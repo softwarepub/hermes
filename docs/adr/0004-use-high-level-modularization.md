@@ -21,13 +21,13 @@ There are at least four levels of architecture where modularization can be achie
 
 ## Considered Options
 
-* Single application
+* Meta CLI application with modularized independent steps
 * One application per pipeline
 * One application per processing step
 
 ## Decision Outcome
 
-Chosen option: "One application per processing step", because modularity, reusability and configurability trump simplicity, and complexity can still be hidden from users who don't need it via application layers weaving the steps and pipelines together.
+Chosen option: "Meta application with modularized independent steps", because Modularity, reusability and configurability can be achieved in a meta ("runner") application that call the single pipelines. Provides a unified user interface.
 
 ### Positive Consequences
 
@@ -44,7 +44,7 @@ Chosen option: "One application per processing step", because modularity, reusab
 
 ## Pros and Cons of the Options
 
-### Single application
+### Meta CLI application with modularized independent steps
 
 A single application that provides access to at least the pipeline steps
 
