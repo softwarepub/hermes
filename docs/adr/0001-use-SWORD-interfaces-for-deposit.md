@@ -1,12 +1,14 @@
 # Use SWORD interfaces for deposit
 
-* Status: accepted
+* Status: proposed
 * Deciders: sdruskat, poikilotherm, knodel, juckel
 * Date: 2022-03-07
 
 ## Context and Problem Statement
 
 We need to use interfaces to deposit software on the target systems. Should we use dedicated wrapper libraries, e.g., for SWORD or for the single systems?
+
+SWORD provides a standard way to deposit metadata in DublinCore.
 
 ## Decision Drivers
 
@@ -17,7 +19,7 @@ We need to use interfaces to deposit software on the target systems. Should we u
 ## Considered Options
 
 * - Use wrapper libraries for target systems, e.g.[Zenodraft for Zenodo](https://github.com/zenodraft/zenodraft) - may need to be adapted for InvenioRDM proper - or [pyDataverse](https://pypi.org/project/pyDataverse/)
-* - Use [SWORD](https://sword.cottagelabs.com/), either via API endpoints or wrapper library
+* - Use [SWORD](https://sword.cottagelabs.com/), either via API endpoints or wrapper library, as one way to deposit metadata in addition to more generic ways
 
 ## Decision Outcome
 
