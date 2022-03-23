@@ -1,7 +1,7 @@
-# Use SWORD interfaces for deposit
+# Use native API interfaces for deposit
 
-* Status: proposed
-* Deciders: sdruskat, poikilotherm, knodel, juckel
+* Status: accepted
+* Deciders: sdruskat, poikilotherm, knodel, juckel, led02
 * Date: 2022-03-07
 
 ## Context and Problem Statement
@@ -18,17 +18,35 @@ SWORD provides a standard way to deposit metadata in DublinCore.
 
 ## Considered Options
 
-* - Use wrapper libraries for target systems, e.g.[Zenodraft for Zenodo](https://github.com/zenodraft/zenodraft) - may need to be adapted for InvenioRDM proper - or [pyDataverse](https://pypi.org/project/pyDataverse/)
-* - Use [SWORD](https://sword.cottagelabs.com/), either via API endpoints or wrapper library, as one way to deposit metadata in addition to more generic ways
+* Use wrapper libraries for target systems, e.g. Zenodraft for Zenodo - may need to be adapted for InvenioRDM proper - or pyDataverse
+* Use SWORD, either via API endpoints or wrapper library, as one way to deposit metadata in addition to more generic ways
+* Use native API endpoints initially for deposit
+* Build own SWORD endpoint that dispatches to other APIs
 
 ## Decision Outcome
 
-Chosen option: "- Use SWORD, either via API endpoints or wrapper library", because it is a more high-level solution that can easily be adapted to several targets that support SWORD, and we don't have to rely on several different third-party libraries.
+Chosen option: "Use native API endpoints initially for deposit", because It is the most usable solution at the moment.
 
 ### Positive Consequences
 
-* We'll have a single, consolidated way for deposition on both primary target platforms, as both InvenioRDM and Dataverse support SWORD.
+* We'll have a working solution
 
 ### Negative Consequences
 
-* SWORD doesn't support requirement elicitation from target platforms, so that we may have to use other dependencies for this.
+* We have to target the different system-native endpoints
+
+## Pros and Cons of the Options
+
+### Use SWORD, either via API endpoints or wrapper library, as one way to deposit metadata in addition to more generic ways
+
+* Good, because Standard way to deposit
+* Bad, because At least the Dataverse SWORD interface is reportedly not easily usable for our purposes
+
+### Use native API endpoints initially for deposit
+
+* Good, because The endpoints work
+
+### Build own SWORD endpoint that dispatches to other APIs
+
+* Good, because Provides a potentially unified interface that may make it easier to deposit via SWORD later on
+* Bad, because Still needs translation
