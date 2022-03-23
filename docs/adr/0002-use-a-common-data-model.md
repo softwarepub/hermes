@@ -1,6 +1,7 @@
 # Use a common data model
 
-* Status: proposed
+* Status: accepted
+* Deciders: sdruskat, poikilotherm, knodel, juckel, led02
 * Date: 2022-03-07
 
 ## Context and Problem Statement
