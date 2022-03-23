@@ -1,6 +1,7 @@
-# Use Python in Docker as base technology
+# Use Python as base technology
 
-* Status: proposed
+* Status: accepted
+* Deciders: sdruskat, poikilotherm, knodel, juckel, led02
 * Date: 2022-03-21
 
 ## Context and Problem Statement
@@ -23,6 +24,8 @@ Chosen option: "Python 3.10", because all project members know Python well enoug
 ## Pros and Cons of the Options
 
 ### Python >= 3.10
+
+We provide Python packages to be installable through standard channels (e.g., pip, conda, etc.)
 
 * Good, because Pattern matching
 * Bad, because Not massively backwards-compatible
