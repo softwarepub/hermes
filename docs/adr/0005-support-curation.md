@@ -37,3 +37,7 @@ Breaks workflow until curation has been successful, continues in the next run
 
 * Good, because Usable for web services
 * Bad, because Not usable for CI services
+
+## Links
+
+* https://github.com/hermes-hmc/workflow/issues/1
