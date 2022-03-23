@@ -1,7 +1,7 @@
 # Use high-level modularization
 
-* Status: proposed
-* Deciders: sdruskat, juckel, knodel, poikilotherm
+* Status: accepted
+* Deciders: sdruskat, juckel, knodel, poikilotherm, led02
 * Date: 2022-03-07
 
 ## Context and Problem Statement
