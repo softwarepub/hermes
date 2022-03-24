@@ -8,6 +8,7 @@ authors = ["Stephan Druskat <stephan.druskat@dlr.de>", "Michael Meinel <michael.
 python = "^3.10"
 
 [tool.poetry.dev-dependencies]
+pytest = "^7.1.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
