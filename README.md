@@ -1,2 +1,5 @@
-# workflow
-Implementation of the HERMES workflow
+# hermes
+
+Implementation of the HERMES workflow.
+
+
