@@ -6,6 +6,7 @@ authors = ["Stephan Druskat <stephan.druskat@dlr.de>", "Michael Meinel <michael.
 
 [tool.poetry.dependencies]
 python = "^3.10"
+click = "^8.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.1"
