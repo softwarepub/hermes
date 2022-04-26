@@ -22,7 +22,9 @@ class WorkflowCommand(click.Group):
         super().__init__(*args, **kwargs)
 
     def add_command(self, cmd: click.Command, name: t.Optional[str] = None) -> None:
-        "Overwritten to ensure the order of commands is retained."
+        """
+        Overwritten to ensure the order of commands is retained.
+        """
 
         cmd_name = name or cmd.name
         if cmd_name not in self.commands:
@@ -30,7 +32,9 @@ class WorkflowCommand(click.Group):
         super().add_command(cmd, name)
 
     def list_commands(self, ctx: click.Context) -> t.List[str]:
-        "Overwritten to return commands in fixed order."
+        """
+        Overwritten to return commands in fixed order.
+        """
 
         return self._command_order
 
@@ -50,8 +54,10 @@ class WorkflowCommand(click.Group):
 
 
 @click.group(cls=WorkflowCommand, invoke_without_command=True)
+@click.option("--deposit", is_flag=True, default=False)
+@click.option("--post", is_flag=True, default=False)
 @click.pass_context
-def haggis(ctx):
+def haggis(ctx: click.Context, *args, **kwargs) -> None:
     """
     HERMES aggregated interface script
 
