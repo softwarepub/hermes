@@ -1,7 +1,7 @@
 import click
 
 
-@click.group(chain=True, invoke_without_command=True)
+@click.group(invoke_without_command=True)
 def harvest():
     """
     Automatic harvest of metadata
@@ -9,7 +9,7 @@ def harvest():
     click.echo("Metadata harvesting")
 
 
-@click.group(chain=True, invoke_without_command=True)
+@click.group(invoke_without_command=True)
 def process():
     """
     Process metadata and prepare it for deposition
@@ -17,7 +17,7 @@ def process():
     click.echo("Metadata processing")
 
 
-@click.group(chain=True, invoke_without_command=True)
+@click.group(invoke_without_command=True)
 def deposit():
     """
     Deposit processed (and curated) metadata
@@ -25,7 +25,7 @@ def deposit():
     click.echo("Metadata deposition")
 
 
-@click.group(chain=True, invoke_without_command=True)
+@click.group(invoke_without_command=True)
 def post():
     """
     Post-process metadata after deposition
