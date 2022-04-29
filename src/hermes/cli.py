@@ -23,7 +23,7 @@ class WorkflowCommand(click.Group):
 
     def add_command(self, cmd: click.Command, name: t.Optional[str] = None) -> None:
         """
-        Overwritten to ensure the order of commands is retained.
+        Overridden to ensure the order of commands is retained.
         """
 
         cmd_name = name or cmd.name
@@ -33,7 +33,7 @@ class WorkflowCommand(click.Group):
 
     def list_commands(self, ctx: click.Context) -> t.List[str]:
         """
-        Overwritten to return commands in fixed order.
+        Overridden to return commands in fixed order.
         """
 
         return self._command_order
