@@ -38,7 +38,7 @@ $ python -m hermes --help
 $ python -m hermes 
 ```
 
-[^1]: Working title, might be subject for change.
+[^1]: Working title, might be subject to change.
 
 ## Testing
 
