@@ -49,5 +49,16 @@ Both tools are specified as development dependencies in the `pyproject.toml`.
 To run tests with an extensive HTML report, run:
 
 ```shell
-$ pytest test --cov=hermes --cov-branch --cov-report=html
+$ poetry run pytest test --cov=hermes --cov-branch --cov-report=html --cov-report=term
+```
+
+## Building documentation
+
+This project comes with extensive documentation that can be built using [Sphinx](https://www.sphinx-doc.org/en/master/).
+This also includes automatic API documentation.
+To build the documentation in your *poetry* envrionment, run the following commands:
+
+```shell
+$ poetry run sphinx-apidoc -o docs/source/api src
+$ poetry run sphinx-build -M html docs/source docs/build
 ```
