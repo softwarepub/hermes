@@ -8,7 +8,7 @@ from hermes import cli
 
 
 def mock_command(name: str) -> t.Tuple[mock.Mock, click.Command]:
-    func = mock.Mock()
+    func = mock.Mock(return_value=name)
     return func, click.command(name)(func)
 
 
@@ -39,14 +39,32 @@ def test_workflow_invoke():
     spam, spam_cmd = mock_command("spam")
     eggs, eggs_cmd = mock_command("eggs")
 
-    wf.add_command(spam)
-    wf.add_command(eggs)
+    wf.add_command(spam_cmd)
+    wf.add_command(eggs_cmd)
 
     ctx = click.Context(wf)
-    wf.invoke_all(ctx)
+    wf.invoke(ctx)
 
     spam.assert_called_once()
     eggs.assert_called_once()
+
+
+def test_workflow_invoke_with_cb():
+    wf = cli.WorkflowCommand()
+    cb_mock = mock.Mock()
+    spam, spam_cmd = mock_command("spam")
+    eggs, eggs_cmd = mock_command("eggs")
+
+    wf.add_command(spam_cmd)
+    wf.add_command(eggs_cmd)
+    wf.result_callback()(cb_mock)
+
+    ctx = click.Context(wf)
+    wf.invoke(ctx)
+
+    spam.assert_called_once()
+    eggs.assert_called_once()
+    cb_mock.assert_called_with(["spam", "eggs"])
 
 
 def test_haggis_full():

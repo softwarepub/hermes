@@ -38,7 +38,7 @@ class WorkflowCommand(click.Group):
 
         return self._command_order
 
-    def invoke_all(self, ctx: click.Context) -> None:
+    def invoke(self, ctx: click.Context) -> t.Any:
         """
         Invoke all sub-commands in a given order.
 
@@ -48,9 +48,43 @@ class WorkflowCommand(click.Group):
         :param ctx: Context for the command.
         """
 
-        for sub in self.list_commands(ctx):
-            if ctx.params.get(sub, True):
-                ctx.invoke(self.get_command(ctx, sub))
+        if ctx.protected_args:
+            return super().invoke(ctx)
+
+        # The following code is largely copied from the base implementation that can be found in
+        # click.core.MultiCommand.
+
+        def _process_result(value: t.Any) -> t.Any:
+            if self._result_callback is not None:
+                value = ctx.invoke(self._result_callback, value, **ctx.params)
+            return value
+
+        args = [*ctx.protected_args, *ctx.args]
+        ctx.args = []
+        ctx.protected_args = []
+
+        with ctx:
+            contexts = []
+            for cmd_name in self.list_commands(ctx):
+                if not ctx.params.get(cmd_name, True):
+                    continue
+
+                cmd = self.get_command(ctx, cmd_name)
+                sub_ctx = cmd.make_context(
+                    cmd_name,
+                    args,
+                    parent=ctx,
+                    allow_extra_args=True,
+                    allow_interspersed_args=False
+                )
+                contexts.append(sub_ctx)
+                args, sub_ctx.args = sub_ctx.args, []
+
+            rv = []
+            for sub_ctx in contexts:
+                with sub_ctx:
+                    rv.append(sub_ctx.command.invoke(sub_ctx))
+            return _process_result(rv)
 
 
 @click.group(cls=WorkflowCommand, invoke_without_command=True)
@@ -63,8 +97,8 @@ def haggis(ctx: click.Context, *args, **kwargs) -> None:
 
     This script can be used to run the HERMES pipeline or parts of it.
     """
-    if ctx.invoked_subcommand is None:
-        ctx.command.invoke_all(ctx)
+
+    pass
 
 
 haggis.add_command(workflow.harvest)
