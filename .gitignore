@@ -1,2 +1,11 @@
+__pycache__
+
+.coverage
+htmlcov
+.pytest_cache
+
+docs/source/api
+docs/build/
+
 .idea/
 .venv/
