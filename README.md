@@ -23,7 +23,7 @@ This project uses
 
 ## Usage
 
-The `haggis`[^1] application provides the entry point for the HERMES workflow.
+The `haggis` application provides the entry point for the HERMES workflow.
 After installation, you can run it from your command line environment:
 
 ```shell
@@ -37,8 +37,6 @@ You can also call the `hermes` package as Python module:
 python -m hermes --help
 python -m hermes 
 ```
-
-[^1]: Working title, might be subject to change.
 
 ## Testing
 

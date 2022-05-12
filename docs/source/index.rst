@@ -6,15 +6,21 @@
 Welcome to hermes's documentation!
 ==================================
 
+README
+------
+.. include:: ../../README.md
+   :parser: myst_parser.sphinx_
+
+API Documentation
+-----------------
+
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
 
-   manual/index
    api/modules
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`
