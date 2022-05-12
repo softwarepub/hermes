@@ -27,15 +27,15 @@ The `haggis`[^1] application provides the entry point for the HERMES workflow.
 After installation, you can run it from your command line environment:
 
 ```shell
-$ haggis --help
-$ haggis harvest
+haggis --help
+haggis harvest
 ```
 
 You can also call the `hermes` package as Python module:
 
 ```shell
-$ python -m hermes --help
-$ python -m hermes 
+python -m hermes --help
+python -m hermes 
 ```
 
 [^1]: Working title, might be subject to change.
@@ -49,7 +49,7 @@ Both tools are specified as development dependencies in the `pyproject.toml`.
 To run tests with an extensive HTML report, run:
 
 ```shell
-$ poetry run pytest test --cov=hermes --cov-branch --cov-report=html --cov-report=term
+poetry run pytest test --cov=hermes --cov-branch --cov-report=html --cov-report=term
 ```
 
 ## Building documentation
@@ -59,6 +59,6 @@ This also includes automatic API documentation.
 To build the documentation in your *poetry* envrionment, run the following commands:
 
 ```shell
-$ poetry run sphinx-apidoc -o docs/source/api src
-$ poetry run sphinx-build -M html docs/source docs/build
+poetry run sphinx-apidoc -o docs/source/api src
+poetry run sphinx-build -M html docs/source docs/build
 ```
