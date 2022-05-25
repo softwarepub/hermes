@@ -6,9 +6,19 @@ authors = ["Stephan Druskat <stephan.druskat@dlr.de>", "Michael Meinel <michael.
 
 [tool.poetry.dependencies]
 python = "^3.10"
+click = "^8.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.1"
+pytest-cov = "^3.0.0"
+Sphinx = "^4.5.0"
+myst-parser = "^0.17.2"
+
+[tool.poetry.plugins.console_scripts]
+haggis = "hermes.cli:haggis"
+
+[tool.poetry.plugins."hermes.harvest"]
+git = "hermes.commands.git.harvest:harvest_git"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
