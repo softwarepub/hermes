@@ -1,6 +1,7 @@
 import click
 from importlib import metadata
 from hermes.model.context import HermesContext
+from hermes.model.errors import HermesValidationError
 
 
 @click.group(invoke_without_command=True)
