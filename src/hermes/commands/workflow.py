@@ -1,5 +1,7 @@
-import click
 from importlib import metadata
+
+import click
+
 from hermes.model.context import HermesContext, HermesHarvestContext
 
 

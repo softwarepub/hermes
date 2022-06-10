@@ -146,7 +146,8 @@ class HermesHarvestContext(HermesContext):
         The updates are added to a list of values.
         A value is only replaced if the `_key` and all `kwargs` match.
 
-        .. code: python
+        .. code:: python
+
             # 'value 2' will be added (twice)
             ctx.update('key', 'value 1', spam='eggs')
             ctx.update('key', 'value 2', foo='bar')
