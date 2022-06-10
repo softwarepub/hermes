@@ -13,7 +13,10 @@ def harvest():
     harvesters = metadata.entry_points(group='hermes.harvest')
     for harvester in harvesters:
         harvest = harvester.load()
-        harvest()
+        try:
+            harvest()
+        except HermesValidationError as e:
+            ctx.error(harvester, e)  # Feed back entry point and errors
 
 
 
