@@ -136,14 +136,30 @@ class HermesHarvestContext(HermesContext):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.store_cache()
-        if not exc_type is None and issubclass(exc_type, HermesValidationError):
+        if exc_type is not None and issubclass(exc_type, HermesValidationError):
             exc = traceback.TracebackException(exc_type, exc_val, exc_tb)
             self._base.error(self._ep, exc)
             return True
 
-    def update(self, _key, _value, **kwargs):
+    def update(self, _key: str, _value: t.Any, **kwargs: t.Any):
         """
-        See :py:meth:`HermesContext.update`.
+        The updates are added to a list of values.
+        A value is only replaced if the `_key` and all `kwargs` match.
+
+        .. code: python
+            # 'value 2' will be added (twice)
+            ctx.update('key', 'value 1', spam='eggs')
+            ctx.update('key', 'value 2', foo='bar')
+            ctx.update('key', 'value 2', foo='bar', spam='eggs')
+
+            # 'value 2' will replace 'value 1'
+            ctx.update('key', 'value 1', spam='eggs')
+            ctx.update('key', 'value 2', spam='eggs')
+
+        This way, the harvester can fully specify the source and only override values that are from the same origin
+        (e.g., if the data changed between two runs).
+
+        See :py:meth:`HermesContext.update` for more information.
         """
 
         if _key not in self._data:
@@ -157,7 +173,7 @@ class HermesHarvestContext(HermesContext):
         else:
             self._data[_key].append([_value, kwargs])
 
-    def error(self, ep, error):
+    def error(self, ep: EntryPoint, error: Exception):
         """
         See :py:meth:`HermesContext.error`
         """
