@@ -1,4 +1,5 @@
 import click
+from importlib import metadata
 
 
 @click.group(invoke_without_command=True)
@@ -7,6 +8,13 @@ def harvest():
     Automatic harvest of metadata
     """
     click.echo("Metadata harvesting")
+
+    # Get all harvesters
+    harvesters = metadata.entry_points(group='hermes.harvest')
+    for harvester in harvesters:
+        harvest = harvester.load()
+        harvest()
+
 
 
 @click.group(invoke_without_command=True)
