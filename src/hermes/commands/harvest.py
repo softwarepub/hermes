@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from hermes.model.context import HermesContext
 from hermes.model.errors import HermesValidationError
 
@@ -23,7 +25,7 @@ def harvest_cff(ctx: HermesContext):
 
 
 def read_cff():
-    return None
+    return {}
 
 
 def validate():
@@ -31,4 +33,4 @@ def validate():
 
 
 def get_cff():
-    return None
+    return Path
