@@ -6,7 +6,7 @@ def harvest_cff(ctx: HermesContext):
     try:
         validate()
     except Exception as e:
-        raise HermesValidationError('CFF is invalid') from e
+        raise HermesValidationError(f'{source} is invalid') from e
 
     if not valid:
         ctx.error(msg='Sorry, but your CFF is not valid, here are the errors.', errors=errors, src=source)
