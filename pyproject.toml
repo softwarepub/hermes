@@ -18,7 +18,7 @@ myst-parser = "^0.17.2"
 haggis = "hermes.cli:haggis"
 
 [tool.poetry.plugins."hermes.harvest"]
-git = "hermes.commands.git.harvest:harvest_git"
+cff = "hermes.commands.harvest:harvest_cff"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
