@@ -1,5 +1,6 @@
 import click
 from importlib import metadata
+from hermes.model.context import HermesContext
 
 
 @click.group(invoke_without_command=True)
@@ -9,6 +10,8 @@ def harvest():
     """
     click.echo("Metadata harvesting")
 
+    ctx = HermesContext()
+
     # Get all harvesters
     harvesters = metadata.entry_points(group='hermes.harvest')
     for harvester in harvesters:
@@ -17,7 +20,6 @@ def harvest():
             harvest()
         except HermesValidationError as e:
             ctx.error(harvester, e)  # Feed back entry point and errors
-
 
 
 @click.group(invoke_without_command=True)
