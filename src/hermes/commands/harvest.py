@@ -18,9 +18,10 @@ def harvest_cff(ctx: HermesContext):
     cff = read_cff(source)
 
     # Convert
-    author = cff.get('authors')
+    authors = cff.get('authors')
 
-    ctx.update('author', author, src=source)
+    for author in authors:
+        ctx.update('author', author, src=source)
     print('Hello CFF harvester')
 
 
