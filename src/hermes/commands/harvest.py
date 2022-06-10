@@ -1,6 +1,10 @@
+from hermes.model.context import HermesContext
+from hermes.model.errors import HermesValidationError
+
+
 def harvest_cff(ctx: HermesContext):
     # Get file
-    source = cff_source
+    source = get_cff()
 
     # Validate via jsonschema
     try:
@@ -8,14 +12,23 @@ def harvest_cff(ctx: HermesContext):
     except Exception as e:
         raise HermesValidationError(f'{source} is invalid') from e
 
-    if not valid:
-        ctx.error(msg='Sorry, but your CFF is not valid, here are the errors.', errors=errors, src=source)
-
     # Load
-    cff = load(source)
+    cff = read_cff(source)
 
     # Convert
     author = cff.get('authors')
 
     ctx.update('author', author, src=source)
     print('Hello CFF harvester')
+
+
+def read_cff():
+    return None
+
+
+def validate():
+    pass
+
+
+def get_cff():
+    return None
