@@ -6,7 +6,8 @@ from hermes.model.context import HermesContext, HermesHarvestContext
 
 
 @click.group(invoke_without_command=True)
-def harvest():
+@click.pass_context
+def harvest(click_ctx: click.Context):
     """
     Automatic harvest of metadata
     """
@@ -20,7 +21,7 @@ def harvest():
     for harvester in harvesters:
         with HermesHarvestContext(ctx, harvester) as harvest_ctx:
             harvest = harvester.load()
-            harvest(harvest_ctx)
+            harvest(click_ctx, harvest_ctx)
 
 
 @click.group(invoke_without_command=True)
