@@ -13,6 +13,9 @@ from hermes.model.context import HermesContext
 from hermes.model.errors import HermesValidationError
 
 
+_CFF_VERSION = '1.2.0'
+
+
 def harvest_cff(click_ctx: click.Context, ctx: HermesContext):
     # Get the parent context (every subcommand has its own context with the main click context as parent)
     parent_ctx = click_ctx.parent
@@ -60,7 +63,7 @@ def build_path_str(absolute_path: collections.deque):
 
 
 def validate(cff_file):
-    cff_schema_url = 'https://citation-file-format.github.io/1.2.0/schema.json'
+    cff_schema_url = f'https://citation-file-format.github.io/{_CFF_VERSION}/schema.json'
     with open(cff_file, 'r') as fi:
         # Convert to Python object
         yaml = YAML(typ='safe')
@@ -78,8 +81,9 @@ def validate(cff_file):
                     path_str = build_path_str(error.absolute_path)
                     click.echo(f'    - Invalid input for path {path_str}.\n'
                                f'      Value: {error.instance} -> {error.message}')
-                click.echo('    See the Citation File Format schema guide for further details: '
-                           'https://github.com/citation-file-format/citation-file-format/blob/1.2.0/schema-guide.md')
+                click.echo(f'    See the Citation File Format schema guide for further details: '
+                           f'https://github.com/citation-file-format/citation-file-format/blob/{_CFF_VERSION}/schema'
+                           f'-guide.md.')
                 return False
             elif len(errors) == 0:
                 click.echo(f'{cff_file} is valid')
