@@ -178,8 +178,8 @@ class HermesHarvestContext(HermesContext):
         if isinstance(_value, dict):
             for key, value in _value.items():
                 self._update_key_from(f'{_key}.{key}', _value, **kwargs)
-            else:
-                self.update(_key, _value, **kwargs)
+        else:
+            self.update(_key, _value, **kwargs)
 
     def update_from(self, data: t.Dict[str, t.Any], **kwargs: t.Any):
         """
