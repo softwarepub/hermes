@@ -8,12 +8,20 @@ from ruamel.yaml import YAML
 import jsonschema
 from jsonschema.exceptions import ValidationError
 import click
+from cffconvert import Citation
 
 from hermes.model.context import HermesContext
 from hermes.model.errors import HermesValidationError
 
 
 _CFF_VERSION = '1.2.0'
+
+
+def convert_cff_to_codemeta(cff_file):
+    with open(cff_file, 'r') as infile:
+        cffstr = infile.read()
+        codemeta_str = Citation(cffstr).as_codemeta()
+        return json.loads(codemeta_str)
 
 
 def harvest_cff(click_ctx: click.Context, ctx: HermesContext):
@@ -29,25 +37,14 @@ def harvest_cff(click_ctx: click.Context, ctx: HermesContext):
         return 1
     else:
         cff_dict = load_cff_from_file(cff_file)
-        if not validate(cff_dict):
+        if not validate(cff_file, cff_dict):
             return 1
         else:
             # Convert to CodeMeta using cffconvert
-            click.echo(f'Hello CFF harvester for {cff_file}')
-
-    # # Load
-    # cff = read_cff(source)
-    #
-    # # Convert
-    # authors = cff.get('authors')
-    #
-    # if authors:
-    #     for author in authors:
-    #         ctx.update('author', author, src=source)
-
-
-def read_cff(source):
-    return {}
+            codemeta = convert_cff_to_codemeta(cff_file)
+            for author in codemeta['author']:
+                ctx.update('author', author, src=cff_file)
+            ctx.update('name', codemeta['name'], src=cff_file)
 
 
 def build_path_str(absolute_path: collections.deque):
