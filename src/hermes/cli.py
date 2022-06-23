@@ -90,7 +90,7 @@ class WorkflowCommand(click.Group):
 @click.group(cls=WorkflowCommand, invoke_without_command=True)
 @click.option("--deposit", is_flag=True, default=False)
 @click.option("--post", is_flag=True, default=False)
-@click.option('--path', default=['./'], help='Working path', type=click.Path())
+@click.option('--path', default='./', help='Working path', type=click.Path())
 @click.pass_context
 def haggis(ctx: click.Context, *args, **kwargs) -> None:
     """
