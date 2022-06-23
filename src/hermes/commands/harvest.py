@@ -28,9 +28,11 @@ def harvest_cff(click_ctx: click.Context, ctx: HermesContext):
                    f'metadata source.')
         return 1
     else:
-        if not validate(cff_file):
+        cff_dict = load_cff_from_file(cff_file)
+        if not validate(cff_dict):
             return 1
         else:
+            # Convert to CodeMeta using cffconvert
             click.echo(f'Hello CFF harvester for {cff_file}')
 
     # # Load
@@ -62,32 +64,35 @@ def build_path_str(absolute_path: collections.deque):
     return path_str
 
 
-def validate(cff_file):
+def validate(cff_file, cff_dict):
     cff_schema_url = f'https://citation-file-format.github.io/{_CFF_VERSION}/schema.json'
+
+    with urllib.request.urlopen(cff_schema_url) as cff_schema_response:
+        schema_data = json.loads(cff_schema_response.read())
+        validator = jsonschema.Draft7Validator(schema_data)
+        errors = sorted(validator.iter_errors(cff_dict), key=lambda e: e.path)
+        if len(errors) > 0:
+            click.echo(f'{cff_file} is not valid according to {cff_schema_url}!')
+            for error in errors:
+                path_str = build_path_str(error.absolute_path)
+                click.echo(f'    - Invalid input for path {path_str}.\n'
+                           f'      Value: {error.instance} -> {error.message}')
+            click.echo(f'    See the Citation File Format schema guide for further details: '
+                       f'https://github.com/citation-file-format/citation-file-format/blob/{_CFF_VERSION}/schema'
+                       f'-guide.md.')
+            return False
+        elif len(errors) == 0:
+            click.echo(f'{cff_file} is valid')
+            return True
+
+
+def load_cff_from_file(cff_file) -> dict:
     with open(cff_file, 'r') as fi:
-        # Convert to Python object
         yaml = YAML(typ='safe')
         yaml.constructor.yaml_constructors[u'tag:yaml.org,2002:timestamp'] = yaml.constructor.yaml_constructors[
             u'tag:yaml.org,2002:str']
-        yml_data = yaml.load(fi)
-
-        with urllib.request.urlopen(cff_schema_url) as cff_schema_response:
-            schema_data = json.loads(cff_schema_response.read())
-            validator = jsonschema.Draft7Validator(schema_data)
-            errors = sorted(validator.iter_errors(yml_data), key=lambda e: e.path)
-            if len(errors) > 0:
-                click.echo(f'{cff_file} is not valid according to {cff_schema_url}!')
-                for error in errors:
-                    path_str = build_path_str(error.absolute_path)
-                    click.echo(f'    - Invalid input for path {path_str}.\n'
-                               f'      Value: {error.instance} -> {error.message}')
-                click.echo(f'    See the Citation File Format schema guide for further details: '
-                           f'https://github.com/citation-file-format/citation-file-format/blob/{_CFF_VERSION}/schema'
-                           f'-guide.md.')
-                return False
-            elif len(errors) == 0:
-                click.echo(f'{cff_file} is valid')
-                return True
+        yaml_dict = yaml.load(fi)
+        return yaml_dict
 
 
 def get_single_cff(paths):
