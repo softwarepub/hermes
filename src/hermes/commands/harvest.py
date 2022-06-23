@@ -92,14 +92,13 @@ def load_cff_from_file(cff_file) -> dict:
         return yaml_dict
 
 
-def get_single_cff(paths):
+def get_single_cff(path):
     # Find CFF files in directories and subdirectories
-    for path in paths:
-        files = find_file_paths('CITATION.cff', path)
-        if len(files) == 1:
-            return files[0]
-        else:
-            return None
+    files = find_file_paths('CITATION.cff', path)
+    if len(files) == 1:
+        return files[0]
+    else:
+        return None
 
 
 def find_file_paths(name, path):
