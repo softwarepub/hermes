@@ -177,11 +177,11 @@ class HermesHarvestContext(HermesContext):
     def _update_key_from(self, _key: str, _value: t.Any, **kwargs):
         if isinstance(_value, dict):
             for key, value in _value.items():
-                self._update_key_from(f'{_key}.{key}', _value, **kwargs)
+                self._update_key_from(f'{_key}.{key}', value, **kwargs)
 
-        elif isinstance(_value, t.Sequence):
+        elif isinstance(_value, (list, tuple)):
             for index, value in enumerate(_value):
-                self._update_key_from(f'{_key}[{index}]', value)
+                self._update_key_from(f'{_key}[{index}]', value, **kwargs)
 
         else:
             self.update(_key, _value, **kwargs)
