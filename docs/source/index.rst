@@ -11,6 +11,14 @@ README
 .. include:: ../../README.md
    :parser: myst_parser.sphinx_
 
+Developer Documentation
+-----------------------
+
+.. toctree::
+   :maxdepth: 1
+
+   dev/data_model
+
 API Documentation
 -----------------
 

@@ -3,6 +3,7 @@ __pycache__
 .coverage
 htmlcov
 .pytest_cache
+.hermes
 
 docs/source/api
 docs/build/

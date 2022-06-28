@@ -2,7 +2,7 @@
 name = "hermes"
 version = "0.1.0"
 description = "Workflow to publish research software with rich metadata"
-authors = ["Stephan Druskat <stephan.druskat@dlr.de>", "Michael Meinel <michael.meinel@dlr.de"]
+authors = ["Stephan Druskat <stephan.druskat@dlr.de>", "Michael Meinel <michael.meinel@dlr.de>"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -18,7 +18,7 @@ myst-parser = "^0.17.2"
 haggis = "hermes.cli:haggis"
 
 [tool.poetry.plugins."hermes.harvest"]
-git = "hermes.commands.git.harvest:harvest_git"
+cff = "hermes.commands.harvest:harvest_cff"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
