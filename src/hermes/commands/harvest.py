@@ -32,19 +32,16 @@ def harvest_cff(click_ctx: click.Context, ctx: HermesContext):
     # Get source files
     cff_file = get_single_cff(path)
     if cff_file is None:
-        click.echo(f'{path} contains either no or more than 1 CITATION.cff file. Aborting harvesting for this '
-                   f'metadata source.')
-        return 1
-    else:
-        cff_dict = load_cff_from_file(cff_file)
-        if not validate(cff_file, cff_dict):
-            return 1
-        else:
-            # Convert to CodeMeta using cffconvert
-            codemeta = convert_cff_to_codemeta(cff_file)
-            for author in codemeta['author']:
-                ctx.update('author', author, src=cff_file)
-            ctx.update('name', codemeta['name'], src=cff_file)
+        raise HermesValidationError(f'{path} contains either no or more than 1 CITATION.cff file. Aborting harvesting '
+                                    f'for this metadata source.')
+    cff_dict = load_cff_from_file(cff_file)
+    if not validate(cff_file, cff_dict):
+        raise HermesValidationError(cff_file)
+    # Convert to CodeMeta using cffconvert
+    codemeta = convert_cff_to_codemeta(cff_file)
+    for author in codemeta['author']:
+        ctx.update('author', author, src=cff_file)
+    ctx.update('name', codemeta['name'], src=cff_file)
 
 
 def build_path_str(absolute_path: collections.deque):
