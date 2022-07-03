@@ -39,9 +39,7 @@ def harvest_cff(click_ctx: click.Context, ctx: HermesContext):
         raise HermesValidationError(cff_file)
     # Convert to CodeMeta using cffconvert
     codemeta = convert_cff_to_codemeta(cff_file)
-    for author in codemeta['author']:
-        ctx.update('author', author, src=cff_file)
-    ctx.update('name', codemeta['name'], src=cff_file)
+    ctx.update_from(codemeta, local_path=cff_file)
 
 
 def build_path_str(absolute_path: collections.deque):
@@ -76,7 +74,7 @@ def validate(cff_file, cff_dict):
                        f'-guide.md.')
             return False
         elif len(errors) == 0:
-            click.echo(f'{cff_file} is valid')
+            click.echo(f'Found valid Citation File Format file at: {cff_file}')
             return True
 
 
