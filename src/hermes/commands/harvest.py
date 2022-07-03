@@ -3,6 +3,8 @@ from pathlib import Path
 import os
 import json
 import urllib.request
+import typing as t
+
 
 from ruamel.yaml import YAML
 import jsonschema
@@ -17,7 +19,7 @@ from hermes.model.errors import HermesValidationError
 _CFF_VERSION = '1.2.0'
 
 
-def convert_cff_to_codemeta(cff_file):
+def convert_cff_to_codemeta(cff_file: str) -> t.Any:
     with open(cff_file, 'r') as infile:
         cffstr = infile.read()
         codemeta_str = Citation(cffstr).as_codemeta()
@@ -42,7 +44,7 @@ def harvest_cff(click_ctx: click.Context, ctx: HermesContext):
     ctx.update_from(codemeta, local_path=cff_file)
 
 
-def build_path_str(absolute_path: collections.deque):
+def build_path_str(absolute_path: collections.deque) -> str:
     # Path deque starts with field name, then index, then field name, etc.
     path_str = "'"
     for index, value in enumerate(absolute_path):
@@ -56,7 +58,7 @@ def build_path_str(absolute_path: collections.deque):
     return path_str
 
 
-def validate(cff_file, cff_dict):
+def validate(cff_file: str, cff_dict: t.Dict) -> bool:
     cff_schema_url = f'https://citation-file-format.github.io/{_CFF_VERSION}/schema.json'
 
     with urllib.request.urlopen(cff_schema_url) as cff_schema_response:
@@ -78,25 +80,23 @@ def validate(cff_file, cff_dict):
             return True
 
 
-def load_cff_from_file(cff_file) -> dict:
+def load_cff_from_file(cff_file: str) -> t.Any:
     with open(cff_file, 'r') as fi:
         yaml = YAML(typ='safe')
         yaml.constructor.yaml_constructors[u'tag:yaml.org,2002:timestamp'] = yaml.constructor.yaml_constructors[
             u'tag:yaml.org,2002:str']
-        yaml_dict = yaml.load(fi)
-        return yaml_dict
+        return yaml.load(fi)
 
 
-def get_single_cff(path):
+def get_single_cff(path: str) -> str:
     # Find CFF files in directories and subdirectories
     files = find_file_paths('CITATION.cff', path)
     if len(files) == 1:
         return files[0]
-    else:
-        return None
+    return None
 
 
-def find_file_paths(name, path):
+def find_file_paths(name: str, path: str) -> t.List[str]:
     files = []
     for dirpath, dirname, filename in os.walk(path):
         if name in filename:
