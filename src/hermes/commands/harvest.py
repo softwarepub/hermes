@@ -29,11 +29,13 @@ def convert_cff_to_codemeta(cff_file: str) -> t.Any:
 def harvest_cff(click_ctx: click.Context, ctx: HermesContext):
     # Get the parent context (every subcommand has its own context with the main click context as parent)
     parent_ctx = click_ctx.parent
+    if parent_ctx is None:
+        raise RuntimeError('No parent context!')
     path = parent_ctx.params['path']
 
     # Get source files
     cff_file = get_single_cff(path)
-    if cff_file is None:
+    if not cff_file:
         raise HermesValidationError(f'{path} contains either no or more than 1 CITATION.cff file. Aborting harvesting '
                                     f'for this metadata source.')
     cff_dict = load_cff_from_file(cff_file)
@@ -78,6 +80,7 @@ def validate(cff_file: str, cff_dict: t.Dict) -> bool:
         elif len(errors) == 0:
             click.echo(f'Found valid Citation File Format file at: {cff_file}')
             return True
+    return False
 
 
 def load_cff_from_file(cff_file: str) -> t.Any:
@@ -93,7 +96,7 @@ def get_single_cff(path: str) -> str:
     files = find_file_paths('CITATION.cff', path)
     if len(files) == 1:
         return files[0]
-    return None
+    return ''
 
 
 def find_file_paths(name: str, path: str) -> t.List[str]:
