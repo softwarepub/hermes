@@ -174,6 +174,38 @@ class HermesHarvestContext(HermesContext):
         else:
             self._data[_key].append([_value, kwargs])
 
+    def _update_key_from(self, _key: str, _value: t.Any, **kwargs):
+        if isinstance(_value, dict):
+            for key, value in _value.items():
+                self._update_key_from(f'{_key}.{key}', _value, **kwargs)
+            else:
+                self.update(_key, _value, **kwargs)
+
+    def update_from(self, data: t.Dict[str, t.Any], **kwargs: t.Any):
+        """
+        Bulk-update multiple values.
+
+        If the value for a certain key is again a dictionary, the key will be expanded. I.e.
+
+        .. code:: python
+
+            ctx.update_from({'foo': 'bar', 'author': {'name': 'Monty Python', 'email': 'eggs@spam.xxx'}})
+
+        will evetually result in the following calls:
+
+        .. code:: python
+
+            ctx.update('foo', 'bar')
+            ctx.update('author.name', 'Monty Python')
+            ctx.update('author.email', 'eggs@spam.xxx')
+
+        :param data: The data that should be updated (as mapping with strings as keys).
+        :param kwargs: Additional information about the value (see :ref:`HermesContext.update` for details).
+        """
+
+        for key, value in data.items():
+            self._update_key_from(key, value, **kwargs)
+
     def error(self, ep: EntryPoint, error: Exception):
         """
         See :py:meth:`HermesContext.error`
