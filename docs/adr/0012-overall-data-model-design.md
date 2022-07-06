@@ -15,7 +15,21 @@ The source for single attributes is not required anymore.
 
 * One common model for all stages
 * Seperate model for different stages
+* Common model for all stages
+* Processing model and curated model
 
 ## Decision Outcome
 
 Chosen option: "Seperate model for different stages", because comes out best.
+
+## Pros and Cons of the Options
+
+### One common model for all stages
+
+A common data model that is capable of storing all information required by HERMES throughout the whole workflow.
+
+* Good, because Single, consistent model
+* Good, because Less classes to cope with
+* Bad, because Complex model
+* Bad, because Complex interface
+* Bad, because Probable case of YAGNI
