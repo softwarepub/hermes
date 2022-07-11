@@ -1,0 +1,15 @@
+img.member {
+    max-width: 13%;
+    border-radius: 50%;
+    margin-top: 0.3em;
+}
+
+img.badge-icon {
+    width: 8em;
+}
+
+@media only screen and (max-width: 850px) {
+    img.member {
+        max-width: 23%;
+    }
+}
