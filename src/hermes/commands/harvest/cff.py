@@ -1,5 +1,4 @@
 import collections
-from pathlib import Path
 import os
 import json
 import urllib.request
@@ -8,7 +7,6 @@ import typing as t
 
 from ruamel.yaml import YAML
 import jsonschema
-from jsonschema.exceptions import ValidationError
 import click
 from cffconvert import Citation
 
@@ -91,12 +89,12 @@ def load_cff_from_file(cff_file: str) -> t.Any:
         return yaml.load(fi)
 
 
-def get_single_cff(path: str) -> str:
+def get_single_cff(path: str) -> t.Optional[str]:
     # Find CFF files in directories and subdirectories
     files = find_file_paths('CITATION.cff', path)
     if len(files) == 1:
         return files[0]
-    return ''
+    return None
 
 
 def find_file_paths(name: str, path: str) -> t.List[str]:
