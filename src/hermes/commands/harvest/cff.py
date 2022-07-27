@@ -20,6 +20,12 @@ _CFF_VERSION = '1.2.0'
 
 
 def harvest_cff(click_ctx: click.Context, ctx: HermesHarvestContext):
+    """
+    Implementation of a harvester that provides data from CFF in Codemeta format.
+
+    :param click_ctx: Click context that this command was run inside (might be used to extract command line arguments).
+    :param ctx: The harvesting context that should contain the provided metadata.
+    """
     # Get the parent context (every subcommand has its own context with the main click context as parent)
     parent_ctx = click_ctx.parent
     if parent_ctx is None:
