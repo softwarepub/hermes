@@ -1,10 +1,11 @@
+import pathlib
 from collections import deque
 import json
 from ruamel.yaml import YAML
 
 import pytest
 
-import hermes.commands.harvest as harvest
+import hermes.commands.harvest.cff as harvest
 
 
 @pytest.fixture
@@ -39,7 +40,7 @@ def valid_minimal_cff(tmp_path):
 
 
 def test_convert_cff_to_codemeta(valid_minimal_cff, codemeta):
-    actual_result = harvest.convert_cff_to_codemeta(valid_minimal_cff)
+    actual_result = harvest._convert_cff_to_codemeta(valid_minimal_cff.read_text())
     assert codemeta == actual_result
 
 
@@ -47,25 +48,30 @@ def test_convert_cff_to_codemeta(valid_minimal_cff, codemeta):
     (deque(['str1', 0]), "'str1 1'"),
     (deque(['str1', 0, 'str2', 1, 'str3', 2]), "'str1 1 -> str2 2 -> str3 3'"),
 ])
-def test_build_path_str(path, path_str):
-    assert harvest.build_path_str(path) == path_str
+def test_build_nodepath_str(path, path_str):
+    assert harvest._build_nodepath_str(path) == path_str
 
 
 @pytest.mark.parametrize("path, path_str", [
     ('str1', "'str1 1'"),
     (deque([0, 'str1', 1, 'str2', 2, 'str3']), "'str1 1 -> str2 2 -> str3 3'"),
 ])
-def test_build_path_str_fail(path, path_str):
+def test_build_nodepath_str_fail(path, path_str):
     with pytest.raises(Exception):
-        assert harvest.build_path_str(path) == path_str
+        assert harvest._build_nodepath_str(path) == path_str
 
 
 def test_get_single_cff(tmp_path):
-    assert harvest.get_single_cff(tmp_path) is None
+    assert harvest._get_single_cff(tmp_path) is None
     single_cff = tmp_path / 'CITATION.cff'
     single_cff.touch()
-    assert harvest.get_single_cff(tmp_path) == str(single_cff)
+    assert harvest._get_single_cff(tmp_path) == single_cff
 
 
-def test_validate():
-    assert False
+def test_validate_success(valid_minimal_cff):
+    cff_dict = harvest._load_cff_from_file(valid_minimal_cff.read_text())
+    assert harvest._validate(pathlib.Path("foobar"), cff_dict)
+
+
+def test_validate_fail():
+    assert harvest._validate(pathlib.Path("foobar"), {}) is False
