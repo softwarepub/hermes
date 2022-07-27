@@ -2,6 +2,7 @@
 This module provides the main entry point for the HERMES command line application.
 """
 import typing as t
+import pathlib
 
 import click
 
@@ -90,6 +91,7 @@ class WorkflowCommand(click.Group):
 @click.group(cls=WorkflowCommand, invoke_without_command=True)
 @click.option("--deposit", is_flag=True, default=False)
 @click.option("--post", is_flag=True, default=False)
+@click.option('--path', default=pathlib.Path('./'), help='Working path', type=pathlib.Path)
 @click.pass_context
 def haggis(ctx: click.Context, *args, **kwargs) -> None:
     """

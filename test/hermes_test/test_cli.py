@@ -102,8 +102,36 @@ def test_haggis_with_post():
     assert not result.exception
 
 
+def test_haggis_with_path():
+    runner = CliRunner()
+    result = runner.invoke(cli.haggis, args=('--path', './'))
+
+    assert not result.exception
+
+
 def test_haggis_with_deposit_and_post():
     runner = CliRunner()
     result = runner.invoke(cli.haggis, args=('--deposit', '--post'))
+
+    assert not result.exception
+
+
+def test_haggis_with_deposit_and_path():
+    runner = CliRunner()
+    result = runner.invoke(cli.haggis, args=('--deposit', '--path', './'))
+
+    assert not result.exception
+
+
+def test_haggis_with_path_and_post():
+    runner = CliRunner()
+    result = runner.invoke(cli.haggis, args=('--path', './', '--post'))
+
+    assert not result.exception
+
+
+def test_haggis_with_deposit_and_post_and_path():
+    runner = CliRunner()
+    result = runner.invoke(cli.haggis, args=('--deposit', '--post', '--path', './'))
 
     assert not result.exception

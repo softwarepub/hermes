@@ -177,25 +177,31 @@ class HermesHarvestContext(HermesContext):
     def _update_key_from(self, _key: str, _value: t.Any, **kwargs):
         if isinstance(_value, dict):
             for key, value in _value.items():
-                self._update_key_from(f'{_key}.{key}', _value, **kwargs)
-            else:
-                self.update(_key, _value, **kwargs)
+                self._update_key_from(f'{_key}.{key}', value, **kwargs)
+
+        elif isinstance(_value, (list, tuple)):
+            for index, value in enumerate(_value):
+                self._update_key_from(f'{_key}[{index}]', value, **kwargs)
+
+        else:
+            self.update(_key, _value, **kwargs)
 
     def update_from(self, data: t.Dict[str, t.Any], **kwargs: t.Any):
         """
         Bulk-update multiple values.
 
-        If the value for a certain key is again a dictionary, the key will be expanded. I.e.
+        If the value for a certain key is again a collection, the key will be expanded:
 
         .. code:: python
 
-            ctx.update_from({'foo': 'bar', 'author': {'name': 'Monty Python', 'email': 'eggs@spam.xxx'}})
+            ctx.update_from({'arr': ['foo', 'bar'], 'author': {'name': 'Monty Python', 'email': 'eggs@spam.xxx'}})
 
-        will evetually result in the following calls:
+        will eventually result in the following calls:
 
         .. code:: python
 
-            ctx.update('foo', 'bar')
+            ctx.update('arr[0]', 'foo')
+            ctx.update('arr[1]', 'bar')
             ctx.update('author.name', 'Monty Python')
             ctx.update('author.email', 'eggs@spam.xxx')
 
