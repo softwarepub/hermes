@@ -17,7 +17,7 @@ from hermes.model.errors import HermesValidationError
 SHELL_ENCODING = 'utf-8'
 
 class AuthorData:
-    def __init__(self, line):
+    def __init__(self, line: t.List):
         self.name = line[0]
         self.email = set((line[1],))
         self.tFirst = line[2]
