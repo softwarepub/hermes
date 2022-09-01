@@ -16,18 +16,18 @@ from hermes.model.errors import HermesValidationError
 # TODO: can and should we get this somehow?
 SHELL_ENCODING = 'utf-8'
 
-class AuthorData:
-    def __init__(self, line: t.List):
-        self.name = line[0]
-        self.email = set((line[1],))
-        self.tFirst = line[2]
+class ConributorData:
+    def __init__(self, d: t.List):
+        self.name = d[0]
+        self.email = set((d[1],))
+        self.tFirst = d[2]
         self.tLast = self.tFirst
 
-    def update(self, line: t.List):
-        assert(self.name == line[0])
+    def update(self, d: t.List):
+        assert(self.name == d[0])
 
-        self.email.add(line[1])
-        t = line[2]
+        self.email.add(d[1])
+        t = d[2]
         if t < self.tFirst:
             self.tFirst = t
         elif t > self.tFirst:
@@ -58,27 +58,36 @@ def harvest_git(click_ctx: click.Context, ctx: HermesHarvestContext):
 
     # Get history of currently checked-out branch
     authors = {}
-    p = subprocess.run([gitExe, "log", "--pretty=%an_%ae_%ad", "--date=unix"], capture_output=True)
+    committers = {}
+    p = subprocess.run([gitExe, "log", "--pretty=%an_%ae_%at_%cn_%ce_%ct"], capture_output=True)
     if p.returncode:
         raise RuntimeError("`git log` command failed with code {}: '{}'!".format(p.returncode, p.stderr.decode(SHELL_ENCODING)))
 
     log = p.stdout.decode(SHELL_ENCODING).split('\n')
     for l in log:
         d = l.split('_')
-        if len(d) != 3:
+        if len(d) != 6:
             continue
         try:
             d[2] = int(d[2])
         except ValueError:
             continue
 
-        if d[0] in authors:
-            authors[d[0]].update(d)
-        else:
-            authors[d[0]] = AuthorData(d)
+        _updateContributor(authors, d[0:3])
+        _updateContributor(committers, d[3:7])
     
-    for a in authors.values():
-        ctx.update("author.since", a.tFirst, name=a.name, branch=gitBranch)
-        ctx.update("author.until", a.tLast, name=a.name, branch=gitBranch)
+    _ctxUpdateContributors(ctx, authors, "author", branch=gitBranch)
+    _ctxUpdateContributors(ctx, committers, "committer", branch=gitBranch)
+
+def _updateContributor(contributors: t.Dict, d: t.List):
+    if d[0] in contributors:
+        contributors[d[0]].update(d[0:3])
+    else:
+        contributors[d[0]] = ConributorData(d[0:3])
+
+def _ctxUpdateContributors(ctx: HermesHarvestContext, contributors: t.Dict, kind: str, **kwargs):
+    for a in contributors.values():
+        ctx.update(f"{kind}.since", a.tFirst, name=a.name, **kwargs)
+        ctx.update(f"{kind}.until", a.tLast, name=a.name, **kwargs)
         for e in a.email:
-            ctx.update("author.email", e, name=a.name, branch=gitBranch, email=e)
+            ctx.update(f"{kind}.email", e, name=a.name, email=e, **kwargs)
