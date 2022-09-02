@@ -35,7 +35,6 @@ def harvest_codemeta(click_ctx: click.Context, ctx: HermesHarvestContext):
         raise HermesValidationError(codemeta_file)
 
     codemeta = json.loads(codemeta_str)
-    print(codemeta)
     ctx.update_from(codemeta, local_path=str(codemeta_file))
 
 
