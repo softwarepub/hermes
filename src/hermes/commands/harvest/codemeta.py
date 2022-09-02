@@ -40,7 +40,7 @@ def harvest_codemeta(click_ctx: click.Context, ctx: HermesHarvestContext):
 
 def _validate(codemeta_file: pathlib.Path) -> bool:
     # TODO: Implement
-    return True
+    return codemeta_file.exists()
 
 
 def _get_single_codemeta(path: pathlib.Path) -> t.Optional[pathlib.Path]:
