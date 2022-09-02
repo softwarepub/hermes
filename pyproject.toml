@@ -25,6 +25,7 @@ haggis = "hermes.cli:haggis"
 
 [tool.poetry.plugins."hermes.harvest"]
 cff = "hermes.commands.harvest.cff:harvest_cff"
+git = "hermes.commands.harvest.git:harvest_git"
 
 [tool.poetry.plugins."hermes.preprocess"]
 _copy = "hermes.commands.process:copy_from_harvest"
