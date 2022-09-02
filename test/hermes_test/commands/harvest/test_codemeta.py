@@ -1,7 +1,5 @@
 import pathlib
-from collections import deque
 import json
-from ruamel.yaml import YAML
 
 import pytest
 
