@@ -1,5 +1,6 @@
 import collections
 import glob
+import logging
 import os
 import json
 import pathlib
@@ -12,11 +13,14 @@ import jsonschema
 import click
 from cffconvert import Citation
 
-from hermes.model.context import HermesHarvestContext
+from hermes.model.context import HermesHarvestContext, ContextPath
 from hermes.model.errors import HermesValidationError
 
 # TODO: should this be configurable via a CLI option?
 _CFF_VERSION = '1.2.0'
+
+
+_log = logging.getLogger('cli.harvest.cff')
 
 
 def harvest_cff(click_ctx: click.Context, ctx: HermesHarvestContext):
@@ -66,34 +70,51 @@ def _convert_cff_to_codemeta(cff_data: str) -> t.Any:
 def _validate(cff_file: pathlib.Path, cff_dict: t.Dict) -> bool:
     cff_schema_url = f'https://citation-file-format.github.io/{_CFF_VERSION}/schema.json'
 
-    # TODO: we should ship the schema we reference to by default to avoid unnecessary network traffic.
-    #       If the requested version is not already downloaded, go ahead and download it.
-    with urllib.request.urlopen(cff_schema_url) as cff_schema_response:
-        schema_data = json.loads(cff_schema_response.read())
+    with open('cff-schema@1.2.0.json', 'r') as cff_schema_file:
+        schema_data = json.load(cff_schema_file)
+
+    if not schema_data:
+        # TODO: we should ship the schema we reference to by default to avoid unnecessary network traffic.
+        #       If the requested version is not already downloaded, go ahead and download it.
+        with urllib.request.urlopen(cff_schema_url) as cff_schema_response:
+            schema_data = json.loads(cff_schema_response.read())
+
+    audit_log = logging.getLogger('audit.cff')
 
     validator = jsonschema.Draft7Validator(schema_data)
     errors = sorted(validator.iter_errors(cff_dict), key=lambda e: e.path)
     if len(errors) > 0:
-        click.echo(f'{cff_file} is not valid according to {cff_schema_url}!')
+        audit_log.warning('!! %s is not valid according to %s', cff_file, cff_schema_url)
+
         for error in errors:
-            path_str = _build_nodepath_str(error.absolute_path)
-            click.echo(f'    - Invalid input for path {path_str}.\n'
-                       f'      Value: {error.instance} -> {error.message}')
-        click.echo(f'    See the Citation File Format schema guide for further details: '
-                   f'https://github.com/citation-file-format/citation-file-format/blob/{_CFF_VERSION}/schema'
-                   f'-guide.md.')
+            path = ContextPath(error.absolute_path.popleft())
+            for next in error.absolute_path:
+                path = path[next]
+
+            audit_log.info('. Invalid input for %s.', str(path))
+            audit_log.info('  %s', error.message)
+            audit_log.debug('  Value: %s', error.instance)
+
+        audit_log.info('')
+        audit_log.info('# See the Citation File Format schema guide for further details:')
+        audit_log.info('# https://github.com/citation-file-format/citation-file-format/blob/{_CFF_VERSION}/schema-guide.md.')
         return False
+
     elif len(errors) == 0:
-        click.echo(f'Found valid Citation File Format file at: {cff_file}')
+        audit_log.info('- Found valid Citation File Format file at: %s', cff_file)
         return True
 
 
 def _get_single_cff(path: pathlib.Path) -> t.Optional[pathlib.Path]:
     # Find CFF files in directories and subdirectories
+    cff_file = path / 'CITATION.cff'
+    if cff_file.exists():
+        return cff_file
+
     # TODO: Do we really want to search recursive? CFF convention is the file should be at the topmost dir,
     #       which is given via the --path arg. Maybe add another option to enable pointing to a single file?
     #       (So this stays "convention over configuration")
-    files = glob.glob(str(path / '**' / 'CITATION.cff'), recursive=True)
+    files = path.rglob('**/CITATION.cff')
     if len(files) == 1:
         return pathlib.Path(files[0])
     # TODO: Shouldn't we log/echo the found CFF files so a user can debug/cleanup?

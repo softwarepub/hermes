@@ -1,3 +1,6 @@
+import datetime
+import pathlib
+import re
 import traceback
 import json
 import logging
@@ -6,6 +9,7 @@ import typing as t
 from pathlib import Path
 from importlib.metadata import EntryPoint
 
+from hermes.model.path import ContextPath
 from hermes.model.errors import HermesValidationError
 
 
@@ -57,7 +61,7 @@ class HermesContext:
         cache_dir = self.hermes_dir.joinpath(*subdir)
         if create:
             cache_dir.mkdir(parents=True, exist_ok=True)
-        data_file = cache_dir / name
+        data_file = cache_dir / (name + '.json')
         self._caches[path] = data_file
 
         return data_file
@@ -128,7 +132,7 @@ class HermesHarvestContext(HermesContext):
 
         data_file = self.get_cache('harvest', self._ep.name, create=True)
         self._log.debug("Writing cache to %s...", data_file)
-        json.dump(self._data, data_file.open('w'))
+        json.dump(self._data, data_file.open('w'), indent='  ')
 
     def __enter__(self):
         self.load_cache()
@@ -140,6 +144,17 @@ class HermesHarvestContext(HermesContext):
             exc = traceback.TracebackException(exc_type, exc_val, exc_tb)
             self._base.error(self._ep, exc)
             return True
+
+    def get_data(self, data=None, tags=None):
+        data = data or {}
+        for key, ((value, tag), *tail) in self._data.items():
+            key = ContextPath.parse(key)
+            if tags is not None:
+                tags[str(key)] = tag
+
+            key.update(data, value)
+
+        return data
 
     def update(self, _key: str, _value: t.Any, **kwargs: t.Any):
         """
@@ -163,28 +178,44 @@ class HermesHarvestContext(HermesContext):
         See :py:meth:`HermesContext.update` for more information.
         """
 
+        base_key = ContextPath.parse(_key)
+
+        ts = kwargs.pop('ts', datetime.datetime.now().isoformat())
+        ep = kwargs.pop('ep', self._ep.name)
+
         if _key not in self._data:
             self._data[_key] = []
 
         for entry in self._data[_key]:
-            if entry[1] == kwargs:
-                self._log.debug("Update %s: %s -> %s (%s)", _key, entry[0], _value, entry[1])
+            value, tag = entry
+            tag_ts = tag.pop('ts')
+
+            if tag == kwargs:
+                self._log.debug("Update %s: %s -> %s (%s)", _key, str(value), _value, str(tag))
                 entry[0] = _value
+                tag['ts'] = ts
+                tag['ep'] = ep
                 break
+
+            tag['ts'] = tag_ts
+            tag['ep'] = ep
+
         else:
+            kwargs['ts'] = ts
+            kwargs['ep'] = ep
             self._data[_key].append([_value, kwargs])
 
-    def _update_key_from(self, _key: str, _value: t.Any, **kwargs):
+    def _update_key_from(self, _key: ContextPath, _value: t.Any, **kwargs):
         if isinstance(_value, dict):
             for key, value in _value.items():
-                self._update_key_from(f'{_key}.{key}', value, **kwargs)
+                self._update_key_from(_key[key], value, **kwargs)
 
         elif isinstance(_value, (list, tuple)):
             for index, value in enumerate(_value):
-                self._update_key_from(f'{_key}[{index}]', value, **kwargs)
+                self._update_key_from(_key[index], value, **kwargs)
 
         else:
-            self.update(_key, _value, **kwargs)
+            self.update(str(_key), _value, **kwargs)
 
     def update_from(self, data: t.Dict[str, t.Any], **kwargs: t.Any):
         """
@@ -210,7 +241,7 @@ class HermesHarvestContext(HermesContext):
         """
 
         for key, value in data.items():
-            self._update_key_from(key, value, **kwargs)
+            self._update_key_from(ContextPath(key), value, **kwargs)
 
     def error(self, ep: EntryPoint, error: Exception):
         """
@@ -219,3 +250,124 @@ class HermesHarvestContext(HermesContext):
 
         ep = ep or self._ep
         self._base.error(ep, error)
+
+    def finish(self):
+        """
+        Calling this method will lead to further processors not handling the context anymore.
+        """
+        self._data.clear()
+
+
+class CodeMetaContext(HermesContext):
+    _PRIMARY_ATTR = {
+        'author': ('@id', 'email', 'name'),
+    }
+
+    def __init__(self, project_dir: pathlib.Path | None = None):
+        super().__init__(project_dir)
+        self.tags = {}
+
+    def merge_from(self, other: HermesHarvestContext):
+        other.get_data(self._data, tags=self.tags)
+
+    def update(self, _key: ContextPath, _value: t.Any, tags: t.Dict[str, t.Dict] | None = None):
+        if _key.item == '*':
+            _item_path = self.find_key(_key.parent, _value)
+            if _item_path:
+                target, context = _item_path.get_from(self._data, None)
+                _item_path.merge_from(_value)
+                _key.item = _item_path.item
+            else:
+                target, context = _key.parent.get_from(self._data, None)
+                _key.item = len(target)
+
+        if tags:
+            values = {}
+
+            for subkey in tags.keys():
+                tag_key = ContextPath.parse(str(_key) + '.' + subkey)
+                try:
+                    tag_value, context = tag_key.get_from(self._data, None)
+                    values[subkey] = tag_value
+                except KeyError:
+                    pass
+
+        _key.update_in(self._data, _value)
+
+        if tags:
+            for subkey, tag in tags.items():
+                tag_key = ContextPath.parse(f'{str(_key)}.{subkey}')
+                tag_value, context = tag_key.get_from(self._data, context)
+                if values.get(subkey) != tag_value:
+                    self.tags[str(tag_key)] = tag
+
+    def annotate(self):
+
+        def _annotate_list(path, data, indent):
+            tag = self.tags.get(str(path))
+            if tag:
+                _tag = {k: v for k, v in tag.items() if k not in ('ep', 'ts')}
+                print(indent + f'# {str(path)} harvested by {tag["ep"]} at {tag["ts"]} from {_tag}')
+
+            print(indent + '[')
+            for i, item in enumerate(data):
+                item_path = path[i]
+
+                match item:
+                    case list() as list_data:
+                        _annotate_list(item_path, list_data, indent + '  ')
+
+                    case dict() as dict_data:
+                        _annotate_dict(item_path, dict_data, indent + '  ')
+
+                    case _ as data:
+                        tag = self.tags.get(str(item_path))
+                        if tag:
+                            _tag = {k: v for k, v in tag.items() if k not in ('ep', 'ts')}
+                            print(indent + f'# {str(item_path)} harvested by {tag["ep"]} at {tag["ts"]} from {_tag}')
+                        print(indent + '  ' + f'{str(data)}')
+
+            print(indent + ']')
+
+        def _annotate_dict(path, data, indent):
+            tag = self.tags.get(str(path))
+            if tag:
+                _tag = {k: v for k, v in tag.items() if k not in ('ep', 'ts')}
+                print(indent + f'# {str(path)} harvested by {tag["ep"]} at {tag["ts"]} from {_tag}')
+
+            print(indent + '{')
+            for k, v in data.items():
+                if path is None:
+                    item_path = ContextPath(k)
+                else:
+                    item_path = path[k]
+
+                match v:
+                    case list():
+                        print(indent + '  ' + str(k) + ':')
+                        _annotate_list(item_path, v, indent + '    ')
+
+                    case dict():
+                        print(indent + '  ' + str(k) + ':')
+                        _annotate_dict(item_path, v, indent + '    ')
+
+                    case _:
+                        tag = self.tags.get(str(item_path))
+                        if tag:
+                            _tag = {k: v for k, v in tag.items() if k not in ('ep', 'ts')}
+                            print(indent + f'# {str(item_path)} havested by {tag["ep"]} at {tag["ts"]} from {_tag}')
+
+                        print(indent + '  ' + str(k) + ': ' + str(v))
+
+            print(indent + '}')
+
+        _annotate_dict(None, self._data, '')
+
+    def find_key(self, item, other):
+        data, context = item.get_from(self._data, None)
+
+        for i, node in enumerate(data):
+            match = [(k, node[k]) for k in self._PRIMARY_ATTR.get(str(item), ('@id',)) if k in node]
+            if any(other.get(k, None) == v for k, v in match):
+                return item[i]
+        return None

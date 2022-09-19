@@ -4,9 +4,6 @@ version = "0.1.0"
 description = "Workflow to publish research software with rich metadata"
 authors = ["Stephan Druskat <stephan.druskat@dlr.de>", "Michael Meinel <michael.meinel@dlr.de>"]
 
-[tool.poetry.extras]
-cff = ['ruamel.yaml', 'cffconvert']
-
 [tool.poetry.dependencies]
 python = "^3.10"
 click = "^8.1"
@@ -24,11 +21,68 @@ myst-parser = "^0.17.2"
 haggis = "hermes.cli:haggis"
 
 [tool.poetry.plugins."hermes.harvest"]
-cff = "hermes.commands.harvest.cff:harvest_cff"
-git = "hermes.commands.harvest.git:harvest_git"
+000_cff = "hermes.commands.harvest.cff:harvest_cff"
+010_git = "hermes.commands.harvest.git:harvest_git"
 
 [tool.poetry.plugins."hermes.preprocess"]
-_copy = "hermes.commands.process:copy_from_harvest"
+000_cff = "hermes.commands.process.cff:add_name"
+010_git = "hermes.commands.process.git:flag_authors"
+
+[tool.hermes.harvest]
+000_git.enabled = false
+
+[tool.hermes.logging.formatters.plain]
+format = "%(message)s"
+
+[tool.hermes.logging.formatters.logfile]
+format = "%(created)16f:%(name)20s:%(levelname)10s | %(message)s"
+
+[tool.hermes.logging.formatters.auditlog]
+format = "%(asctime)s %(name)-20s  %(message)s"
+
+[tool.hermes.logging]
+version = 1
+
+[tool.hermes.logging.handlers.terminal]
+class = "logging.StreamHandler"
+formatter = "plain"
+level = "INFO"
+stream = "ext://sys.stdout"
+
+[tool.hermes.logging.handlers.logfile]
+class = "logging.FileHandler"
+formatter = "logfile"
+level = "DEBUG"
+filename = "hermes.log"
+
+[tool.hermes.logging.handlers.auditfile]
+class = "logging.FileHandler"
+formatter = "plain"
+level = "DEBUG"
+filename = "hermes-audit.md"
+
+[tool.hermes.logging.handlers.hintfile]
+class = "logging.FileHandler"
+formatter = "plain"
+level = "DEBUG"
+filename = "quickfix.sh"
+
+[tool.hermes.logging.loggers.cli]
+level = "DEBUG"
+handlers = ["terminal"]
+
+[tool.hermes.logging.loggers.hermes]
+level = "WARNING"
+handlers = ["terminal", "logfile"]
+
+[tool.hermes.logging.loggers.audit]
+level = "DEBUG"
+handlers = ["terminal", "auditfile"]
+
+[tool.hermes.logging.loggers.audit.hint]
+level = "DEBUG"
+propagate = false
+handlers = ["terminal", "hintfile"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

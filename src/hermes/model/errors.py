@@ -13,3 +13,12 @@ class HermesValidationError(Exception):
     """
 
     pass
+
+
+class MergeError(Exception):
+    def __init__(self, path, old_Value, new_value, **kwargs):
+        self.path = path
+        self.old_value = old_Value
+        self.new_value = new_value
+        self.tag = kwargs
+        super().__init__(f'Error merging {self.path} (ambiguous values "{self.old_value}" and "{self.new_value}")')

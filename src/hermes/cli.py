@@ -3,10 +3,37 @@ This module provides the main entry point for the HERMES command line applicatio
 """
 import typing as t
 import pathlib
+from importlib import metadata
 
 import click
 
+from hermes import config
 from hermes.commands import workflow
+from hermes.config import configure, init_logging
+
+
+def log_header(header, summary=None):
+    _log = config.getLogger('cli')
+
+    dist = metadata.distribution('hermes')
+    meta = dist.metadata
+
+    if header is None:
+        title = f"{dist.name} workflow ({dist.version})"
+
+        _log.info(title)
+        _log.info("=" * len(title))
+        _log.info('')
+
+        if 'Summary' in meta:
+            _log.info('%s', meta['Summary'])
+            _log.info('')
+
+    else:
+        _log.info("%s", header)
+        if summary:
+            _log.info("%s", summary)
+            _log.info('')
 
 
 class WorkflowCommand(click.Group):
@@ -48,6 +75,10 @@ class WorkflowCommand(click.Group):
 
         :param ctx: Context for the command.
         """
+
+        configure()
+        init_logging()
+        log_header(None)
 
         if ctx.protected_args:
             return super().invoke(ctx)
