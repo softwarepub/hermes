@@ -91,7 +91,7 @@ def _validate(cff_file: pathlib.Path, cff_dict: t.Dict) -> bool:
         audit_log.warning('!!! warning "%s is not valid according to <%s>"', cff_file, cff_schema_url)
 
         for error in errors:
-            path = ContextPath.make(error.absolute_path)
+            path = ContextPath.make(error.absolute_path or ['root'])
             audit_log.info('    Invalid input for `%s`.', str(path))
             audit_log.info('    !!! message "%s"', error.message)
             audit_log.debug('    !!! value "%s"', error.instance)
@@ -115,7 +115,7 @@ def _get_single_cff(path: pathlib.Path) -> t.Optional[pathlib.Path]:
     # TODO: Do we really want to search recursive? CFF convention is the file should be at the topmost dir,
     #       which is given via the --path arg. Maybe add another option to enable pointing to a single file?
     #       (So this stays "convention over configuration")
-    files = path.rglob('**/CITATION.cff')
+    files = list(path.rglob('**/CITATION.cff'))
     if len(files) == 1:
         return pathlib.Path(files[0])
     # TODO: Shouldn't we log/echo the found CFF files so a user can debug/cleanup?

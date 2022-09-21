@@ -1,10 +1,10 @@
+import logging
 import typing as t
 
 import pyparsing as pp
 
-from hermes import config
 
-_log = config.getLogger('hermes.model.path')
+_log = logging.getLogger('hermes.model.path')
 
 
 class ContextPathGrammar:

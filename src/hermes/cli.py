@@ -83,7 +83,7 @@ class WorkflowCommand(click.Group):
 
         audit_log = logging.getLogger('audit')
         audit_log.info("# Running Hermes")
-        audit_log.info("Running Hermes command line in: %s", ctx.params['path'].absolute())
+        audit_log.info("Running Hermes command line in: %s", ctx.params.get('path', pathlib.Path.cwd()).absolute())
         audit_log.debug("")
         audit_log.debug("Invoked `%s` with", ctx.invoked_subcommand or self.name)
         audit_log.debug("")

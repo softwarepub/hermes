@@ -193,6 +193,7 @@ class HermesHarvestContext(HermesContext):
         for entry in self._data[_key]:
             value, tag = entry
             tag_ts = tag.pop('ts')
+            tag_ep = tag.pop('ep')
 
             if tag == kwargs:
                 self._log.debug("Update %s: %s -> %s (%s)", _key, str(value), _value, str(tag))
@@ -202,7 +203,7 @@ class HermesHarvestContext(HermesContext):
                 break
 
             tag['ts'] = tag_ts
-            tag['ep'] = ep
+            tag['ep'] = tag_ep
 
         else:
             kwargs['ts'] = ts
