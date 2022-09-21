@@ -1,29 +1,22 @@
 from hermes.model.context import CodeMetaContext, HermesHarvestContext, ContextPath
 
 
-def flag_authors(ctx: CodeMetaContext, harverst_ctx: HermesHarvestContext):
-    data = harverst_ctx.get_data(tags=(tags := {}))
+_AUTHOR_KEYS = ('@id', 'email', 'name')
 
-    contributors = []
+
+def flag_authors(ctx: CodeMetaContext, harverst_ctx: HermesHarvestContext):
+    tags = {}
+    data = harverst_ctx.get_data(tags=tags)
     author_path = ContextPath('author')
 
-    for i, contributor in enumerate(data.get('author', [])):
-        author_key = ctx.find_key(author_path, contributor)
-        contributor_key = author_path[i]
+    for i, contributor in enumerate(author_path.get_from(data)):
+        query = {k: contributor[k] for k in _AUTHOR_KEYS if k in contributor}
+        author_key, target, path = author_path['*'].resolve(ctx._data, query=query)
 
-        contributor_tags = {}
-        for k, t in tags.items():
-            if ContextPath.parse(k) in contributor_key:
-                subkey = k.lstrip(str(contributor_key) + '.')
-                contributor_tags[subkey] = t
-
-        if not author_key:
+        if author_key._item == '*':
             contributor['projectRole'] = 'Others'
-            contributors.append((contributor, contributor_tags))
-        else:
-            ctx.update(author_key, contributor, tags=contributor_tags)
 
+        ctx.update(author_key, contributor, tags=tags)
+
+    ctx.tags.update(tags)
     harverst_ctx.finish()
-
-    for author, author_tags in contributors:
-        ctx.update(author_path['*'], author, tags=author_tags)

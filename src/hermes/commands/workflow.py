@@ -8,16 +8,6 @@ from hermes import cli
 
 from hermes.model.context import HermesContext, HermesHarvestContext, CodeMetaContext
 from hermes.model.errors import MergeError
-from hermes.model.path import MergeRunner
-
-from hermes.commands.process.merge import CollectionMerge, ObjectMerge
-
-
-MergeRunner.register('person', ObjectMerge(['@id', 'email', 'name']), type='Person')
-MergeRunner.register('list', CollectionMerge(), type='list')
-MergeRunner.register('map', ObjectMerge(), type='map')
-
-
 
 
 @click.group(invoke_without_command=True)
