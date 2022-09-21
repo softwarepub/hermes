@@ -8,26 +8,77 @@ _log = config.getLogger('hermes.model.path')
 
 
 class ContextPathGrammar:
+    """
+    The pyparsing grammar for ContextGrammar paths.
+    """
+
     key = pp.Word('@' + pp.alphas)
     index = pp.Word(pp.nums).set_parse_action(lambda tok: [int(tok[0])]) | pp.Char('*')
     field = key + (pp.Suppress('[') + index + pp.Suppress(']'))[...]
     path = field + (pp.Suppress('.') + field)[...]
 
     @classmethod
-    def parse(cls, text: str):
+    def parse(cls, text: str) -> pp.ParseResults:
+        """
+        Parse a ContextPath string representation into its individual tokens.
+
+        :param text: The path to parse.
+        :return: The pyparsing.ParseResult.
+        """
         return cls.path.parse_string(text)
 
 
 class ContextPath:
+    """
+    This class is used to access the different contexts.
+
+    On the one hand, the class allows you to define and manage pathes.
+    You can simply build them up like follows:
+
+    >>> path = ContextPath('spam')['eggs'][1]['ham']
+
+    will result in a `path` like `spam.eggs[1].ham`.
+
+    hint ::
+        The paths are idenpendent from any context.
+        You can create and even re-use them independently for different contexts.
+
+        To construct wildcard paths, you can use the `'*'` as accessor.
+
+    If you need a shortcut for building paths from a list of accessors, you can use :py:meth:`ContextPath.make`.
+    To parse the string representation, use :py:meth:`ContextPath.parse`.
+    """
+
     merge_strategies = None
 
-    def __init__(self, item: str | int, parent: t.Optional['ContextPath'] = None):
-        self._item = item
-        self._parent = parent
+    def __init__(self, item: str | int | t.List[str | int], parent: t.Optional['ContextPath'] = None):
+        """
+        Initialize a new path element.
+
+        The path stores a reference to it's parent.
+        This means that
+
+        >>> path ContextPath('foo', parent=ContextPath('bar'))
+
+        will result in the path `bar.foo`.
+
+        :param item: The accessor to the current path item.
+        :param parent: The path of the parent item.
+        """
+        if isinstance(item, (list, tuple)) and item:
+            *head, self._item = item
+            if head:
+                self._parent = ContextPath(head, parent)
+            else:
+                self._parent = parent
+        else:
+            self._item = item
+            self._parent = parent
         self._type = None
 
     @classmethod
     def init_merge_strategies(cls):
+        # TODO refactor
         if cls.merge_strategies is None:
             from hermes.model.merge import MergeStrategies, default_merge_strategies
 
@@ -37,22 +88,35 @@ class ContextPath:
 
     @property
     def parent(self) -> t.Optional['ContextPath']:
+        """
+        Accessor to the parent node.
+        """
         return self._parent
 
     @property
     def path(self) -> t.List['ContextPath']:
+        """
+        Get the whole path from the root as list of items.
+        """
         if self._parent is None:
             return [self]
         else:
             return self._parent.path + [self]
 
     def __getitem__(self, item: str | int) -> 'ContextPath':
+        """
+        Create a sub-path for the given `item`.
+        """
         match item:
             case str(): self._type = dict
             case int(): self._type = list
         return ContextPath(item, self)
 
     def __str__(self) -> str:
+        """
+        Get the string representation of the path.
+        The result is parsable by :py:meth:`ContextPath.parse`
+        """
         item = str(self._item)
         if self._parent is not None:
             parent = str(self._parent)
@@ -66,6 +130,10 @@ class ContextPath:
         return f'ContextPath.parse("{str(self)}")'
 
     def __eq__(self, other: 'ContextPath') -> bool:
+        """
+        This match includes semantics for wildcards.
+        Items that access `'*'` will automatically match everything (except for None).
+        """
         return (
             other is not None
             and (self._item == other._item or self._item == '*' or other._item == '*')
@@ -73,13 +141,21 @@ class ContextPath:
         )
 
     def __contains__(self, other: 'ContextPath') -> bool:
+        """
+        Check whether `other` is a true child of this path.
+        """
         while other is not None:
             if other == self:
                 return True
             other = other.parent
         return False
 
-    def new(self):
+    def new(self) -> t.Any:
+        """
+        Create a new instance of the container this node represents.
+
+        For this to work, the node need to have at least on child node derive (e.g., by using `self["child"]').
+        """
         if self._type is not None:
             return self._type()
         raise TypeError()
@@ -112,7 +188,7 @@ class ContextPath:
         while _path is not None:
             try:
                 item = self._get_item(target, _path[_item])
-                _log.debug("Using type %s from §%s.", item, _path)
+                _log.debug("Using type %s from %s.", item, _path)
                 return item
 
             except (KeyError, IndexError, TypeError) as e:
@@ -184,18 +260,37 @@ class ContextPath:
 
         return value
 
-    def resolve(self, _target: list | dict, create: bool = False, query: t.Any = None) -> ('ContextPath', list | dict, 'ContextPath'):
+    def resolve(self, target: list | dict, create: bool = False, query: t.Any = None) -> ('ContextPath', list | dict, 'ContextPath'):
+        """
+        Resolve a given path releative to a given target.
+
+        The method will incrementally try to resolve the entries in the `_target.path`.
+        It stops when the requested item was found or when the resolution could not be completed.
+        If you set `create` to true, the method tries to create the direct target that contains the selected node.
+
+        :param target: Container to resolve node in.
+        :param create: Flags whether missing containers should be created.
+        :param query:
+        :return: The method returns a tuple with the following values:
+            - The path to the last item that could be resolved (e.g., the container of the requested element).
+            - The container for the path from the first return value.
+            - The rest of the path that could not be resolved.
+        """
         head, *tail = self.path
-        target = _target
-        while head._type and tail:
+        next_target = target
+        while tail:
             try:
-                target = self._get_item(target, head)
+                next_target = self._get_item(next_target, head)
             except (IndexError, KeyError, TypeError):
                 if create and self.parent is not None:
-                    new_head = head.new()
-                    setter = self._find_setter(_target, head, new_head)
-                    setter(target, head, new_head)
-                    target = new_head
+                    try:
+                        new_target = head.new()
+                    except TypeError:
+                        pass
+                    else:
+                        setter = self._find_setter(target, head, new_target)
+                        setter(next_target, head, new_target)
+                        next_target = new_target
                 else:
                     break
             head, *tail = tail
@@ -210,12 +305,9 @@ class ContextPath:
                     head._item = len(target)
 
         if not hasattr(head, 'set_item'):
-            head.set_item = self._find_setter(_target, head)
-        tail_path = ContextPath(head._item)
-        for t in tail:
-            tail_path = tail_path[t._item]
-
-        return head, target, tail_path
+            head.set_item = self._find_setter(target, head)
+        tail = ContextPath.make([head._item] + tail)
+        return head, next_target, tail
 
     def get_from(self, target: dict | list) -> t.Any:
         prefix, target, path = self.resolve(target)
@@ -228,9 +320,14 @@ class ContextPath:
             tags[str(self)] = kwargs
 
     @classmethod
+    def make(cls, path: t.Iterable[str | int]) -> 'ContextPath':
+        head, *tail = path
+        path = ContextPath(head)
+        for next in tail:
+            path = path[next]
+        return path
+
+    @classmethod
     def parse(cls, path: str) -> 'ContextPath':
-        head, *tail = ContextPathGrammar.parse(path)
-        path = cls(head)
-        for item in tail:
-            path = path[item]
+        path = cls.make(ContextPathGrammar.parse(path))
         return path

@@ -1,3 +1,5 @@
+import logging
+
 from hermes.model.context import CodeMetaContext, HermesHarvestContext, ContextPath
 
 
@@ -5,9 +7,23 @@ _AUTHOR_KEYS = ('@id', 'email', 'name')
 
 
 def flag_authors(ctx: CodeMetaContext, harverst_ctx: HermesHarvestContext):
-    tags = {}
-    data = harverst_ctx.get_data(tags=tags)
+    """
+    Identify all authors that are not yet in the target context and flag them with role `Other`.
+
+    :param ctx: The target context containting harmonized data.
+    :param harverst_ctx: Data as it was harvested.
+    """
+    audit_log = logging.getLogger('audit.git')
+    audit_log.info('')
+    audit_log.info('### Flag new authors')
+
     author_path = ContextPath('author')
+    tags = {}
+    try:
+        data = harverst_ctx.get_data(tags=tags)
+    except ValueError:
+        audit_log.info("- Inconsistent data, skipping.")
+        return
 
     for i, contributor in enumerate(author_path.get_from(data)):
         query = {k: contributor[k] for k in _AUTHOR_KEYS if k in contributor}
@@ -15,6 +31,7 @@ def flag_authors(ctx: CodeMetaContext, harverst_ctx: HermesHarvestContext):
 
         if author_key._item == '*':
             contributor['projectRole'] = 'Others'
+            audit_log.debug('- %s', contributor['name'])
 
         ctx.update(author_key, contributor, tags=tags)
 

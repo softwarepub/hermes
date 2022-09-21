@@ -1,6 +1,5 @@
 import datetime
 import pathlib
-import re
 import traceback
 import json
 import logging
@@ -17,6 +16,7 @@ _log = logging.getLogger(__name__)
 
 
 ContextPath.init_merge_strategies()
+
 
 class HermesContext:
     """
@@ -263,6 +263,18 @@ class HermesHarvestContext(HermesContext):
         return value, tag
 
     def get_data(self, data: t.Optional[dict] = None, path: t.Optional['ContextPath'] = None, tags: t.Optional[dict] = None) -> dict:
+        """
+        Retrieve the data from a given path.
+
+        This method can be used to extract data and whole sub-trees from the context.
+        If you want a complete copy of the data, you can also call this method without giving a path.
+
+        :param data: Optional a target dictionary where the data is stored. If not given, a new one is created.
+        :param path: The path to extract data from.
+        :param tags: An optional dictionary to collect the tags that belog to the extracted data.
+                     The full path will be used as key for this dictionary.
+        :return: The extracted data (i.e., the `data` parameter if it was given).
+        """
         if data is None:
             data = {}
         for key, values in self._data.items():
@@ -313,68 +325,6 @@ class CodeMetaContext(HermesContext):
                     tags[tag_key] = v
         else:
             _key.update(self._data, _value, tags)
-
-    def annotate(self):
-
-        def _annotate_list(path, data, indent):
-            tag = self.tags.get(str(path))
-            if tag:
-                _tag = {k: v for k, v in tag.items() if k not in ('ep', 'ts')}
-                print(indent + f'# {str(path)} harvested by {tag["ep"]} at {tag["ts"]} from {_tag}')
-
-            print(indent + '[')
-            for i, item in enumerate(data):
-                item_path = path[i]
-
-                match item:
-                    case list() as list_data:
-                        _annotate_list(item_path, list_data, indent + '  ')
-
-                    case dict() as dict_data:
-                        _annotate_dict(item_path, dict_data, indent + '  ')
-
-                    case _ as data:
-                        tag = self.tags.get(str(item_path))
-                        if tag:
-                            _tag = {k: v for k, v in tag.items() if k not in ('ep', 'ts')}
-                            print(indent + f'# {str(item_path)} harvested by {tag["ep"]} at {tag["ts"]} from {_tag}')
-                        print(indent + '  ' + f'{str(data)}')
-
-            print(indent + ']')
-
-        def _annotate_dict(path, data, indent):
-            tag = self.tags.get(str(path))
-            if tag:
-                _tag = {k: v for k, v in tag.items() if k not in ('ep', 'ts')}
-                print(indent + f'# {str(path)} harvested by {tag["ep"]} at {tag["ts"]} from {_tag}')
-
-            print(indent + '{')
-            for k, v in data.items():
-                if path is None:
-                    item_path = ContextPath(k)
-                else:
-                    item_path = path[k]
-
-                match v:
-                    case list():
-                        print(indent + '  ' + str(k) + ':')
-                        _annotate_list(item_path, v, indent + '    ')
-
-                    case dict():
-                        print(indent + '  ' + str(k) + ':')
-                        _annotate_dict(item_path, v, indent + '    ')
-
-                    case _:
-                        tag = self.tags.get(str(item_path))
-                        if tag:
-                            _tag = {k: v for k, v in tag.items() if k not in ('ep', 'ts')}
-                            print(indent + f'# {str(item_path)} havested by {tag["ep"]} at {tag["ts"]} from {_tag}')
-
-                        print(indent + '  ' + str(k) + ': ' + str(v))
-
-            print(indent + '}')
-
-        _annotate_dict(None, self._data, '')
 
     def find_key(self, item, other):
         data = item.get_from(self._data)

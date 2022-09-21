@@ -18,13 +18,27 @@ _log = logging.getLogger('harvest.git')
 SHELL_ENCODING = 'utf-8'
 
 _GIT_SEP = '|'
-#_GIT_FORMAT = ['%an', '%ae', '%aI']
 _GIT_FORMAT = ['%aN', '%aE', '%aI']
-#_GIT_ARGS = ['--reverse']
 _GIT_ARGS = []
 
+
+# TODO The following code contains a lot of duplicate implementation that can be found in hermes.model
+#      (In fact, it was kind of the prototype for lots of stuff there.)
+#      Clean up and refactor to use hermes.model instead
+
 class ContributorData:
+    """
+    Stores contributor data information from Git history.
+    """
+
     def __init__(self, name: str | t.List[str], email: str | t.List[str], ts: str | t.List[str]):
+        """
+        Initialize a new contributor dataset.
+
+        :param name: Name as returned by the `git log` command (i.e., with `.mailmap` applied).
+        :param email: Email address as returned by the `git log` command (also with `.mailmap` applied).
+        :param ts: Timestamp when the respective commit was done.
+        """
         self.name = []
         self.email = []
         self.ts = []
@@ -45,16 +59,35 @@ class ContributorData:
                 target.append(value)
 
     def update(self, name=None, email=None, ts=None):
+        """
+        Update the current contributor with the given data.
+
+        :param name: New name to assign (addtionally).
+        :param email: New email to assign (additionally).
+        :param ts: New timestamp to adapt time range.
+        """
         self._update_attr(self.name, name)
         self._update_attr(self.email, email)
         self._update_attr(self.ts, ts, unique=False)
 
     def merge(self, other: 'ContributorData'):
+        """
+        Merge another :ref:`ContributorData` instance into this one.
+
+        All attributes will be merged yet kept unique if required.
+
+        :param other: The other instance that should contribute to this.
+        """
         self.name += [n for n in other.name if n not in self.name]
         self.email += [e for e in other.email if e not in self.email]
         self.ts += other.ts
 
-    def to_codemeta(self):
+    def to_codemeta(self) -> dict:
+        """
+        Return the current dataset as CodeMeta.
+
+        :return: The CodeMeta representation of this dataset.
+        """
         res = {
             '@type': ['Person', 'hermes:contributor'],
         }
@@ -77,7 +110,13 @@ class ContributorData:
         return res
 
     @classmethod
-    def from_codemeta(cls, data):
+    def from_codemeta(cls, data) -> 'ContributorData':
+        """
+        Initialize a new instance from CodeMeta representation.
+
+        :param data: The CodeMeta dataset to initialize from.
+        :return: The newly created instance.
+        """
         name = [data['name']] + data.get('alternateName', [])
         email = [data['email']] + [contact['email'] for contact in data.get('contactPoint', [])]
         ts = [data['startTime'], data['endTime']]
@@ -85,14 +124,32 @@ class ContributorData:
 
 
 class NodeRegister:
+    """
+    Helper class to unify Git commit authors / contributors.
+
+    This class keeps track of all registered instances and merges two :ref:`ContributorData` instances if some
+    attributes match.
+    """
+
     def __init__(self, cls, *order, **mapping):
+        """
+        Initalize a new register.
+
+        :param cls: Type of objects to store.
+        :param order: The order of attributes to compare.
+        :param mapping: A mapping to convert attributes (will be applied for comparison).
+        """
         self.cls = cls
         self.order = order
         self.mapping = mapping
         self._all = []
         self._node_by = {key: {} for key in self.order}
 
-    def add(self, node):
+    def add(self, node: t.Any):
+        """
+        Add (or merge) a new node to the register.
+        :param node: The node that should be added.
+        """
         self._all.append(node)
 
         for key in self.order:
@@ -106,6 +163,13 @@ class NodeRegister:
                         self._node_by[key][mapping(value)] = node
 
     def update(self, **kwargs):
+        """
+        Add (or merge) a new item to the register with the given attribute values.
+
+        :fixme: This is not a good implementation strategy at all.
+
+        :param kwargs: The attribute values to be stored.
+        """
         missing = []
         tail = list(self.order)
         while tail:
@@ -144,22 +208,29 @@ class NodeRegister:
 
 
 def _audit_authors(authors, audit_log: logging.Logger):
+    # Collect all authors that have ambiguous data
     unmapped_authors = []
     for author in authors._all:
         if len(author.email) > 1 or len(author.name) > 1:
             unmapped_authors.append(author)
 
     if unmapped_authors:
-        audit_log.warning("You have unmapped authors in your Git history.")
+        # Report to the audit about our findings
+        audit_log.warning('!!! warning "You have unmapped authors in your Git history."')
         for author in unmapped_authors:
             if len(author.email) > 1:
-                audit_log.info(f"- %s has alternate email: %s", str(author), ', '.join(author.email[1:]))
+                audit_log.info(f"    - %s has alternate email: %s", str(author), ', '.join(author.email[1:]))
             if len(author.name) > 1:
-                audit_log.info(f"- %s has alternate names: %s", str(author), ', '.join(author.name[1:]))
+                audit_log.info(f"    - %s has alternate names: %s", str(author), ', '.join(author.name[1:]))
+        audit_log.warning('')
 
+        audit_log.info("Please consider adding a `.maillog` file to your repository to disambiguate these contributors.")
+        audit_log.info('')
+        audit_log.info('``` .mailmap')
+
+        # Provide some example configuration for the hint log
         hint_log = audit_log.parent.getChild('hints')
-        hint_log.debug("# Write a '.maillog' to resolve Git ambiguities.")
-        hint_log.info("cat > .maillog << EOF")
+        hint_log.debug("# '.maillog' to resolve git ambiguities.")
 
         unmapped_email = [a for a in unmapped_authors if a.email[1:]]
         if unmapped_email:
@@ -181,8 +252,9 @@ def _audit_authors(authors, audit_log: logging.Logger):
                 for name in author.name[1:]:
                     hint_log.info('%s <%s> %s', str(author.name[0]), str(author.email[0]), str(name))
 
-        hint_log.info("EOF")
         hint_log.info('')
+
+        audit_log.info('```')
 
 
 def harvest_git(click_ctx: click.Context, ctx: HermesHarvestContext):
@@ -193,6 +265,9 @@ def harvest_git(click_ctx: click.Context, ctx: HermesHarvestContext):
     :param ctx: The harvesting context that should contain the provided metadata.
     """
     _log = logging.getLogger('cli.harvest.git')
+    audit_log = logging.getLogger('audit.cff')
+    audit_log.info('')
+    audit_log.info("## Git History")
 
     # Get the parent context (every subcommand has its own context with the main click context as parent)
     parent_ctx = click_ctx.parent
@@ -202,8 +277,11 @@ def harvest_git(click_ctx: click.Context, ctx: HermesHarvestContext):
     _log.debug(". Get history of currently checked-out branch")
 
     authors = NodeRegister(ContributorData, 'email', 'name', email=str.upper)
-#    for author_data in ctx.get_data().get('author', []):
-#        authors.add(ContributorData.from_codemeta(author_data))
+    try:
+        for author_data in ctx.get_data().get('author', []):
+            authors.add(ContributorData.from_codemeta(author_data))
+    except ValueError:
+        pass
 
     git_exe = shutil.which('git')
     if not git_exe:
@@ -244,3 +322,11 @@ def harvest_git(click_ctx: click.Context, ctx: HermesHarvestContext):
         '@type': "SoftwareSourceCode",
         'author': [author.to_codemeta() for author in authors._all],
     }, branch=git_branch)
+
+    try:
+        ctx.get_data()
+    except ValueError as e:
+        audit_log.error('!!! warning "Inconsistent data"')
+        audit_log.info('     The data collected from git is ambiguous.')
+        audit_log.info('     Consider deleting `%s` to avoid problems.', ctx.hermes_dir)
+        audit_log.error('')

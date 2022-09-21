@@ -1,6 +1,7 @@
 """
 This module provides the main entry point for the HERMES command line application.
 """
+import logging
 import typing as t
 import pathlib
 from importlib import metadata
@@ -79,6 +80,17 @@ class WorkflowCommand(click.Group):
         configure()
         init_logging()
         log_header(None)
+
+        audit_log = logging.getLogger('audit')
+        audit_log.info("# Running Hermes")
+        audit_log.info("Running Hermes command line in: %s", ctx.params['path'].absolute())
+        audit_log.debug("")
+        audit_log.debug("Invoked `%s` with", ctx.invoked_subcommand or self.name)
+        audit_log.debug("")
+        for k, v in ctx.params.items():
+            audit_log.debug("`--%s`", k)
+            audit_log.debug(":   `%s`", v)
+            audit_log.debug("")
 
         if ctx.protected_args:
             return super().invoke(ctx)

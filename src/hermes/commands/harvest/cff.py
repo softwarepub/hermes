@@ -31,6 +31,10 @@ def harvest_cff(click_ctx: click.Context, ctx: HermesHarvestContext):
     :param ctx: The harvesting context that should contain the provided metadata.
     """
     # Get the parent context (every subcommand has its own context with the main click context as parent)
+    audit_log = logging.getLogger('audit.cff')
+    audit_log.info('')
+    audit_log.info("## Citation File Format")
+
     parent_ctx = click_ctx.parent
     if parent_ctx is None:
         raise RuntimeError('No parent context!')
@@ -68,9 +72,11 @@ def _convert_cff_to_codemeta(cff_data: str) -> t.Any:
 
 
 def _validate(cff_file: pathlib.Path, cff_dict: t.Dict) -> bool:
+    audit_log = logging.getLogger('audit.cff')
+
     cff_schema_url = f'https://citation-file-format.github.io/{_CFF_VERSION}/schema.json'
 
-    with open('cff-schema@1.2.0.json', 'r') as cff_schema_file:
+    with (pathlib.Path(__file__).parent / f'cff-schema@{_CFF_VERSION}.json').open('r') as cff_schema_file:
         schema_data = json.load(cff_schema_file)
 
     if not schema_data:
@@ -79,25 +85,20 @@ def _validate(cff_file: pathlib.Path, cff_dict: t.Dict) -> bool:
         with urllib.request.urlopen(cff_schema_url) as cff_schema_response:
             schema_data = json.loads(cff_schema_response.read())
 
-    audit_log = logging.getLogger('audit.cff')
-
     validator = jsonschema.Draft7Validator(schema_data)
     errors = sorted(validator.iter_errors(cff_dict), key=lambda e: e.path)
     if len(errors) > 0:
-        audit_log.warning('!! %s is not valid according to %s', cff_file, cff_schema_url)
+        audit_log.warning('!!! warning "%s is not valid according to <%s>"', cff_file, cff_schema_url)
 
         for error in errors:
-            path = ContextPath(error.absolute_path.popleft())
-            for next in error.absolute_path:
-                path = path[next]
-
-            audit_log.info('. Invalid input for %s.', str(path))
-            audit_log.info('  %s', error.message)
-            audit_log.debug('  Value: %s', error.instance)
+            path = ContextPath.make(error.absolute_path)
+            audit_log.info('    Invalid input for `%s`.', str(path))
+            audit_log.info('    !!! message "%s"', error.message)
+            audit_log.debug('    !!! value "%s"', error.instance)
 
         audit_log.info('')
-        audit_log.info('# See the Citation File Format schema guide for further details:')
-        audit_log.info('# https://github.com/citation-file-format/citation-file-format/blob/{_CFF_VERSION}/schema-guide.md.')
+        audit_log.info('See the Citation File Format schema guide for further details:')
+        audit_log.info(f'<https://github.com/citation-file-format/citation-file-format/blob/{_CFF_VERSION}/schema-guide.md>.')
         return False
 
     elif len(errors) == 0:
