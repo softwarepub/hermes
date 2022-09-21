@@ -16,6 +16,8 @@ from hermes.model.errors import HermesValidationError
 _log = logging.getLogger(__name__)
 
 
+ContextPath.init_merge_strategies()
+
 class HermesContext:
     """
     The HermesContext stores the metadata for a certain project.
@@ -40,6 +42,9 @@ class HermesContext:
         self._caches = {}
         self._data = {}
         self._errors = []
+
+    def keys(self):
+        return [ContextPath.parse(k) for k in self._data.keys()]
 
     def get_cache(self, *path: str, create: bool = False) -> Path:
         """
@@ -78,6 +83,16 @@ class HermesContext:
         """
 
         pass
+
+    def get_data(self, data: t.Optional[dict] = None, path: t.Optional['ContextPath'] = None, tags: t.Optional[dict] = None) -> dict:
+        if data is None:
+            data = {}
+        if path is not None:
+            data.update(path.get_from(self._data))
+        else:
+            for key in self.keys():
+                data.update(key.get_from(self._data))
+        return data
 
     def error(self, ep: EntryPoint, error: Exception):
         """
@@ -144,17 +159,6 @@ class HermesHarvestContext(HermesContext):
             exc = traceback.TracebackException(exc_type, exc_val, exc_tb)
             self._base.error(self._ep, exc)
             return True
-
-    def get_data(self, data=None, tags=None):
-        data = data or {}
-        for key, ((value, tag), *tail) in self._data.items():
-            key = ContextPath.parse(key)
-            if tags is not None:
-                tags[str(key)] = tag
-
-            key.update(data, value)
-
-        return data
 
     def update(self, _key: str, _value: t.Any, **kwargs: t.Any):
         """
@@ -251,6 +255,25 @@ class HermesHarvestContext(HermesContext):
         ep = ep or self._ep
         self._base.error(ep, error)
 
+    def _check_values(self, path, values):
+        (value, tag), *values = values
+        for alt_value, alt_tag in values:
+            if value != alt_value:
+                raise ValueError(f'{path}')
+        return value, tag
+
+    def get_data(self, data: t.Optional[dict] = None, path: t.Optional['ContextPath'] = None, tags: t.Optional[dict] = None) -> dict:
+        if data is None:
+            data = {}
+        for key, values in self._data.items():
+            key = ContextPath.parse(key)
+            if path is None or key in path:
+                value, tag = self._check_values(key, values)
+                key.update(data, value, tags, **tag)
+                if tags is not None and tag:
+                    tags[str(key)] = tag
+        return data
+
     def finish(self):
         """
         Calling this method will lead to further processors not handling the context anymore.
@@ -271,35 +294,25 @@ class CodeMetaContext(HermesContext):
         other.get_data(self._data, tags=self.tags)
 
     def update(self, _key: ContextPath, _value: t.Any, tags: t.Dict[str, t.Dict] | None = None):
-        if _key.item == '*':
-            _item_path = self.find_key(_key.parent, _value)
-            if _item_path:
-                target, context = _item_path.get_from(self._data, None)
-                _item_path.merge_from(_value)
-                _key.item = _item_path.item
+        if _key._item == '*':
+            _item_path, _item, _path = _key.resolve(self._data, query=_value, create=True)
+            if tags:
+                _tags = {k.lstrip(str(_key) + '.'): t for k, t in tags.items() if ContextPath.parse(k) in _key}
             else:
-                target, context = _key.parent.get_from(self._data, None)
-                _key.item = len(target)
+                _tags = {}
+            _path.update(_item, _value, _tags)
+            if tags is not None and _tags:
+                for k, v in _tags.items():
+                    if not v:
+                        continue
 
-        if tags:
-            values = {}
-
-            for subkey in tags.keys():
-                tag_key = ContextPath.parse(str(_key) + '.' + subkey)
-                try:
-                    tag_value, context = tag_key.get_from(self._data, None)
-                    values[subkey] = tag_value
-                except KeyError:
-                    pass
-
-        _key.update_in(self._data, _value)
-
-        if tags:
-            for subkey, tag in tags.items():
-                tag_key = ContextPath.parse(f'{str(_key)}.{subkey}')
-                tag_value, context = tag_key.get_from(self._data, context)
-                if values.get(subkey) != tag_value:
-                    self.tags[str(tag_key)] = tag
+                    if _key:
+                        tag_key = str(_key) + '.' + k
+                    else:
+                        tag_key = k
+                    tags[tag_key] = v
+        else:
+            _key.update(self._data, _value, tags)
 
     def annotate(self):
 
@@ -364,7 +377,7 @@ class CodeMetaContext(HermesContext):
         _annotate_dict(None, self._data, '')
 
     def find_key(self, item, other):
-        data, context = item.get_from(self._data, None)
+        data = item.get_from(self._data)
 
         for i, node in enumerate(data):
             match = [(k, node[k]) for k in self._PRIMARY_ATTR.get(str(item), ('@id',)) if k in node]

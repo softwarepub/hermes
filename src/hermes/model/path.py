@@ -1,117 +1,76 @@
 import typing as t
 
+import pyparsing as pp
+
 from hermes import config
-from hermes.model.errors import MergeError
+
+_log = config.getLogger('hermes.model.path')
 
 
-_log = config.getLogger('hermes.model')
-
-
-class MergeRunner:
-    _registry = {}
-
-    def __init__(self, strategies):
-        self._strategies = strategies
-        _log.debug(". Loaded %d strategies", len(self._strategies))
-
-    def __call__(self, path, target, value, **kwargs):
-        merged_keys = []
-
-        for merge in self._strategies:
-            try:
-                print(path, target, value)
-                _log.info(". Trying merge using %s", merge)
-                result = merge(path, target, value, **kwargs)
-
-            except MergeError as e:
-                _log.warning("! %s failed:", merge)
-                _log.info("> %s", e)
-                continue
-
-            else:
-                merged_keys.extend(result)
-                break
-
-        else:
-            return False
-
-        return merged_keys
-
-    def compare(self, path, other):
-        if other is not None and path.item == other.item and path.parent == other.parent:
-            return True
-        return False
+class ContextPathGrammar:
+    key = pp.Word('@' + pp.alphas)
+    index = pp.Word(pp.nums).set_parse_action(lambda tok: [int(tok[0])]) | pp.Char('*')
+    field = key + (pp.Suppress('[') + index + pp.Suppress(']'))[...]
+    path = field + (pp.Suppress('.') + field)[...]
 
     @classmethod
-    def _filter_matches(cls, filter, kwargs):
-        for key, value in filter.items():
-            print(key, value, kwargs)
-            if key not in kwargs or kwargs[key] in value:
-                return True
-
-        return False
-
-    @classmethod
-    def register(cls, name, merge, **kwargs):
-        cls._registry[name or str(merge)] = (kwargs, merge)
-
-    @classmethod
-    def query(cls, **kwargs):
-        strategies = []
-        for filter, strategy in cls._registry.values():
-            if cls._filter_matches(filter, kwargs):
-                strategies.append(strategy)
-
-        return cls(strategies)
+    def parse(cls, text: str):
+        return cls.path.parse_string(text)
 
 
 class ContextPath:
+    merge_strategies = None
+
     def __init__(self, item: str | int, parent: t.Optional['ContextPath'] = None):
         self._item = item
         self._parent = parent
         self._type = None
+
+    @classmethod
+    def init_merge_strategies(cls):
+        if cls.merge_strategies is None:
+            from hermes.model.merge import MergeStrategies, default_merge_strategies
+
+            cls.merge_strategies = MergeStrategies()
+            for strategy in default_merge_strategies:
+                cls.merge_strategies.register(strategy)
 
     @property
     def parent(self) -> t.Optional['ContextPath']:
         return self._parent
 
     @property
-    def item(self) -> t.Optional[str | int]:
-        return self._item
-
-    @property
-    def is_container(self):
-        return self._type in (list, dict)
+    def path(self) -> t.List['ContextPath']:
+        if self._parent is None:
+            return [self]
+        else:
+            return self._parent.path + [self]
 
     def __getitem__(self, item: str | int) -> 'ContextPath':
         match item:
             case str(): self._type = dict
             case int(): self._type = list
-
         return ContextPath(item, self)
 
     def __str__(self) -> str:
         item = str(self._item)
-
         if self._parent is not None:
             parent = str(self._parent)
-
             match self._item:
                 case '*' | int(): item = parent + f'[{item}]'
                 case str(): item = parent + '.' + item
                 case _: raise ValueError(self.item)
-
         return item
 
     def __repr__(self) -> str:
         return f'ContextPath.parse("{str(self)}")'
 
     def __eq__(self, other: 'ContextPath') -> bool:
-        if (other is None) or (self.parent != other.parent) \
-                or (self.item != '*' and other.item != '*' and self.item != other.item):
-            return False
-
-        return True
+        return (
+            other is not None
+            and (self._item == other._item or self._item == '*' or other._item == '*')
+            and self._parent == other._parent
+        )
 
     def __contains__(self, other: 'ContextPath') -> bool:
         while other is not None:
@@ -120,181 +79,158 @@ class ContextPath:
             other = other.parent
         return False
 
-    def _get_trace(self):
-        if self.parent:
-            return self.parent._get_trace() + [self._item]
-        else:
-            return [self._item]
-
     def new(self):
-        return self._type()
+        if self._type is not None:
+            return self._type()
+        raise TypeError()
 
-    def _select_from(self, _target, _head, *_trace):
-        _prefix = self[_head]
+    @staticmethod
+    def _get_item(target: dict | list, path: 'ContextPath') -> t.Optional['ContextPath']:
+        match target, path._item:
+            case list(), '*':
+                raise IndexError(f'Cannot resolve any(*) from {path}.')
+            case list(), int() as index if index < len(target):
+                return target[index]
+            case list(), int() as index:
+                raise IndexError(f'Index {index} out of bounds for {path.parent}.')
+            case list(), _ as index:
+                raise TypeError(f'Invalid index type {type(index)} to access {path.parent}.')
 
-        match _target, _head:
-            case list(), int() if len(_target) > _head:
-                if _trace:
-                    _target, _prefix, _trace = _prefix._select_from(_target[_head], *_trace)
-                else:
-                    _target = _target[_head]
-
-            case dict(), str() if _head in _target:
-               if _trace:
-                   _target, _prefix, _trace = _prefix._select_from(_target[_head], *_trace)
-               else:
-                   _target = _target[_head]
-
-            case (list(), '*' | int()) | (dict(), str()):
-                pass
+            case dict(), str() as key if key in target:
+                return target[key]
+            case dict(), str() as key:
+                raise KeyError(f'Key {key} not in {path.parent}.')
+            case dict(), _ as key:
+                raise TypeError(f'Invalid key type {type(key)} to access {path.parent}.')
 
             case _, _:
-                raise KeyError(_target, _head)
+                raise TypeError(f'Cannot handle target type {type(target)} for {path}.')
 
-        return _target, _prefix, _trace
+    def _find_in_parent(self, target: dict, path: 'ContextPath') -> t.Any:
+        _item = path._item
+        _path = path.parent
+        while _path is not None:
+            try:
+                item = self._get_item(target, _path[_item])
+                _log.debug("Using type %s from §%s.", item, _path)
+                return item
 
-    def _set_in_target(self, _target, value):
-        match _target:
-            case list():
-                if self.item == '*' or self.item == len(_target):
-                    self._item = len(_target)
-                    _target.append(value)
-                elif self.item > len(_target):
-                    raise IndexError()
-                else:
-                    # TODO use update instead of replace...
-                    _target[self._item] = value
+            except (KeyError, IndexError, TypeError) as e:
+                _log.debug("%s: %s", _path, e)
+                _path = _path.parent
+                continue
 
-            case dict():
-                if self.item not in _target:
-                    _target[self._item] = value
-                else:
-                    # TODO use update instead of replace...
-                    _target[self._item] = value
+        return None
 
-            case _:
-                raise TypeError()
+    def _find_setter(self, target: dict | list, path: 'ContextPath', value: t.Any = None, **kwargs) -> t.Callable:
+        filter = {
+            'name': path._item,
+        }
 
-    def resolve(self, target):
-        _head, *_trace = self._get_trace()
-        _prefix = ContextPath(_head)
-        _target = target
+        if isinstance(path._item, str) or path._parent is not None:
+            filter['path'] = str(path)
 
-        if _head not in target:
-            tail = [_prefix]
-            for item in _trace:
-                tail.append(tail[-1][item])
+        if type := self._find_in_parent(target, path['@type']):
+            filter['type'] = type
+        elif value is not None:
+            match value:
+                case list(): filter['type'] = 'list'
+                case dict(): filter['type'] = 'map'
+        elif path._type is list:
+                filter['type'] = 'list'
+        elif path._type is dict:
+                filter['type'] = 'map'
 
-        return _prefix._select_from(target, _head, *_trace)
+        if ep := kwargs.get('ep', None):
+            filter['ep'] = ep
 
-    def select(self, target: t.Dict | t.List) -> 'ContextPath':
-        head, *trace = self._get_trace()
-        if head in target:
-            _, _prefix, _ = ContextPath(head)._select_from(target[head], *trace)
+        setter = self.merge_strategies.select(**filter)
+        if setter is None:
+            return self._set_item
         else:
-            _prefix = None
-        return _prefix
+            return setter
 
-    def update(self, target: t.Dict[str, t.Any] | t.List, value: t.Any, **kwargs: t.Any):
-        _head, *_trace = self._get_trace()
-        _target = target
-        _prefix = ContextPath(_head)
+    def _set_item(self, target: dict | list, path: 'ContextPath', value: t.Any, **kwargs) -> t.Optional['ContextPath']:
+        match target, path._item:
+            case list(), int() as index if index < len(target):
+                match target[index]:
+                    case dict() as t: t.update(value)
+                    case list() as l: l[:] = value
+                    case _: target[index] = value
 
-        if _head in target:
-            _target, _prefix, _trace = ContextPath(_head)._select_from(target[_head], *_trace)
+            case dict(), str() as key if key in target:
+                match target[key]:
+                    case dict() as t: t.update(value)
+                    case list() as l: l[:] = value
+                    case _: target[key] = value
 
-        if _head not in _target:
-            _prefix.insert(_target, value, **kwargs)
+            case dict(), str() as key:
+                target[key] = value
+            case list(), '*':
+                path._item = len(target)
+                target.append(value)
+            case list(), int() as index if index == len(target):
+                target.append(value)
 
-        q = {'path': str(self)}
-        if _prefix._type is list: q['type'] = 'list'
-        if _prefix._type is dict: q['type'] = 'map'
-        print(_prefix, _prefix._type, q)
+            case dict(), _ as key:
+                raise TypeError(f'Invalid key type {type(key)} to set in {path.parent}.')
+            case list(), int() as index:
+                raise IndexError(f'Index {index} out of bounds to set in {path.parent}.')
+            case list(), _ as index:
+                raise TypeError(f'Invalid index type {type(index)} to set in {path.parent}.')
 
-        merge_runner = MergeRunner.query(**q)
-        return merge_runner(self, _target, value, **kwargs)
+            case _, _:
+                raise TypeError(f'Cannot handle target type {type(target)} to set {path}.')
 
-    def insert(self, target, value, **kwargs):
-        keys_added = []
-        _target, _prefix, _trace = self.resolve(target)
+        return value
 
-        while _prefix.is_container:
-            _prefix._set_in_target(_target, _prefix.new())
-            _target = _target[_prefix.item]
+    def resolve(self, _target: list | dict, create: bool = False, query: t.Any = None) -> ('ContextPath', list | dict, 'ContextPath'):
+        head, *tail = self.path
+        target = _target
+        while head._type and tail:
+            try:
+                target = self._get_item(target, head)
+            except (IndexError, KeyError, TypeError):
+                if create and self.parent is not None:
+                    new_head = head.new()
+                    setter = self._find_setter(_target, head, new_head)
+                    setter(target, head, new_head)
+                    target = new_head
+                else:
+                    break
+            head, *tail = tail
 
-        _prefix._set_in_target(_target, value)
+        if head._item == '*':
+            for i, item in enumerate(target):
+                if all(item[k] == v for k, v in query.items() if k in item):
+                    head._item = i
+                    break
+            else:
+                if create:
+                    head._item = len(target)
 
-        return keys_added
+        if not hasattr(head, 'set_item'):
+            head.set_item = self._find_setter(_target, head)
+        tail_path = ContextPath(head._item)
+        for t in tail:
+            tail_path = tail_path[t._item]
+
+        return head, target, tail_path
+
+    def get_from(self, target: dict | list) -> t.Any:
+        prefix, target, path = self.resolve(target)
+        return self._get_item(target, path)
+
+    def update(self, target: t.Dict[str, t.Any] | t.List, value: t.Any, tags: t.Optional[dict] = None, **kwargs):
+        prefix, target, tail = self.resolve(target, create=True)
+        prefix.set_item(target, tail, value, **kwargs)
+        if tags is not None and kwargs:
+            tags[str(self)] = kwargs
 
     @classmethod
     def parse(cls, path: str) -> 'ContextPath':
-        full_path = None
-        for part in path.split('.'):
-            name, _, index = part.partition('[')
-
-            if full_path is None:
-                full_path = ContextPath(name)
-            else:
-                full_path = full_path[name]
-
-            if not index: continue
-
-            for idx in index[:-1].split(']['):
-                try:
-                    idx = int(idx)
-                except ValueError:
-                    pass
-                finally:
-                    full_path = full_path[idx]
-
-        return full_path
-
-
-class query_dict:
-    def __init__(self, data=None, **kwargs):
-        self.data = data or {}
-        self.data.update(**kwargs)
-
-    def __contains__(self, item):
-        return all(self.data.get(k) == v for k, v in item.items())
-
-    def __repr__(self):
-        return repr(self.data)
-
-    def __str__(self):
-        return str(self.data)
-
-
-if __name__ == '__main__':
-    from hermes.commands.process.merge import ObjectMerge, CollectionMerge
-
-    MergeRunner.register('default', ObjectMerge(['@id', 'email', 'name']), )
-
-    logging.basicConfig(level=logging.DEBUG, format="%(message)s")
-    class query_dict:
-        def __init__(self, data=None, **kwargs):
-            self.data = data or {}
-            self.data.update(**kwargs)
-
-        def __contains__(self, item):
-            return all(self.data.get(k) == v for k, v in item.items())
-
-        def __repr__(self):
-            return repr(self.data)
-
-        def __str__(self):
-            return str(self.data)
-
-    data = {
-        'author': [
-            {'@type': ['Person', 'hermes:contributor'], 'name': 'Michael Meinel', 'email': 'michael.meinel@DLR.de'},
-            {'@type': 'Person', 'name': 'Stephan Druskat'},
-        ]
-    }
-
-
-    author = ContextPath('author')
-    author[0].update(data, {'givenName': 'Michael', 'familyName': 'Meinel', 'email': "Michael.Meinel@dlr.de"}, ep='git', stage='harvest')
-    author[1].update(data, {'email': 'spam@egg.com'})
-
-    print(data)
+        head, *tail = ContextPathGrammar.parse(path)
+        path = cls(head)
+        for item in tail:
+            path = path[item]
+        return path
