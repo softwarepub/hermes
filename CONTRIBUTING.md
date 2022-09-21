@@ -13,15 +13,15 @@
 We loosely follow a mixture of [GitHubFlow](https://docs.github.com/en/get-started/quickstart/github-flow) and [GitFlow](https://nvie.com/posts/a-successful-git-branching-model/):
 
 `main`
-:   - Stable branch
+    - Stable branch
     - Merges come only from `develop` or a hotfix branch (i.e., when something needs to be fixed in "production")
 
 `develop`
-:   - Unstable development branch
+    - Unstable development branch
     - Last "stable" is tagged: tag before attempting to break something
 
 `feature/<describe-feature>` (including issue id when exists: `feature/62-fix-broken-thing`)
-:   - Branch from last tag on `develop`
+    - Branch from last tag on `develop`
     - Feature branches may pick up "older" branches if they are not to complicated
     - Combined branches must all start from the same tag
 
