@@ -15,17 +15,17 @@ git = repo.git
 # Get the active branch
 branch = repo.active_branch
 
-# Get a list of files in the current branch
-files = [file_str for file_str in git.ls_tree('-r', '--name-only', branch, repo.working_dir).split('\n')]
+# Get a list of files in the current branch, ignore the following:
+# LICENSES/*
+files = [file_str for file_str in git.ls_tree('-r', '--name-only', branch, repo.working_dir).split('\n') if not file_str.startswith('LICENSES/')]
 
 # Build a list of files to unique committer names, using git log
 file_committer_map = {}
 for file in files:
-    if '/LICENSES/' not in file:  # Ignore licenses texts
-        if file not in file_committer_map:
-            file_committer_map[file] = set()
-        for name in git.log('--follow', '--pretty=format:%an', '--', file).split('\n'):
-            file_committer_map[file].add(name)
+    if file not in file_committer_map:
+        file_committer_map[file] = set()
+    for name in git.log('--follow', '--pretty=format:%an', '--', file).split('\n'):
+        file_committer_map[file].add(name)
 
 # Run the reuse CLI to add copyright headers for all committers
 for file in file_committer_map:
