@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2022 Michael Meinel
+# SPDX-FileCopyrightText: 2022 Stephan Druskat
+
 [tool.poetry]
 name = "hermes"
 version = "0.1.0"
@@ -20,6 +23,7 @@ pytest-cov = "^3.0.0"
 Sphinx = "^4.5.0"
 myst-parser = "^0.17.2"
 GitPython = "^3.1.27"
+reuse = "^1.0.0"
 
 [tool.poetry.plugins.console_scripts]
 haggis = "hermes.cli:haggis"
