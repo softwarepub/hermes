@@ -76,14 +76,10 @@ def _validate(cff_file: pathlib.Path, cff_dict: t.Dict) -> bool:
 
     cff_schema_url = f'https://citation-file-format.github.io/{_CFF_VERSION}/schema.json'
 
-    with (pathlib.Path(__file__).parent / f'cff-schema@{_CFF_VERSION}.json').open('r') as cff_schema_file:
-        schema_data = json.load(cff_schema_file)
-
-    if not schema_data:
-        # TODO: we should ship the schema we reference to by default to avoid unnecessary network traffic.
-        #       If the requested version is not already downloaded, go ahead and download it.
-        with urllib.request.urlopen(cff_schema_url) as cff_schema_response:
-            schema_data = json.loads(cff_schema_response.read())
+    # TODO: we should ship the schema we reference to by default to avoid unnecessary network traffic.
+    #       If the requested version is not already downloaded, go ahead and download it.
+    with urllib.request.urlopen(cff_schema_url) as cff_schema_response:
+        schema_data = json.loads(cff_schema_response.read())
 
     validator = jsonschema.Draft7Validator(schema_data)
     errors = sorted(validator.iter_errors(cff_dict), key=lambda e: e.path)
