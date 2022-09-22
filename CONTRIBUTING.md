@@ -22,8 +22,6 @@ We loosely follow a mixture of [GitHubFlow](https://docs.github.com/en/get-start
 
 `feature/<describe-feature>` (including issue id when exists: `feature/62-fix-broken-thing`)
     - Branch from last tag on `develop`
-    - Feature branches may pick up "older" branches if they are not to complicated
-    - Combined branches must all start from the same tag
 
 ### Pull requests
 
