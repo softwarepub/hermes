@@ -1,3 +1,6 @@
+REM SPDX-FileCopyrightText: 2022 Oliver Bertuch
+REM SPDX-FileCopyrightText: 2022 Stephan Druskat
+REM
 REM SPDX-License-Identifier: CC0-1.0
 
 @ECHO OFF

@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2022 Oliver Bertuch
+# SPDX-FileCopyrightText: 2022 Stephan Druskat
+#
 # SPDX-License-Identifier: CC0-1.0
 
 Sphinx==4.5.0
