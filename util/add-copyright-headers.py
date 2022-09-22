@@ -29,11 +29,14 @@ for file in files:
 
 # Run the reuse CLI to add copyright headers for all committers
 for file in file_committer_map:
+    exts = ['.txt', '.bat', 'Makefile', '.py', '.toml', '.yml', '.gitignore']
+    force_single_line = False
+    for ext in exts:
+        if file.endswith(ext):
+            force_single_line = True
     for name in file_committer_map[file]:
-        exts = ['.txt', '.bat', 'Makefile', '.py', '.toml', '.yml', '.gitignore']
-        for ext in exts:
-            if file.endswith(ext):
-                # Force single line copyright comments for those file types that support it
-                subprocess.run(['reuse', 'addheader', '--merge-copyrights', '--single-line', f'-c={name}', file])
-            else:
-                subprocess.run(['reuse', 'addheader', '--merge-copyrights', f'-c={name}', file])
+        if force_single_line:
+            # Force single line copyright comments for those file types that support it
+            subprocess.run(['reuse', 'addheader', '--merge-copyrights', '--single-line', f'-c={name}', file])
+        else:
+            subprocess.run(['reuse', 'addheader', '--merge-copyrights', f'-c={name}', file])
