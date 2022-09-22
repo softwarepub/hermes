@@ -12,3 +12,4 @@ docs/build/
 
 .idea/
 .venv/
+dist/
