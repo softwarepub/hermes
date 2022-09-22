@@ -21,12 +21,19 @@ files = [file_str for file_str in git.ls_tree('-r', '--name-only', branch, repo.
 # Build a list of files to unique committer names, using git log
 file_committer_map = {}
 for file in files:
-    if file not in file_committer_map:
-        file_committer_map[file] = set()
-    for name in git.log('--follow', '--pretty=format:%an', '--', file).split('\n'):
-        file_committer_map[file].add(name)
+    if '/LICENSES/' not in file:  # Ignore licenses texts
+        if file not in file_committer_map:
+            file_committer_map[file] = set()
+        for name in git.log('--follow', '--pretty=format:%an', '--', file).split('\n'):
+            file_committer_map[file].add(name)
 
 # Run the reuse CLI to add copyright headers for all committers
 for file in file_committer_map:
     for name in file_committer_map[file]:
-        subprocess.run(['reuse', 'addheader', '--merge-copyrights', '--single-line', f'-c={name}', file])
+        exts = ['.txt', '.bat', 'Makefile', '.py', '.toml', '.yml', '.gitignore']
+        for ext in exts:
+            if file.endswith(ext):
+                # Force single line copyright comments for those file types that support it
+                subprocess.run(['reuse', 'addheader', '--merge-copyrights', '--single-line', f'-c={name}', file])
+            else:
+                subprocess.run(['reuse', 'addheader', '--merge-copyrights', f'-c={name}', file])
