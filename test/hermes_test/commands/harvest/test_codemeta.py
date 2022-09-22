@@ -118,16 +118,16 @@ CODEMETA_JSON = """\
 
 
 @pytest.fixture
-def codemeta():
+def valid_codemeta():
     return json.loads(CODEMETA_JSON)
 
 
 @pytest.fixture()
-def valid_codemeta(tmp_path):
-    codemeta_json = json.loads(CODEMETA_JSON)
-    codemeta_file = tmp_path / 'codemeta.json'
-    json.dump(codemeta_json, codemeta_file)
-    return codemeta_file
+def valid_codemeta_path(tmp_path, valid_codemeta):
+    codemeta_path = tmp_path / 'codemeta.json'
+    with open(codemeta_path, 'w') as fo:
+        json.dump(valid_codemeta, fo)
+    return codemeta_path
 
 
 def test_get_single_codemeta(tmp_path):
@@ -137,5 +137,9 @@ def test_get_single_codemeta(tmp_path):
     assert harvest._get_single_codemeta(tmp_path) == single_codemeta
 
 
-def test_validate_success(codemeta):
-    assert harvest._validate(pathlib.Path("foobar"))
+def test_validate_fail():
+    assert not harvest._validate(pathlib.Path("foobar"))
+
+
+def test_validate_success(valid_codemeta_path):
+    assert harvest._validate(valid_codemeta_path)
