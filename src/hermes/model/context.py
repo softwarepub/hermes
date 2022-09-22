@@ -8,6 +8,7 @@ import typing as t
 from pathlib import Path
 from importlib.metadata import EntryPoint
 
+from hermes.model import errors
 from hermes.model.path import ContextPath
 from hermes.model.errors import HermesValidationError
 
@@ -282,9 +283,12 @@ class HermesHarvestContext(HermesContext):
             key = ContextPath.parse(key)
             if path is None or key in path:
                 value, tag = self._check_values(key, values)
-                key.update(data, value, tags, **tag)
-                if tags is not None and tag:
-                    tags[str(key)] = tag
+                try:
+                    key.update(data, value, tags, **tag)
+                    if tags is not None and tag:
+                        tags[str(key)] = tag
+                except errors.MergeError as e:
+                    self.error(self._ep, e)
         return data
 
     def finish(self):
@@ -313,7 +317,7 @@ class CodeMetaContext(HermesContext):
                 _tags = {k.lstrip(str(_key) + '.'): t for k, t in tags.items() if ContextPath.parse(k) in _key}
             else:
                 _tags = {}
-            _path.update(_item, _value, _tags)
+            _path._set_item(_item, _path, _value, **_tags)
             if tags is not None and _tags:
                 for k, v in _tags.items():
                     if not v:

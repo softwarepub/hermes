@@ -3,6 +3,7 @@ import typing as t
 
 import pyparsing as pp
 
+from hermes.model import errors
 
 _log = logging.getLogger('hermes.model.path')
 
@@ -280,7 +281,13 @@ class ContextPath:
         next_target = target
         while tail:
             try:
-                next_target = self._get_item(next_target, head)
+                new_target = self._get_item(next_target, head)
+                if not isinstance(new_target, (list, dict)) and head.parent:
+                    next_target = self._get_item(next_target, head.parent)
+                    tail = [head._item] + tail
+                    break
+                else:
+                    next_target = new_target
             except (IndexError, KeyError, TypeError):
                 if create and self.parent is not None:
                     try:
@@ -296,13 +303,14 @@ class ContextPath:
             head, *tail = tail
 
         if head._item == '*':
-            for i, item in enumerate(target):
-                if all(item[k] == v for k, v in query.items() if k in item):
+            for i, item in enumerate(next_target):
+                _keys = [k for k in query.keys() if k in item]
+                if _keys and all(item[k] == query[k] for k in _keys):
                     head._item = i
                     break
             else:
                 if create:
-                    head._item = len(target)
+                    head._item = len(next_target)
 
         if not hasattr(head, 'set_item'):
             head.set_item = self._find_setter(target, head)
@@ -314,10 +322,13 @@ class ContextPath:
         return self._get_item(target, path)
 
     def update(self, target: t.Dict[str, t.Any] | t.List, value: t.Any, tags: t.Optional[dict] = None, **kwargs):
-        prefix, target, tail = self.resolve(target, create=True)
-        prefix.set_item(target, tail, value, **kwargs)
-        if tags is not None and kwargs:
-            tags[str(self)] = kwargs
+        prefix, _target, tail = self.resolve(target, create=True)
+        try:
+            prefix.set_item(_target, tail, value, **kwargs)
+            if tags is not None and kwargs:
+                tags[str(self)] = kwargs
+        except (KeyError, IndexError, TypeError, ValueError) as e:
+            raise errors.MergeError(self, _target, value, **kwargs)
 
     @classmethod
     def make(cls, path: t.Iterable[str | int]) -> 'ContextPath':
