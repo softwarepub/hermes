@@ -1,3 +1,7 @@
+<!--
+SPDX-FileCopyrightText: 2022 Stephan Druskat
+-->
+
 # Development utilities
 
 ## `add-copyright-headers.py`

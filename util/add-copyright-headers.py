@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2022 Stephan Druskat
+
 import subprocess
 
 from git import Repo
@@ -8,10 +10,11 @@ assert not repo.bare
 
 # Get the git instance for this repository
 git = repo.git
+# Get the active branch
+branch = repo.active_branch
 
-# Get a list of files in the develop branch
-# Change the 'develop' argument to your own branch if you need to run it on anything other than 'develop'
-files = [file_str for file_str in git.ls_tree('-r', '--name-only', 'develop', repo.working_dir).split('\n')]
+# Get a list of files in the current branch
+files = [file_str for file_str in git.ls_tree('-r', '--name-only', branch, repo.working_dir).split('\n')]
 
 # Build a list of files to unique committer names, using git log
 file_committer_map = {}
