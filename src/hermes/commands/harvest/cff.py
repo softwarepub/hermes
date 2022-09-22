@@ -118,17 +118,3 @@ def _get_single_cff(path: pathlib.Path) -> t.Optional[pathlib.Path]:
     # TODO: Do we want to hand down a logging instance via Hermes context or just encourage
     #       peeps to use the Click context?
     return None
-
-
-def _build_nodepath_str(absolute_path: collections.deque) -> str:
-    # Path deque starts with field name, then index, then field name, etc.
-    path_str = "'"
-    for index, value in enumerate(absolute_path):
-        if index == 0:  # First value
-            path_str += f'{value}'
-        elif index % 2 == 0:  # value is a field name
-            path_str += f' -> {value}'
-        else:  # Value is an index
-            path_str += f' {int(value) + 1}'  # Use index starting at 1
-    path_str += "'"
-    return path_str
