@@ -34,8 +34,8 @@ We loosely follow a mixture of [GitHubFlow](https://docs.github.com/en/get-start
 
 - Create PR from `feature/...` against `develop` (PR author)
 - Describe work in initial comment (PR author)
-    - Issue reference (`#n`)
-    - What does the new code do
+    - Reference any related issues (use, e.g., `Fixes #n` or `- Related: #n`)
+    - What does the new code do?
     - Optional: What should reviewers look at specifically
     - Information on how to review:
         - E.g.
@@ -45,7 +45,7 @@ We loosely follow a mixture of [GitHubFlow](https://docs.github.com/en/get-start
           ```
 - Request review (PR author)
     - Eligible reviewers:
-        - Python code: @led02, @sdruskat, @jkelling, #TODO
+        - Python code: @led02, @sdruskat, @jkelling
         - Documentation:
             - Workflow: @all
             - Project: @all
