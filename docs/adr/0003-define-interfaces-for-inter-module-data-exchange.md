@@ -1,3 +1,7 @@
+<!--
+SPDX-FileCopyrightText: 2022 Stephan Druskat, Oliver Bertuch, Oliver Knodel, Guido Juckeland, Michael Meinel
+-->
+
 # Define interfaces for inter-module data exchange
 
 * Status: proposed

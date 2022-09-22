@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2022 Stephan Druskat
+SPDX-FileCopyrightText: 2022 Stephan Druskat, Michael Meinel
+-->
+
 # Use click for CLI commands
 
 * Status: accepted

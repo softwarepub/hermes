@@ -1,3 +1,7 @@
+<!--
+SPDX-FileCopyrightText: 2022 Stephan Druskat, Oliver Bertuch, Oliver Knodel, Guido Juckeland, Michael Meinel
+-->
+
 # Expose internal data model to allow mapping configurations
 
 * Status: proposed
