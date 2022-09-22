@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+
 """
 This module provides the main entry point for the HERMES command line application.
 """
