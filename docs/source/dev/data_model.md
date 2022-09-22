@@ -1,3 +1,7 @@
+<!--
+SPDX-License-Identifier: CC-BY-SA-4.0
+-->
+
 # HERMES Data Model
 
 *haggis* uses an internal data model to store the output of the different stages.
