@@ -29,4 +29,4 @@ for file in files:
 # Run the reuse CLI to add copyright headers for all committers
 for file in file_committer_map:
     for name in file_committer_map[file]:
-        subprocess.run(['reuse', 'addheader', '--merge-copyrights', f'-c={name}', file])
+        subprocess.run(['reuse', 'addheader', '--merge-copyrights', '--single-line', f'-c={name}', file])
