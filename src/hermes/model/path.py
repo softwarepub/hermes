@@ -318,10 +318,26 @@ class ContextPath:
         return head, next_target, tail
 
     def get_from(self, target: dict | list) -> t.Any:
+        """
+        Expand the path and return the referenced data from a concrete container.
+
+        :param target: The list or dict that this path points into.
+        :return: The value stored at path.
+        """
         prefix, target, path = self.resolve(target)
         return self._get_item(target, path)
 
     def update(self, target: t.Dict[str, t.Any] | t.List, value: t.Any, tags: t.Optional[dict] = None, **kwargs):
+        """
+        Update the data stored at the path in a concrete container.
+
+        How this method actually behaves heavily depends on the active MergeStrategy for the path.
+
+        :param target: The dict inside which the value should be stored.
+        :param value: The value to store.
+        :param tags: Dictionary containing the tags for all stored values.
+        :param kwargs: The tag attibutes for the new value.
+        """
         prefix, _target, tail = self.resolve(target, create=True)
         try:
             prefix.set_item(_target, tail, value, **kwargs)
@@ -332,6 +348,12 @@ class ContextPath:
 
     @classmethod
     def make(cls, path: t.Iterable[str | int]) -> 'ContextPath':
+        """
+        Convert a list of item accessors into a ContextPath.
+
+        :param path: The items in the order of access.
+        :return: A ContextPath that reference the selected value.
+        """
         head, *tail = path
         path = ContextPath(head)
         for next in tail:
@@ -340,5 +362,11 @@ class ContextPath:
 
     @classmethod
     def parse(cls, path: str) -> 'ContextPath':
+        """
+        Parse a string representation of a ContextPath into a proper object.
+
+        :param path: The path to parse.
+        :return: A new ContextPath that references the selected path.
+        """
         path = cls.make(ContextPathGrammar.parse(path))
         return path

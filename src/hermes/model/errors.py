@@ -1,3 +1,6 @@
+import typing as t
+
+
 class HermesValidationError(Exception):
     """
     This exception should be thrown when input validation (e.g., during harvest) occurs.
@@ -16,7 +19,18 @@ class HermesValidationError(Exception):
 
 
 class MergeError(Exception):
-    def __init__(self, path, old_Value, new_value, **kwargs):
+    """
+    This exception should be raised when there is an error during a merge / set operation.
+    """
+    def __init__(self, path: 'ContextPath', old_Value: t.Any, new_value: t.Any, **kwargs):
+        """
+        Create a new merge incident.
+
+        :param path: The path where the merge error occured.
+        :param old_Value: Old value that was stored at `path`.
+        :param new_value: New value that was to be assinged.
+        :param kwargs: Tag data for the new value.
+        """
         self.path = path
         self.old_value = old_Value
         self.new_value = new_value

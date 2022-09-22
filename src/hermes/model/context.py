@@ -44,7 +44,10 @@ class HermesContext:
         self._data = {}
         self._errors = []
 
-    def keys(self):
+    def keys(self) -> t.List[ContextPath]:
+        """
+        Get all the keys for the data stored in this context.
+        """
         return [ContextPath.parse(k) for k in self._data.keys()]
 
     def get_cache(self, *path: str, create: bool = False) -> Path:
@@ -182,8 +185,6 @@ class HermesHarvestContext(HermesContext):
 
         See :py:meth:`HermesContext.update` for more information.
         """
-
-        base_key = ContextPath.parse(_key)
 
         ts = kwargs.pop('ts', datetime.datetime.now().isoformat())
         ep = kwargs.pop('ep', self._ep.name)
