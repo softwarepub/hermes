@@ -1,6 +1,8 @@
 <!--
 SPDX-FileCopyrightText: 2022 Stephan Druskat
 SPDX-FileCopyrightText: 2022 Stephan Druskat, Michael Meinel
+
+SPDX-License-Identifier: CC-BY-SA-4.0
 -->
 
 # Use click for CLI commands

@@ -1,5 +1,7 @@
 <!--
 SPDX-FileCopyrightText: 2022 Stephan Druskat, Oliver Bertuch, Oliver Knodel, Guido Juckeland, Michael Meinel
+
+SPDX-License-Identifier: CC-BY-SA-4.0
 -->
 
 # Expose internal data model to allow mapping configurations
