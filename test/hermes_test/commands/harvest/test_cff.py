@@ -44,23 +44,6 @@ def test_convert_cff_to_codemeta(valid_minimal_cff, codemeta):
     assert codemeta == actual_result
 
 
-@pytest.mark.parametrize("path, path_str", [
-    (deque(['str1', 0]), "'str1 1'"),
-    (deque(['str1', 0, 'str2', 1, 'str3', 2]), "'str1 1 -> str2 2 -> str3 3'"),
-])
-def test_build_nodepath_str(path, path_str):
-    assert harvest._build_nodepath_str(path) == path_str
-
-
-@pytest.mark.parametrize("path, path_str", [
-    ('str1', "'str1 1'"),
-    (deque([0, 'str1', 1, 'str2', 2, 'str3']), "'str1 1 -> str2 2 -> str3 3'"),
-])
-def test_build_nodepath_str_fail(path, path_str):
-    with pytest.raises(Exception):
-        assert harvest._build_nodepath_str(path) == path_str
-
-
 def test_get_single_cff(tmp_path):
     assert harvest._get_single_cff(tmp_path) is None
     single_cff = tmp_path / 'CITATION.cff'
