@@ -9,6 +9,14 @@ This is a work in progress. Expect disruptive changes.
 ```{include} ../../README.md
 ```
 
+## Tutorials
+
+```{toctree}
+:glob:
+:maxdepth: 1
+tutorials/*
+```
+
 ## Developer Documentation
 
 ```{toctree}
