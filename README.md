@@ -55,9 +55,16 @@ poetry run pytest test --cov=hermes --cov-branch --cov-report=html --cov-report=
 
 This project comes with extensive documentation that can be built using [Sphinx](https://www.sphinx-doc.org/en/master/).
 This also includes automatic API documentation.
-To build the documentation in your *poetry* envrionment, run the following commands:
+To build the documentation in your *poetry* environment, run the following commands from the project root:
 
 ```shell
-poetry run sphinx-apidoc -o docs/source/api src
-poetry run sphinx-build -M html docs/source docs/build
+poetry install --with docs
+poetry run task docs-build
+```
+
+Or use [`sphinx-autobuild`](https://) to enable a self-updating preview service:
+
+```shell
+poetry install --with docs
+poetry run task docs-live
 ```

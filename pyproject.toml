@@ -20,6 +20,7 @@ cffconvert = "^2.0.0"
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.1.1"
 pytest-cov = "^3.0.0"
+taskipy = "^1.10.3"
 
 # Packages for developers for creating documentation
 [tool.poetry.group.docs]
@@ -44,6 +45,11 @@ haggis = "hermes.cli:haggis"
 
 [tool.poetry.plugins."hermes.harvest"]
 cff = "hermes.commands.harvest.cff:harvest_cff"
+
+[tool.taskipy.tasks]
+docs-build = "poetry run sphinx-build -M html docs/source docs/build -W"
+docs-clean = "poetry run sphinx-build -M clean docs/source docs/build"
+docs-live = "poetry run sphinx-autobuild docs/source docs/build"
 
 [build-system]
 requires = ["poetry-core>=1.2.0"]
