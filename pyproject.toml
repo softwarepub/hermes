@@ -16,7 +16,8 @@ click = "^8.1"
 jsonschema = "^3.0.0"
 cffconvert = "^2.0.0"
 
-[tool.poetry.dev-dependencies]
+# Packages for developers
+[tool.poetry.group.dev.dependencies]
 pytest = "^7.1.1"
 pytest-cov = "^3.0.0"
 Sphinx = "^4.5.0"
@@ -29,5 +30,5 @@ haggis = "hermes.cli:haggis"
 cff = "hermes.commands.harvest.cff:harvest_cff"
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core>=1.2.0"]
 build-backend = "poetry.core.masonry.api"

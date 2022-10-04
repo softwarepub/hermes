@@ -20,6 +20,7 @@ This project uses
 
 1. Clone this repository
 2. If you want to use [`poetry`](https://python-poetry.org), run `poetry shell` and `poetry install`
+   ([Learn how to install `poetry`](https://python-poetry.org/docs/#installation)) - we require using `poetry>=1.2`.
 
 ## Usage
 
