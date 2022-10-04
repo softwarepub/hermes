@@ -8,7 +8,9 @@ For more information about the HERMES project, see the [HERMES project website](
 
 - Python sources are in the `src` folder
 - pytest tests are in the `test` folder
-- Architectural design records are in `docs/adr`
+- [Architectural Design Records (ADR)](https://adr.github.io/) are in `docs/adr`
+- API documentation is generated in `docs/source/api`
+- All other documentation lives in `docs/source/*`
 
 This project uses 
 
