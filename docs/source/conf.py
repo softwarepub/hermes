@@ -1,6 +1,4 @@
-# SPDX-FileCopyrightText: 2022 Michael Meinel
-# SPDX-FileCopyrightText: 2022 Oliver Bertuch
-# SPDX-FileCopyrightText: 2022 Stephan Druskat
+# SPDX-FileCopyrightText: 2022 German Aerospace Center (DLR), Forschungszentrum Jülich
 #
 # SPDX-License-Identifier: Apache-2.0
 

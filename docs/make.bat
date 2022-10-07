@@ -1,5 +1,4 @@
-REM SPDX-FileCopyrightText: 2022 Oliver Bertuch
-REM SPDX-FileCopyrightText: 2022 Stephan Druskat
+REM SPDX-FileCopyrightText: 2022 Forschungszentrum Jülich
 REM
 REM SPDX-License-Identifier: CC0-1.0
 
