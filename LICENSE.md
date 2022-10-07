@@ -1,5 +1,6 @@
 <!--
-SPDX-FileCopyrightText: 2022 Stephan Druskat
+SPDX-FileCopyrightText: 2022 German Aerospace Center (DLR)
+
 SPDX-License-Identifier: CC0-1.0
 -->
 
