@@ -20,8 +20,11 @@ We loosely follow a mixture of [GitHubFlow](https://docs.github.com/en/get-start
     - Unstable development branch
     - Last "stable" is tagged: tag before attempting to break something
 
-`feature/<describe-feature>` (including issue id when exists: `feature/62-fix-broken-thing`)
+`feature/<describe-feature>` (including issue id when exists: `feature/62-improve-broken-thing`/`feature/42-add-new-thing`)
     - Branch from last tag on `develop`
+
+`hotfix/<describe-hotfix>` (including issue id when exists: `hotfix/62-fix-broken-thing-in-release`)
+    - Branch from last tag on `main`
 
 ### Pull requests
 
