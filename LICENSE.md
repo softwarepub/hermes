@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2022 Stephan Druskat
+SPDX-License-Identifier: CC0-1.0
+-->
+
 ## Licenses
 
 The work contained in this repository is licensed under different licenses:
