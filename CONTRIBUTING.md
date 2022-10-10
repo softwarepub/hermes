@@ -74,9 +74,11 @@ We loosely follow a mixture of [GitHubFlow](https://docs.github.com/en/get-start
     - CASE 4: (PR author's reaction depends on outcome of second review)
 - Re-review:
     - See Review above
-- PR author
-    - Close PR, or
-    - Merge PR and delete remote branch
+- Any maintainer
+    - Close PR if PR is not suitable for merge, and no further changes to improve it come from the PR author,
+      after having communicated sensible requests with a deadline for further work in the PR comments.
+    - Merge PR and delete remote branch if at least half of the invited reviewers have approved the PR, and no changes have been requested after review.
+      This implements lazy consensus to avoid bottlenecks, where a PR has been approved by some reviewers but cannot be closed due to missing reviews.
 
 ## Release/stabilization process
 
