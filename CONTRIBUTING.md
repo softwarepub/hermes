@@ -24,7 +24,7 @@ We loosely follow a mixture of [GitHubFlow](https://docs.github.com/en/get-start
     - Branch from last tag on `develop`
 
 `hotfix/<describe-hotfix>` (including issue id when exists: `hotfix/62-fix-broken-thing-in-release`)
-    - Branch from last tag on `main`
+    - Branch from `main`
 
 ### Pull requests
 
