@@ -31,9 +31,6 @@ release = '2022-07-01'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    # run sphinx-apidocs on every build
-    'sphinxcontrib.apidoc',
-
     'sphinx.ext.intersphinx',
     'sphinx.ext.extlinks',
     'sphinx.ext.autosectionlabel',
@@ -47,7 +44,8 @@ extensions = [
     'sphinxcontrib.icon',
     'sphinxemoji.sphinxemoji',
     "sphinxext.opengraph",
-    'myst_parser'
+    'myst_parser',
+    'autoapi.extension',
 ]
 
 language = 'en'
@@ -70,11 +68,11 @@ myst_enable_extensions = [
     'deflist',
 ]
 
-# Sphinx apidoc run configuration
-apidoc_module_dir = '../../src'
-apidoc_output_dir = 'api'
-apidoc_excluded_paths = ['tests']
-apidoc_separate_modules = True
+# Sphinx API docs configuration, see https://sphinx-autoapi.readthedocs.io/en/latest/reference/config.html
+autoapi_type = "python"
+autoapi_dirs = ["../../src"]
+autoapi_root = "api"
+autoapi_ignore = ["*__main__*"]
 
 # -- Options for HTML output -------------------------------------------------
 

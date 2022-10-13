@@ -32,7 +32,7 @@ myst-parser = "^0.18.0"
 sphinx-autobuild = "^2021.3.14"
 sphinx-book-theme = "^0.3.3"
 # Sphinx - Additional modules
-sphinxcontrib-apidoc = "^0.3.0"
+sphinx-autoapi = "^2.0.0"
 sphinxcontrib-contentui = "^0.2.5"
 sphinxcontrib-images = "^0.9.4"
 sphinx-icon = "^0.1.2"
