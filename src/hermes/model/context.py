@@ -206,7 +206,7 @@ class HermesHarvestContext(HermesContext):
             ctx.update('author.email', 'eggs@spam.xxx')
 
         :param data: The data that should be updated (as mapping with strings as keys).
-        :param kwargs: Additional information about the value (see :ref:`HermesContext.update` for details).
+        :param kwargs: Additional information about the value (see :py:meth:`HermesContext.update` for details).
         """
 
         for key, value in data.items():
