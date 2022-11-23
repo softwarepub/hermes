@@ -16,8 +16,20 @@ def click_ctx():
     return ctx
 
 
+@pytest.fixture()
+def click_ctx_no_parent():
+    spam, spam_cmd = mock_command('spam')
+    ctx = click.Context(spam_cmd)
+    return ctx
+
+
 def test_get_project_path(click_ctx):
     path = util.get_project_path(click_ctx)
     assert isinstance(path, pathlib.PosixPath)
     assert path == pathlib.PosixPath('foobar')
 
+
+def test_get_project_path_exception(click_ctx_no_parent):
+    with pytest.raises(RuntimeError) as e:
+        util.get_project_path(click_ctx_no_parent)
+    assert str(e.value) == 'No parent context!'
