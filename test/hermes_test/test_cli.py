@@ -3,13 +3,9 @@ from unittest import mock
 
 import click
 from click.testing import CliRunner
+from mocks import mock_command
 
 from hermes import cli
-
-
-def mock_command(name: str) -> t.Tuple[mock.Mock, click.Command]:
-    func = mock.Mock(return_value=name)
-    return func, click.command(name)(func)
 
 
 def test_workflow_setup():
