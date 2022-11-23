@@ -3,9 +3,9 @@ from unittest import mock
 
 import click
 from click.testing import CliRunner
-from mocks import mock_command
 
 from hermes import cli
+from hermes_test.mocks import mock_command
 
 
 def test_workflow_setup():
