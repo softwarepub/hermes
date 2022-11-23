@@ -1,118 +1,74 @@
-import pathlib
 import json
 
 import pytest
+from hermes.model.errors import HermesValidationError
 
 import hermes.commands.harvest.codemeta as harvest
 
 
+INVALID_CODEMETA_JSON = """\
+{
+  "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+  "@type": "SoftwareSourceCode",
+  "INVALID_KEY": "HERMES"
+}
+"""
+
+INVALID_JSON = 'Not JSON'
+
 CODEMETA_JSON = """\
 {
-    "@context": [
-        "https://raw.githubusercontent.com/codemeta/codemeta/2.0/codemeta.jsonld",
-        "https://raw.githubusercontent.com/schemaorg/schemaorg/main/data/releases/13.0/schemaorgcontext.jsonld",
-        "https://w3id.org/software-types",
-        "https://w3id.org/software-iodata"
-    ],
-    "@id": "https://github.com/hermes-hms/workflow.git",
-    "@type": "SoftwareSourceCode",
-    "applicationCategory": "Software Development",
-    "audience": {
-        "@id": "/audience/developers",
-        "@type": "Audience",
-        "audienceType": "Developers"
-    },
-    "author": {
-        "@id": "/person/iam-person",
-        "@type": "Person",
-        "affiliation": {
-            "@id": "/org/iamorg",
-            "@type": "Organization",
-            "name": "iamorg"
-        },
-        "email": "iam@mail.example",
-        "familyName": "Person",
-        "givenName": "Iam",
-        "position": 1,
-        "url": "https://iam.website"
-    },
-    "codeRepository": "https://github.com/hermes-hms/workflow.git",
-    "contributor": {
-        "@id": "/person/iam-person",
-        "@type": "Person",
-        "affiliation": {
-            "@id": "/org/iamorg",
-            "@type": "Organization",
-            "name": "iamorg"
-        },
-        "email": "iam@mail.example",
-        "familyName": "Person",
-        "givenName": "Iam",
-        "position": 1,
-        "url": "https://iam.website"
-    },
-    "dateCreated": "2023-06-31T10:54:22Z+0200",
-    "dateModified": "2023-12-31T121:52:34Z+0200",
-    "description": "Test Codemeta harvesting",
-    "developmentStatus": "https://www.repostatus.org/#active",
-    "identifier": "workflow",
-    "issueTracker": "https://github.com/hermes-hmc/workflow/issues",
-    "keywords": [
-        "metadata",
-        "scientific",
-        "codemeta",
-        "hermes",
-        "software metadata",
-        "software publication"
-    ],
-    "license": [
-        "https://spdx.org/licenses/Apache-2.0"
-    ],
-    "maintainer": {
-        "@id": "/person/iam-person",
-        "@type": "Person",
-        "affiliation": {
-            "@id": "/org/iamorg",
-            "@type": "Organization",
-            "name": "iamorg"
-        },
-        "email": "iam@mail.example",
-        "familyName": "Person",
-        "givenName": "Iam",
-        "position": 1,
-        "url": "https://iam.website"
-    },
-    "name": "HERMES Workflow",
-    "operatingSystem": [
-        "Linux",
-        "BSD",
-        "macOS"
-    ],
-    "readme": "https://github.com/hermes-hmc/workflow/blob/main/README.md",
-    "runtimePlatform": [
-        "Python 3.10"
-    ],
-    "softwareRequirements": [
-        {
-            "@id": "/dependency/click",
-            "@type": "SoftwareApplication",
-            "identifier": "click",
-            "name": "click",
-            "runtimePlatform": "Python 3"
-        }
-    ],
-    "targetProduct": {
-        "@id": "/commandlineapplication/haggis",
-        "@type": "CommandLineApplication",
-        "executableName": "haggis",
-        "name": "haggis",
-        "runtimePlatform": "Python 3"
-    },
-    "url": [
-        "https://software-metadata.pub",
-        "https://github.com/hermes-hmc/workflow.git"
-    ],
-    "version": "0"
+  "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+  "@type": "SoftwareSourceCode",
+  "identifier": "HERMES",
+  "description": "HERMES Workflow.",
+  "name": "HERMES Workflow",
+  "codeRepository": "https://github.com/hermes-hmc/workflow",
+  "issueTracker": "https://github.com/hermes-hmc/workflow/issues",
+  "license": "https://spdx.org/licenses/Apache-2.0",
+  "version": "2.0",
+  "author": [
+    {
+      "@type": "Person",
+      "givenName": "Iam",
+      "familyName": "Person",
+      "email": "iam@email.com",
+      "@id": "http://orcid.org/0000-0000-0000-0000"
+    }
+  ],
+  "contributor": [
+    {
+      "@type": "Person",
+      "givenName": "Iam",
+      "familyName": "Person",
+      "email": "iam@email.com",
+      "@id": "http://orcid.org/0000-0000-0000-0000"
+    }
+  ],
+  "maintainer":     {
+    "@type": "Person",
+    "givenName": "Iam",
+    "familyName": "Person",
+    "email": "iam@email.com",
+    "@id": "http://orcid.org/0000-0000-0000-0000"
+  },
+  "contIntegration": "https://github.com/hermes-hmc/workflow/actions",
+  "developmentStatus": "active",
+  "downloadUrl": "https://github.com/hermes-hmc/workflow",
+  "funder": { 
+          "@id": "https://helmholtz-metadaten.de",
+          "@type": "Organization",
+          "name": "Helmholtz Metadata Collaboration"
+  },
+  "funding":"ZT-I-PF-3-006; HERMES: Helmholtz Rich Metadata Software Publication",
+  "keywords": [
+    "metadata",
+    "software publication",
+    "automation"
+  ],
+  "dateCreated":"2020-07-01",
+  "datePublished":"2022-11-23",
+  "programmingLanguage": "Python"
 }
 """
 
@@ -120,6 +76,11 @@ CODEMETA_JSON = """\
 @pytest.fixture
 def valid_codemeta():
     return json.loads(CODEMETA_JSON)
+
+
+@pytest.fixture
+def invalid_codemeta():
+    return json.loads(INVALID_CODEMETA_JSON)
 
 
 @pytest.fixture()
@@ -130,6 +91,22 @@ def valid_codemeta_path(tmp_path, valid_codemeta):
     return codemeta_path
 
 
+@pytest.fixture()
+def invalid_codemeta_path(tmp_path, invalid_codemeta):
+    codemeta_path = tmp_path / 'codemeta.json'
+    with open(codemeta_path, 'w') as fo:
+        json.dump(invalid_codemeta, fo)
+    return codemeta_path
+
+
+@pytest.fixture()
+def invalid_json_path(tmp_path):
+    codemeta_path = tmp_path / 'codemeta.json'
+    with open(codemeta_path, 'w') as fo:
+        fo.write(INVALID_JSON)
+    return codemeta_path
+
+
 def test_get_single_codemeta(tmp_path):
     assert harvest._get_single_codemeta(tmp_path) is None
     single_codemeta = tmp_path / 'codemeta.json'
@@ -137,8 +114,15 @@ def test_get_single_codemeta(tmp_path):
     assert harvest._get_single_codemeta(tmp_path) == single_codemeta
 
 
-def test_validate_fail():
-    assert not harvest._validate(pathlib.Path("foobar"))
+def test_validate_invalid_json_raises(invalid_json_path, tmp_path):
+    with pytest.raises(HermesValidationError) as hve:
+        harvest._validate(invalid_json_path)
+    assert str(hve.value) == f"('CodeMeta file at {tmp_path}/codemeta.json cannot be decoded into JSON.', " \
+                             f"JSONDecodeError('Expecting value: line 1 column 1 (char 0)'))"
+
+
+def test_validate_invalid_codemeta_raises(invalid_codemeta_path, tmp_path):
+    assert not harvest._validate(invalid_codemeta_path)
 
 
 def test_validate_success(valid_codemeta_path):
