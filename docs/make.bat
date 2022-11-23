@@ -2,6 +2,8 @@ REM SPDX-FileCopyrightText: 2022 Forschungszentrum Jülich
 REM
 REM SPDX-License-Identifier: CC0-1.0
 
+REM SPDX-FileContributor: Oliver Bertuch
+
 @ECHO OFF
 
 pushd %~dp0

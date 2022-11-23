@@ -2,6 +2,9 @@
 #
 # SPDX-License-Identifier: CC0-1.0
 
+# SPDX-FileContributor: Stephan Druskat
+# SPDX-FileContributor: Michael Meinel
+
 [tool.poetry]
 name = "hermes"
 version = "0.1.0"

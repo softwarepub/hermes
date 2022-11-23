@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+# SPDX-FileContributor: Michael Meinel
+
 class HermesValidationError(Exception):
     """
     This exception should be thrown when input validation (e.g., during harvest) occurs.

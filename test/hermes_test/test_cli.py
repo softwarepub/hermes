@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+# SPDX-FileContributor: Michael Meinel
+
 import typing as t
 from unittest import mock
 

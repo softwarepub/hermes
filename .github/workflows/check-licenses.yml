@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: CC0-1.0
 
+# SPDX-FileContributor: Stephan Druskat
+
 name: REUSE 3.0 Compliance Check
 
 on: [push, pull_request]

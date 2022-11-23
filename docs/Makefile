@@ -2,6 +2,9 @@
 #
 # SPDX-License-Identifier: CC0-1.0
 
+# SPDX-FileContributor: Oliver Bertuch
+
+
 # Minimal makefile for Sphinx documentation
 #
 

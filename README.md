@@ -4,6 +4,11 @@ SPDX-FileCopyrightText: 2022 German Aerospace Center (DLR)
 SPDX-License-Identifier: CC-BY-SA-4.0
 -->
 
+<!--
+SPDX-FileContributor: Stephan Druskat
+SPDX-FileContributor: Michael Meinel
+-->
+
 # hermes
 
 Implementation of the HERMES workflow.

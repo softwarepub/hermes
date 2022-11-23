@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+# SPDX-FileContributor: Michael Meinel
+
 from hermes.cli import haggis
 
 
