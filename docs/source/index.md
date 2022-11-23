@@ -29,7 +29,7 @@ adr/index
 ```{toctree}
 :maxdepth: 2
 :caption: API
-api/modules
+api/index
 ```
 
 ## Indices and tables
