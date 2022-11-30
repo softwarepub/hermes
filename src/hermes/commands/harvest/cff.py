@@ -1,7 +1,4 @@
-import collections
-import glob
 import logging
-import os
 import json
 import pathlib
 import urllib.request
