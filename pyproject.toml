@@ -13,9 +13,6 @@ authors = ["Stephan Druskat <stephan.druskat@dlr.de>",
            "Michael Meinel <michael.meinel@dlr.de>",
            "Oliver Bertuch <o.bertuch@fz-juelich.de>"]
 
-[tool.poetry.extras]
-cff = ['ruamel.yaml', 'cffconvert']
-
 [tool.poetry.dependencies]
 python = "^3.10"
 click = "^8.1"
@@ -28,6 +25,7 @@ cffconvert = "^2.0.0"
 pytest = "^7.1.1"
 pytest-cov = "^3.0.0"
 taskipy = "^1.10.3"
+flake8 = "^5.0.4"
 
 # Packages for developers for creating documentation
 [tool.poetry.group.docs]

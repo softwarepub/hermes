@@ -14,7 +14,7 @@ from hermes.model.context import HermesContext, HermesHarvestContext
 @pytest.fixture
 def harvest_ctx(request: pytest.FixtureRequest):
     ctx = HermesContext()
-    return HermesHarvestContext(ctx, EntryPoint(name=request.function, group='hermes.harvest', value='hermes_test:hctx'))
+    return HermesHarvestContext(ctx, EntryPoint(name=request.function, group='hermes.harvest', value='hermes_test:ctx'))
 
 
 def test_context_default(harvest_ctx):

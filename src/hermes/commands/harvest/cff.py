@@ -7,7 +7,6 @@
 
 import collections
 import glob
-import os
 import json
 import pathlib
 import urllib.request
