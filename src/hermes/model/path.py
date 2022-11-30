@@ -33,7 +33,7 @@ class ContextPath:
     """
     This class is used to access the different contexts.
 
-    On the one hand, the class allows you to define and manage pathes.
+    On the one hand, the class allows you to define and manage paths.
     You can simply build them up like follows:
 
     >>> path = ContextPath('spam')['eggs'][1]['ham']
@@ -263,7 +263,7 @@ class ContextPath:
 
     def resolve(self, target: list | dict, create: bool = False, query: t.Any = None) -> ('ContextPath', list | dict, 'ContextPath'):
         """
-        Resolve a given path releative to a given target.
+        Resolve a given path relative to a given target.
 
         The method will incrementally try to resolve the entries in the `_target.path`.
         It stops when the requested item was found or when the resolution could not be completed.

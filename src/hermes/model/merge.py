@@ -46,7 +46,7 @@ class MergeStrategy:
 
     def _check(self, key, filter, value):
         if key in filter:
-            check = self.checks.get(key, lambda item, vaue: item in value)
+            check = self.checks.get(key, lambda item, value: item in value)
             return check(filter[key], value)
         return True
 

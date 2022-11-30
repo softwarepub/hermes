@@ -274,7 +274,7 @@ class HermesHarvestContext(HermesContext):
 
         :param data: Optional a target dictionary where the data is stored. If not given, a new one is created.
         :param path: The path to extract data from.
-        :param tags: An optional dictionary to collect the tags that belog to the extracted data.
+        :param tags: An optional dictionary to collect the tags that belong to the extracted data.
                      The full path will be used as key for this dictionary.
         :return: The extracted data (i.e., the `data` parameter if it was given).
         """
