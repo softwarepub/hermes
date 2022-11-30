@@ -27,4 +27,9 @@ authors:
     family-names: Bertuch
     email: o.bertuch@fz-juelich.de
     affiliation: Forschungszentrum Jülich GmbH (FZJ)
-    orcid: 'https://orcid.org/0000-0002-2702-3419'  
+    orcid: 'https://orcid.org/0000-0002-2702-3419'
+  - given-names: Oliver
+    family-names: Knodel
+    email: o.knodel@hzdr.de
+    affiliation: Helmholtz Zentrum Dresden-Rossendorf (HZDR)
+    orcid: 'https://orcid.org/0000-0001-8174-7795'
