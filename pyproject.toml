@@ -1,3 +1,10 @@
+# SPDX-FileCopyrightText: 2022 German Aerospace Center (DLR)
+#
+# SPDX-License-Identifier: CC0-1.0
+
+# SPDX-FileContributor: Stephan Druskat
+# SPDX-FileContributor: Michael Meinel
+
 [tool.poetry]
 name = "hermes"
 version = "0.1.0"
@@ -37,6 +44,7 @@ sphinx-icon = "^0.1.2"
 sphinx-favicon = "^0.2"
 sphinxemoji = "^0.2.0"
 sphinxext-opengraph = "^0.6.3"
+reuse = "^1.0.0"
 
 [tool.poetry.plugins.console_scripts]
 haggis = "hermes.cli:haggis"

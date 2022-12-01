@@ -1,3 +1,13 @@
+<!--
+SPDX-FileCopyrightText: 2022 German Aerospace Center (DLR)
+
+SPDX-License-Identifier: CC-BY-SA-4.0
+-->
+
+<!--
+SPDX-FileContributor: Michael Meinel
+-->
+
 # HERMES Data Model
 
 *haggis* uses an internal data model to store the output of the different stages.
