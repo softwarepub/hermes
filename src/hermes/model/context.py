@@ -195,7 +195,7 @@ class HermesHarvestContext(HermesContext):
         See :py:meth:`HermesContext.update` for more information.
         """
 
-        ts = kwargs.pop('ts', datetime.datetime.now().isoformat())
+        ts = kwargs.pop('ts', datetime.datetime.now().isoformat(timespec='seconds'))
         ep = kwargs.pop('ep', self._ep.name)
 
         if _key not in self._data:
