@@ -1,3 +1,9 @@
+# SPDX-FileCopyrightText: 2022 German Aerospace Center (DLR)
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# SPDX-FileContributor: Michael Meinel
+
 from datetime import datetime
 from importlib.metadata import EntryPoint
 
