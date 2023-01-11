@@ -140,7 +140,7 @@ class WorkflowCommand(click.Group):
 
 @click.group(cls=WorkflowCommand, invoke_without_command=True)
 @click.option("--deposit", is_flag=True, default=False)
-@click.option("--post-process", is_flag=True, default=False)
+@click.option("--postprocess", is_flag=True, default=False)
 @click.option('--path', default=pathlib.Path('./'), help='Working path', type=pathlib.Path)
 @click.pass_context
 def main(ctx: click.Context, *args, **kwargs) -> None:

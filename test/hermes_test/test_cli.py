@@ -101,9 +101,9 @@ def test_hermes_with_deposit():
     assert not result.exception
 
 
-def test_haggis_with_post_process():
+def test_haggis_with_postprocess():
     runner = CliRunner()
-    result = runner.invoke(cli.main, args=('--post-process', ))
+    result = runner.invoke(cli.main, args=('--postprocess', ))
 
     assert not result.exception
 
@@ -115,9 +115,9 @@ def test_hermes_with_path():
     assert not result.exception
 
 
-def test_hermes_with_deposit_and_post_process():
+def test_haggis_with_deposit_and_postprocess():
     runner = CliRunner()
-    result = runner.invoke(cli.main, args=('--deposit', '--post-process'))
+    result = runner.invoke(cli.main, args=('--deposit', '--postprocess'))
 
     assert not result.exception
 
@@ -129,15 +129,15 @@ def test_hermes_with_deposit_and_path():
     assert not result.exception
 
 
-def test_hermes_with_path_and_post_process():
+def test_haggis_with_path_and_postprocess():
     runner = CliRunner()
-    result = runner.invoke(cli.main, args=('--path', './', '--post-process'))
+    result = runner.invoke(cli.main, args=('--path', './', '--postprocess'))
 
     assert not result.exception
 
 
-def test_hermes_with_deposit_and_post_process_and_path():
+def test_haggis_with_deposit_and_postprocess_and_path():
     runner = CliRunner()
-    result = runner.invoke(cli.main, args=('--deposit', '--post-process', '--path', './'))
+    result = runner.invoke(cli.main, args=('--deposit', '--postprocess', '--path', './'))
 
     assert not result.exception

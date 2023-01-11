@@ -117,8 +117,8 @@ def deposit():
 
 
 @click.group(invoke_without_command=True)
-def post_process():
+def postprocess():
     """
-    Post-process metadata after deposition
+    Postprocess metadata after deposition
     """
     click.echo("Post-processing")
