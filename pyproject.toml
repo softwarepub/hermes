@@ -64,7 +64,7 @@ sphinxext-opengraph = "^0.6.3"
 reuse = "^1.0.0"
 
 [tool.poetry.plugins.console_scripts]
-haggis = "hermes.cli:haggis"
+hermes = "hermes.cli:main"
 
 [tool.poetry.plugins."hermes.harvest"]
 000_cff = "hermes.commands.harvest.cff:harvest_cff"
