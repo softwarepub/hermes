@@ -4,7 +4,7 @@ SPDX-FileCopyrightText: 2022 German Aerospace Center (DLR), Forschungszentrum JÃ
 SPDX-License-Identifier: CC-BY-SA-4.0
 -->
 
-# Architecture Design Records
+# Architectural Decision Records
 
 ```{toctree}
 :glob:
