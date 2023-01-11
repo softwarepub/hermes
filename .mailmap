@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2022 German Aerospace Center (DLR)
+#
+# SPDX-License-Identifier: CC0-1.0
+
 # Mapping of email addresses only. Format (one pair per line):
 # <primary.email@address> <discard.this.email@address>
 <michael.meinel@dlr.de> <led02@me.com>
