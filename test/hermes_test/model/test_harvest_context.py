@@ -4,7 +4,6 @@
 
 # SPDX-FileContributor: Michael Meinel
 
-from datetime import datetime
 from importlib.metadata import EntryPoint
 
 import pytest
