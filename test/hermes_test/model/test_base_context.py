@@ -21,7 +21,7 @@ def test_context_hermes_dir_custom():
 
 def test_context_get_cache_default():
     ctx = HermesContext()
-    assert ctx.get_cache('spam', 'eggs') == Path('.') / '.hermes' / 'spam' / 'eggs'
+    assert ctx.get_cache('spam', 'eggs') == Path('.') / '.hermes' / 'spam' / 'eggs.json'
 
 
 def test_context_get_cache_cached():
@@ -34,5 +34,5 @@ def test_context_get_cache_create(tmpdir):
     ctx = HermesContext(tmpdir)
     subdir = Path(tmpdir) / '.hermes' / 'spam'
 
-    assert ctx.get_cache('spam', 'eggs', create=True) == subdir / 'eggs'
+    assert ctx.get_cache('spam', 'eggs', create=True) == subdir / 'eggs.json'
     assert subdir.exists()

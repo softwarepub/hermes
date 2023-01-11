@@ -37,12 +37,12 @@ This project uses
 
 ## Usage
 
-The `haggis` application provides the entry point for the HERMES workflow.
+The `hermes` application provides the entry point for the HERMES workflow.
 After installation, you can run it from your command line environment:
 
 ```shell
-haggis --help
-haggis harvest
+hermes --help
+hermes harvest
 ```
 
 You can also call the `hermes` package as Python module:

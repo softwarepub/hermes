@@ -4,6 +4,8 @@
 
 # SPDX-FileContributor: Michael Meinel
 
+import datetime
+import pathlib
 import traceback
 import json
 import logging
@@ -12,10 +14,15 @@ import typing as t
 from pathlib import Path
 from importlib.metadata import EntryPoint
 
+from hermes.model import errors
+from hermes.model.path import ContextPath
 from hermes.model.errors import HermesValidationError
 
 
 _log = logging.getLogger(__name__)
+
+
+ContextPath.init_merge_strategies()
 
 
 class HermesContext:
@@ -43,6 +50,12 @@ class HermesContext:
         self._data = {}
         self._errors = []
 
+    def keys(self) -> t.List[ContextPath]:
+        """
+        Get all the keys for the data stored in this context.
+        """
+        return [ContextPath.parse(k) for k in self._data.keys()]
+
     def get_cache(self, *path: str, create: bool = False) -> Path:
         """
         Retrieve a cache file for a given *path*.
@@ -63,7 +76,7 @@ class HermesContext:
         cache_dir = self.hermes_dir.joinpath(*subdir)
         if create:
             cache_dir.mkdir(parents=True, exist_ok=True)
-        data_file = cache_dir / name
+        data_file = cache_dir / (name + '.json')
         self._caches[path] = data_file
 
         return data_file
@@ -80,6 +93,19 @@ class HermesContext:
         """
 
         pass
+
+    def get_data(self,
+                 data: t.Optional[dict] = None,
+                 path: t.Optional['ContextPath'] = None,
+                 tags: t.Optional[dict] = None) -> dict:
+        if data is None:
+            data = {}
+        if path is not None:
+            data.update(path.get_from(self._data))
+        else:
+            for key in self.keys():
+                data.update(key.get_from(self._data))
+        return data
 
     def error(self, ep: EntryPoint, error: Exception):
         """
@@ -134,7 +160,7 @@ class HermesHarvestContext(HermesContext):
 
         data_file = self.get_cache('harvest', self._ep.name, create=True)
         self._log.debug("Writing cache to %s...", data_file)
-        json.dump(self._data, data_file.open('w'))
+        json.dump(self._data, data_file.open('w'), indent=2)
 
     def __enter__(self):
         self.load_cache()
@@ -169,28 +195,43 @@ class HermesHarvestContext(HermesContext):
         See :py:meth:`HermesContext.update` for more information.
         """
 
+        timestamp = kwargs.pop('timestamp', datetime.datetime.now().isoformat(timespec='seconds'))
+        harvester = kwargs.pop('harvester', self._ep.name)
+
         if _key not in self._data:
             self._data[_key] = []
 
         for entry in self._data[_key]:
-            if entry[1] == kwargs:
-                self._log.debug("Update %s: %s -> %s (%s)", _key, entry[0], _value, entry[1])
+            value, tag = entry
+            tag_timestamp = tag.pop('timestamp')
+            tag_harvester = tag.pop('harvester')
+
+            if tag == kwargs:
+                self._log.debug("Update %s: %s -> %s (%s)", _key, str(value), _value, str(tag))
                 entry[0] = _value
+                tag['timestamp'] = timestamp
+                tag['harvester'] = harvester
                 break
+
+            tag['timestamp'] = tag_timestamp
+            tag['harvester'] = tag_harvester
+
         else:
+            kwargs['timestamp'] = timestamp
+            kwargs['harvester'] = harvester
             self._data[_key].append([_value, kwargs])
 
-    def _update_key_from(self, _key: str, _value: t.Any, **kwargs):
+    def _update_key_from(self, _key: ContextPath, _value: t.Any, **kwargs):
         if isinstance(_value, dict):
             for key, value in _value.items():
-                self._update_key_from(f'{_key}.{key}', value, **kwargs)
+                self._update_key_from(_key[key], value, **kwargs)
 
         elif isinstance(_value, (list, tuple)):
             for index, value in enumerate(_value):
-                self._update_key_from(f'{_key}[{index}]', value, **kwargs)
+                self._update_key_from(_key[index], value, **kwargs)
 
         else:
-            self.update(_key, _value, **kwargs)
+            self.update(str(_key), _value, **kwargs)
 
     def update_from(self, data: t.Dict[str, t.Any], **kwargs: t.Any):
         """
@@ -216,7 +257,7 @@ class HermesHarvestContext(HermesContext):
         """
 
         for key, value in data.items():
-            self._update_key_from(key, value, **kwargs)
+            self._update_key_from(ContextPath(key), value, **kwargs)
 
     def error(self, ep: EntryPoint, error: Exception):
         """
@@ -225,3 +266,89 @@ class HermesHarvestContext(HermesContext):
 
         ep = ep or self._ep
         self._base.error(ep, error)
+
+    def _check_values(self, path, values):
+        (value, tag), *values = values
+        for alt_value, alt_tag in values:
+            if value != alt_value:
+                raise ValueError(f'{path}')
+        return value, tag
+
+    def get_data(self,
+                 data: t.Optional[dict] = None,
+                 path: t.Optional['ContextPath'] = None,
+                 tags: t.Optional[dict] = None) -> dict:
+        """
+        Retrieve the data from a given path.
+
+        This method can be used to extract data and whole sub-trees from the context.
+        If you want a complete copy of the data, you can also call this method without giving a path.
+
+        :param data: Optional a target dictionary where the data is stored. If not given, a new one is created.
+        :param path: The path to extract data from.
+        :param tags: An optional dictionary to collect the tags that belong to the extracted data.
+                     The full path will be used as key for this dictionary.
+        :return: The extracted data (i.e., the `data` parameter if it was given).
+        """
+        if data is None:
+            data = {}
+        for key, values in self._data.items():
+            key = ContextPath.parse(key)
+            if path is None or key in path:
+                value, tag = self._check_values(key, values)
+                try:
+                    key.update(data, value, tags, **tag)
+                    if tags is not None and tag:
+                        tags[str(key)] = tag
+                except errors.MergeError as e:
+                    self.error(self._ep, e)
+        return data
+
+    def finish(self):
+        """
+        Calling this method will lead to further processors not handling the context anymore.
+        """
+        self._data.clear()
+
+
+class CodeMetaContext(HermesContext):
+    _PRIMARY_ATTR = {
+        'author': ('@id', 'email', 'name'),
+    }
+
+    def __init__(self, project_dir: pathlib.Path | None = None):
+        super().__init__(project_dir)
+        self.tags = {}
+
+    def merge_from(self, other: HermesHarvestContext):
+        other.get_data(self._data, tags=self.tags)
+
+    def update(self, _key: ContextPath, _value: t.Any, tags: t.Dict[str, t.Dict] | None = None):
+        if _key._item == '*':
+            _item_path, _item, _path = _key.resolve(self._data, query=_value, create=True)
+            if tags:
+                _tags = {k.lstrip(str(_key) + '.'): t for k, t in tags.items() if ContextPath.parse(k) in _key}
+            else:
+                _tags = {}
+            _path._set_item(_item, _path, _value, **_tags)
+            if tags is not None and _tags:
+                for k, v in _tags.items():
+                    if not v:
+                        continue
+
+                    if _key:
+                        tag_key = str(_key) + '.' + k
+                    else:
+                        tag_key = k
+                    tags[tag_key] = v
+        else:
+            _key.update(self._data, _value, tags)
+
+    def find_key(self, item, other):
+        data = item.get_from(self._data)
+
+        for i, node in enumerate(data):
+            match = [(k, node[k]) for k in self._PRIMARY_ATTR.get(str(item), ('@id',)) if k in node]
+            if any(other.get(k, None) == v for k, v in match):
+                return item[i]
+        return None

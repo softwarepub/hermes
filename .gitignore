@@ -11,11 +11,17 @@ __pycache__
 .coverage
 htmlcov
 .pytest_cache
-.hermes
 
 docs/source/api
 docs/build/
+/dist/
 
 .idea/
 .venv/
 dist/
+
+# HERMES workflow specifics
+.hermes
+hermes-audit.md
+hermes.log
+quickfix.sh

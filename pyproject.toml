@@ -9,9 +9,24 @@
 name = "hermes"
 version = "0.1.0"
 description = "Workflow to publish research software with rich metadata"
-authors = ["Stephan Druskat <stephan.druskat@dlr.de>",
-           "Michael Meinel <michael.meinel@dlr.de>",
-           "Oliver Bertuch <o.bertuch@fz-juelich.de>"]
+homepage = "https://software-metadata.pub"
+license = "Apache-2.0"
+authors = [
+    "Stephan Druskat <stephan.druskat@dlr.de>",
+    "Michael Meinel <michael.meinel@dlr.de>",
+    "Oliver Bertuch <o.bertuch@fz-juelich.de>",
+    "Jeffrey Kelling <j.kelling@hzdr.de>",
+    "Oliver Knodel <o.knodel@hzd.r.de>"
+]
+
+readme = "README.md"
+repository = "https://github.com/hermes-hmc/workflow"
+documentation = "https://docs.software-metadata.pub"
+keywords = ["publishing", "metadata", "automation"]
+
+include = [
+    "hermes/schema/*.json",
+]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -19,6 +34,8 @@ click = "^8.1"
 "ruamel.yaml" = "^0.17.21"
 jsonschema = "^3.0.0"
 cffconvert = "^2.0.0"
+toml = "^0.10.2"
+pyparsing = "^3.0.9"
 
 # Packages for developers
 [tool.poetry.group.dev.dependencies]
@@ -33,24 +50,75 @@ optional = true
 
 [tool.poetry.group.docs.dependencies]
 Sphinx = "^4.5.0"
-myst-parser = "^0.18.0"
-sphinx-autobuild = "^2021.3.14"
-sphinx-book-theme = "^0.3.3"
 # Sphinx - Additional modules
-sphinx-autoapi = "^2.0.0"
+myst-parser = "^0.18.0"
+sphinx-book-theme = "^0.3.3"
+sphinx-favicon = "^0.2"
 sphinxcontrib-contentui = "^0.2.5"
 sphinxcontrib-images = "^0.9.4"
 sphinx-icon = "^0.1.2"
-sphinx-favicon = "^0.2"
+sphinx-autobuild = "^2021.3.14"
+sphinx-autoapi = "^2.0.0"
 sphinxemoji = "^0.2.0"
 sphinxext-opengraph = "^0.6.3"
 reuse = "^1.0.0"
 
 [tool.poetry.plugins.console_scripts]
-haggis = "hermes.cli:haggis"
+hermes = "hermes.cli:main"
 
 [tool.poetry.plugins."hermes.harvest"]
-cff = "hermes.commands.harvest.cff:harvest_cff"
+000_cff = "hermes.commands.harvest.cff:harvest_cff"
+010_codemeta = "hermes.commands.harvest.codemeta:harvest_codemeta"
+020_git = "hermes.commands.harvest.git:harvest_git"
+
+[tool.poetry.plugins."hermes.preprocess"]
+000_cff = "hermes.commands.process.cff:add_name"
+020_git = "hermes.commands.process.git:flag_authors"
+
+
+
+[tool.hermes.logging.formatters.plain]
+format = "%(message)s"
+
+[tool.hermes.logging.formatters.logfile]
+format = "%(created)16f:%(name)20s:%(levelname)10s | %(message)s"
+
+[tool.hermes.logging.formatters.auditlog]
+format = "%(asctime)s %(name)-20s  %(message)s"
+
+[tool.hermes.logging]
+version = 1
+
+[tool.hermes.logging.handlers.terminal]
+class = "logging.StreamHandler"
+formatter = "plain"
+level = "INFO"
+stream = "ext://sys.stdout"
+
+[tool.hermes.logging.handlers.logfile]
+class = "logging.FileHandler"
+formatter = "logfile"
+level = "DEBUG"
+filename = "hermes.log"
+
+[tool.hermes.logging.handlers.auditfile]
+class = "logging.FileHandler"
+formatter = "plain"
+level = "DEBUG"
+filename = "hermes-audit.md"
+mode = "w"
+
+[tool.hermes.logging.loggers.cli]
+level = "DEBUG"
+handlers = ["terminal"]
+
+[tool.hermes.logging.loggers.hermes]
+level = "DEBUG"
+handlers = ["terminal", "logfile"]
+
+[tool.hermes.logging.loggers.audit]
+level = "DEBUG"
+handlers = ["terminal", "auditfile"]
 
 [tool.taskipy.tasks]
 docs-build = "poetry run sphinx-build -M html docs/source docs/build -W"
