@@ -35,6 +35,8 @@ class HermesContext:
     - The *harvest* stages uses :class:`HermesHarvestContext`.
     """
 
+    default_timestamp = datetime.datetime.now().isoformat(timespec='seconds')
+
     def __init__(self, project_dir: t.Optional[Path] = None):
         """
         Create a new context for the given project dir.
@@ -195,7 +197,7 @@ class HermesHarvestContext(HermesContext):
         See :py:meth:`HermesContext.update` for more information.
         """
 
-        timestamp = kwargs.pop('timestamp', datetime.datetime.now().isoformat(timespec='seconds'))
+        timestamp = kwargs.pop('timestamp', self.default_timestamp)
         harvester = kwargs.pop('harvester', self._ep.name)
 
         if _key not in self._data:
