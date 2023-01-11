@@ -45,7 +45,7 @@ def test_context_update_append(harvest_ctx):
     ]
 
 
-def test_context_update_rharvesterlace(harvest_ctx):
+def test_context_update_replace(harvest_ctx):
     harvest_ctx.update('spam', 'noodles', test=True)
     harvest_ctx.update('spam', 'eggs', test=True)
 
