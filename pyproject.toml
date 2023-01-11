@@ -109,12 +109,6 @@ level = "DEBUG"
 filename = "hermes-audit.md"
 mode = "w"
 
-[tool.hermes.logging.handlers.hintfile]
-class = "logging.FileHandler"
-formatter = "plain"
-level = "DEBUG"
-filename = "quickfix.sh"
-
 [tool.hermes.logging.loggers.cli]
 level = "DEBUG"
 handlers = ["terminal"]
@@ -126,11 +120,6 @@ handlers = ["terminal", "logfile"]
 [tool.hermes.logging.loggers.audit]
 level = "DEBUG"
 handlers = ["terminal", "auditfile"]
-
-[tool.hermes.logging.loggers.audit.hint]
-level = "DEBUG"
-propagate = false
-handlers = ["terminal", "hintfile"]
 
 [tool.taskipy.tasks]
 docs-build = "poetry run sphinx-build -M html docs/source docs/build -W"
