@@ -45,22 +45,6 @@ def harvest(click_ctx: click.Context):
     audit_log.info('')
 
 
-_HTML_PREFIX = """
-<html>
-<head>
-  <title>Hermes Report</title>
-  <style type="text/css">
-    body {font-family:Arial; margin:12pt auto; width:820px}
-    .admonition.warning {border:3px solid red; padding:6pt}
-    .admonition.warning > .admonition-title {text-align:center; font-weight:bold}
-    .admonition.message {font-size:8pt}
-    .admonition.value {font-size:8pt; color:gray}
-    dt {clear:left; float:left; width:20%; display:block; text-align:right; margin-right:2em}
-  </style>
-</head>
-<body>"""
-
-
 @click.group(invoke_without_command=True)
 def process():
     """
