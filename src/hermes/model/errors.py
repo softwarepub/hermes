@@ -6,6 +6,8 @@
 
 import typing as t
 
+from hermes.model import path as path_model
+
 
 class HermesValidationError(Exception):
     """
@@ -28,7 +30,7 @@ class MergeError(Exception):
     """
     This exception should be raised when there is an error during a merge / set operation.
     """
-    def __init__(self, path: 'ContextPath', old_Value: t.Any, new_value: t.Any, **kwargs):
+    def __init__(self, path: path_model.ContextPath, old_Value: t.Any, new_value: t.Any, **kwargs):
         """
         Create a new merge incident.
 
