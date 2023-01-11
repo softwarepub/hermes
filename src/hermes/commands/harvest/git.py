@@ -97,7 +97,7 @@ class ContributorData:
         :return: The CodeMeta representation of this dataset.
         """
         res = {
-            '@type': ['Person', 'hermes:contributor'],
+            '@type': 'Person',
         }
 
         if self.name:

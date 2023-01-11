@@ -24,6 +24,8 @@ def flag_authors(ctx: CodeMetaContext, harverst_ctx: HermesHarvestContext):
     audit_log.info('### Flag new authors')
 
     author_path = ContextPath('author')
+    contributor_path = ContextPath('contributor')
+
     tags = {}
     try:
         data = harverst_ctx.get_data(tags=tags)
@@ -36,10 +38,12 @@ def flag_authors(ctx: CodeMetaContext, harverst_ctx: HermesHarvestContext):
         author_key, target, path = author_path['*'].resolve(ctx._data, query=query)
 
         if author_key._item == '*':
-            contributor['projectRole'] = 'Contributor'
             audit_log.debug('- %s', contributor['name'])
-
-        ctx.update(author_key, contributor, tags=tags)
+            if contributor_path not in ctx.keys():
+                ctx.update(contributor_path, [])
+            ctx.update(contributor_path['*'], contributor, tags=tags)
+        else:
+            ctx.update(author_key, contributor, tags=tags)
 
     ctx.tags.update(tags)
     harverst_ctx.finish()
