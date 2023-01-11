@@ -94,7 +94,10 @@ class HermesContext:
 
         pass
 
-    def get_data(self, data: t.Optional[dict] = None, path: t.Optional['ContextPath'] = None, tags: t.Optional[dict] = None) -> dict:
+    def get_data(self,
+                 data: t.Optional[dict] = None,
+                 path: t.Optional['ContextPath'] = None,
+                 tags: t.Optional[dict] = None) -> dict:
         if data is None:
             data = {}
         if path is not None:
@@ -192,7 +195,7 @@ class HermesHarvestContext(HermesContext):
         See :py:meth:`HermesContext.update` for more information.
         """
 
-        ts = kwargs.pop('ts', datetime.datetime.now().isoformat())
+        ts = kwargs.pop('ts', datetime.datetime.now().isoformat(timespec='seconds'))
         ep = kwargs.pop('ep', self._ep.name)
 
         if _key not in self._data:
@@ -271,7 +274,10 @@ class HermesHarvestContext(HermesContext):
                 raise ValueError(f'{path}')
         return value, tag
 
-    def get_data(self, data: t.Optional[dict] = None, path: t.Optional['ContextPath'] = None, tags: t.Optional[dict] = None) -> dict:
+    def get_data(self,
+                 data: t.Optional[dict] = None,
+                 path: t.Optional['ContextPath'] = None,
+                 tags: t.Optional[dict] = None) -> dict:
         """
         Retrieve the data from a given path.
 

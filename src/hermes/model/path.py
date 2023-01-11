@@ -161,7 +161,7 @@ class ContextPath:
         """
         Create a new instance of the container this node represents.
 
-        For this to work, the node need to have at least on child node derive (e.g., by using `self["child"]').
+        For this to work, the node need to have at least on child node derive (e.g., by using ``self["child"]``).
         """
         if self._type is not None:
             return self._type()
@@ -220,9 +220,9 @@ class ContextPath:
                 case list(): filter['type'] = 'list'
                 case dict(): filter['type'] = 'map'
         elif path._type is list:
-                filter['type'] = 'list'
+            filter['type'] = 'list'
         elif path._type is dict:
-                filter['type'] = 'map'
+            filter['type'] = 'map'
 
         if ep := kwargs.get('ep', None):
             filter['ep'] = ep
@@ -237,14 +237,14 @@ class ContextPath:
         match target, path._item:
             case list(), int() as index if index < len(target):
                 match target[index]:
-                    case dict() as t: t.update(value)
-                    case list() as l: l[:] = value
+                    case dict() as item: item.update(value)
+                    case list() as item: item[:] = value
                     case _: target[index] = value
 
             case dict(), str() as key if key in target:
                 match target[key]:
-                    case dict() as t: t.update(value)
-                    case list() as l: l[:] = value
+                    case dict() as item: item.update(value)
+                    case list() as item: item[:] = value
                     case _: target[key] = value
 
             case dict(), str() as key:
@@ -267,7 +267,10 @@ class ContextPath:
 
         return value
 
-    def resolve(self, target: list | dict, create: bool = False, query: t.Any = None) -> ('ContextPath', list | dict, 'ContextPath'):
+    def resolve(self,
+                target: list | dict,
+                create: bool = False,
+                query: t.Any = None) -> ('ContextPath', list | dict, 'ContextPath'):
         """
         Resolve a given path relative to a given target.
 
@@ -349,7 +352,7 @@ class ContextPath:
             prefix.set_item(_target, tail, value, **kwargs)
             if tags is not None and kwargs:
                 tags[str(self)] = kwargs
-        except (KeyError, IndexError, TypeError, ValueError) as e:
+        except (KeyError, IndexError, TypeError, ValueError):
             raise errors.MergeError(self, _target, value, **kwargs)
 
     @classmethod

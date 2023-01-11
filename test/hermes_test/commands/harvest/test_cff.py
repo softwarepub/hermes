@@ -6,7 +6,6 @@
 # SPDX-FileContributor: Michael Meinel
 
 import pathlib
-from collections import deque
 import json
 from ruamel.yaml import YAML
 

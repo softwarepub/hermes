@@ -13,7 +13,7 @@ def add_name(ctx: CodeMetaContext, harvest_ctx: HermesHarvestContext):
     """
     Augment each author with a `name` attribute (if not present).
 
-    This will allow better matching against the git authors and can be removed in a post-process step.
+    This will allow better matching against the git authors and can be removed in a post-processing step.
 
     :param ctx: The resulting context that should contain the harmonized data.
     :param harvest_ctx: The harvest context containing all raw harvested data.
@@ -27,5 +27,6 @@ def add_name(ctx: CodeMetaContext, harvest_ctx: HermesHarvestContext):
 
     for i, author in enumerate(data.get('author', [])):
         if 'name' not in author:
-            harvest_ctx.update(str(author_path[i]["name"]), f"{author['givenName']} {author['familyName']}", stage='preprocess')
+            harvest_ctx.update(str(author_path[i]["name"]), f"{author['givenName']} {author['familyName']}",
+                               stage='preprocess')
             audit_log.debug(f"- {author['givenName']} {author['familyName']}")
