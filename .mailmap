@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: CC0-1.0
 
 # Mapping of email addresses only. Format (one pair per line):
-# <primary@address> <discarded@address>
+# <primary.email@address> <discard.this.email@address>
 <michael.meinel@dlr.de> <led02@me.com>
 <o.bertuch@fz-juelich.de> <poikilotherm@users.noreply.github.com>
 <stephan.druskat@dlr.de> <sdruskat@users.noreply.github.com>
