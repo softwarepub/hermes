@@ -76,8 +76,6 @@ hermes = "hermes.cli:main"
 020_git = "hermes.commands.process.git:flag_authors"
 
 
-[tool.hermes.harvest]
-000_git.enabled = false
 
 [tool.hermes.logging.formatters.plain]
 format = "%(message)s"

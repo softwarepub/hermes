@@ -160,7 +160,7 @@ class HermesHarvestContext(HermesContext):
 
         data_file = self.get_cache('harvest', self._ep.name, create=True)
         self._log.debug("Writing cache to %s...", data_file)
-        json.dump(self._data, data_file.open('w'), indent='  ')
+        json.dump(self._data, data_file.open('w'), indent=2)
 
     def __enter__(self):
         self.load_cache()
