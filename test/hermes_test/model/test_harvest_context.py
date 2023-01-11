@@ -52,7 +52,7 @@ def test_context_update_rharvesterlace(harvest_ctx):
     assert harvest_ctx._data['spam'] == [
         ['eggs', {'test': True,
                   'timestamp': datetime.now().isoformat(timespec='seconds'),
-                  'harvester': 'test_context_update_rharvesterlace'}]
+                  'harvester': 'test_context_update_replace'}]
     ]
 
 
