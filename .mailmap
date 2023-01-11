@@ -1,10 +1,14 @@
+# SPDX-FileCopyrightText: 2022 German Aerospace Center (DLR)
+#
+# SPDX-License-Identifier: CC0-1.0
+
 # Mapping of email addresses only. Format (one pair per line):
-# <old.email@ddress> <new.email@address>
+# <primary@address> <discarded@address>
 <michael.meinel@dlr.de> <led02@me.com>
 <o.bertuch@fz-juelich.de> <poikilotherm@users.noreply.github.com>
 <stephan.druskat@dlr.de> <sdruskat@users.noreply.github.com>
 
 # Mapping of user names. Format (one pair per line):
-# Real Name <email@ddress> nickname
-# Real Name <email@ddress> Name, Real
+# Real Name <email@address> nickname
+# Real Name <email@address> Name, Real
 Jeffrey Kelling <j.kelling@hzdr.de> jkelling
