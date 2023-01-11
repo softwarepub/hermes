@@ -234,32 +234,6 @@ def _audit_authors(authors, audit_log: logging.Logger):
         audit_log.info('')
         audit_log.info('``` .mailmap')
 
-        # Provide some example configuration for the hint log
-        hint_log = audit_log.parent.getChild('hints')
-        hint_log.debug("# '.maillog' to resolve git ambiguities.")
-
-        unmapped_email = [a for a in unmapped_authors if a.email[1:]]
-        if unmapped_email:
-            hint_log.debug('# Mapping of email addresses only. Format (one pair per line):')
-            hint_log.debug('# <old.email@ddress> <new.email@address>')
-
-            for author in unmapped_email:
-                for email in author.email[1:]:
-                    hint_log.info("<%s> <%s>", str(author.email[0]), str(email))
-            hint_log.debug('')
-
-        unmapped_name = [a for a in unmapped_authors if a.name[1:]]
-        if unmapped_name:
-            hint_log.debug('# Mapping of user names. Format (one pair per line):')
-            hint_log.debug('# Real Name <email@ddress> nickname')
-            hint_log.debug('# Real Name <email@ddress> Name, Real')
-
-            for author in [a for a in unmapped_authors if a.name[1:]]:
-                for name in author.name[1:]:
-                    hint_log.info('%s <%s> %s', str(author.name[0]), str(author.email[0]), str(name))
-
-        hint_log.info('')
-
         audit_log.info('```')
 
 
