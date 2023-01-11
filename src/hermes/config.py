@@ -1,3 +1,9 @@
+# SPDX-FileCopyrightText: 2022 German Aerospace Center (DLR)
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# SPDX-FileContributor: Michael Meinel
+
 # TODO this file contains only dummy implementations which in most cases will lead to a crash...
 import logging
 import toml

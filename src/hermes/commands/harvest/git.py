@@ -1,4 +1,10 @@
-import datetime
+# SPDX-FileCopyrightText: 2022 German Aerospace Center (DLR)
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# SPDX-FileContributor: Jeffrey Kelling
+# SPDX-FileContributor: Michael Meinel
+
 import logging
 import os
 import pathlib

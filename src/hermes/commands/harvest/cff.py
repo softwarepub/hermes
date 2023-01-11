@@ -1,4 +1,3 @@
-import logging
 # SPDX-FileCopyrightText: 2022 German Aerospace Center (DLR)
 #
 # SPDX-License-Identifier: Apache-2.0
@@ -6,9 +5,8 @@ import logging
 # SPDX-FileContributor: Stephan Druskat
 # SPDX-FileContributor: Michael Meinel
 
-import collections
-import glob
 import json
+import logging
 import pathlib
 import urllib.request
 import typing as t
