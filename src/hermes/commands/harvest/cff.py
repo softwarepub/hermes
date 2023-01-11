@@ -98,7 +98,8 @@ def _validate(cff_file: pathlib.Path, cff_dict: t.Dict) -> bool:
 
         audit_log.info('')
         audit_log.info('See the Citation File Format schema guide for further details:')
-        audit_log.info(f'<https://github.com/citation-file-format/citation-file-format/blob/{_CFF_VERSION}/schema-guide.md>.')
+        audit_log.info(
+            f'<https://github.com/citation-file-format/citation-file-format/blob/{_CFF_VERSION}/schema-guide.md>.')
         return False
 
     elif len(errors) == 0:
