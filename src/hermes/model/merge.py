@@ -80,8 +80,8 @@ class CollectionMergeStrategy(MergeStrategy):
         match target, path._item:
             case list(), int() as index if index < len(target):
                 match target[index]:
-                    case dict() as t: t.update(value)
-                    case list() as l: l[:] = value
+                    case dict() as item: item.update(value)
+                    case list() as item: item[:] = value
                     case _: target[index] = value
 
             case list(), '*':
@@ -98,8 +98,8 @@ class CollectionMergeStrategy(MergeStrategy):
 
             case dict(), str() as key if key in target:
                 match target[key]:
-                    case dict() as t: t.update(value)
-                    case list() as l: l[:] = value
+                    case dict() as item: item.update(value)
+                    case list() as item: item[:] = value
                     case _: target[key] = value
 
             case dict(), str() as key:
@@ -129,8 +129,8 @@ class ObjectMergeStrategy(MergeStrategy):
         match target, path._item:
             case dict(), str() as key if key in target:
                 match target[key]:
-                    case dict() as t: t.update(value)
-                    case list() as l: l[:] = value
+                    case dict() as item: item.update(value)
+                    case list() as item: item[:] = value
                     case _: target[key] = value
 
             case dict(), str() as key:
@@ -141,8 +141,8 @@ class ObjectMergeStrategy(MergeStrategy):
 
             case list(), int() as index if index < len(target):
                 match target[index]:
-                    case dict() as t: t.update(value)
-                    case list() as l: l[:] = value
+                    case dict() as item: item.update(value)
+                    case list() as item: item[:] = value
                     case _: target[index] = value
 
             case list(), '*':

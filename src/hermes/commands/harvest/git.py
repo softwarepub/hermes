@@ -14,7 +14,7 @@ import click
 import subprocess
 import shutil
 
-from hermes.model.context import HermesHarvestContext, ContextPath
+from hermes.model.context import HermesHarvestContext
 
 
 _log = logging.getLogger('harvest.git')
@@ -53,8 +53,10 @@ class ContributorData:
 
     def __str__(self):
         parts = []
-        if self.name: parts.append(self.name[0])
-        if self.email: parts.append(f'<{self.email[0]}>')
+        if self.name:
+            parts.append(self.name[0])
+        if self.email:
+            parts.append(f'<{self.email[0]}>')
         return f'"{" ".join(parts)}"'
 
     def _update_attr(self, target, value, unique=True):
@@ -215,22 +217,20 @@ class NodeRegister:
 
 def _audit_authors(authors, audit_log: logging.Logger):
     # Collect all authors that have ambiguous data
-    unmapped_authors = []
-    for author in authors._all:
-        if len(author.email) > 1 or len(author.name) > 1:
-            unmapped_authors.append(author)
+    unmapped_authors = [a for a in authors._all if len(a.email) > 1 or len(a.name) > 1]
 
     if unmapped_authors:
         # Report to the audit about our findings
         audit_log.warning('!!! warning "You have unmapped authors in your Git history."')
         for author in unmapped_authors:
             if len(author.email) > 1:
-                audit_log.info(f"    - %s has alternate email: %s", str(author), ', '.join(author.email[1:]))
+                audit_log.info("    - %s has alternate email: %s", str(author), ', '.join(author.email[1:]))
             if len(author.name) > 1:
-                audit_log.info(f"    - %s has alternate names: %s", str(author), ', '.join(author.name[1:]))
+                audit_log.info("    - %s has alternate names: %s", str(author), ', '.join(author.name[1:]))
         audit_log.warning('')
 
-        audit_log.info("Please consider adding a `.maillog` file to your repository to disambiguate these contributors.")
+        audit_log.info(
+            "Please consider adding a `.maillog` file to your repository to disambiguate these contributors.")
         audit_log.info('')
         audit_log.info('``` .mailmap')
 
@@ -274,18 +274,20 @@ def harvest_git(click_ctx: click.Context, ctx: HermesHarvestContext):
 
     p = subprocess.run([git_exe, "rev-parse", "--abbrev-ref", "HEAD"], capture_output=True)
     if p.returncode:
-        raise RuntimeError("`git branch` command failed with code {}: '{}'!".format(p.returncode, p.stderr.decode(SHELL_ENCODING)))
+        raise RuntimeError(f"`git branch` command failed with code {p.returncode}: "
+                           f"'{p.stderr.decode(SHELL_ENCODING)}'!")
     git_branch = p.stdout.decode(SHELL_ENCODING).strip()
     # TODO: should we warn or error if the HEAD is detached?
 
     p = subprocess.run([git_exe, "log", f"--pretty={_GIT_SEP.join(_GIT_FORMAT)}"] + _GIT_ARGS, capture_output=True)
     if p.returncode:
-        raise RuntimeError("`git log` command failed with code {}: '{}'!".format(p.returncode, p.stderr.decode(SHELL_ENCODING)))
+        raise RuntimeError(f"`git log` command failed with code {p.returncode}: "
+                           f"'{p.stderr.decode(SHELL_ENCODING)}'!")
 
     log = p.stdout.decode(SHELL_ENCODING).split('\n')
-    for l in log:
+    for line in log:
         try:
-            name, email, ts = l.split(_GIT_SEP)
+            name, email, ts = line.split(_GIT_SEP)
         except ValueError:
             continue
 
@@ -305,7 +307,7 @@ def harvest_git(click_ctx: click.Context, ctx: HermesHarvestContext):
 
     try:
         ctx.get_data()
-    except ValueError as e:
+    except ValueError:
         audit_log.error('!!! warning "Inconsistent data"')
         audit_log.info('     The data collected from git is ambiguous.')
         audit_log.info('     Consider deleting `%s` to avoid problems.', ctx.hermes_dir)
