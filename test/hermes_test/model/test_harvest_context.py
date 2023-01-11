@@ -104,7 +104,7 @@ def test_context_bulk_replace(harvest_ctx):
     ]
     assert harvest_ctx._data['author[0].email'] == [
         ['eggs@spam.io', {'test': True, 'timestamp': datetime.now().isoformat(timespec='seconds'),
-                          'ep': 'test_context_bulk_replace'}]
+                          'harvester': 'test_context_bulk_replace'}]
     ]
 
 
