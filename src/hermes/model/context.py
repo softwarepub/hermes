@@ -195,30 +195,30 @@ class HermesHarvestContext(HermesContext):
         See :py:meth:`HermesContext.update` for more information.
         """
 
-        ts = kwargs.pop('ts', datetime.datetime.now().isoformat(timespec='seconds'))
-        ep = kwargs.pop('ep', self._ep.name)
+        timestamp = kwargs.pop('timestamp', datetime.datetime.now().isoformat(timespec='seconds'))
+        harvester = kwargs.pop('harvester', self._ep.name)
 
         if _key not in self._data:
             self._data[_key] = []
 
         for entry in self._data[_key]:
             value, tag = entry
-            tag_ts = tag.pop('ts')
-            tag_ep = tag.pop('ep')
+            tag_timestamp = tag.pop('timestamp')
+            tag_harvester = tag.pop('harvester')
 
             if tag == kwargs:
                 self._log.debug("Update %s: %s -> %s (%s)", _key, str(value), _value, str(tag))
                 entry[0] = _value
-                tag['ts'] = ts
-                tag['ep'] = ep
+                tag['timestamp'] = timestamp
+                tag['harvester'] = harvester
                 break
 
-            tag['ts'] = tag_ts
-            tag['ep'] = tag_ep
+            tag['timestamp'] = tag_timestamp
+            tag['harvester'] = tag_harvester
 
         else:
-            kwargs['ts'] = ts
-            kwargs['ep'] = ep
+            kwargs['timestamp'] = timestamp
+            kwargs['harvester'] = harvester
             self._data[_key].append([_value, kwargs])
 
     def _update_key_from(self, _key: ContextPath, _value: t.Any, **kwargs):
