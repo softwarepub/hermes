@@ -8,7 +8,7 @@ _AUTHOR_KEYS = ('@id', 'email', 'name')
 
 def flag_authors(ctx: CodeMetaContext, harverst_ctx: HermesHarvestContext):
     """
-    Identify all authors that are not yet in the target context and flag them with role `Other`.
+    Identify all authors that are not yet in the target context and flag them with role `Contributor`.
 
     :param ctx: The target context containting harmonized data.
     :param harverst_ctx: Data as it was harvested.
@@ -30,7 +30,7 @@ def flag_authors(ctx: CodeMetaContext, harverst_ctx: HermesHarvestContext):
         author_key, target, path = author_path['*'].resolve(ctx._data, query=query)
 
         if author_key._item == '*':
-            contributor['projectRole'] = 'Others'
+            contributor['projectRole'] = 'Contributor'
             audit_log.debug('- %s', contributor['name'])
 
         ctx.update(author_key, contributor, tags=tags)
