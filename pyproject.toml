@@ -35,7 +35,6 @@ click = "^8.1"
 jsonschema = "^3.0.0"
 cffconvert = "^2.0.0"
 toml = "^0.10.2"
-Markdown = "^3.4.1"
 
 # Packages for developers
 [tool.poetry.group.dev.dependencies]

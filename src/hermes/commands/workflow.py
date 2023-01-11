@@ -10,7 +10,6 @@ import logging
 from importlib import metadata
 
 import click
-import markdown as markdown
 
 from hermes.model.context import HermesContext, HermesHarvestContext, CodeMetaContext
 from hermes.model.errors import MergeError
@@ -107,14 +106,6 @@ def process():
         json.dump(ctx._data, codemeta_file, indent='  ')
 
     logging.shutdown()
-
-    with open('hermes-audit.md', 'r') as auditlog_file:
-        html_data = markdown.markdown(auditlog_file.read(), extensions=['admonition', 'def_list', 'fenced_code'])
-
-    with open('hermes-audit.html', 'w') as html_file:
-        html_file.write(_HTML_PREFIX)
-        html_file.write(html_data)
-        html_file.write('</body></html>')
 
 
 @click.group(invoke_without_command=True)
