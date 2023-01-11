@@ -80,7 +80,7 @@ class ContributorData:
 
     def merge(self, other: 'ContributorData'):
         """
-        Merge another :ref:`ContributorData` instance into this one.
+        Merge another :py:class:`ContributorData` instance into this one.
 
         All attributes will be merged yet kept unique if required.
 
@@ -135,7 +135,7 @@ class NodeRegister:
     """
     Helper class to unify Git commit authors / contributors.
 
-    This class keeps track of all registered instances and merges two :ref:`ContributorData` instances if some
+    This class keeps track of all registered instances and merges two :py:class:`ContributorData` instances if some
     attributes match.
     """
 

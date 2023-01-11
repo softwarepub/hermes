@@ -161,7 +161,7 @@ class ContextPath:
         """
         Create a new instance of the container this node represents.
 
-        For this to work, the node need to have at least on child node derive (e.g., by using `self["child"]').
+        For this to work, the node need to have at least on child node derive (e.g., by using ``self["child"]``).
         """
         if self._type is not None:
             return self._type()

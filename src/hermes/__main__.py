@@ -4,8 +4,8 @@
 
 # SPDX-FileContributor: Michael Meinel
 
-from hermes.cli import haggis
+from hermes.cli import main
 
 
 if __name__ == '__main__':
-    haggis()
+    main()

@@ -108,10 +108,10 @@ CODEMETA_JSON = """\
         }
     ],
     "targetProduct": {
-        "@id": "/commandlineapplication/haggis",
+        "@id": "/commandlineapplication/hermes",
         "@type": "CommandLineApplication",
-        "executableName": "haggis",
-        "name": "haggis",
+        "executableName": "hermes",
+        "name": "hermes",
         "runtimePlatform": "Python 3"
     },
     "url": [
