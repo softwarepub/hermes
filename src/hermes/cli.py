@@ -143,7 +143,7 @@ class WorkflowCommand(click.Group):
 @click.option("--post", is_flag=True, default=False)
 @click.option('--path', default=pathlib.Path('./'), help='Working path', type=pathlib.Path)
 @click.pass_context
-def haggis(ctx: click.Context, *args, **kwargs) -> None:
+def main(ctx: click.Context, *args, **kwargs) -> None:
     """
     HERMES aggregated interface script
 
@@ -153,7 +153,7 @@ def haggis(ctx: click.Context, *args, **kwargs) -> None:
     pass
 
 
-haggis.add_command(workflow.harvest)
-haggis.add_command(workflow.process)
-haggis.add_command(workflow.deposit)
-haggis.add_command(workflow.post)
+main.add_command(workflow.harvest)
+main.add_command(workflow.process)
+main.add_command(workflow.deposit)
+main.add_command(workflow.post)
