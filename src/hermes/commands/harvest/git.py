@@ -37,19 +37,19 @@ class ContributorData:
     Stores contributor data information from Git history.
     """
 
-    def __init__(self, name: str | t.List[str], email: str | t.List[str], ts: str | t.List[str]):
+    def __init__(self, name: str | t.List[str], email: str | t.List[str], timestamp: str | t.List[str]):
         """
         Initialize a new contributor dataset.
 
         :param name: Name as returned by the `git log` command (i.e., with `.mailmap` applied).
         :param email: Email address as returned by the `git log` command (also with `.mailmap` applied).
-        :param ts: Timestamp when the respective commit was done.
+        :param timestamp: Timestamp when the respective commit was done.
         """
         self.name = []
         self.email = []
-        self.ts = []
+        self.timestamp = []
 
-        self.update(name=name, email=email, ts=ts)
+        self.update(name=name, email=email, timestamp=timestamp)
 
     def __str__(self):
         parts = []
@@ -66,17 +66,17 @@ class ContributorData:
             case str() if not unique or value not in target:
                 target.append(value)
 
-    def update(self, name=None, email=None, ts=None):
+    def update(self, name=None, email=None, timestamp=None):
         """
         Update the current contributor with the given data.
 
         :param name: New name to assign (addtionally).
         :param email: New email to assign (additionally).
-        :param ts: New timestamp to adapt time range.
+        :param timestamp: New timestamp to adapt time range.
         """
         self._update_attr(self.name, name)
         self._update_attr(self.email, email)
-        self._update_attr(self.ts, ts, unique=False)
+        self._update_attr(self.timestamp, timestamp, unique=False)
 
     def merge(self, other: 'ContributorData'):
         """
@@ -88,7 +88,7 @@ class ContributorData:
         """
         self.name += [n for n in other.name if n not in self.name]
         self.email += [e for e in other.email if e not in self.email]
-        self.ts += other.ts
+        self.timestamp += other.timestamp
 
     def to_codemeta(self) -> dict:
         """
@@ -110,10 +110,10 @@ class ContributorData:
         if self.email:
             res['contactPoint'] = [{'@type': 'ContactPoint', 'email': email} for email in self.email]
 
-        if self.ts:
-            ts_start, *_, ts_end = sorted(self.ts + [self.ts[0]])
-            res['startTime'] = ts_start
-            res['endTime'] = ts_end
+        if self.timestamp:
+            timestamp_start, *_, timestamp_end = sorted(self.timestamp + [self.timestamp[0]])
+            res['startTime'] = timestamp_start
+            res['endTime'] = timestamp_end
 
         return res
 
@@ -127,8 +127,8 @@ class ContributorData:
         """
         name = [data['name']] + data.get('alternateName', [])
         email = [data['email']] + [contact['email'] for contact in data.get('contactPoint', [])]
-        ts = [data['startTime'], data['endTime']]
-        return cls(name, email, ts)
+        timestamp = [data['startTime'], data['endTime']]
+        return cls(name, email, timestamp)
 
 
 class NodeRegister:
@@ -287,11 +287,11 @@ def harvest_git(click_ctx: click.Context, ctx: HermesHarvestContext):
     log = p.stdout.decode(SHELL_ENCODING).split('\n')
     for line in log:
         try:
-            name, email, ts = line.split(_GIT_SEP)
+            name, email, timestamp = line.split(_GIT_SEP)
         except ValueError:
             continue
 
-        authors.update(email=email, name=name, ts=ts)
+        authors.update(email=email, name=name, timestamp=timestamp)
 
     _audit_authors(authors, logging.getLogger('audit.git'))
 

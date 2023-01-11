@@ -25,7 +25,9 @@ def test_context_default(harvest_ctx):
     harvest_ctx.update('spam', 'eggs', test=True)
 
     assert harvest_ctx._data['spam'] == [
-        ['eggs', {'test': True, 'ts': datetime.now().isoformat(timespec='seconds'), 'ep': 'test_context_default'}]
+        ['eggs', {'test': True,
+                  'timestamp': datetime.now().isoformat(timespec='seconds'),
+                  'harvester': 'test_context_default'}]
     ]
 
 
@@ -35,9 +37,11 @@ def test_context_update_append(harvest_ctx):
 
     assert harvest_ctx._data['spam'] == [
         ['noodles', {'index': 0,
-                     'ts': datetime.now().isoformat(timespec='seconds'),
-                     'ep': 'test_context_update_append'}],
-        ['eggs', {'index': 1, 'ts': datetime.now().isoformat(timespec='seconds'), 'ep': 'test_context_update_append'}]
+                     'timestamp': datetime.now().isoformat(timespec='seconds'),
+                     'harvester': 'test_context_update_append'}],
+        ['eggs', {'index': 1,
+                  'timestamp': datetime.now().isoformat(timespec='seconds'),
+                  'harvester': 'test_context_update_append'}]
     ]
 
 
@@ -47,8 +51,8 @@ def test_context_update_replace(harvest_ctx):
 
     assert harvest_ctx._data['spam'] == [
         ['eggs', {'test': True,
-                  'ts': datetime.now().isoformat(timespec='seconds'),
-                  'ep': 'test_context_update_replace'}]
+                  'timestamp': datetime.now().isoformat(timespec='seconds'),
+                  'harvester': 'test_context_update_replace'}]
     ]
 
 
@@ -59,10 +63,14 @@ def test_context_bulk_flat(harvest_ctx):
     }, test=True)
 
     assert harvest_ctx._data['ans'] == [
-        [42, {'test': True, 'ts': datetime.now().isoformat(timespec='seconds'), 'ep': 'test_context_bulk_flat'}]
+        [42, {'test': True,
+              'timestamp': datetime.now().isoformat(timespec='seconds'),
+              'harvester': 'test_context_bulk_flat'}]
     ]
     assert harvest_ctx._data['spam'] == [
-        ['eggs', {'test': True, 'ts': datetime.now().isoformat(timespec='seconds'), 'ep': 'test_context_bulk_flat'}]
+        ['eggs', {'test': True,
+                  'timestamp': datetime.now().isoformat(timespec='seconds'),
+                  'harvester': 'test_context_bulk_flat'}]
     ]
 
 
@@ -76,20 +84,22 @@ def test_context_bulk_complex(harvest_ctx):
     }, test=True)
 
     assert harvest_ctx._data['ans'] == [
-        [42, {'test': True, 'ts': datetime.now().isoformat(timespec='seconds'), 'ep': 'test_context_bulk_complex'}]
+        [42, {'test': True,
+              'timestamp': datetime.now().isoformat(timespec='seconds'),
+              'harvester': 'test_context_bulk_complex'}]
     ]
     assert harvest_ctx._data['author[0].name'] == [
-        ['Monty Python', {'test': True, 'ts': datetime.now().isoformat(timespec='seconds'),
-                          'ep': 'test_context_bulk_complex'}]
+        ['Monty Python', {'test': True, 'timestamp': datetime.now().isoformat(timespec='seconds'),
+                          'harvester': 'test_context_bulk_complex'}]
     ]
     assert harvest_ctx._data['author[0].email'] == [
-        ['eggs@spam.io', {'test': True, 'ts': datetime.now().isoformat(timespec='seconds'),
-                          'ep': 'test_context_bulk_complex'}]
+        ['eggs@spam.io', {'test': True, 'timestamp': datetime.now().isoformat(timespec='seconds'),
+                          'harvester': 'test_context_bulk_complex'}]
     ]
     assert harvest_ctx._data['author[1].name'] == [
         ['Herr Mes', {'test': True,
-                      'ts': datetime.now().isoformat(timespec='seconds'),
-                      'ep': 'test_context_bulk_complex'}]
+                      'timestamp': datetime.now().isoformat(timespec='seconds'),
+                      'harvester': 'test_context_bulk_complex'}]
     ]
 
 
@@ -99,12 +109,12 @@ def test_context_bulk_replace(harvest_ctx):
 
     assert harvest_ctx._data['author[0].name'] == [
         ['Herr Mes', {'test': True,
-                      'ts': datetime.now().isoformat(timespec='seconds'),
-                      'ep': 'test_context_bulk_replace'}]
+                      'timestamp': datetime.now().isoformat(timespec='seconds'),
+                      'harvester': 'test_context_bulk_replace'}]
     ]
     assert harvest_ctx._data['author[0].email'] == [
-        ['eggs@spam.io', {'test': True, 'ts': datetime.now().isoformat(timespec='seconds'),
-                          'ep': 'test_context_bulk_replace'}]
+        ['eggs@spam.io', {'test': True, 'timestamp': datetime.now().isoformat(timespec='seconds'),
+                          'harvester': 'test_context_bulk_replace'}]
     ]
 
 
@@ -113,11 +123,13 @@ def test_context_bulk_append(harvest_ctx):
     harvest_ctx.update_from({'author': [{'name': 'Herr Mes', 'email': 'eggs@spam.io'}]}, index=1)
 
     assert harvest_ctx._data['author[0].name'] == [
-        ['Monty Python', {'index': 0, 'ts': datetime.now().isoformat(timespec='seconds'),
-                          'ep': 'test_context_bulk_append'}],
-        ['Herr Mes', {'index': 1, 'ts': datetime.now().isoformat(timespec='seconds'), 'ep': 'test_context_bulk_append'}]
+        ['Monty Python', {'index': 0, 'timestamp': datetime.now().isoformat(timespec='seconds'),
+                          'harvester': 'test_context_bulk_append'}],
+        ['Herr Mes', {'index': 1,
+                      'timestamp': datetime.now().isoformat(timespec='seconds'),
+                      'harvester': 'test_context_bulk_append'}]
     ]
     assert harvest_ctx._data['author[0].email'] == [
-        ['eggs@spam.io', {'index': 1, 'ts': datetime.now().isoformat(timespec='seconds'),
-                          'ep': 'test_context_bulk_append'}]
+        ['eggs@spam.io', {'index': 1, 'timestamp': datetime.now().isoformat(timespec='seconds'),
+                          'harvester': 'test_context_bulk_append'}]
     ]
