@@ -13,7 +13,7 @@ from hermes.model.context import CodeMetaContext, HermesHarvestContext, ContextP
 _AUTHOR_KEYS = ('@id', 'email', 'name')
 
 
-def flag_authors(ctx: CodeMetaContext, harverst_ctx: HermesHarvestContext):
+def flag_authors(ctx: CodeMetaContext, harvest_ctx: HermesHarvestContext):
     """
     Add all git authors and committers with role `Contributor`.
 
@@ -29,7 +29,7 @@ def flag_authors(ctx: CodeMetaContext, harverst_ctx: HermesHarvestContext):
 
     tags = {}
     try:
-        data = harverst_ctx.get_data(tags=tags)
+        data = harvest_ctx.get_data(tags=tags)
     except ValueError:
         audit_log.info("- Inconsistent data, skipping.")
         return
@@ -41,4 +41,4 @@ def flag_authors(ctx: CodeMetaContext, harverst_ctx: HermesHarvestContext):
         ctx.update(contributor_path['*'], contributor, tags=tags)
 
     ctx.tags.update(tags)
-    harverst_ctx.finish()
+    harvest_ctx.finish()
