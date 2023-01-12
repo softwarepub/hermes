@@ -93,21 +93,35 @@ def process():
 
 
 @click.group(invoke_without_command=True)
-@click.pass_context
-def deposit(click_ctx: click.Context):
+def deposit():
     """
     Deposit processed (and curated) metadata
     """
     click.echo("Metadata deposition")
 
+    # local import that can be removed later
+    from hermes.model.path import ContextPath
+
     ctx = CodeMetaContext()
 
-    # TODO: Which platform do we target here? Get this from config
-    deposition_platform = "invenio"
+    deposition_platform_path = ContextPath("depositionPlatorm")
+    deposit_invenio_path = ContextPath("deposit.invenio")
+
+    # TODO: Which platform do we target here? Get this from config/context.
+    #  For now, we just put "invenio" there.
+    ctx.update(deposition_platform_path, "invenio")
+
+    # TODO: Get this from config with reasonable defaults.
+    #  For now, we just put some values there.
+    ctx.update(deposit_invenio_path["siteUrl"], "https://zenodo.org")
+    ctx.update(deposit_invenio_path["recordSchemaPath"], "api/schemas/records/record-v1.0.0.json")
+
+    deposition_platform = ctx.get_data(None, deposition_platform_path)
 
     deposit_preparator_entrypoints = metadata.entry_points(group="hermes.prepare_deposit", name=deposition_platform)
     deposit_preparator = deposit_preparator_entrypoints[0].load()
-    deposit_preparator(click_ctx, ctx)
+
+    deposit_preparator(ctx)
 
 
 @click.group(invoke_without_command=True)

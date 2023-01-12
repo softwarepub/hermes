@@ -4,20 +4,17 @@
 
 # SPDX-FileContributor: David Pape
 
-import click
 import requests
 
-from hermes.model.context import HermesContext
-
-INVENIO_SITE_URL = "https://zenodo.org"
-INVENIO_RECORD_SCHEMA_PATH = "api/schemas/records/record-v1.0.0.json"
-
-# TODO: HermesDepositContext?
-def prepare_invenio(click_ctx: click.Context, ctx: HermesContext):
-    _get_invenio_requirements()
+from hermes.model.context import CodeMetaContext
+from hermes.model.path import ContextPath
 
 
-def _get_invenio_requirements():
+def prepare_invenio(ctx: CodeMetaContext):
+    _get_invenio_requirements(f"{INVENIO_SITE_URL}/{INVENIO_RECORD_SCHEMA_PATH}")
+
+
+def _get_invenio_requirements(url):
     # TODO: requests.Session in context?
-    response = requests.get(f"{INVENIO_SITE_URL}/{INVENIO_RECORD_SCHEMA_PATH}")
+    response = requests.get(url)
     print(response.json())
