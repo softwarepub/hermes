@@ -105,7 +105,7 @@ def deposit():
     ctx = CodeMetaContext()
 
     deposition_platform_path = ContextPath("depositionPlatorm")
-    deposit_invenio_path = ContextPath("deposit.invenio")
+    deposit_invenio_path = ContextPath.parse("deposit.invenio")
 
     # TODO: Which platform do we target here? Get this from config/context.
     #  For now, we just put "invenio" there.
@@ -116,7 +116,8 @@ def deposit():
     ctx.update(deposit_invenio_path["siteUrl"], "https://zenodo.org")
     ctx.update(deposit_invenio_path["recordSchemaPath"], "api/schemas/records/record-v1.0.0.json")
 
-    deposition_platform = ctx.get_data(None, deposition_platform_path)
+    deposition_platform = ctx[deposition_platform_path]
+    print(ctx['deposit'])
 
     deposit_preparator_entrypoints = metadata.entry_points(group="hermes.prepare_deposit", name=deposition_platform)
     deposit_preparator = deposit_preparator_entrypoints[0].load()
@@ -130,3 +131,5 @@ def postprocess():
     Postprocess metadata after deposition
     """
     click.echo("Post-processing")
+
+deposit()
