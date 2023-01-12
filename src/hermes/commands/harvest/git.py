@@ -24,7 +24,7 @@ _log = logging.getLogger('harvest.git')
 SHELL_ENCODING = 'utf-8'
 
 _GIT_SEP = '|'
-_GIT_FORMAT = ['%aN', '%aE', '%aI']
+_GIT_FORMAT = ['%aN', '%aE', '%aI', '%cN', '%cE', '%cI']
 _GIT_ARGS = []
 
 
@@ -215,18 +215,18 @@ class NodeRegister:
             self._node_by[key][arg] = node
 
 
-def _audit_authors(authors, audit_log: logging.Logger):
+def _audit_contributors(contributors, audit_log: logging.Logger):
     # Collect all authors that have ambiguous data
-    unmapped_authors = [a for a in authors._all if len(a.email) > 1 or len(a.name) > 1]
+    unmapped_contributors = [a for a in contributors._all if len(a.email) > 1 or len(a.name) > 1]
 
-    if unmapped_authors:
+    if unmapped_contributors:
         # Report to the audit about our findings
-        audit_log.warning('!!! warning "You have unmapped authors in your Git history."')
-        for author in unmapped_authors:
-            if len(author.email) > 1:
-                audit_log.info("    - %s has alternate email: %s", str(author), ', '.join(author.email[1:]))
-            if len(author.name) > 1:
-                audit_log.info("    - %s has alternate names: %s", str(author), ', '.join(author.name[1:]))
+        audit_log.warning('!!! warning "You have unmapped contributors in your Git history."')
+        for contributor in unmapped_contributors:
+            if len(contributor.email) > 1:
+                audit_log.info("    - %s has alternate email: %s", str(contributor), ', '.join(contributor.email[1:]))
+            if len(contributor.name) > 1:
+                audit_log.info("    - %s has alternate names: %s", str(contributor), ', '.join(contributor.name[1:]))
         audit_log.warning('')
 
         audit_log.info(
@@ -256,12 +256,8 @@ def harvest_git(click_ctx: click.Context, ctx: HermesHarvestContext):
 
     _log.debug(". Get history of currently checked-out branch")
 
-    authors = NodeRegister(ContributorData, 'email', 'name', email=str.upper)
-    try:
-        for author_data in ctx.get_data().get('author', []):
-            authors.add(ContributorData.from_codemeta(author_data))
-    except ValueError:
-        pass
+    git_authors = NodeRegister(ContributorData, 'email', 'name', email=str.upper)
+    git_committers = NodeRegister(ContributorData, 'email', 'name', email=str.upper)
 
     git_exe = shutil.which('git')
     if not git_exe:
@@ -287,13 +283,15 @@ def harvest_git(click_ctx: click.Context, ctx: HermesHarvestContext):
     log = p.stdout.decode(SHELL_ENCODING).split('\n')
     for line in log:
         try:
-            name, email, timestamp = line.split(_GIT_SEP)
+            author_name, author_email, author_timestamp, committer_name, committer_email, committer_timestamp = line.split(_GIT_SEP)
         except ValueError:
             continue
 
-        authors.update(email=email, name=name, timestamp=timestamp)
+        git_authors.update(email=author_email, name=author_name, timestamp=author_timestamp)
+        git_committers.update(email=committer_email, name=committer_name, timestamp=committer_timestamp)
 
-    _audit_authors(authors, logging.getLogger('audit.git'))
+    _audit_contributors(git_authors, logging.getLogger('audit.git'))
+    _audit_contributors(git_committers, logging.getLogger('audit.git'))
 
     ctx.update_from({
         '@context': [
@@ -302,7 +300,7 @@ def harvest_git(click_ctx: click.Context, ctx: HermesHarvestContext):
         ],
 
         '@type': "SoftwareSourceCode",
-        'author': [author.to_codemeta() for author in authors._all],
+        'author': [author.to_codemeta() for author in git_authors._all],
     }, branch=git_branch)
 
     try:
