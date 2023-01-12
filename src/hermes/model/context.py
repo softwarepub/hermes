@@ -173,6 +173,9 @@ class HermesHarvestContext(HermesContext):
         if exc_type is not None and issubclass(exc_type, HermesValidationError):
             exc = traceback.TracebackException(exc_type, exc_val, exc_tb)
             self._base.error(self._ep, exc)
+            self._log.warning("{}: {}".format(
+                exc_type.__name__,
+                ' '.join(str(x) for x in exc_val.args)))
             return True
 
     def update(self, _key: str, _value: t.Any, **kwargs: t.Any):
