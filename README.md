@@ -48,14 +48,8 @@ You can also call the `hermes` package as a Python module:
 
 ```shell
 python -m hermes --help
-python -m hermes 
+python -m hermes harvest
 ```
-
-## License and Citation
-
-Please see [`LICENSE.md`](LICENSE.md) for legal information.
-We provide a [`CITATION.cff`](CITATION.cff) containing all metadata for citation, which is also easy to
-use via the widget on the right-hand side.
 
 ## Contributions, Extension and Development
 
@@ -63,3 +57,16 @@ We welcome external contributions! Please follow our [contribution guidelines](C
 
 HERMES was designed with extensibility in mind. Our [development guide](https://docs.software-metadata.pub/en/latest/dev/start.html)
 contains in-depth information how to get ready and start coding.
+
+## Acknowledgements
+
+This project (ZT-I-PF-3-006) was funded by the *Initiative and Networking Fund*
+of the [Helmholtz Association](https://www.helmholtz.de/en/about-us/structure-and-governance/initiating-and-networking)
+in the framework of the [Helmholtz Metadata Collaboration](https://helmholtz-metadaten.de)'s
+[2020 project call](https://helmholtz-metadaten.de/en/projects/hmc-projects-2020).
+
+## License and Citation
+
+Please see [`LICENSE.md`](LICENSE.md) for legal information.
+We provide a [`CITATION.cff`](CITATION.cff) containing all metadata for citation, which is also easy to
+use via the widget on the right-hand side.
