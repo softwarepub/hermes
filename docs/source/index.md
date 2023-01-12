@@ -26,9 +26,10 @@ tutorials/*
 ## Developer Documentation
 
 ```{toctree}
+:glob:
 :maxdepth: 1
 :caption: Developers
-dev/data_model
+dev/*
 adr/index
 ```
 
