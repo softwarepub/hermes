@@ -30,18 +30,12 @@ tutorials/*
 ## Developer Documentation
 
 ```{toctree}
-:glob:
 :maxdepth: 1
 :caption: Developers
-dev/*
+dev/start
+dev/contribute
+dev/data_model
 adr/index
-```
-
-## API Documentation
-
-```{toctree}
-:maxdepth: 2
-:caption: API
 api/index
 ```
 
@@ -63,11 +57,14 @@ Concept Paper <https://arxiv.org/abs/2201.09015>
 
 This is an open repository to collect feedback on the HERMES workflow.
 
-We see our project as part of a global and inter-disciplinary effort to improve the state of the art in research software engineering, maintenance and scholarly communications around research software. We therefore appreciate any feedback you may have on the HERMES project itself and any of its outputs.
+We see our project as part of a global and inter-disciplinary effort to improve the state of the art in 
+research software engineering, maintenance and scholarly communications around research software. We therefore
+appreciate any feedback you may have on the HERMES project itself and any of its outputs.
 
 **How to give feedback**
 
-Either [create an issue](https://github.com/hermes-hmc/workflow/issues/new/choose) in our project repository or [send us an email](mailto:team@software-metadata.pub?subject=HERMES%20WOrkflow%20Reachout).
+Either [create an issue](https://github.com/hermes-hmc/workflow/issues/new/choose) in our project repository or 
+[send us an email](mailto:team@software-metadata.pub?subject=HERMES%20WOrkflow%20Reachout).
 
 ## Acknowledgements
 
