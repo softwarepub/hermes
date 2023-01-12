@@ -52,6 +52,18 @@ class HermesContext:
         self._data = {}
         self._errors = []
 
+    def __getitem__(self, key: ContextPath | str) -> t.Any:
+        """
+        Access a single entry from the context.
+
+        :param key: The path to the item that should be retrieved.
+                    Can be in dotted syntax or as a :class:`ContextPath` instance.
+        :return: The value stored under the given key.
+        """
+        if isinstance(key, str):
+            item = ContextPath.parse(key)
+        return item.get_from(self._data)
+
     def keys(self) -> t.List[ContextPath]:
         """
         Get all the keys for the data stored in this context.
