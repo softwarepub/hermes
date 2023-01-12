@@ -1,3 +1,14 @@
+<!--
+SPDX-FileCopyrightText: 2022 German Aerospace Center (DLR), Forschungszentrum Jülich
+
+SPDX-License-Identifier: CC-BY-SA-4.0
+-->
+
+<!--
+SPDX-FileContributor: Michael Meinel
+SPDX-FileContributor: Oliver Bertuch
+-->
+
 # Tutorial: Start to develop HERMES
 
 Following this tutorial will guide you along setting up a local copy of the code for development of the workflow itself.
