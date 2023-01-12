@@ -75,51 +75,6 @@ hermes = "hermes.cli:main"
 000_cff = "hermes.commands.process.cff:add_name"
 020_git = "hermes.commands.process.git:flag_authors"
 
-
-
-[tool.hermes.logging.formatters.plain]
-format = "%(message)s"
-
-[tool.hermes.logging.formatters.logfile]
-format = "%(created)16f:%(name)20s:%(levelname)10s | %(message)s"
-
-[tool.hermes.logging.formatters.auditlog]
-format = "%(asctime)s %(name)-20s  %(message)s"
-
-[tool.hermes.logging]
-version = 1
-
-[tool.hermes.logging.handlers.terminal]
-class = "logging.StreamHandler"
-formatter = "plain"
-level = "INFO"
-stream = "ext://sys.stdout"
-
-[tool.hermes.logging.handlers.logfile]
-class = "logging.FileHandler"
-formatter = "logfile"
-level = "DEBUG"
-filename = "hermes.log"
-
-[tool.hermes.logging.handlers.auditfile]
-class = "logging.FileHandler"
-formatter = "plain"
-level = "DEBUG"
-filename = "hermes-audit.md"
-mode = "w"
-
-[tool.hermes.logging.loggers.cli]
-level = "DEBUG"
-handlers = ["terminal"]
-
-[tool.hermes.logging.loggers.hermes]
-level = "DEBUG"
-handlers = ["terminal", "logfile"]
-
-[tool.hermes.logging.loggers.audit]
-level = "DEBUG"
-handlers = ["terminal", "auditfile"]
-
 [tool.taskipy.tasks]
 docs-build = "poetry run sphinx-build -M html docs/source docs/build -W"
 docs-clean = "poetry run sphinx-build -M clean docs/source docs/build"
