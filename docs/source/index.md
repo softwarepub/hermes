@@ -16,17 +16,6 @@ SPDX-FileContributor: Michael Meinel
 This is a work in progress. Expect disruptive changes.
 ```
 
-
-
-
-## Tutorials
-
-```{toctree}
-:glob:
-:maxdepth: 1
-tutorials/*
-```
-
 ## Developer Documentation
 
 ```{toctree}
