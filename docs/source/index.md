@@ -1,7 +1,13 @@
 <!--
-SPDX-FileCopyrightText: 2022 German Aerospace Center (DLR), Forschungszentrum Jülich
+SPDX-FileCopyrightText: 2022 Forschungszentrum Jülich, German Aerospace Center (DLR)
 
 SPDX-License-Identifier: CC-BY-SA-4.0
+-->
+
+<!--
+SPDX-FileContributor: Oliver Bertuch
+SPDX-FileContributor: Stephan Druskat
+SPDX-FileContributor: Michael Meinel
 -->
 
 # Overview
