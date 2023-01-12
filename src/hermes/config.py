@@ -14,9 +14,9 @@ _config = {
         'version': 1,
 
         'formatters': {
-            'plain': { 'format': "%(message)s" },
-            'logfile': { 'format': "%(created)16f:%(name)20s:%(levelname)10s | %(message)s" },
-            'auditlog': { 'format': "%(asctime)s %(name)-20s  %(message)s" },
+            'plain': {'format': "%(message)s"},
+            'logfile': {'format': "%(created)16f:%(name)20s:%(levelname)10s | %(message)s"},
+            'auditlog': {'format': "%(asctime)s %(name)-20s  %(message)s"},
         },
 
         'handlers': {
