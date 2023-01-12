@@ -7,8 +7,6 @@ There is no obvious additional metadata available.
 We use https://github.com/hermes-hmc/base-example throughout this tutorial.
 It should be easily adoptable to other repositories.
 
-Before you start, make sure you followed {doc}`000-install-hermes` and have your environment activated.
-
 ## Clone the repository
 
 This step is optional if you use a checked-out version of your own repository.
