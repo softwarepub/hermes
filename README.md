@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: 2022 German Aerospace Center (DLR)
+SPDX-FileCopyrightText: 2022 German Aerospace Center (DLR), Forschungszentrum Jülich
 
 SPDX-License-Identifier: CC-BY-SA-4.0
 -->
@@ -7,35 +7,34 @@ SPDX-License-Identifier: CC-BY-SA-4.0
 <!--
 SPDX-FileContributor: Stephan Druskat
 SPDX-FileContributor: Michael Meinel
+SPDX-FileContributor: Oliver Bertuch
 -->
+
+![HERMES Key Visual](docs/source/_static/img/opengraph-workflow.png)
 
 # hermes
 
-Implementation of the HERMES workflow.
+Implementation of [the HERMES workflow](https://docs.software-metadata.pub/en/latest).
 
-For more information about the HERMES project, see the [HERMES project website](https://software-metadata.pub).
+(For more information about the HERMES [HMC](https://helmholtz-metadata.de) *project*, see the [HERMES project website](https://software-metadata.pub).)
 
-## Structure
+[![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=hermes-hmc_workflow&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=hermes-hmc_workflow)
 
-- Python sources are in the `src` folder
-- pytest tests are in the `test` folder
-- [Architectural Design Records (ADR)](https://adr.github.io/) are in `docs/adr`
-- API documentation is generated into `docs/source/api`
-- All other documentation lives in `docs/source/*`
 
-This project uses 
+## Installation and Usage
 
-- a development branch (`develop`) to merge developments into, this is the default branch
-- actual development is done on "feature" branches (this includes non-feature work such as bug fixing)
-- a `main` branch which only includes releases
+Usually, you will not install `hermes` locally, but 
+[use it within a CI environment](https://docs.software-metadata.pub/en/latest/tutorials/001-prepare-your-project.html).
 
-## Set up for development
+In case you still want to install on your machine, you can (for example) use `pip`:
 
-1. Clone this repository
-2. If you want to use [`poetry`](https://python-poetry.org), run `poetry shell` and `poetry install`
-   ([Learn how to install `poetry`](https://python-poetry.org/docs/#installation)) - we require using `poetry>=1.2`.
+```commandline
+pip install git+https://github.com/hermes-hmc/workflow.git
+```
 
-## Usage
+- Note: you must have Python 3.10 or newer installed.
+- Note: we plan to release stable versions to PyPI and/or Github Packages in the future.
 
 The `hermes` application provides the entry point for the HERMES workflow.
 After installation, you can run it from your command line environment:
@@ -45,39 +44,22 @@ hermes --help
 hermes harvest
 ```
 
-You can also call the `hermes` package as Python module:
+You can also call the `hermes` package as a Python module:
 
 ```shell
 python -m hermes --help
 python -m hermes 
 ```
 
-## Testing
+## License and Citation
 
-Tests are implemented using [pytest](https://pytest.org).
-You can generate coverage report using the `pytest-cov` plugin.
-Both tools are specified as development dependencies in the `pyproject.toml`.
+Please see [`LICENSE.md`](LICENSE.md) for legal information.
+We provide a [`CITATION.cff`](CITATION.cff) containing all metadata for citation, which is also easy to
+use via the widget on the right-hand side.
 
-To run tests with an extensive HTML report, run:
+## Contributions, Extension and Development
 
-```shell
-poetry run pytest test --cov=hermes --cov-branch --cov-report=html --cov-report=term
-```
+We welcome external contributions! Please follow our [contribution guidelines](CONTRIBUTING.md).
 
-## Building documentation
-
-This project comes with extensive documentation that can be built using [Sphinx](https://www.sphinx-doc.org/en/master/).
-This also includes automatic API documentation.
-To build the documentation in your *poetry* environment, run the following commands from the project root:
-
-```shell
-poetry install --with docs
-poetry run task docs-build
-```
-
-Or use [`sphinx-autobuild`](https://) to enable a self-updating preview service:
-
-```shell
-poetry install --with docs
-poetry run task docs-live
-```
+HERMES was designed with extensibility in mind. Our [development guide](https://docs.software-metadata.pub/en/latest/dev/start.html)
+contains in-depth information how to get ready and start coding.
