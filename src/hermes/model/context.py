@@ -61,8 +61,8 @@ class HermesContext:
         :return: The value stored under the given key.
         """
         if isinstance(key, str):
-            item = ContextPath.parse(key)
-        return item.get_from(self._data)
+            key = ContextPath.parse(key)
+        return key.get_from(self._data)
 
     def keys(self) -> t.List[ContextPath]:
         """

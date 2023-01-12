@@ -114,12 +114,17 @@ def deposit():
     # TODO: Get this from config with reasonable defaults.
     #  For now, we just put some values there.
     ctx.update(deposit_invenio_path["siteUrl"], "https://zenodo.org")
-    ctx.update(deposit_invenio_path["recordSchemaPath"], "api/schemas/records/record-v1.0.0.json")
+    ctx.update(
+        deposit_invenio_path["recordSchemaPath"],
+        "api/schemas/records/record-v1.0.0.json"
+    )
 
-    deposition_platform = ctx[deposition_platform_path]
-    print(ctx['deposit'])
+    deposition_platform = ctx["depositionPlatorm"]
 
-    deposit_preparator_entrypoints = metadata.entry_points(group="hermes.prepare_deposit", name=deposition_platform)
+    deposit_preparator_entrypoints = metadata.entry_points(
+        group="hermes.prepare_deposit",
+        name=deposition_platform
+    )
     deposit_preparator = deposit_preparator_entrypoints[0].load()
 
     deposit_preparator(ctx)
@@ -131,5 +136,3 @@ def postprocess():
     Postprocess metadata after deposition
     """
     click.echo("Post-processing")
-
-deposit()

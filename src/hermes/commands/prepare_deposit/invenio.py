@@ -11,10 +11,17 @@ from hermes.model.path import ContextPath
 
 
 def prepare_invenio(ctx: CodeMetaContext):
-    _get_invenio_requirements(f"{INVENIO_SITE_URL}/{INVENIO_RECORD_SCHEMA_PATH}")
+    invenio_path = ContextPath.parse("deposit.invenio")
+
+    invenio_ctx = ctx[invenio_path]
+    recordSchemaUrl = f"{invenio_ctx['siteUrl']}/{invenio_ctx['recordSchemaPath']}"
+
+    recordSchema = _get_invenio_record_schema(recordSchemaUrl)
+    ctx.update(invenio_path["requiredSchema"], recordSchema)
 
 
-def _get_invenio_requirements(url):
-    # TODO: requests.Session in context?
+def _get_invenio_record_schema(url):
+    # TODO: Store a requests.Session in a click_ctx in case we need it more frequently?
     response = requests.get(url)
-    print(response.json())
+    response.raise_for_status()
+    return response.json()
