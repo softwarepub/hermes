@@ -1,6 +1,16 @@
+<!--
+SPDX-FileCopyrightText: 2022 German Aerospace Center (DLR)
+
+SPDX-License-Identifier: CC-BY-SA-4.0
+-->
+
+<!--
+SPDX-FileContributor: Michael Meinel
+-->
+
 # HERMES Data Model
 
-*haggis* uses an internal data model to store the output of the different stages.
+*hermes* uses an internal data model to store the output of the different stages.
 All the data is collected in a directory called `.hermes` located in the root of the project directory.
 
 You should not need to interact with this data directly.

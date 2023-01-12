@@ -1,7 +1,12 @@
-import collections
-import glob
-import os
+# SPDX-FileCopyrightText: 2022 German Aerospace Center (DLR)
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# SPDX-FileContributor: Stephan Druskat
+# SPDX-FileContributor: Michael Meinel
+
 import json
+import logging
 import pathlib
 import urllib.request
 import typing as t
@@ -12,11 +17,14 @@ import jsonschema
 import click
 from cffconvert import Citation
 
-from hermes.model.context import HermesHarvestContext
+from hermes.model.context import HermesHarvestContext, ContextPath
 from hermes.model.errors import HermesValidationError
 
 # TODO: should this be configurable via a CLI option?
 _CFF_VERSION = '1.2.0'
+
+
+_log = logging.getLogger('cli.harvest.cff')
 
 
 def harvest_cff(click_ctx: click.Context, ctx: HermesHarvestContext):
@@ -27,6 +35,10 @@ def harvest_cff(click_ctx: click.Context, ctx: HermesHarvestContext):
     :param ctx: The harvesting context that should contain the provided metadata.
     """
     # Get the parent context (every subcommand has its own context with the main click context as parent)
+    audit_log = logging.getLogger('audit.cff')
+    audit_log.info('')
+    audit_log.info("## Citation File Format")
+
     parent_ctx = click_ctx.parent
     if parent_ctx is None:
         raise RuntimeError('No parent context!')
@@ -64,6 +76,8 @@ def _convert_cff_to_codemeta(cff_data: str) -> t.Any:
 
 
 def _validate(cff_file: pathlib.Path, cff_dict: t.Dict) -> bool:
+    audit_log = logging.getLogger('audit.cff')
+
     cff_schema_url = f'https://citation-file-format.github.io/{_CFF_VERSION}/schema.json'
 
     # TODO: we should ship the schema we reference to by default to avoid unnecessary network traffic.
@@ -74,43 +88,38 @@ def _validate(cff_file: pathlib.Path, cff_dict: t.Dict) -> bool:
     validator = jsonschema.Draft7Validator(schema_data)
     errors = sorted(validator.iter_errors(cff_dict), key=lambda e: e.path)
     if len(errors) > 0:
-        click.echo(f'{cff_file} is not valid according to {cff_schema_url}!')
+        audit_log.warning('!!! warning "%s is not valid according to <%s>"', cff_file, cff_schema_url)
+
         for error in errors:
-            path_str = _build_nodepath_str(error.absolute_path)
-            click.echo(f'    - Invalid input for path {path_str}.\n'
-                       f'      Value: {error.instance} -> {error.message}')
-        click.echo(f'    See the Citation File Format schema guide for further details: '
-                   f'https://github.com/citation-file-format/citation-file-format/blob/{_CFF_VERSION}/schema'
-                   f'-guide.md.')
+            path = ContextPath.make(error.absolute_path or ['root'])
+            audit_log.info('    Invalid input for `%s`.', str(path))
+            audit_log.info('    !!! message "%s"', error.message)
+            audit_log.debug('    !!! value "%s"', error.instance)
+
+        audit_log.info('')
+        audit_log.info('See the Citation File Format schema guide for further details:')
+        audit_log.info(
+            f'<https://github.com/citation-file-format/citation-file-format/blob/{_CFF_VERSION}/schema-guide.md>.')
         return False
+
     elif len(errors) == 0:
-        click.echo(f'Found valid Citation File Format file at: {cff_file}')
+        audit_log.info('- Found valid Citation File Format file at: %s', cff_file)
         return True
 
 
 def _get_single_cff(path: pathlib.Path) -> t.Optional[pathlib.Path]:
     # Find CFF files in directories and subdirectories
+    cff_file = path / 'CITATION.cff'
+    if cff_file.exists():
+        return cff_file
+
     # TODO: Do we really want to search recursive? CFF convention is the file should be at the topmost dir,
     #       which is given via the --path arg. Maybe add another option to enable pointing to a single file?
     #       (So this stays "convention over configuration")
-    files = glob.glob(str(path / '**' / 'CITATION.cff'), recursive=True)
+    files = list(path.rglob('**/CITATION.cff'))
     if len(files) == 1:
         return pathlib.Path(files[0])
     # TODO: Shouldn't we log/echo the found CFF files so a user can debug/cleanup?
     # TODO: Do we want to hand down a logging instance via Hermes context or just encourage
     #       peeps to use the Click context?
     return None
-
-
-def _build_nodepath_str(absolute_path: collections.deque) -> str:
-    # Path deque starts with field name, then index, then field name, etc.
-    path_str = "'"
-    for index, value in enumerate(absolute_path):
-        if index == 0:  # First value
-            path_str += f'{value}'
-        elif index % 2 == 0:  # value is a field name
-            path_str += f' -> {value}'
-        else:  # Value is an index
-            path_str += f' {int(value) + 1}'  # Use index starting at 1
-    path_str += "'"
-    return path_str

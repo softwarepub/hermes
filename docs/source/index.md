@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2022 German Aerospace Center (DLR), Forschungszentrum Jülich
+
+SPDX-License-Identifier: CC-BY-SA-4.0
+-->
+
 # Overview
 
 ```{warning}
@@ -31,7 +37,7 @@ adr/index
 ```{toctree}
 :maxdepth: 2
 :caption: API
-api/modules
+api/index
 ```
 
 ## Indices and tables

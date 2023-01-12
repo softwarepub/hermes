@@ -1,3 +1,9 @@
+# SPDX-FileCopyrightText: 2022 German Aerospace Center (DLR)
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# SPDX-FileContributor: Michael Meinel
+
 import typing as t
 from unittest import mock
 
@@ -67,71 +73,71 @@ def test_workflow_invoke_with_cb():
     cb_mock.assert_called_with(["spam", "eggs"])
 
 
-def test_haggis_full():
+def test_hermes_full():
     runner = CliRunner()
-    result = runner.invoke(cli.haggis)
+    result = runner.invoke(cli.main)
 
     assert not result.exception
 
 
-def test_haggis_harvest():
+def test_hermes_harvest():
     runner = CliRunner()
-    result = runner.invoke(cli.haggis, args=('harvest', ))
+    result = runner.invoke(cli.main, args=('harvest', ))
 
     assert not result.exception
 
 
-def test_haggis_process():
+def test_hermes_process():
     runner = CliRunner()
-    result = runner.invoke(cli.haggis, args=('process', ))
+    result = runner.invoke(cli.main, args=('process', ))
 
     assert not result.exception
 
 
-def test_haggis_with_deposit():
+def test_hermes_with_deposit():
     runner = CliRunner()
-    result = runner.invoke(cli.haggis, args=('--deposit', ))
+    result = runner.invoke(cli.main, args=('--deposit', ))
 
     assert not result.exception
 
 
-def test_haggis_with_post():
+def test_haggis_with_postprocess():
     runner = CliRunner()
-    result = runner.invoke(cli.haggis, args=('--post', ))
+    result = runner.invoke(cli.main, args=('--postprocess', ))
 
     assert not result.exception
 
 
-def test_haggis_with_path():
+def test_hermes_with_path():
     runner = CliRunner()
-    result = runner.invoke(cli.haggis, args=('--path', './'))
+    result = runner.invoke(cli.main, args=('--path', './'))
 
     assert not result.exception
 
 
-def test_haggis_with_deposit_and_post():
+def test_haggis_with_deposit_and_postprocess():
     runner = CliRunner()
-    result = runner.invoke(cli.haggis, args=('--deposit', '--post'))
+    result = runner.invoke(cli.main, args=('--deposit', '--postprocess'))
 
     assert not result.exception
 
 
-def test_haggis_with_deposit_and_path():
+def test_hermes_with_deposit_and_path():
     runner = CliRunner()
-    result = runner.invoke(cli.haggis, args=('--deposit', '--path', './'))
+    result = runner.invoke(cli.main, args=('--deposit', '--path', './'))
 
     assert not result.exception
 
 
-def test_haggis_with_path_and_post():
+def test_haggis_with_path_and_postprocess():
     runner = CliRunner()
-    result = runner.invoke(cli.haggis, args=('--path', './', '--post'))
+    result = runner.invoke(cli.main, args=('--path', './', '--postprocess'))
 
     assert not result.exception
 
 
-def test_haggis_with_deposit_and_post_and_path():
+def test_haggis_with_deposit_and_postprocess_and_path():
     runner = CliRunner()
-    result = runner.invoke(cli.haggis, args=('--deposit', '--post', '--path', './'))
+    result = runner.invoke(cli.main, args=('--deposit', '--postprocess', '--path', './'))
 
     assert not result.exception
