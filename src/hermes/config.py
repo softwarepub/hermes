@@ -6,6 +6,8 @@
 
 # TODO this file contains only dummy implementations which in most cases will lead to a crash...
 import logging
+import pathlib
+
 import toml
 
 
@@ -52,20 +54,23 @@ _config = {
 }
 
 
-def configure():
+
+def configure(config_path: pathlib.Path):
     if 'hermes' in _config:
         return
 
     # Load configuration if not present
     try:
-        with open('pyproject.toml', 'r') as config_file:
-            config_toml = toml.load(config_file)
-            hermes_config = config_toml['tool'].get('hermes', {})
+        with open(config_path, 'r') as config_file:
+            hermes_config = toml.load(config_file)
             _config['hermes'] = hermes_config
             _config['logging'] = hermes_config.get('logging', _config['logging'])
 
-    except IOError:
-        pass
+    except FileNotFoundError:
+        print(f"Configuration not present at {config_path}.")
+
+    except KeyError:
+        print(f"Invalid configuration at {config_path}, no 'hermes' section found.")
 
 
 def get(name):
@@ -85,8 +90,6 @@ def init_logging():
 
     # Inintialize logging system
     import logging.config
-
-    configure()
 
     logging.config.dictConfig(_config['logging'])
     for log_name in _config['logging']['loggers']:
