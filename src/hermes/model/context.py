@@ -174,8 +174,8 @@ class HermesHarvestContext(HermesContext):
             exc = traceback.TracebackException(exc_type, exc_val, exc_tb)
             self._base.error(self._ep, exc)
             self._log.warning("%s: %s",
-                exc_type,
-                ' '.join(map(str, exc_val.args)))
+                              exc_type,
+                              ' '.join(map(str, exc_val.args)))
             return True
 
     def update(self, _key: str, _value: t.Any, **kwargs: t.Any):
