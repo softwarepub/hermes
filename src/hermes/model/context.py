@@ -9,6 +9,7 @@ import pathlib
 import traceback
 import json
 import logging
+import shutil
 import typing as t
 
 from pathlib import Path
@@ -118,6 +119,14 @@ class HermesContext:
         """
 
         self._errors.append((ep, error))
+
+    def purge_caches(self, *path: str) -> Path:
+        """
+        Delete `.hermes` cache-directory for a given *path* if it exsis.
+        """
+
+        if self.hermes_dir.exists:
+            shutil.rmtree(self.hermes_dir)
 
 
 class HermesHarvestContext(HermesContext):

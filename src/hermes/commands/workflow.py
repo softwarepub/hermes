@@ -106,3 +106,16 @@ def postprocess():
     Postprocess metadata after deposition
     """
     click.echo("Post-processing")
+
+
+@click.group(invoke_without_command=True)
+def clean():
+    """
+    Remove cached data.
+    """
+    audit_log = logging.getLogger('audit')
+    audit_log.info("# Cleanup")
+
+    # Create Hermes context (i.e., all collected metadata for all stages...)
+    ctx = HermesContext()
+    ctx.purge_caches()
