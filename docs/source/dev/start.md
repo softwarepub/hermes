@@ -47,7 +47,7 @@ This project uses
 
 - a development branch (`develop`) to merge developments into, this is the default branch
 - actual development is done on "feature" branches (this includes non-feature work such as bug fixing), see also our
-  [contribution guidelines]()
+  {doc}`contribute`.
 - a `main` branch which only includes releases
 
 ## Install HERMES and dependencies
