@@ -1,12 +1,47 @@
+# SPDX-FileCopyrightText: 2022 German Aerospace Center (DLR)
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# SPDX-FileContributor: Stephan Druskat
+# SPDX-FileContributor: Michael Meinel
+
 """
 This module provides the main entry point for the HERMES command line application.
 """
+import logging
 import typing as t
 import pathlib
+from importlib import metadata
 
 import click
 
+from hermes import config
 from hermes.commands import workflow
+from hermes.config import configure, init_logging
+
+
+def log_header(header, summary=None):
+    _log = config.getLogger('cli')
+
+    dist = metadata.distribution('hermes')
+    meta = dist.metadata
+
+    if header is None:
+        title = f"{dist.name} workflow ({dist.version})"
+
+        _log.info(title)
+        _log.info("=" * len(title))
+        _log.info('')
+
+        if 'Summary' in meta:
+            _log.info('%s', meta['Summary'])
+            _log.info('')
+
+    else:
+        _log.info("%s", header)
+        if summary:
+            _log.info("%s", summary)
+            _log.info('')
 
 
 class WorkflowCommand(click.Group):
@@ -49,6 +84,21 @@ class WorkflowCommand(click.Group):
         :param ctx: Context for the command.
         """
 
+        configure()
+        init_logging()
+        log_header(None)
+
+        audit_log = logging.getLogger('audit')
+        audit_log.info("# Running Hermes")
+        audit_log.info("Running Hermes command line in: %s", ctx.params.get('path', pathlib.Path.cwd()).absolute())
+        audit_log.debug("")
+        audit_log.debug("Invoked `%s` with", ctx.invoked_subcommand or self.name)
+        audit_log.debug("")
+        for k, v in ctx.params.items():
+            audit_log.debug("`--%s`", k)
+            audit_log.debug(":   `%s`", v)
+            audit_log.debug("")
+
         if ctx.protected_args:
             return super().invoke(ctx)
 
@@ -90,10 +140,10 @@ class WorkflowCommand(click.Group):
 
 @click.group(cls=WorkflowCommand, invoke_without_command=True)
 @click.option("--deposit", is_flag=True, default=False)
-@click.option("--post", is_flag=True, default=False)
+@click.option("--postprocess", is_flag=True, default=False)
 @click.option('--path', default=pathlib.Path('./'), help='Working path', type=pathlib.Path)
 @click.pass_context
-def haggis(ctx: click.Context, *args, **kwargs) -> None:
+def main(ctx: click.Context, *args, **kwargs) -> None:
     """
     HERMES aggregated interface script
 
@@ -103,7 +153,7 @@ def haggis(ctx: click.Context, *args, **kwargs) -> None:
     pass
 
 
-haggis.add_command(workflow.harvest)
-haggis.add_command(workflow.process)
-haggis.add_command(workflow.deposit)
-haggis.add_command(workflow.post)
+main.add_command(workflow.harvest)
+main.add_command(workflow.process)
+main.add_command(workflow.deposit)
+main.add_command(workflow.postprocess)

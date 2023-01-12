@@ -1,12 +1,27 @@
+# SPDX-FileCopyrightText: 2022 German Aerospace Center (DLR)
+#
+# SPDX-License-Identifier: CC0-1.0
+
+# SPDX-FileContributor: Stephan Druskat
+# SPDX-FileContributor: Michael Meinel
+
+
 __pycache__
 
 .coverage
 htmlcov
 .pytest_cache
-.hermes
 
 docs/source/api
 docs/build/
+/dist/
 
 .idea/
 .venv/
+dist/
+
+# HERMES workflow specifics
+.hermes
+hermes-audit.md
+hermes.log
+quickfix.sh

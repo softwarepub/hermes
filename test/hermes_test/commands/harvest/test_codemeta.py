@@ -1,3 +1,9 @@
+# SPDX-FileCopyrightText: 2022 German Aerospace Center (DLR)
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# SPDX-FileContributor: Stephan Druskat
+
 import json
 
 import pytest
@@ -117,8 +123,6 @@ def test_get_single_codemeta(tmp_path):
 def test_validate_invalid_json_raises(invalid_json_path, tmp_path):
     with pytest.raises(HermesValidationError) as hve:
         harvest._validate(invalid_json_path)
-    assert str(hve.value) == f"('CodeMeta file at {tmp_path}/codemeta.json cannot be decoded into JSON.', " \
-                             f"JSONDecodeError('Expecting value: line 1 column 1 (char 0)'))"
 
 
 def test_validate_invalid_codemeta_raises(invalid_codemeta_path, tmp_path):

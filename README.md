@@ -1,3 +1,14 @@
+<!--
+SPDX-FileCopyrightText: 2022 German Aerospace Center (DLR)
+
+SPDX-License-Identifier: CC-BY-SA-4.0
+-->
+
+<!--
+SPDX-FileContributor: Stephan Druskat
+SPDX-FileContributor: Michael Meinel
+-->
+
 # hermes
 
 Implementation of the HERMES workflow.
@@ -8,7 +19,9 @@ For more information about the HERMES project, see the [HERMES project website](
 
 - Python sources are in the `src` folder
 - pytest tests are in the `test` folder
-- Architectural design records are in `docs/adr`
+- [Architectural Design Records (ADR)](https://adr.github.io/) are in `docs/adr`
+- API documentation is generated into `docs/source/api`
+- All other documentation lives in `docs/source/*`
 
 This project uses 
 
@@ -20,15 +33,16 @@ This project uses
 
 1. Clone this repository
 2. If you want to use [`poetry`](https://python-poetry.org), run `poetry shell` and `poetry install`
+   ([Learn how to install `poetry`](https://python-poetry.org/docs/#installation)) - we require using `poetry>=1.2`.
 
 ## Usage
 
-The `haggis` application provides the entry point for the HERMES workflow.
+The `hermes` application provides the entry point for the HERMES workflow.
 After installation, you can run it from your command line environment:
 
 ```shell
-haggis --help
-haggis harvest
+hermes --help
+hermes harvest
 ```
 
 You can also call the `hermes` package as Python module:
@@ -54,9 +68,16 @@ poetry run pytest test --cov=hermes --cov-branch --cov-report=html --cov-report=
 
 This project comes with extensive documentation that can be built using [Sphinx](https://www.sphinx-doc.org/en/master/).
 This also includes automatic API documentation.
-To build the documentation in your *poetry* envrionment, run the following commands:
+To build the documentation in your *poetry* environment, run the following commands from the project root:
 
 ```shell
-poetry run sphinx-apidoc -o docs/source/api src
-poetry run sphinx-build -M html docs/source docs/build
+poetry install --with docs
+poetry run task docs-build
+```
+
+Or use [`sphinx-autobuild`](https://) to enable a self-updating preview service:
+
+```shell
+poetry install --with docs
+poetry run task docs-live
 ```

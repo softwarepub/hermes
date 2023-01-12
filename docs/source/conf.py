@@ -1,3 +1,12 @@
+# SPDX-FileCopyrightText: 2022 German Aerospace Center (DLR), Forschungszentrum Jülich
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# SPDX-FileContributor: Stephan Druskat
+# SPDX-FileContributor: Oliver Bertuch
+# SPDX-FileContributor: Michael Meinel
+
+
 # Configuration file for the Sphinx documentation builder.
 #
 # This file only contains a selection of the most common options. For a full
@@ -10,9 +19,9 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+import os
+import sys
+sys.path.insert(0, os.path.abspath('../../src'))
 
 
 # -- Project information -----------------------------------------------------
@@ -44,7 +53,8 @@ extensions = [
     'sphinxcontrib.icon',
     'sphinxemoji.sphinxemoji',
     "sphinxext.opengraph",
-    'myst_parser'
+    'myst_parser',
+    'autoapi.extension',
 ]
 
 language = 'en'
@@ -66,6 +76,12 @@ myst_enable_extensions = [
     'tasklist',
     'deflist',
 ]
+
+# Sphinx API docs configuration, see https://sphinx-autoapi.readthedocs.io/en/latest/reference/config.html
+autoapi_type = "python"
+autoapi_dirs = ["../../src"]
+autoapi_root = "api"
+autoapi_ignore = ["*__main__*"]
 
 # -- Options for HTML output -------------------------------------------------
 
