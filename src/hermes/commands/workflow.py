@@ -119,8 +119,10 @@ def deposit():
         "api/schemas/records/record-v1.0.0.json"
     )
 
+    # The platform to which we want to deposit the (meta)data
     deposition_platform = ctx["depositionPlatorm"]
 
+    # Based on the deposition platform, get the correct entry point
     deposit_preparator_entrypoints = metadata.entry_points(
         group="hermes.prepare_deposit",
         name=deposition_platform

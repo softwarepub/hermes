@@ -76,6 +76,9 @@ hermes = "hermes.cli:main"
 000_cff = "hermes.commands.process.cff:add_name"
 020_git = "hermes.commands.process.git:flag_authors"
 
+[tool.poetry.plugins."hermes.prepare_deposit"]
+invenio = "hermes.commands.prepare_deposit.invenio:prepare_invenio_deposit"
+
 [tool.taskipy.tasks]
 docs-build = "poetry run sphinx-build -M html docs/source docs/build -W"
 docs-clean = "poetry run sphinx-build -M clean docs/source docs/build"
