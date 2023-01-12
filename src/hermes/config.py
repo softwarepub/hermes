@@ -53,14 +53,14 @@ _config = {
 
 
 def configure():
-    if _config:
+    if 'hermes' in _config:
         return
 
     # Load configuration if not present
     try:
         with open('pyproject.toml', 'r') as config_file:
             config_toml = toml.load(config_file)
-            hermes_config = config_toml['tool']['hermes']
+            hermes_config = config_toml['tool'].get('hermes', {})
             _config['hermes'] = hermes_config
             _config['logging'] = hermes_config.get('logging', _config['logging'])
 
