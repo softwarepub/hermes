@@ -93,11 +93,21 @@ def process():
 
 
 @click.group(invoke_without_command=True)
-def deposit():
+@click.pass_context
+def deposit(click_ctx: click.Context):
     """
     Deposit processed (and curated) metadata
     """
     click.echo("Metadata deposition")
+
+    ctx = CodeMetaContext()
+
+    # TODO: Which platform do we target here? Get this from config
+    deposition_platform = "invenio"
+
+    deposit_preparator_entrypoints = metadata.entry_points(group="hermes.prepare_deposit", name=deposition_platform)
+    deposit_preparator = deposit_preparator_entrypoints[0].load()
+    deposit_preparator(click_ctx, ctx)
 
 
 @click.group(invoke_without_command=True)
