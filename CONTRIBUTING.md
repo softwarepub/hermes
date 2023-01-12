@@ -6,11 +6,33 @@ SPDX-License-Identifier: CC-BY-SA-4.0
 
 <!--
 SPDX-FileContributor: Stephan Druskat
+SPDX-FileContributor: Oliver Bertuch
 -->
 
-# HERMES development workflow
+# Contribution Guidelines
 
-## Preamble
+## Feedback
+
+This is an open repository to collect feedback, issues, bug reports, feature requests, etc. on the HERMES workflow.
+
+We see our project as part of a global and interdisciplinary effort to improve the state of the art in 
+research software engineering, maintenance and scholarly communications around research software. We therefore
+appreciate any feedback you may have on the HERMES project itself and any of its outputs.
+
+Either [create an issue](https://github.com/hermes-hmc/workflow/issues/new/choose) in our project repository or 
+[send us an email](mailto:team@software-metadata.pub?subject=HERMES%20WOrkflow%20Reachout).
+
+## External Code Contributions
+
+```{note}
+TODO: This still needs to be written.
+```
+
+## HERMES development workflow
+
+The following describes the project internal workflow for contributions.
+
+### Preamble
 
 > **Branching is cheap!**
 >
@@ -18,7 +40,7 @@ SPDX-FileContributor: Stephan Druskat
 >
 > Aim for quick turnaround times!
 
-## Branching
+### Branching
 
 We loosely follow a mixture of [GitHubFlow](https://docs.github.com/en/get-started/quickstart/github-flow) and [GitFlow](https://nvie.com/posts/a-successful-git-branching-model/):
 
@@ -36,14 +58,14 @@ We loosely follow a mixture of [GitHubFlow](https://docs.github.com/en/get-start
 `hotfix/<describe-hotfix>` (including issue id when exists: `hotfix/62-fix-broken-thing-in-release`)
     - Branch from `main`
 
-### Pull requests
+#### Pull requests
 
 - As soon as you have made 1 commit in a feature branch, put up a *draft* pull request
 - Keep pull requests small :skull: 
 - :warning: No pre-emptive reviews on PR drafts, **unless** the PR author @-mentions with this specific request
 - When you think you're done, mark PR ready for review, see below (Merge Process)
 
-## Merge Process (into `develop`)
+### Merge Process (into `develop`)
 
 - Create PR from `feature/...` against `develop` (PR author)
 - Describe work in initial comment (PR author)
@@ -90,7 +112,7 @@ We loosely follow a mixture of [GitHubFlow](https://docs.github.com/en/get-start
     - Merge PR and delete remote branch if at least half of the invited reviewers have approved the PR, and no changes have been requested after review.
       This implements lazy consensus to avoid bottlenecks, where a PR has been approved by some reviewers but cannot be closed due to missing reviews.
 
-## Release/stabilization process
+### Release/stabilization process
 
 - Create release branch `release/v<version-id>` from `develop`
 - Check if everything looks good
