@@ -16,8 +16,8 @@ def get_project_path(click_ctx: click.Context) -> Path:
 
     :param click_ctx: The subcommand's click context
     :return: The path parameter of the passed click.Context's parent path, i.e.,
-    the path where the workflow CLI tool was executed, i.e.,
-    the root path of the project that the workflow tool is run for.
+             the path where the workflow CLI tool was executed, i.e.,
+             the root path of the project that the workflow tool is run for.
     """
     parent_ctx = click_ctx.parent
     if parent_ctx is None:
