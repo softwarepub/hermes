@@ -19,7 +19,7 @@ class ContextPathGrammar:
     The pyparsing grammar for ContextGrammar paths.
     """
 
-    key = pp.Word('@' + pp.alphas)
+    key = pp.Word('@:' + pp.alphas)
     index = pp.Word(pp.nums).set_parse_action(lambda tok: [int(tok[0])]) | pp.Char('*')
     field = key + (pp.Suppress('[') + index + pp.Suppress(']'))[...]
     path = field + (pp.Suppress('.') + field)[...]
