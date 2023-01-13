@@ -7,7 +7,6 @@
 
 import json
 import logging
-import sys
 from importlib import metadata
 
 import click

@@ -70,7 +70,6 @@ class HermesContext:
         cache_dir.mkdir(parents=True, exist_ok=True)
         return cache_dir
 
-
     def get_cache(self, *path: str, create: bool = False) -> Path:
         """
         Retrieve a cache file for a given *path*.
