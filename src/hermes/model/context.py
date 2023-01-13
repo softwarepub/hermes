@@ -66,7 +66,7 @@ class HermesContext:
         :param path: The (local) path to identify the requested cache.
         :return: The path to the requested cache file.
         """
-        cache_dir = self.hermes_dir.joinpath(path)
+        cache_dir = self.hermes_dir.joinpath(*path)
         cache_dir.mkdir(parents=True, exist_ok=True)
         return cache_dir
 
