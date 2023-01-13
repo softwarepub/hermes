@@ -73,7 +73,7 @@ hermes = "hermes.cli:main"
 
 [tool.poetry.plugins."hermes.preprocess"]
 000_cff = "hermes.commands.process.cff:add_name"
-020_git = "hermes.commands.process.git:flag_authors"
+020_git = "hermes.commands.process.git:add_contributors"
 
 
 
