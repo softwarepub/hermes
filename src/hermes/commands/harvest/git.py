@@ -134,7 +134,7 @@ class ContributorData:
 
 class NodeRegister:
     """
-    Helper class to unify Git commit authors / committers.
+    Helper class to unify Git commit authors and committers.
 
     This class keeps track of all registered instances and merges two :py:class:`ContributorData` instances if some
     attributes match.
