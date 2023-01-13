@@ -9,19 +9,63 @@ import logging
 import toml
 
 
-_config = {}
+_config = {
+    'logging': {
+        'version': 1,
+
+        'formatters': {
+            'plain': {'format': "%(message)s"},
+            'logfile': {'format': "%(created)16f:%(name)20s:%(levelname)10s | %(message)s"},
+            'auditlog': {'format': "%(asctime)s %(name)-20s  %(message)s"},
+        },
+
+        'handlers': {
+            'terminal': {
+                'class': "logging.StreamHandler",
+                'formatter': "plain",
+                'level': "INFO",
+                'stream': "ext://sys.stdout",
+            },
+
+            'logfile': {
+                'class': "logging.FileHandler",
+                'formatter': "logfile",
+                'level': "DEBUG",
+                'filename': "hermes.log",
+            },
+
+            'auditfile': {
+                'class': "logging.FileHandler",
+                'formatter': "plain",
+                'level': "DEBUG",
+                'filename': "hermes-audit.md",
+                'mode': "w",
+            },
+        },
+
+        'loggers': {
+            'cli': {'level': "DEBUG", 'handlers': ['terminal']},
+            'hermes': {'level': "DEBUG", 'handlers': ['terminal', 'logfile']},
+            'audit': {'level': "DEBUG", 'handlers': ['terminal', 'logfile']},
+        },
+    },
+}
 
 
 def configure():
-    if _config:
+    if 'hermes' in _config:
         return
 
     # Load configuration if not present
-    with open('pyproject.toml', 'r') as config_file:
-        config_toml = toml.load(config_file)
-        hermes_config = config_toml['tool']['hermes']
-        _config['hermes'] = hermes_config
-        _config['logging'] = hermes_config['logging']
+    try:
+        with open('pyproject.toml', 'r') as config_file:
+            config_toml = toml.load(config_file)
+            hermes_config = config_toml['tool'].get('hermes', {})
+            _config['hermes'] = hermes_config
+            _config['logging'] = hermes_config.get('logging', _config['logging'])
+
+    except IOError:
+        pass
 
 
 def get(name):
