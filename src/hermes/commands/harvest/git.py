@@ -240,7 +240,7 @@ def _audit_contributors(contributors, audit_log: logging.Logger):
 
 def _merge_contributors(git_authors: NodeRegister, git_committers: NodeRegister) -> NodeRegister:
     """
-    Merges the git authors and git committers :py:class:`NodeRegister`s, and assign the respective roles for each node.
+    Merges the git authors and git committers :py:class:`NodeRegister` and assign the respective roles for each node.
     """
     git_contributors = NodeRegister(ContributorData, 'email', 'name', email=str.upper)
     for author in git_authors._all:
