@@ -5,12 +5,12 @@
 # SPDX-FileContributor: Stephan Druskat
 # SPDX-FileContributor: Michael Meinel
 
-import pathlib
+from pathlib import Path
 
 import click
 
 
-def get_project_path(click_ctx: click.Context) -> pathlib.PosixPath:
+def get_project_path(click_ctx: click.Context) -> Path:
     """Returns the 'path' parameter of the passed click.Context's parent context.
     Every subcommand has its own click context with the main click context as parent.
 
