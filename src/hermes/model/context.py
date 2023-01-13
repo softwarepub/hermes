@@ -9,6 +9,7 @@ import pathlib
 import traceback
 import json
 import logging
+import shutil
 import typing as t
 
 from pathlib import Path
@@ -36,6 +37,7 @@ class HermesContext:
     """
 
     default_timestamp = datetime.datetime.now().isoformat(timespec='seconds')
+    hermes_cache_name = ".hermes"
 
     def __init__(self, project_dir: t.Optional[Path] = None):
         """
@@ -46,7 +48,7 @@ class HermesContext:
         """
 
         #: Base dir for the hermes metadata cache (default is `.hermes` in the project root).
-        self.hermes_dir = Path(project_dir or '.') / '.hermes'
+        self.hermes_dir = Path(project_dir or '.') / self.hermes_cache_name
 
         self._caches = {}
         self._data = {}
@@ -70,6 +72,17 @@ class HermesContext:
         """
         return [ContextPath.parse(k) for k in self._data.keys()]
 
+    def init_cache(self, *path: str) -> Path:
+        """
+        Initialize a cache directory if not present.
+
+        :param path: The (local) path to identify the requested cache.
+        :return: The path to the requested cache file.
+        """
+        cache_dir = self.hermes_dir.joinpath(*path)
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        return cache_dir
+
     def get_cache(self, *path: str, create: bool = False) -> Path:
         """
         Retrieve a cache file for a given *path*.
@@ -87,9 +100,11 @@ class HermesContext:
             return self._caches[path]
 
         *subdir, name = path
-        cache_dir = self.hermes_dir.joinpath(*subdir)
         if create:
-            cache_dir.mkdir(parents=True, exist_ok=True)
+            cache_dir = self.init_cache(*subdir)
+        else:
+            cache_dir = self.hermes_dir.joinpath(*subdir)
+
         data_file = cache_dir / (name + '.json')
         self._caches[path] = data_file
 
@@ -130,6 +145,14 @@ class HermesContext:
         """
 
         self._errors.append((ep, error))
+
+    def purge_caches(self) -> None:
+        """
+        Delete `.hermes` cache-directory if it exsis.
+        """
+
+        if self.hermes_dir.exists:
+            shutil.rmtree(self.hermes_dir)
 
 
 class HermesHarvestContext(HermesContext):
