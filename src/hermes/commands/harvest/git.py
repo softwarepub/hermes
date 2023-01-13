@@ -38,7 +38,8 @@ class ContributorData:
     Stores contributor data information from Git history.
     """
 
-    def __init__(self, name: str | t.List[str], email: str | t.List[str], timestamp: str | t.List[str], role: str | t.List[str]):
+    def __init__(self, name: str | t.List[str], email: str | t.List[str], timestamp: str | t.List[str],
+                 role: str | t.List[str]):
         """
         Initialize a new contributor dataset.
 
@@ -103,7 +104,8 @@ class ContributorData:
 
         :return: The CodeMeta representation of this dataset.
         """
-        # Person as type is fine even for bots, as they need to have emails, and the Person type can be a fictional person in schema.org.
+        # Person as type is fine even for bots, as they need to have emails,
+        # and the Person type can be a fictional person in schema.org.
         res = {
             '@type': 'Person',
         }
@@ -121,7 +123,9 @@ class ContributorData:
         if self.role:
             if self.timestamp:
                 timestamp_start, *_, timestamp_end = sorted(self.timestamp + [self.timestamp[0]])
-                res['hermes:contributionRole'] = [{'@type': 'Role', 'roleName': role, 'startTime': timestamp_start, 'endTime': timestamp_end} for role in self.role]
+                res['hermes:contributionRole'] = [
+                    {'@type': 'Role', 'roleName': role, 'startTime': timestamp_start, 'endTime': timestamp_end}
+                    for role in self.role]
             else:
                 res['hermes:contributionRole'] = [{'@type': 'Role', 'roleName': role} for role in self.role]
 
@@ -233,19 +237,21 @@ def _audit_contributors(contributors, audit_log: logging.Logger):
 
         audit_log.info('```')
 
+
 def _merge_contributors(git_authors: NodeRegister, git_committers: NodeRegister) -> NodeRegister:
     """
     Merges the git authors and git committers :py:class:`NodeRegister`s, and assign the respective roles for each node.
     """
     git_contributors = NodeRegister(ContributorData, 'email', 'name', email=str.upper)
     for author in git_authors._all:
-        git_contributors.update(email=author.email[0], name=author.name[0], timestamp=author.timestamp, role='git author')
+        git_contributors.update(email=author.email[0], name=author.name[0], timestamp=author.timestamp,
+                                role='git author')
 
     for committer in git_committers._all:
-        git_contributors.update(email=committer.email[0], name=committer.name[0], timestamp=committer.timestamp, role='git committer')
-    
-    return git_contributors
+        git_contributors.update(email=committer.email[0], name=committer.name[0], timestamp=committer.timestamp,
+                                role='git committer')
 
+    return git_contributors
 
 
 def harvest_git(click_ctx: click.Context, ctx: HermesHarvestContext):
@@ -294,12 +300,13 @@ def harvest_git(click_ctx: click.Context, ctx: HermesHarvestContext):
     log = p.stdout.decode(SHELL_ENCODING).split('\n')
     for line in log:
         try:
-            author_name, author_email, author_timestamp, committer_name, committer_email, committer_timestamp = line.split(_GIT_SEP)
+            # a = author, c = committer
+            a_name, a_email, a_timestamp, c_name, c_email, c_timestamp = line.split(_GIT_SEP)
         except ValueError:
             continue
 
-        git_authors.update(email=author_email, name=author_name, timestamp=author_timestamp, role=None)
-        git_committers.update(email=committer_email, name=committer_name, timestamp=committer_timestamp, role=None)
+        git_authors.update(email=a_email, name=a_name, timestamp=a_timestamp, role=None)
+        git_committers.update(email=c_email, name=c_name, timestamp=c_timestamp, role=None)
 
     git_contributors = _merge_contributors(git_authors, git_committers)
 
