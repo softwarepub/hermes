@@ -104,32 +104,36 @@ def deposit():
 
     ctx = CodeMetaContext()
 
+    ############################ TODO: Remove this ############################
     deposition_platform_path = ContextPath("depositionPlatorm")
     deposit_invenio_path = ContextPath.parse("deposit.invenio")
 
-    # TODO: Which platform do we target here? Get this from config/context.
-    #  For now, we just put "invenio" there.
+    # Which kind of platform do we target here? For now, we just put "invenio" there.
     ctx.update(deposition_platform_path, "invenio")
 
-    # TODO: Get this from config with reasonable defaults.
-    #  For now, we just put some values there.
+    # There are many Invenio instances. For now, we just use Zenodo as a default.
     ctx.update(deposit_invenio_path["siteUrl"], "https://zenodo.org")
     ctx.update(
         deposit_invenio_path["recordSchemaPath"],
         "api/schemas/records/record-v1.0.0.json"
     )
+    ###########################################################################
 
     # The platform to which we want to deposit the (meta)data
+    # TODO: Get this from config
     deposition_platform = ctx["depositionPlatorm"]
 
-    # Based on the deposition platform, get the correct entry point
+    # Prepare the deposit
     deposit_preparator_entrypoints = metadata.entry_points(
         group="hermes.prepare_deposit",
         name=deposition_platform
     )
     deposit_preparator = deposit_preparator_entrypoints[0].load()
-
     deposit_preparator(ctx)
+
+    # TODO: Metadata mapping
+
+    # TODO: Deposit
 
 
 @click.group(invoke_without_command=True)

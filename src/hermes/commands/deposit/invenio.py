@@ -10,7 +10,7 @@ from hermes.model.context import CodeMetaContext
 from hermes.model.path import ContextPath
 
 
-def prepare_invenio_deposit(ctx: CodeMetaContext):
+def prepare_deposit(ctx: CodeMetaContext):
     """Prepare the Invenio deposit.
 
     In this case, "prepare" means download the record schema that is required
@@ -21,6 +21,7 @@ def prepare_invenio_deposit(ctx: CodeMetaContext):
     invenio_path = ContextPath.parse("deposit.invenio")
 
     invenio_ctx = ctx[invenio_path]
+    # TODO: Get these values from config with reasonable defaults.
     recordSchemaUrl = f"{invenio_ctx['siteUrl']}/{invenio_ctx['recordSchemaPath']}"
 
     recordSchema = _request_json(recordSchemaUrl)
