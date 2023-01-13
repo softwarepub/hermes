@@ -4,6 +4,7 @@
 
 # SPDX-FileContributor: Stephan Druskat
 # SPDX-FileContributor: Michael Meinel
+# SPDX-FileContributor: David Pape
 
 [tool.poetry]
 name = "hermes"
@@ -37,6 +38,7 @@ cffconvert = "^2.0.0"
 convert-codemeta = "^0.4.0"
 toml = "^0.10.2"
 pyparsing = "^3.0.9"
+requests = "^2.28.1"
 
 # Packages for developers
 [tool.poetry.group.dev.dependencies]
@@ -75,6 +77,9 @@ hermes = "hermes.cli:main"
 [tool.poetry.plugins."hermes.preprocess"]
 000_cff = "hermes.commands.process.cff:add_name"
 020_git = "hermes.commands.process.git:add_contributors"
+
+[tool.poetry.plugins."hermes.prepare_deposit"]
+invenio = "hermes.commands.deposit.invenio:prepare_deposit"
 
 [tool.taskipy.tasks]
 docs-build = "poetry run sphinx-build -M html docs/source docs/build -W"

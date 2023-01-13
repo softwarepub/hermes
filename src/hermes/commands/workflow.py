@@ -4,6 +4,7 @@
 
 # SPDX-FileContributor: Stephan Druskat
 # SPDX-FileContributor: Michael Meinel
+# SPDX-FileContributor: David Pape
 
 import json
 import logging
@@ -111,6 +112,44 @@ def deposit():
     Deposit processed (and curated) metadata
     """
     click.echo("Metadata deposition")
+
+    # local import that can be removed later
+    from hermes.model.path import ContextPath
+
+    ctx = CodeMetaContext()
+
+    # TODO: Remove this
+    deposition_platform_path = ContextPath("depositionPlatform")
+    deposit_invenio_path = ContextPath.parse("deposit.invenio")
+
+    # TODO: Remove this
+    # Which kind of platform do we target here? For now, we just put "invenio" there.
+    ctx.update(deposition_platform_path, "invenio")
+
+    # TODO: Remove this
+    # There are many Invenio instances. For now, we just use Zenodo as a default.
+    ctx.update(deposit_invenio_path["siteUrl"], "https://zenodo.org")
+    ctx.update(
+        deposit_invenio_path["recordSchemaPath"],
+        "api/schemas/records/record-v1.0.0.json"
+    )
+
+    # The platform to which we want to deposit the (meta)data
+    # TODO: Get this from config
+    deposition_platform = ctx["depositionPlatform"]
+
+    # Prepare the deposit
+    deposit_preparator_entrypoints = metadata.entry_points(
+        group="hermes.prepare_deposit",
+        name=deposition_platform
+    )
+    if deposit_preparator_entrypoints:
+        deposit_preparator = deposit_preparator_entrypoints[0].load()
+        deposit_preparator(ctx)
+
+    # TODO: Metadata mapping
+
+    # TODO: Deposit
 
 
 @click.group(invoke_without_command=True)
