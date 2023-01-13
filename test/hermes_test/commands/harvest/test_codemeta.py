@@ -121,10 +121,12 @@ def test_get_single_codemeta(tmp_path):
 
 
 def test_validate_invalid_json_raises(invalid_json_path, tmp_path):
-    assert not harvest._validate(invalid_json_path)
+    with pytest.raises(HermesValidationError) as e:
+        harvest._validate(invalid_json_path)
+        assert "cannot be decoded into JSON" in e.value
 
 
-def test_validate_invalid_codemeta_raises(invalid_codemeta_path, tmp_path):
+def test_validate_invalid_codemeta(invalid_codemeta_path, tmp_path):
     assert not harvest._validate(invalid_codemeta_path)
 
 
