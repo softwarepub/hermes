@@ -4,6 +4,7 @@
 
 # SPDX-FileContributor: Jeffrey Kelling
 # SPDX-FileContributor: Michael Meinel
+# SPDX-FileContributor: Stephan Druskat
 
 import logging
 import os
