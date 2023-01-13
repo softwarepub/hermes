@@ -130,8 +130,9 @@ def deposit():
         group="hermes.prepare_deposit",
         name=deposition_platform
     )
-    deposit_preparator = deposit_preparator_entrypoints[0].load()
-    deposit_preparator(ctx)
+    if deposit_preparator_entrypoints:
+        deposit_preparator = deposit_preparator_entrypoints[0].load()
+        deposit_preparator(ctx)
 
     # TODO: Metadata mapping
 
