@@ -24,6 +24,8 @@ def prepare_deposit(ctx: CodeMetaContext):
     # TODO: Get these values from config with reasonable defaults.
     recordSchemaUrl = f"{invenio_ctx['siteUrl']}/{invenio_ctx['recordSchemaPath']}"
 
+    # TODO: cache this download in HERMES cache dir
+    # TODO: ensure to use from cache instead of download if not expired (needs config)
     recordSchema = _request_json(recordSchemaUrl)
     ctx.update(invenio_path["requiredSchema"], recordSchema)
 
