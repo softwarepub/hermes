@@ -4,6 +4,7 @@
 
 # SPDX-FileContributor: Stephan Druskat
 # SPDX-FileContributor: Michael Meinel
+# SPDX-FileContributor: David Pape
 
 [tool.poetry]
 name = "hermes"
