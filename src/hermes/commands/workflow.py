@@ -119,7 +119,7 @@ def deposit():
     ctx = CodeMetaContext()
 
     # TODO: Remove this
-    deposition_platform_path = ContextPath("depositionPlatorm")
+    deposition_platform_path = ContextPath("depositionPlatform")
     deposit_invenio_path = ContextPath.parse("deposit.invenio")
 
     # TODO: Remove this
@@ -136,7 +136,7 @@ def deposit():
 
     # The platform to which we want to deposit the (meta)data
     # TODO: Get this from config
-    deposition_platform = ctx["depositionPlatorm"]
+    deposition_platform = ctx["depositionPlatform"]
 
     # Prepare the deposit
     deposit_preparator_entrypoints = metadata.entry_points(
