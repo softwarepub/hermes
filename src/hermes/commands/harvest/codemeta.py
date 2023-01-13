@@ -13,10 +13,9 @@ import typing as t
 import click
 from convert_codemeta.validate import validate_codemeta
 
-
+from hermes.commands.harvest import util
 from hermes.model.context import HermesHarvestContext
 from hermes.model.errors import HermesValidationError
-from hermes.commands.harvest import util
 
 
 def harvest_codemeta(click_ctx: click.Context, ctx: HermesHarvestContext):

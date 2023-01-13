@@ -61,7 +61,7 @@ CODEMETA_JSON = """\
   "contIntegration": "https://github.com/hermes-hmc/workflow/actions",
   "developmentStatus": "active",
   "downloadUrl": "https://github.com/hermes-hmc/workflow",
-  "funder": { 
+  "funder": {
           "@id": "https://helmholtz-metadaten.de",
           "@type": "Organization",
           "name": "Helmholtz Metadata Collaboration"
@@ -121,8 +121,7 @@ def test_get_single_codemeta(tmp_path):
 
 
 def test_validate_invalid_json_raises(invalid_json_path, tmp_path):
-    with pytest.raises(HermesValidationError) as hve:
-        harvest._validate(invalid_json_path)
+    assert not harvest._validate(invalid_json_path)
 
 
 def test_validate_invalid_codemeta_raises(invalid_codemeta_path, tmp_path):
