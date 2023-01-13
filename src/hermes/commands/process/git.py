@@ -13,7 +13,7 @@ from hermes.model.context import CodeMetaContext, HermesHarvestContext, ContextP
 _AUTHOR_KEYS = ('@id', 'email', 'name')
 
 
-def flag_authors(ctx: CodeMetaContext, harvest_ctx: HermesHarvestContext):
+def add_contributors(ctx: CodeMetaContext, harvest_ctx: HermesHarvestContext):
     """
     Add all git authors and committers with role `Contributor`.
 
@@ -24,7 +24,6 @@ def flag_authors(ctx: CodeMetaContext, harvest_ctx: HermesHarvestContext):
     audit_log.info('')
     audit_log.info('### Add git authors and committers as contributors')
 
-    author_path = ContextPath('author')
     contributor_path = ContextPath('contributor')
 
     tags = {}
@@ -34,7 +33,7 @@ def flag_authors(ctx: CodeMetaContext, harvest_ctx: HermesHarvestContext):
         audit_log.info("- Inconsistent data, skipping.")
         return
 
-    for i, contributor in enumerate(author_path.get_from(data)):
+    for i, contributor in enumerate(contributor_path.get_from(data)):
         audit_log.debug('- %s', contributor['name'])
         if contributor_path not in ctx.keys():
             ctx.update(contributor_path, [])
