@@ -15,6 +15,7 @@ import subprocess
 import shutil
 
 from hermes.model.context import HermesHarvestContext
+from hermes.model.errors import HermesValidationError
 
 
 _log = logging.getLogger('harvest.git')
@@ -274,15 +275,16 @@ def harvest_git(click_ctx: click.Context, ctx: HermesHarvestContext):
 
     p = subprocess.run([git_exe, "rev-parse", "--abbrev-ref", "HEAD"], capture_output=True)
     if p.returncode:
-        raise RuntimeError(f"`git branch` command failed with code {p.returncode}: "
-                           f"'{p.stderr.decode(SHELL_ENCODING)}'!")
+        raise HermesValidationError(f"`git branch` command failed with code {p.returncode}: "
+                                    f"'{p.stderr.decode(SHELL_ENCODING).rstrip()}'!")
+
     git_branch = p.stdout.decode(SHELL_ENCODING).strip()
     # TODO: should we warn or error if the HEAD is detached?
 
     p = subprocess.run([git_exe, "log", f"--pretty={_GIT_SEP.join(_GIT_FORMAT)}"] + _GIT_ARGS, capture_output=True)
     if p.returncode:
-        raise RuntimeError(f"`git log` command failed with code {p.returncode}: "
-                           f"'{p.stderr.decode(SHELL_ENCODING)}'!")
+        raise HermesValidationError(f"`git log` command failed with code {p.returncode}: "
+                                    f"'{p.stderr.decode(SHELL_ENCODING).rstrip()}'!")
 
     log = p.stdout.decode(SHELL_ENCODING).split('\n')
     for line in log:
