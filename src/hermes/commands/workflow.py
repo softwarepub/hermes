@@ -28,6 +28,9 @@ def harvest(click_ctx: click.Context):
     # Create Hermes context (i.e., all collected metadata for all stages...)
     ctx = HermesContext()
 
+    # Initialize the harvest cache directory here to indicate the step ran
+    ctx.init_cache("harvest")
+
     # Get all harvesters
     harvesters = metadata.entry_points(group='hermes.harvest')
     for harvester in harvesters:
@@ -57,12 +60,22 @@ def process():
 
     ctx = CodeMetaContext()
 
+    if not (ctx.hermes_dir / "harvest").exists():
+        _log.error("You must run the harvest command before process")
+        return 1
+
+    # TODO: needs a lookup in future configuration to loop only over enabled harvesters
     harvesters = metadata.entry_points(group='hermes.harvest')
     for harvester in harvesters:
         audit_log.info("## Process data from %s", harvester.name)
 
         harvest_context = HermesHarvestContext(ctx, harvester)
-        harvest_context.load_cache()
+        try:
+            harvest_context.load_cache()
+        # when the harvest step ran, but there is no cache file, this is a serious flaw
+        except FileNotFoundError:
+            _log.warning("No output data from harvester %s found, skipping", harvester.name)
+            continue
 
         processors = metadata.entry_points(group='hermes.preprocess', name=harvester.name)
         for processor in processors:
@@ -86,7 +99,7 @@ def process():
     with tags_path.open('w') as tags_file:
         json.dump(ctx.tags, tags_file, indent='  ')
 
-    with open('codemeta.json', 'w') as codemeta_file:
+    with open(ctx.get_cache("process", "codemeta", create=True), 'w') as codemeta_file:
         json.dump(ctx._data, codemeta_file, indent='  ')
 
     logging.shutdown()

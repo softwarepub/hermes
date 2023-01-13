@@ -34,6 +34,7 @@ click = "^8.1"
 "ruamel.yaml" = "^0.17.21"
 jsonschema = "^3.0.0"
 cffconvert = "^2.0.0"
+convert-codemeta = "^0.4.0"
 toml = "^0.10.2"
 pyparsing = "^3.0.9"
 
@@ -79,6 +80,7 @@ hermes = "hermes.cli:main"
 docs-build = "poetry run sphinx-build -M html docs/source docs/build -W"
 docs-clean = "poetry run sphinx-build -M clean docs/source docs/build"
 docs-live = "poetry run sphinx-autobuild docs/source docs/build"
+flake8 = "poetry run flake8 ./test/ ./src/ --count --select=E9,F63,F7,F82 --statistics"
 
 [build-system]
 requires = ["poetry-core>=1.2.0"]

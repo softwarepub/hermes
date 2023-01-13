@@ -4,18 +4,13 @@
 
 # SPDX-FileContributor: Michael Meinel
 
-import typing as t
 from unittest import mock
 
 import click
 from click.testing import CliRunner
 
 from hermes import cli
-
-
-def mock_command(name: str) -> t.Tuple[mock.Mock, click.Command]:
-    func = mock.Mock(return_value=name)
-    return func, click.command(name)(func)
+from hermes_test.mocks import mock_command
 
 
 def test_workflow_setup():

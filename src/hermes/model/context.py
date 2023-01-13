@@ -37,6 +37,7 @@ class HermesContext:
     """
 
     default_timestamp = datetime.datetime.now().isoformat(timespec='seconds')
+    hermes_cache_name = ".hermes"
 
     def __init__(self, project_dir: t.Optional[Path] = None):
         """
@@ -47,7 +48,7 @@ class HermesContext:
         """
 
         #: Base dir for the hermes metadata cache (default is `.hermes` in the project root).
-        self.hermes_dir = Path(project_dir or '.') / '.hermes'
+        self.hermes_dir = Path(project_dir or '.') / self.hermes_cache_name
 
         self._caches = {}
         self._data = {}
@@ -58,6 +59,17 @@ class HermesContext:
         Get all the keys for the data stored in this context.
         """
         return [ContextPath.parse(k) for k in self._data.keys()]
+
+    def init_cache(self, *path: str) -> Path:
+        """
+        Initialize a cache directory if not present.
+
+        :param path: The (local) path to identify the requested cache.
+        :return: The path to the requested cache file.
+        """
+        cache_dir = self.hermes_dir.joinpath(*path)
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        return cache_dir
 
     def get_cache(self, *path: str, create: bool = False) -> Path:
         """
@@ -76,9 +88,11 @@ class HermesContext:
             return self._caches[path]
 
         *subdir, name = path
-        cache_dir = self.hermes_dir.joinpath(*subdir)
         if create:
-            cache_dir.mkdir(parents=True, exist_ok=True)
+            cache_dir = self.init_cache(*subdir)
+        else:
+            cache_dir = self.hermes_dir.joinpath(*subdir)
+
         data_file = cache_dir / (name + '.json')
         self._caches[path] = data_file
 
