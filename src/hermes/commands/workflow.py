@@ -104,20 +104,21 @@ def deposit():
 
     ctx = CodeMetaContext()
 
-    ############################ TODO: Remove this ############################
+    # TODO: Remove this
     deposition_platform_path = ContextPath("depositionPlatorm")
     deposit_invenio_path = ContextPath.parse("deposit.invenio")
 
+    # TODO: Remove this
     # Which kind of platform do we target here? For now, we just put "invenio" there.
     ctx.update(deposition_platform_path, "invenio")
 
+    # TODO: Remove this
     # There are many Invenio instances. For now, we just use Zenodo as a default.
     ctx.update(deposit_invenio_path["siteUrl"], "https://zenodo.org")
     ctx.update(
         deposit_invenio_path["recordSchemaPath"],
         "api/schemas/records/record-v1.0.0.json"
     )
-    ###########################################################################
 
     # The platform to which we want to deposit the (meta)data
     # TODO: Get this from config
