@@ -61,8 +61,6 @@ class ContributorData:
             parts.append(self.name[0])
         if self.email:
             parts.append(f'<{self.email[0]}>')
-        if self.role:
-            parts.append(f' ({", ".join([self.role])}')
         return f'"{" ".join(parts)}"'
 
     def _update_attr(self, target, value, unique=True):
