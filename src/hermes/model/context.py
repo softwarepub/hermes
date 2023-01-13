@@ -120,7 +120,7 @@ class HermesContext:
 
         self._errors.append((ep, error))
 
-    def purge_caches(self) -> Path:
+    def purge_caches(self) -> None:
         """
         Delete `.hermes` cache-directory if it exsis.
         """
