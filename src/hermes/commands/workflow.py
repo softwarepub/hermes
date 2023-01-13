@@ -100,7 +100,7 @@ def process():
     with tags_path.open('w') as tags_file:
         json.dump(ctx.tags, tags_file, indent='  ')
 
-    with open('codemeta.json', 'w') as codemeta_file:
+    with open(ctx.get_cache("process", "codemeta", create=True), 'w') as codemeta_file:
         json.dump(ctx._data, codemeta_file, indent='  ')
 
     logging.shutdown()
