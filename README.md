@@ -10,7 +10,7 @@ SPDX-FileContributor: Michael Meinel
 SPDX-FileContributor: Oliver Bertuch
 -->
 
-![HERMES Key Visual](docs/source/_static/img/opengraph-workflow.png)
+![HERMES Key Visual](docs/source/_static/img/header.png)
 
 # hermes
 
