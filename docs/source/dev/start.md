@@ -14,9 +14,6 @@ SPDX-FileContributor: Oliver Bertuch
 Follow this tutorial to set up a local copy of the code for development of the workflow itself.
 This is not necessary if you only want to use HERMES or want to develop an extension plugin loaded at runtime.
 
-```{note}
-In the future, there will be a tutorial how to extend HERMES with a plugin available.
-```
 
 ## Prepare your environment
 
