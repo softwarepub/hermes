@@ -119,5 +119,3 @@ poetry install --with docs
 poetry run task docs-live
 ```
 
-Note: you need to run `poetry install` again here because the docs dependencies are optional!
-
