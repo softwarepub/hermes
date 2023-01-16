@@ -13,7 +13,8 @@ SPDX-FileContributor: Oliver Bertuch
 
 ## Feedback
 
-This is an open repository, and we are very happy to receive contributions to the HERMES workflow from the community, for example as feedback, bug reports, feature requests, etc.
+This is an open repository, and we are very happy to receive contributions to the HERMES workflow from the community, 
+for example as feedback, bug reports, feature requests, etc.
 
 We see our project as part of a global and interdisciplinary effort to improve the state of the art in 
 research software engineering, maintenance and scholarly communications around research software. We therefore
@@ -22,15 +23,9 @@ appreciate any feedback you may have on the HERMES project itself and any of its
 Either [create an issue](https://github.com/hermes-hmc/workflow/issues/new/choose) in our project repository or 
 [send us an email](mailto:team@software-metadata.pub?subject=HERMES%20WOrkflow%20Reachout).
 
-## External Code Contributions
-
-```{note}
-TODO: This still needs to be written.
-```
-
 ## HERMES development workflow
 
-The following describes the project internal workflow for contributions.
+The following describes the workflow for contributions.
 
 ### Preamble
 
@@ -58,7 +53,10 @@ We loosely follow a mixture of [GitHubFlow](https://docs.github.com/en/get-start
 `hotfix/<describe-hotfix>` (including issue id when exists: `hotfix/62-fix-broken-thing-in-release`)
     - Branch from `main`
 
-#### Pull requests
+### Pull requests
+
+Project members may create pull requests from co-located branches, while external contributors need to following
+a [forking pattern](https://docs.github.com/en/get-started/quickstart/fork-a-repo).
 
 - As soon as you have made 1 commit in a feature branch, put up a *draft* pull request
 - Keep pull requests small :skull: 
@@ -93,7 +91,8 @@ We loosely follow a mixture of [GitHubFlow](https://docs.github.com/en/get-start
         - **CASE 2:** Blocking change requests (something doesn't work, bad quality code, docs not understandable):
             - Ideally, fix things yourself in the branch -> Request Changes (or do them on your own)
         - **CASE 3:** "Just a comment"s, pointers to potential future changes -> Document and Accept
-        - **CASE 4:** :warning: If you want a second pair of eyes on the PR, use "Comment" to finish review, request another reviewer and @-mention in comment.
+        - **CASE 4:** :warning: If you want a second pair of eyes on the PR, use "Comment" to finish review, request
+                      another reviewer and @-mention in comment.
     - Optional: If you find something blocking after initial review, add review with "Request changes" outcome
 - Act on review (PR author)
     - React to comments
@@ -109,8 +108,9 @@ We loosely follow a mixture of [GitHubFlow](https://docs.github.com/en/get-start
 - Any maintainer
     - Close PR if PR is not suitable for merge, and no further changes to improve it come from the PR author,
       after having communicated sensible requests with a deadline for further work in the PR comments.
-    - Merge PR and delete remote branch if at least half of the invited reviewers have approved the PR, and no changes have been requested after review.
-      This implements lazy consensus to avoid bottlenecks, where a PR has been approved by some reviewers but cannot be closed due to missing reviews.
+    - Merge PR and delete remote branch if at least half of the invited reviewers have approved the PR, and no changes
+      have been requested after review. This implements lazy consensus to avoid bottlenecks, where a PR has been
+      approved by some reviewers but cannot be closed due to missing reviews.
 
 ### Release/stabilization process
 
@@ -128,4 +128,5 @@ We loosely follow a mixture of [GitHubFlow](https://docs.github.com/en/get-start
 - Push tag
 - Merge `main` into `develop`
 - Delete release branch
-- :bulb: If something goes wrong in the release branch, you can always delete, fix things in a feature branch, merge into `develop` following workflow above, and start anew
+- :bulb: If something goes wrong in the release branch, you can always delete, fix things in a feature branch, merge
+  into `develop` following workflow above, and start anew
