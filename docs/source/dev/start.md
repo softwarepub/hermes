@@ -11,7 +11,7 @@ SPDX-FileContributor: Oliver Bertuch
 
 # Tutorial: Start to develop HERMES
 
-Following this tutorial will guide you along setting up a local copy of the code for development of the workflow itself.
+Follow this tutorial to set up a local copy of the code for development of the workflow itself.
 This is not necessary if you only want to use HERMES or want to develop an extension plugin loaded at runtime.
 
 ```{note}
@@ -50,7 +50,7 @@ cd workflow
 
 - All Python sources are in the `src` folder
 - `pytest` tests are in the `test` folder
-- [Architectural Design Records (ADR)](https://adr.github.io/) are in `docs/adr`
+- [Architectural Decision Records (ADR)](https://adr.github.io/) are in `docs/adr`
 - API documentation is automatically generated into `docs/source/api`
 - All other Sphinx-based documentation lives in `docs/source/*`
 
@@ -84,18 +84,11 @@ Finally, there are some dependencies that are only required for active developme
 - `Sphinx`, `myst-parser` to build the documentation
 - `flake8` to check the coding style
 
-While there is no containerized or installable version of Hermes available yet, you need to install it manually into
-your Python environment for development, see below.
-
 
 ## Verify installation works
 
 That's it, you should now have a working development copy of HERMES in your environment.
-You can confirm this by running `hermes`, seeing how it harvests all the information from the input:
-
-```shell
-hermes
-```
+You can confirm this by running `hermes --help` to show available commands and options.
 
 ## Verify tests can be run
 

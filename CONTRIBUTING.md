@@ -13,7 +13,7 @@ SPDX-FileContributor: Oliver Bertuch
 
 ## Feedback
 
-This is an open repository to collect feedback, issues, bug reports, feature requests, etc. on the HERMES workflow.
+This is an open repository, and we are very happy to receive contributions to the HERMES workflow from the community, for example as feedback, bug reports, feature requests, etc.
 
 We see our project as part of a global and interdisciplinary effort to improve the state of the art in 
 research software engineering, maintenance and scholarly communications around research software. We therefore

@@ -14,7 +14,7 @@ SPDX-FileContributor: Oliver Bertuch
 
 # hermes
 
-Implementation of [the HERMES workflow](https://docs.software-metadata.pub/en/latest).
+Implementation of the HERMES workflow. For more extensive documentation, see the [HERMES workflow documentation](https://docs.software-metadata.pub/en/latest).
 
 (For more information about the HERMES [HMC](https://helmholtz-metadata.de) *project*, see the [HERMES project website](https://software-metadata.pub).)
 
@@ -24,8 +24,7 @@ Implementation of [the HERMES workflow](https://docs.software-metadata.pub/en/la
 
 ## Installation and Usage
 
-Usually, you will not install `hermes` locally, but 
-[use it within a CI environment](https://docs.software-metadata.pub/en/latest/tutorials/001-prepare-your-project.html).
+`hermes`' primary use case is to [use it in a continuous integration environment](https://docs.software-metadata.pub/en/latest/tutorials/001-prepare-your-project.html).
 
 In case you still want to install on your machine, you can (for example) use `pip`:
 
@@ -34,7 +33,7 @@ pip install git+https://github.com/hermes-hmc/workflow.git
 ```
 
 - Note: you must have Python 3.10 or newer installed.
-- Note: we plan to release stable versions to PyPI and/or Github Packages in the future.
+- Note: we plan to release stable versions to PyPI (and potentially Github Packages) in the future.
 
 The `hermes` application provides the entry point for the HERMES workflow.
 After installation, you can run it from your command line environment:
@@ -56,7 +55,7 @@ python -m hermes harvest
 We welcome external contributions! Please follow our [contribution guidelines](CONTRIBUTING.md).
 
 HERMES was designed with extensibility in mind. Our [development guide](https://docs.software-metadata.pub/en/latest/dev/start.html)
-contains in-depth information how to get ready and start coding.
+contains in-depth information on how to get ready and start coding.
 
 ## Acknowledgements
 
