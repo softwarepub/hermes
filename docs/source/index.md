@@ -10,13 +10,30 @@ SPDX-FileContributor: Stephan Druskat
 SPDX-FileContributor: Michael Meinel
 -->
 
+![](_static/img/header.png)
+
 # Overview
 
 ```{warning}
 This is a work in progress. Expect disruptive changes.
 ```
 
-## Developer Documentation
+Research software must be formally published to satisfy FAIR principles and unlock academic credit. Publication
+repositories enable this and provide PIDs for software versions, but only through tedious, mostly manual process. 
+
+The HERMES workflow enables automated publication of rich research software metadata and artifacts to publication
+repositories using open source tooling. 
+
+We follow a *push based* model and run in continuous integration (CI) infrastructures integrated in common code platforms 
+such as GitHub or GitLab to avoid going out of service and overcome limitations of pull-based web services. 
+
+Rich descriptive metadata is the key element to useful software publications. We harvest existing metadata from source
+code repos and connected platforms, then process, collate and present them for curation, thus preparing software for
+automatic submission to publication repositories. 
+
+![](_static/img/workflow-overview.svg)
+
+## Documentation
 
 ```{toctree}
 :maxdepth: 1
@@ -27,13 +44,6 @@ dev/data_model
 adr/index
 api/index
 ```
-
-## Indices and tables
-
-* [](genindex)
-* [](modindex)
-* [](search)
-
 
 ```{toctree}
 :hidden:
@@ -64,3 +74,9 @@ in the framework of the [Helmholtz Metadata Collaboration](https://helmholtz-met
 
 ```{include} ../../LICENSE.md
 ```
+
+## Indices and tables
+
+* [](genindex)
+* [](modindex)
+* [](search)
