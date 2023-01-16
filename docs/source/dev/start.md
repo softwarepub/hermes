@@ -14,22 +14,13 @@ SPDX-FileContributor: Oliver Bertuch
 Follow this tutorial to set up a local copy of the code for development of the workflow itself.
 This is not necessary if you only want to use HERMES or want to develop an extension plugin loaded at runtime.
 
-
 ## Prepare your environment
 
-First, install Python 3.10 and activate your Python environment of you choice (e.g., `venv`, `conda`, `pipenv`, ...).
-This is very dependent on which Python environment you prefer.
+First, install Python 3.10 (or later).
 
-Next to Python 3.10 you need to [install `poetry`](https://python-poetry.org/docs/#installation) inside your environment
-to manage and install dependencies. Please note we require using `poetry>=1.2`.
-
-If you use `conda`, the above can be achieved with the following commands:
-
-```shell
-conda create --name hermes python=3.10 poetry
-```
-
-You should confirm whether to proceed.
+Additionally, you need to [install `poetry >= 1.2.0`](https://python-poetry.org/docs/#installation), either globally, or
+within an environment of your choice. As a project, we chose `poetry` to manage our dependencies, builds, and deposits
+as a state of the art solution within the Python ecosystem.
 
 ## Get the source code
 
@@ -60,26 +51,24 @@ This project uses
 
 ## Install HERMES and dependencies
 
-To finally install all the required dependencies and HERMES itself, you can now use `poetry`:
-
-```
+`poetry` comes with its own environment management. To create a development environment and install dependencies, run
+```shell
+# Create an environment dedicated to hermes development
+poetry shell
+# Install dependencies
 poetry install
 ```
 
 ### Which dependencies do we use?
 
-Our feature implementations build upon these main dependencies:
+Building a CLI application, we deliberately chose the [Click framework](https://click.palletsprojects.com) to implement
+the different workflow parts as commands verbs.
 
-- [`click`](https://click.palletsprojects.com/) for providing a commmand line interface
-- [`jsonschema`](https://python-jsonschema.readthedocs.io) to validate different JSON based file formats
-- [`ruaml.yaml`](https://yaml.readthedocs.io) to parse and validate YAML files
-- [`cffconvert`](https://github.com/citation-file-format/cff-converter-python) to harvest data from the CITATION.cff file
+To learn what other packages `hermes` depends on, have a look at the project configuration file `pyproject.toml` 
+(in the root of the repository), or use `poetry show --only main`. 
 
-Finally, there are some dependencies that are only required for active development. These are:
-
-- `pytest`, `pytest-cov` to run the developer tests and monitor the test coverage
-- `Sphinx`, `myst-parser` to build the documentation
-- `flake8` to check the coding style
+To show dependencies that are only required for active development, or for building documentation run
+`poetry show --only dev` and `poetry show --only docs` respectively.
 
 
 ## Verify installation works
@@ -89,10 +78,11 @@ You can confirm this by running `hermes --help` to show available commands and o
 
 ## Verify tests can be run
 
-Tests are implemented using [pytest](https://pytest.org). You can generate coverage report using the `pytest-cov` plugin.
-Both tools are specified as development dependencies in the `pyproject.toml`.
+Tests are implemented using [pytest](https://pytest.org).
 
-To verify tests with an extensive HTML report run, execute:
+To run all tests, execute `pytest test/` within the activated `poetry` environment.
+
+To create an extensive test coverage report in HTML, execute:
 
 ```shell
 poetry run pytest test --cov=hermes --cov-branch --cov-report=html --cov-report=term
