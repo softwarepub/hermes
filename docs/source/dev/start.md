@@ -112,7 +112,7 @@ poetry install --with docs
 poetry run task docs-build
 ```
 
-Or use [`sphinx-autobuild`](https://) to enable a self-updating preview service:
+Or use [`sphinx-autobuild`](https://github.com/executablebooks/sphinx-autobuild) to enable a self-updating preview service:
 
 ```shell
 poetry install --with docs
