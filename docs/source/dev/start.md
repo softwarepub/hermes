@@ -8,8 +8,8 @@ SPDX-License-Identifier: CC-BY-SA-4.0
 SPDX-FileContributor: Michael Meinel
 SPDX-FileContributor: Oliver Bertuch
 -->
-
-# Tutorial: Start to develop HERMES
+  
+# Tutorial: Get started with development
 
 Follow this tutorial to set up a local copy of the code for development of the workflow itself.
 This is not necessary if you only want to use HERMES or want to develop an extension plugin loaded at runtime.
