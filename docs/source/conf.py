@@ -76,6 +76,7 @@ myst_enable_extensions = [
     'tasklist',
     'deflist',
 ]
+myst_heading_anchors = 4
 
 # Sphinx API docs configuration, see https://sphinx-autoapi.readthedocs.io/en/latest/reference/config.html
 autoapi_type = "python"

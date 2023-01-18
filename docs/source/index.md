@@ -38,8 +38,8 @@ automatic submission to publication repositories.
 ```{toctree}
 :maxdepth: 1
 :caption: Developers
-Tutorial: Get started w/ development <dev/start>
 dev/contribute
+Tutorial: Get started w/ development <dev/start>
 dev/data_model
 adr/index
 api/index

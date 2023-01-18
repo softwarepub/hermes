@@ -37,96 +37,105 @@ The following describes the workflow for contributions.
 
 ### Branching
 
-We loosely follow a mixture of [GitHubFlow](https://docs.github.com/en/get-started/quickstart/github-flow) and [GitFlow](https://nvie.com/posts/a-successful-git-branching-model/):
+We loosely follow a mixture of [GitHubFlow](https://docs.github.com/en/get-started/quickstart/github-flow) and [GitFlow](https://nvie.com/posts/a-successful-git-branching-model/) with the following branches.
 
-`main`
-    - Stable branch
-    - Merges come only from `develop` or a hotfix branch (i.e., when something needs to be fixed in "production")
+#### `main`
 
-`develop`
-    - Unstable development branch
-    - Last "stable" is tagged: tag before attempting to break something
+- This is the stable branch.
+- Merges into `main` come only from `develop` or a hotfix branch (i.e., when something needs to be fixed in "production").
 
-`feature/<describe-feature>` (including issue id when exists: `feature/62-improve-broken-thing`/`feature/42-add-new-thing`)
-    - Branch from last tag on `develop`
+#### `develop`
 
-`hotfix/<describe-hotfix>` (including issue id when exists: `hotfix/62-fix-broken-thing-in-release`)
-    - Branch from `main`
+- This is the unstable development branch.
+- Before you attempt to break something or add experimental changes, `git tag` the current state.
 
-### Pull requests
+#### `feature/<describe-feature>`
 
-Project members may create pull requests from co-located branches, while external contributors need to following
-a [forking pattern](https://docs.github.com/en/get-started/quickstart/fork-a-repo).
+- Naming convention: include an issue id if one exists, e.g., `feature/62-improve-broken-thing` or `feature/42-add-new-thing`.
+- Branch from last tag on `develop`.
 
-- As soon as you have made 1 commit in a feature branch, put up a *draft* pull request
-- Keep pull requests small :skull: 
-- :warning: No pre-emptive reviews on PR drafts, **unless** the PR author @-mentions with this specific request
-- When you think you're done, mark PR ready for review, see below (Merge Process)
+#### `hotfix/<describe-hotfix>`
 
-### Merge Process (into `develop`)
+- Naming convention: include an issue id if one exists, e.g., `hotfix/62-fix-broken-thing-in-release`.
+- Branch from `main`.
 
-- Create PR from `feature/...` against `develop` (PR author)
-- Describe work in initial comment (PR author)
+### Pull requests (PRs)
+
+Project members may create pull requests from branches in the main repository, while external contributors need to follow
+a [forking pattern](https://docs.github.com/en/get-started/quickstart/fork-a-repo). In both cases, please follow these rules:
+
+
+- As soon as you have made 1 commit in a feature branch, put up a *draft* pull request.
+- Keep pull requests small.
+- ⚠️ Do not review *draft* pull requests, unless the PR author @-mentions you with this specific request.
+- When you think you're done, mark the PR ready for review to start the [merge process](#merging-changes-into-develop).
+
+### Merging changes into `develop`
+
+- *Create draft PR:* The **contributor** [creates a draft pull request (PR)](#pull-requests-prs) from `feature/...` against `develop` (and becomes the **PR author**).
+- *Describe changes:* The **PR author** describes the changes in the PR in the initial comment:
     - Reference any related issues (use, e.g., `Fixes #n` or `- Related: #n`)
-    - What does the new code do?
-    - Optional: What should reviewers look at specifically
-    - Information on how to review:
-        - E.g.
+    - Describe what new code does
+    - Optional: Describe what reviewers should look at specifically
+    - Include information on how to review:
+        - E.g.:
           ```bash
-          pip install ./
-          pytest test/
+          poetry install
+          poetry run pytest test/
           ```
-- Request review (PR author)
-    - Eligible reviewers:
-        - Python code: @led02, @sdruskat, @jkelling
-        - Documentation:
+- *Request review:* The **PR author** requests one or more reviews.
+    - Eligible reviewers are:
+        - For Python code: @led02, @sdruskat, @jkelling
+        - For Documentation:
             - Workflow: @all
             - Project: @all
-- Review (at least 1 reviewer)
-    - Follow instructions in PR
+- *Review:* At least 1 **reviewer** reviews the changes:
+    - Follow the instructions in the PR
     - Review thoroughly beyond instructions
-    - Comments / change suggestions inline in files
-    - Submit review:
-        - **CASE 1:** Non-blocking change requests (typos, documentation wording, etc.) -> Document and Accept
-        - **CASE 2:** Blocking change requests (something doesn't work, bad quality code, docs not understandable):
-            - Ideally, fix things yourself in the branch -> Request Changes (or do them on your own)
-        - **CASE 3:** "Just a comment"s, pointers to potential future changes -> Document and Accept
-        - **CASE 4:** :warning: If you want a second pair of eyes on the PR, use "Comment" to finish review, request
-                      another reviewer and @-mention in comment.
-    - Optional: If you find something blocking after initial review, add review with "Request changes" outcome
-- Act on review (PR author)
+    - Add comments or change suggestions inline in the respective file using GitHub's * changed* tab
+    - Submit the review with the correct review outcome:
+        - **CASE 1:** Non-blocking change requests (typos, documentation wording, etc.) -> *Document and Accept*
+        - **CASE 2:** Blocking change requests (something doesn't work, bad quality code, docs are not understandable):
+            - Ideally, fix things yourself in the branch -> *Request Changes* (or do them on your own)
+        - **CASE 3:** "Just a comment"s, pointers to potential future changes -> *Document and Accept*
+        - **CASE 4:** ⚠️ If you want a second pair of eyes on the PR, use *Comment* to finish the review, then request
+                      another reviewer and @-mention them in a comment on the PR.
+    - Optional: If you find something blocking after your initial review, add another review with *Request changes* outcome.
+- *Act on review:* The **PR author** acts on the review
     - React to comments
-    - Fix issues
+    - Fix issues (including non-blocking issues)
     - Discuss options
-- Then:
-    - CASE 1: PR author to fix non-blocking issues and merge
-    - CASE 2: PR author to re-request review from original reviewer(s)
-    - CASE 3: PR author to react to comments and merge
-    - CASE 4: (PR author's reaction depends on outcome of second review)
-- Re-review:
-    - See Review above
-- Any maintainer
-    - Close PR if PR is not suitable for merge, and no further changes to improve it come from the PR author,
-      after having communicated sensible requests with a deadline for further work in the PR comments.
-    - Merge PR and delete remote branch if at least half of the invited reviewers have approved the PR, and no changes
+    - Then:
+        - **CASE 1:** The **PR author** merges the PR.
+        - **CASE 2:** The **PR author** re-requests a review from the original reviewer(s).
+        - **CASE 3:** The **PR author** reacts to any comments. If all comments are resolved, the **PR author** merges the PR.
+        - **CASE 4:** The correct next step depends on the outcome of the second review.
+- *Re-review:*
+    - *See Review* above
+- **Any maintainer** can:
+    - Close a PR if the PR is not suitable for merging, and no further changes to improve it come from the PR author.
+      ⚠️ Only do this after after having communicated sensible requests with a deadline for further work in the PR comments.
+    - Merge a PR and delete the remote branch if at least half of the invited reviewers have approved the PR, and no changes
       have been requested after review. This implements lazy consensus to avoid bottlenecks, where a PR has been
       approved by some reviewers but cannot be closed due to missing reviews.
 
-### Release/stabilization process
+### Stabilizing the codebase and making releases
 
-- Create release branch `release/v<version-id>` from `develop`
-- Check if everything looks good
-    - Audit source (using linters and stuff)
-    - Ensure test coverage of at least 72.3%
-    - Check if documentation aligns with code (also run tutorial to check completeness)
-    - Check if metadata is correct
-- Put up PR from release branch against `main`
-- Request review (workflow as above)
-- Merge into `main`
-- Tag `main` HEAD as `v<version-id>`
-- Push `main`
-- Push tag
-- Merge `main` into `develop`
-- Delete release branch
-- :bulb: If something goes wrong in the release branch, you can always delete, fix things in a feature branch, merge
-  into `develop` following workflow above, and start anew
+⚠️ The following steps can only be taken by maintainers.
+
+1. Create a release branch `release/v<version-id>` from `develop`.
+1. Check if everything looks good:
+    1. Audit the source code (using linters and other tooling).
+    1. Ensure test coverage is at least 65%, and that all tests pass.
+    1. Check if the documentation aligns with the code (also run tutorial to check completeness).
+    1. Check if the metadata is correct in all relevant places.
+1. Put up a PR from the release branch against `main`.
+1. Request a review (using the same workflow as above).
+1. Merge the PR into `main`.
+1. Tag `main`'s `HEAD` as `v<version-id>`.
+1. Push `main`.
+1. Push tag.
+1. Merge `main` into `develop`.
+1. Delete the release branch.
+1. 💡 If something goes wrong in the release branch, you can always delete it, fix things in a feature branch, merge
+  into `develop` following the workflow above, and start anew.
