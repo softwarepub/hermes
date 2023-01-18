@@ -41,35 +41,36 @@ We loosely follow a mixture of [GitHubFlow](https://docs.github.com/en/get-start
 
 #### `main`
 
-- Stable branch
-- Merges come only from `develop` or a hotfix branch (i.e., when something needs to be fixed in "production")
+- This is the stable branch.
+- Merges into `main` come only from `develop` or a hotfix branch (i.e., when something needs to be fixed in "production").
 
 #### `develop`
 
-- Unstable development branch
-- Last "stable" is tagged: tag before attempting to break something
+- This is the unstable development branch.
+- Before you attempt to break something or add experimental changes, `git tag` the current state.
 
 #### `feature/<describe-feature>`
 
-- Naming convention: include an issue id if one exists, e.g., `feature/62-improve-broken-thing` or `feature/42-add-new-thing`
-- Branch from updated `develop`
+- Naming convention: include an issue id if one exists, e.g., `feature/62-improve-broken-thing` or `feature/42-add-new-thing`.
+- Branch from last tag on `develop`.
 
 #### `hotfix/<describe-hotfix>`
 
-- Naming convention: include an issue id if one exists, e.g., `hotfix/62-fix-broken-thing-in-release`
-- Branch from `main`
+- Naming convention: include an issue id if one exists, e.g., `hotfix/62-fix-broken-thing-in-release`.
+- Branch from `main`.
 
-### Pull requests
+### Pull requests (PRs)
 
-Project members may create pull requests from co-located branches, while external contributors need to following
-a [forking pattern](https://docs.github.com/en/get-started/quickstart/fork-a-repo).
+Project members may create pull requests from branches in the main repository, while external contributors need to follow
+a [forking pattern](https://docs.github.com/en/get-started/quickstart/fork-a-repo). In both cases, please follow these rules:
 
-- As soon as you have made 1 commit in a feature branch, put up a *draft* pull request
-- Keep pull requests small :skull: 
-- :warning: No pre-emptive reviews on PR drafts, **unless** the PR author @-mentions with this specific request
-- When you think you're done, mark PR ready for review, see below (Merge Process)
 
-### Merge Process (into `develop`)
+- As soon as you have made 1 commit in a feature branch, put up a *draft* pull request.
+- Keep pull requests small.
+- ⚠️ Do not review *draft* pull requests, unless the PR author @-mentions you with this specific request.
+- When you think you're done, mark the PR ready for review to start the [merge process](#merging-changes-into-develop).
+
+### Merging changes into `develop`
 
 - Create PR from `feature/...` against `develop` (PR author)
 - Describe work in initial comment (PR author)
