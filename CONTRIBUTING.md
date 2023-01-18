@@ -37,7 +37,7 @@ The following describes the workflow for contributions.
 
 ### Branching
 
-We loosely follow a mixture of [GitHubFlow](https://docs.github.com/en/get-started/quickstart/github-flow) and [GitFlow](https://nvie.com/posts/a-successful-git-branching-model/):
+We loosely follow a mixture of [GitHubFlow](https://docs.github.com/en/get-started/quickstart/github-flow) and [GitFlow](https://nvie.com/posts/a-successful-git-branching-model/) with the following branches.
 
 #### `main`
 
@@ -49,12 +49,14 @@ We loosely follow a mixture of [GitHubFlow](https://docs.github.com/en/get-start
 - Unstable development branch
 - Last "stable" is tagged: tag before attempting to break something
 
-#### `feature/<describe-feature>` (including issue id when exists: `feature/62-improve-broken-thing`/`feature/42-add-new-thing`)
+#### `feature/<describe-feature>`
 
-- Branch from last tag on `develop`
+- Naming convention: include an issue id if one exists, e.g., `feature/62-improve-broken-thing` or `feature/42-add-new-thing`
+- Branch from updated `develop`
 
-#### `hotfix/<describe-hotfix>` (including issue id when exists: `hotfix/62-fix-broken-thing-in-release`)
+#### `hotfix/<describe-hotfix>`
 
+- Naming convention: include an issue id if one exists, e.g., `hotfix/62-fix-broken-thing-in-release`
 - Branch from `main`
 
 ### Pull requests
