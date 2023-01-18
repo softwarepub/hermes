@@ -151,7 +151,7 @@ class HermesContext:
         Delete `.hermes` cache-directory if it exsis.
         """
 
-        if self.hermes_dir.exists:
+        if self.hermes_dir.exists():
             shutil.rmtree(self.hermes_dir)
 
 
