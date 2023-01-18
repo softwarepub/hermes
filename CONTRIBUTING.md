@@ -39,19 +39,23 @@ The following describes the workflow for contributions.
 
 We loosely follow a mixture of [GitHubFlow](https://docs.github.com/en/get-started/quickstart/github-flow) and [GitFlow](https://nvie.com/posts/a-successful-git-branching-model/):
 
-`main`
-    - Stable branch
-    - Merges come only from `develop` or a hotfix branch (i.e., when something needs to be fixed in "production")
+#### `main`
 
-`develop`
-    - Unstable development branch
-    - Last "stable" is tagged: tag before attempting to break something
+- Stable branch
+- Merges come only from `develop` or a hotfix branch (i.e., when something needs to be fixed in "production")
 
-`feature/<describe-feature>` (including issue id when exists: `feature/62-improve-broken-thing`/`feature/42-add-new-thing`)
-    - Branch from last tag on `develop`
+#### `develop`
 
-`hotfix/<describe-hotfix>` (including issue id when exists: `hotfix/62-fix-broken-thing-in-release`)
-    - Branch from `main`
+- Unstable development branch
+- Last "stable" is tagged: tag before attempting to break something
+
+#### `feature/<describe-feature>` (including issue id when exists: `feature/62-improve-broken-thing`/`feature/42-add-new-thing`)
+
+- Branch from last tag on `develop`
+
+#### `hotfix/<describe-hotfix>` (including issue id when exists: `hotfix/62-fix-broken-thing-in-release`)
+
+- Branch from `main`
 
 ### Pull requests
 
