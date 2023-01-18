@@ -112,7 +112,7 @@ a [forking pattern](https://docs.github.com/en/get-started/quickstart/fork-a-rep
         - **CASE 4:** The correct next step depends on the outcome of the second review.
 - *Re-review:*
     - *See Review* above
-- **Any maintainer** can at any time:
+- **Any maintainer** can:
     - Close a PR if the PR is not suitable for merging, and no further changes to improve it come from the PR author.
       ⚠️ Only do this after after having communicated sensible requests with a deadline for further work in the PR comments.
     - Merge a PR and delete the remote branch if at least half of the invited reviewers have approved the PR, and no changes
