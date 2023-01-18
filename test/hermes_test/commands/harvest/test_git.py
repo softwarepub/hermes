@@ -9,7 +9,7 @@ from importlib.metadata import EntryPoint
 
 import pytest
 from pytest import FixtureRequest
-from unittest.mock import MagicMock, patch, Mock
+from unittest.mock import patch, Mock
 
 import hermes.commands.harvest.git as harvest
 from hermes.model.context import HermesContext, HermesHarvestContext
@@ -104,7 +104,7 @@ def mock_click_ctx():
 @patch("hermes.commands.harvest.git.subprocess.run")
 def test_harvest_git(mock_run, mock_click_ctx, harvest_ctx, git_log_output, codemeta):
     # Mocking the output of the subprocess call to git log to retrieve author and committer info
-    mock_stdout = MagicMock()
+    mock_stdout = Mock()
     mock_stdout.configure_mock(
         **{
             "stdout.decode.return_value": git_log_output,
