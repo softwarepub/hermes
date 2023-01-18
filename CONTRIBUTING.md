@@ -123,19 +123,19 @@ a [forking pattern](https://docs.github.com/en/get-started/quickstart/fork-a-rep
 
 ⚠️ The following steps can only be taken by maintainers.
 
-- Create a release branch `release/v<version-id>` from `develop`.
-- Check if everything looks good:
-    - Audit the source code (using linters and other tooling).
-    - Ensure test coverage is at least 65%, and that all tests pass.
-    - Check if the documentation aligns with the code (also run tutorial to check completeness).
-    - Check if the metadata is correct in all relevant places.
-- Put up a PR from the release branch against `main`.
-- Request a review (using the same workflow as above).
-- Merge the PR into `main`.
-- Tag `main`'s `HEAD` as `v<version-id>`.
-- Push `main`.
-- Push tag.
-- Merge `main` into `develop`.
-- Delete the release branch.
-- 💡 If something goes wrong in the release branch, you can always delete it, fix things in a feature branch, merge
+1. Create a release branch `release/v<version-id>` from `develop`.
+1. Check if everything looks good:
+    1. Audit the source code (using linters and other tooling).
+    1. Ensure test coverage is at least 65%, and that all tests pass.
+    1. Check if the documentation aligns with the code (also run tutorial to check completeness).
+    1. Check if the metadata is correct in all relevant places.
+1. Put up a PR from the release branch against `main`.
+1. Request a review (using the same workflow as above).
+1. Merge the PR into `main`.
+1. Tag `main`'s `HEAD` as `v<version-id>`.
+1. Push `main`.
+1. Push tag.
+1. Merge `main` into `develop`.
+1. Delete the release branch.
+1. 💡 If something goes wrong in the release branch, you can always delete it, fix things in a feature branch, merge
   into `develop` following the workflow above, and start anew.
