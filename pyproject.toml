@@ -81,6 +81,9 @@ hermes = "hermes.cli:main"
 [tool.poetry.plugins."hermes.prepare_deposit"]
 invenio = "hermes.commands.deposit.invenio:prepare_deposit"
 
+[tool.poetry.plugins."hermes.metadata_mapping"]
+invenio = "hermes.commands.deposit.invenio:map_metadata"
+
 [tool.taskipy.tasks]
 docs-build = "poetry run sphinx-build -M html docs/source docs/build -W"
 docs-clean = "poetry run sphinx-build -M clean docs/source docs/build"

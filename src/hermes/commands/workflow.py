@@ -147,7 +147,14 @@ def deposit():
         deposit_preparator = deposit_preparator_entrypoints[0].load()
         deposit_preparator(ctx)
 
-    # TODO: Metadata mapping
+    # Map metadata onto target schema
+    metadata_mapping_entrypoints = metadata.entry_points(
+        group="hermes.metadata_mapping",
+        name=deposition_platform
+    )
+    if metadata_mapping_entrypoints:
+        metadata_mapping = metadata_mapping_entrypoints[0].load()
+        metadata_mapping()
 
     # TODO: Deposit
 

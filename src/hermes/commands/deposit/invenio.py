@@ -29,6 +29,9 @@ def prepare_deposit(ctx: CodeMetaContext):
     recordSchema = _request_json(recordSchemaUrl)
     ctx.update(invenio_path["requiredSchema"], recordSchema)
 
+def map_metadata():
+    pass
+
 
 def _request_json(url: str):
     """Request an URL and return the response as JSON."""
