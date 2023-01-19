@@ -67,9 +67,9 @@ def add_branch(ctx: CodeMetaContext, harvest_ctx: HermesHarvestContext):
     ctx.update(branch_path, branch, tags=tags)
 
     ctx.tags.update(tags)
-    harvest_ctx.finish()
 
 
 def process(ctx: CodeMetaContext, harvest_ctx: HermesHarvestContext):
     add_contributors(ctx, harvest_ctx)
     add_branch(ctx, harvest_ctx)
+    harvest_ctx.finish()
