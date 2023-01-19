@@ -63,5 +63,10 @@ def test_process_git(harvest_ctx, _data):
     ctx = CodeMetaContext()
     assert ctx.get_data() == {}
     process.process(ctx, harvest_ctx)
-    assert harvest_ctx.get_data() == {}
     assert ctx.get_data() == _data
+
+
+def test_process_git_empties_harvesting_context(harvest_ctx):
+    ctx = CodeMetaContext()
+    process.process(ctx, harvest_ctx)
+    assert harvest_ctx.get_data() == {}
