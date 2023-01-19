@@ -130,10 +130,10 @@ class HermesContext:
         if data is None:
             data = {}
         if path is not None:
-            data.update(path.get_from(self._data))
+            data.update({str(path): path.get_from(self._data)})
         else:
             for key in self.keys():
-                data.update(key.get_from(self._data))
+                data.update({str(key): key.get_from(self._data)})
         return data
 
     def error(self, ep: EntryPoint, error: Exception):
