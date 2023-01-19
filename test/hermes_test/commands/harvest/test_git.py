@@ -94,6 +94,7 @@ Git Author + Committer|e@mail.com|2023-01-13T08:57:12+01:00|Git Author + Committ
 Git Author|f@mail.com|2023-01-13T08:57:12+01:00|Git Committer|g@mail.com|2023-01-13T08:57:12+01:00
     '''
 
+
 @pytest.fixture
 def git_branch_output():
     return 'test-branch'

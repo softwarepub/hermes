@@ -4,7 +4,6 @@
 
 # SPDX-FileContributor: Stephan Druskat
 
-import json
 from importlib.metadata import EntryPoint
 
 import pytest
