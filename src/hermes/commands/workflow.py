@@ -112,11 +112,22 @@ def deposit():
     Deposit processed (and curated) metadata
     """
     click.echo("Metadata deposition")
+    _log = logging.getLogger("cli.deposit")
 
     # local import that can be removed later
     from hermes.model.path import ContextPath
 
     ctx = CodeMetaContext()
+
+    codemeta_file = ctx.get_cache("process", "codemeta")
+    if not codemeta_file.exists():
+        _log.error("You must run the process command before deposit")
+        return 1
+
+    # TODO: How to write into the root of the context?
+    codemeta_path = ContextPath("codemeta")
+    with open(codemeta_file) as codemeta_fh:
+        ctx.update(codemeta_path, json.load(codemeta_fh))
 
     # TODO: Remove this
     deposition_platform_path = ContextPath("depositionPlatform")
@@ -154,7 +165,7 @@ def deposit():
     )
     if metadata_mapping_entrypoints:
         metadata_mapping = metadata_mapping_entrypoints[0].load()
-        metadata_mapping()
+        metadata_mapping(ctx)
 
     # TODO: Deposit
 
