@@ -113,8 +113,13 @@ def _codemeta_to_invenio_deposition(metadata: dict) -> dict:
         for contributor in metadata["contributor"] if contributor.get("name") != "GitHub"
     ]
 
-    # TODO: There are more metadata fields available than the ones used here.
-    deposition_metadata = {
+    # TODO: Use the fields currently set to `None`.
+    # Some more fields are available but they most likely don't relate to software
+    # publications targeted by hermes.
+    deposition_metadata = {k: v for k, v in {
+        # If upload_type is "publication"/"image", a publication_type/image_type must be
+        # specified. Since hermes targets software publications, this can be ignored and
+        # upload_type can be hard-coded to "software".
         "upload_type": "software",
         # IS0 8601-formatted date
         # TODO: Maybe we want a different date? Then make this configurable. If not,
@@ -132,13 +137,35 @@ def _codemeta_to_invenio_deposition(metadata: dict) -> dict:
         # restricted should come with a `license`, embargoed with an `embargo_date`,
         # restricted with `access_conditions`.
         "access_right": "open",
+        # TODO: Get this from config/codemeta/...
+        "license": "Apache-2.0",
+        "embargo_date": None,
+        "access_conditions": None,
+        # TODO: If a publisher already has assigned a DOI to the files we want to
+        # upload, it should be used here. In this case, Invenio will not give us a new
+        # one. Set "prereserve_doi" accordingly.
+        "doi": None,
         # This prereserves a DOI that can then be added to the files before publishing
         # them.
         # TODO: Use the DOI we get back from this.
         "prereserve_doi": True,
-        "contributors": contributors,
-        # TODO: Get this from config/codemeta/...
-        "license": "Apache-2.0",
-    }
+        # TODO: A good source for this could be `tool.poetry.keywords` in pyproject.toml.
+        "keywords": None,
+        "notes": None,
+        "related_identifiers": None,
+        # TODO: Use `contributors`. In the case of the hermes workflow itself, the
+        # contributors are currently all in `creators` already. So for now, we set this
+        # to `None`. Change this when relationship between authors and contributors can
+        # be specified in the processing step.
+        "contributors": None,
+        "references": None,
+        # TODO: I have seen `applicationCategory` in codemeta.json used for this. It
+        # might make sense to adopt that.
+        "communities": None,
+        "grants": None,
+        "subjects": None,
+        # TODO: Get this from config
+        "version": None,
+    }.items() if v is not None}
 
     return deposition_metadata
