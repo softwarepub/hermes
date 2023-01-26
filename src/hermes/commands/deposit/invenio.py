@@ -13,6 +13,8 @@ from hermes.model.context import CodeMetaContext
 from hermes.model.path import ContextPath
 
 
+# TODO: It turns out that the schema downloaded here can not be used. Figure out what to
+# do with this. Maybe the code can be removed.
 def prepare_deposit(ctx: CodeMetaContext):
     """Prepare the Invenio deposit.
 
@@ -38,17 +40,8 @@ def map_metadata(ctx: CodeMetaContext):
 
     deposition_metadata = _codemeta_to_invenio_deposition(ctx["codemeta"])
 
-    # invenio_path = ContextPath.parse("deposit.invenio")
-
-    # invenio_ctx = ctx[invenio_path]
-    # target_schema = invenio_ctx["requiredSchema"]
-
-    # TODO: Is it always draft 4 in the case of invenio?
-    # validator = jsonschema.Draft4Validator(target_schema)
-    # errors = sorted(validator.iter_errors(deposition_metadata), key=lambda e: e.path)
-
-    from pprint import pprint
-    pprint(deposition_metadata)
+    metadata_path = ContextPath.parse("deposit.invenio.depositionMetadata")
+    ctx.update(metadata_path, deposition_metadata)
 
 
 def _request_json(url: str) -> dict:
