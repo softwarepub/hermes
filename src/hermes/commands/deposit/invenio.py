@@ -94,8 +94,7 @@ def _codemeta_to_invenio_deposition(metadata: dict) -> dict:
     ]
 
     # This is not used at the moment. See comment below in `deposition_metadata` dict.
-    # noqa: F841
-    contributors = [
+    contributors = [  # noqa: F841
         # TODO: Distinguish between @type "Person" and others
         {
             k: v for k, v in {
