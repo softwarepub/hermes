@@ -7,7 +7,6 @@
 from datetime import date
 
 import requests
-# import jsonschema
 
 from hermes.model.context import CodeMetaContext
 from hermes.model.path import ContextPath

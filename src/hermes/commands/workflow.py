@@ -124,7 +124,6 @@ def deposit():
         _log.error("You must run the process command before deposit")
         return 1
 
-    # TODO: How to write into the root of the context?
     codemeta_path = ContextPath("codemeta")
     with open(codemeta_file) as codemeta_fh:
         ctx.update(codemeta_path, json.load(codemeta_fh))
