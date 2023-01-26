@@ -77,6 +77,11 @@ def _codemeta_to_invenio_deposition(metadata: dict) -> dict:
 
     Currently, this function handles a lot of cases which we want to be able to
     configure. A simple mapping from one JSON path to another is not enough.
+
+    The metadata expected by Zenodo is described in the `Zenodo Developers guide
+    <https://developers.zenodo.org/#representation>`_. Unfortunately, there doesn't seem
+    to be a schema one can download in order to validate these metadata. There might be
+    differences between Invenio-based platforms.
     """
 
     creators = [
@@ -116,30 +121,32 @@ def _codemeta_to_invenio_deposition(metadata: dict) -> dict:
         for contributor in metadata["contributor"] if contributor.get("name") != "GitHub"
     ]
 
-    # https://developers.zenodo.org/#representation
+    # TODO: There are more metadata fields available than the ones used here.
     deposition_metadata = {
         "upload_type": "software",
-        # IS0 8601-formatted.
+        # IS0 8601-formatted date
         # TODO: Maybe we want a different date? Then make this configurable. If not,
-        #  this can be removed as it defaults to today.
+        # this can be removed as it defaults to today.
         "publication_date": date.today().isoformat(),
         "title": metadata["name"],
         "creators": creators,
-        # TODO: Use a real description here
+        # TODO: Use a real description here. Possible sources could be
+        # `tool.poetry.description` from pyproject.toml or `abstract` from
+        # CITATION.cff.
         "description": metadata["name"],
         # TODO: Get from config
         # TODO: Needs some more logic:
-        #  Possible options: open, embargoed, restricted, closed
-        #  "open" and "restricted" should come with a license; "embargoed" with an
-        #  "embargo_date"; restricted with "access_conditions".
+        # Possible options are: open, embargoed, restricted, closed. open and
+        # restricted should come with a `license`, embargoed with an `embargo_date`,
+        # restricted with `access_conditions`.
         "access_right": "open",
         # This prereserves a DOI that can then be added to the files before publishing
         # them.
+        # TODO: Use the DOI we get back from this.
         "prereserve_doi": True,
         "contributors": contributors,
         # TODO: Get this from config/codemeta/...
         "license": "Apache-2.0",
-        # TODO: More fields are available
     }
 
     return deposition_metadata
