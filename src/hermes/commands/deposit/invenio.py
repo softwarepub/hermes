@@ -121,6 +121,7 @@ def _codemeta_to_invenio_deposition(metadata: dict) -> dict:
         # If upload_type is "publication"/"image", a publication_type/image_type must be
         # specified. Since hermes targets software publications, this can be ignored and
         # upload_type can be hard-coded to "software".
+        # TODO: Make this a constant maybe.
         "upload_type": "software",
         # IS0 8601-formatted date
         # TODO: Maybe we want a different date? Then make this configurable. If not,
@@ -130,15 +131,15 @@ def _codemeta_to_invenio_deposition(metadata: dict) -> dict:
         "creators": creators,
         # TODO: Use a real description here. Possible sources could be
         # `tool.poetry.description` from pyproject.toml or `abstract` from
-        # CITATION.cff.
+        # CITATION.cff. This should then be stored in codemeta description field.
         "description": metadata["name"],
-        # TODO: Get from config
+        # TODO: Get from config. This needs to be specified; we can not guess this.
         # TODO: Needs some more logic:
         # Possible options are: open, embargoed, restricted, closed. open and
         # restricted should come with a `license`, embargoed with an `embargo_date`,
         # restricted with `access_conditions`.
         "access_right": "open",
-        # TODO: Get this from config/codemeta/...
+        # TODO: Get this from config/codemeta/GitHub API/...
         "license": "Apache-2.0",
         "embargo_date": None,
         "access_conditions": None,
@@ -160,8 +161,7 @@ def _codemeta_to_invenio_deposition(metadata: dict) -> dict:
         # be specified in the processing step.
         "contributors": None,
         "references": None,
-        # TODO: I have seen `applicationCategory` in codemeta.json used for this. It
-        # might make sense to adopt that.
+        # TODO: This has to come from config.
         "communities": None,
         "grants": None,
         "subjects": None,
