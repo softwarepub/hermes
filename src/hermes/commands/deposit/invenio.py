@@ -42,6 +42,9 @@ def map_metadata(ctx: CodeMetaContext):
     metadata_path = ContextPath.parse("deposit.invenio.depositionMetadata")
     ctx.update(metadata_path, deposition_metadata)
 
+def deposit(ctx: CodeMetaContext):
+    pass
+
 
 def _request_json(url: str) -> dict:
     """Request an URL and return the JSON response as dict."""
