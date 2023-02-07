@@ -159,3 +159,7 @@ main.add_command(workflow.harvest)
 main.add_command(workflow.process)
 main.add_command(workflow.deposit)
 main.add_command(workflow.postprocess)
+
+
+if __name__ == "__main__":
+    main()

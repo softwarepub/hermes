@@ -42,6 +42,7 @@ def map_metadata(ctx: CodeMetaContext):
     metadata_path = ContextPath.parse("deposit.invenio.depositionMetadata")
     ctx.update(metadata_path, deposition_metadata)
 
+
 def deposit(ctx: CodeMetaContext):
     pass
 
