@@ -5,6 +5,7 @@
 # SPDX-FileContributor: David Pape
 
 from datetime import date
+from getpass import getpass
 
 import click
 import requests
@@ -45,7 +46,21 @@ def map_metadata(click_ctx: click.Context, ctx: CodeMetaContext):
 
 
 def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
-    pass
+    """Make a deposition on an Invenio-based platform.
+
+    This function can:
+
+    - Update the metadata of an existing record
+    - Update the metadata and files of an existing record y creating a new version
+    - Create a new record without any previous versions.
+    """
+
+    invenio_path = ContextPath.parse("deposit.invenio")
+    invenio_ctx = ctx[invenio_path]
+
+    # TODO: Get from environment or parameter
+    token = getpass(f"API token for {invenio_ctx['siteUrl']}: ")
+    click_ctx.session.headers["Authorization"] = f"Bearer {token}"
 
 
 def _request_json(session: requests.Session, url: str) -> dict:
