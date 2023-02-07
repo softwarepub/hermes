@@ -62,6 +62,26 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     token = environ.get("HERMES_INVENIO_AUTH_TOKEN")
     click_ctx.session.headers["Authorization"] = f"Bearer {token}"
 
+    # TODO: Get this from config or determine from some value (DOI, ...) in config.
+    existing_record_url = None
+
+    deposit_url = f"{invenio_ctx['siteUrl']}/{invenio_ctx['apiPaths']['depositions']}"
+    if existing_record_url is not None:
+        # TODO: Get by calling new version on existing record
+        deposit_url = None
+        raise NotImplementedError("At the moment, hermes can not create new versions of existing records")
+
+    deposition_metadata = invenio_ctx["depositionMetadata"]
+    response = click_ctx.session.post(deposit_url, json={"metadata": deposition_metadata})
+    response.raise_for_status()
+
+    deposit = response.json()
+    print("New deposit:", deposit["links"]["html"])
+
+    # TODO: Update files if needed
+
+    # TODO: Publish
+
 
 def _request_json(session: requests.Session, url: str) -> dict:
     """Request an URL and return the JSON response as dict."""
