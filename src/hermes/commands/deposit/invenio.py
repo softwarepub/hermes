@@ -5,7 +5,7 @@
 # SPDX-FileContributor: David Pape
 
 from datetime import date
-from getpass import getpass
+from os import environ
 
 import click
 import requests
@@ -58,8 +58,8 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     invenio_path = ContextPath.parse("deposit.invenio")
     invenio_ctx = ctx[invenio_path]
 
-    # TODO: Get from environment or parameter
-    token = getpass(f"API token for {invenio_ctx['siteUrl']}: ")
+    # TODO: Get from environment or parameter to the deposit command. Click?
+    token = environ.get("HERMES_INVENIO_AUTH_TOKEN")
     click_ctx.session.headers["Authorization"] = f"Bearer {token}"
 
 
