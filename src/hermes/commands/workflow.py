@@ -15,6 +15,7 @@ import requests
 
 from hermes.model.context import HermesContext, HermesHarvestContext, CodeMetaContext
 from hermes.model.errors import MergeError
+from hermes.utils import hermes_user_agent
 
 
 @click.group(invoke_without_command=True)
@@ -120,8 +121,7 @@ def deposit(click_ctx: click.Context):
     # TODO: If this is needed in more places, it could be moved one level up.
     click_ctx.session = requests.Session()
     click_ctx.session.headers = {
-        # TODO: Get this from package metadata
-        "User-Agent": "hermes/0.1.0 (https://software-metadata.pub)"
+        "User-Agent": hermes_user_agent,
     }
 
     # local import that can be removed later
