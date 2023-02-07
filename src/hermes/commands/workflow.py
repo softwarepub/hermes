@@ -169,13 +169,13 @@ def deposit():
     # Make deposit: Update metadata, upload files, publish
     # TODO: Do publish step manually? This would allow users to check the deposition on
     # the site and decide whether they are happy with it.
-    metadata_mapping_entrypoints = metadata.entry_points(
+    deposition_entrypoints = metadata.entry_points(
         group="hermes.deposit",
         name=deposition_platform
     )
-    if metadata_mapping_entrypoints:
-        metadata_mapping = metadata_mapping_entrypoints[0].load()
-        metadata_mapping(ctx)
+    if deposition_entrypoints:
+        deposition = deposition_entrypoints[0].load()
+        deposition(ctx)
 
 
 @click.group(invoke_without_command=True)
