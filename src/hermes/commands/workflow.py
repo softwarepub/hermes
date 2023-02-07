@@ -11,6 +11,7 @@ import logging
 from importlib import metadata
 
 import click
+import requests
 
 from hermes.model.context import HermesContext, HermesHarvestContext, CodeMetaContext
 from hermes.model.errors import MergeError
@@ -107,12 +108,21 @@ def process():
 
 
 @click.group(invoke_without_command=True)
-def deposit():
+@click.pass_context
+def deposit(click_ctx: click.Context):
     """
     Deposit processed (and curated) metadata
     """
     click.echo("Metadata deposition")
     _log = logging.getLogger("cli.deposit")
+
+    # TODO: Better name than session?
+    # TODO: If this is needed in more places, it could be moved one level up.
+    click_ctx.session = requests.Session()
+    click_ctx.session.headers = {
+        # TODO: Get this from package metadata
+        "User-Agent": "hermes/0.1.0 (https://software-metadata.pub)"
+    }
 
     # local import that can be removed later
     from hermes.model.path import ContextPath
@@ -155,7 +165,7 @@ def deposit():
     )
     if deposit_preparator_entrypoints:
         deposit_preparator = deposit_preparator_entrypoints[0].load()
-        deposit_preparator(ctx)
+        deposit_preparator(click_ctx, ctx)
 
     # Map metadata onto target schema
     metadata_mapping_entrypoints = metadata.entry_points(
@@ -164,7 +174,7 @@ def deposit():
     )
     if metadata_mapping_entrypoints:
         metadata_mapping = metadata_mapping_entrypoints[0].load()
-        metadata_mapping(ctx)
+        metadata_mapping(click_ctx, ctx)
 
     # Make deposit: Update metadata, upload files, publish
     # TODO: Do publish step manually? This would allow users to check the deposition on
@@ -175,7 +185,7 @@ def deposit():
     )
     if deposition_entrypoints:
         deposition = deposition_entrypoints[0].load()
-        deposition(ctx)
+        deposition(click_ctx, ctx)
 
 
 @click.group(invoke_without_command=True)

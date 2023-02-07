@@ -6,6 +6,7 @@
 
 from datetime import date
 
+import click
 import requests
 
 from hermes.model.context import CodeMetaContext
@@ -14,7 +15,7 @@ from hermes.model.path import ContextPath
 
 # TODO: It turns out that the schema downloaded here can not be used. Figure out what to
 # do with this. Maybe the code can be removed.
-def prepare_deposit(ctx: CodeMetaContext):
+def prepare_deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     """Prepare the Invenio deposit.
 
     In this case, "prepare" means download the record schema that is required
@@ -30,11 +31,11 @@ def prepare_deposit(ctx: CodeMetaContext):
 
     # TODO: cache this download in HERMES cache dir
     # TODO: ensure to use from cache instead of download if not expired (needs config)
-    recordSchema = _request_json(recordSchemaUrl)
+    recordSchema = _request_json(click_ctx.session, recordSchemaUrl)
     ctx.update(invenio_path["requiredSchema"], recordSchema)
 
 
-def map_metadata(ctx: CodeMetaContext):
+def map_metadata(click_ctx: click.Context, ctx: CodeMetaContext):
     """Map the harvested metadata onto the Invenio schema."""
 
     deposition_metadata = _codemeta_to_invenio_deposition(ctx["codemeta"])
@@ -43,15 +44,14 @@ def map_metadata(ctx: CodeMetaContext):
     ctx.update(metadata_path, deposition_metadata)
 
 
-def deposit(ctx: CodeMetaContext):
+def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     pass
 
 
-def _request_json(url: str) -> dict:
+def _request_json(session: requests.Session, url: str) -> dict:
     """Request an URL and return the JSON response as dict."""
 
-    # TODO: Store a requests.Session in a click_ctx in case we need it more frequently?
-    response = requests.get(url)
+    response = session.get(url)
     response.raise_for_status()
     return response.json()
 
