@@ -27,7 +27,7 @@ def prepare_deposit(click_ctx: click.Context, ctx: CodeMetaContext):
 
     invenio_ctx = ctx[invenio_path]
     # TODO: Get these values from config with reasonable defaults.
-    recordSchemaUrl = f"{invenio_ctx['siteUrl']}/{invenio_ctx['recordSchemaPath']}"
+    recordSchemaUrl = f"{invenio_ctx['siteUrl']}/{invenio_ctx['schemaPaths']['record']}"
 
     # TODO: cache this download in HERMES cache dir
     # TODO: ensure to use from cache instead of download if not expired (needs config)

@@ -148,10 +148,14 @@ def deposit(click_ctx: click.Context):
 
     # TODO: Remove this
     # There are many Invenio instances. For now, we just use Zenodo as a default.
-    ctx.update(deposit_invenio_path["siteUrl"], "https://zenodo.org")
+    ctx.update(deposit_invenio_path["siteUrl"], "https://sandbox.zenodo.org")
     ctx.update(
-        deposit_invenio_path["recordSchemaPath"],
+        deposit_invenio_path["schemaPaths"]["record"],
         "api/schemas/records/record-v1.0.0.json"
+    )
+    ctx.update(
+        deposit_invenio_path["apiPaths"]["depositions"],
+        "api/deposit/depositions"
     )
 
     # The platform to which we want to deposit the (meta)data
