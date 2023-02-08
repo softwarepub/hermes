@@ -33,7 +33,9 @@ def prepare_deposit(click_ctx: click.Context, ctx: CodeMetaContext):
 
     # TODO: cache this download in HERMES cache dir
     # TODO: ensure to use from cache instead of download if not expired (needs config)
-    recordSchema = _request_json(click_ctx.session, recordSchemaUrl)
+    response = click_ctx.session.get(recordSchemaUrl)
+    response.raise_for_status()
+    recordSchema = response.json()
     ctx.update(invenio_path["requiredSchema"], recordSchema)
 
 
@@ -106,14 +108,6 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
 
     record = response.json()
     print("Published record:", record["links"]["record_html"])
-
-
-def _request_json(session: requests.Session, url: str) -> dict:
-    """Request an URL and return the JSON response as dict."""
-
-    response = session.get(url)
-    response.raise_for_status()
-    return response.json()
 
 
 def _codemeta_to_invenio_deposition(metadata: dict) -> dict:
