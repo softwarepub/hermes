@@ -101,7 +101,12 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     # This can potentially be used to verify the checksum
     # file_resource = response.json()
 
-    # TODO: Publish
+    publish_url = deposit["links"]["publish"]
+    response = click_ctx.session.post(publish_url)
+    response.raise_for_status()
+
+    record = response.json()
+    print("Published record:", record["links"]["record_html"])
 
 
 def _request_json(session: requests.Session, url: str) -> dict:
