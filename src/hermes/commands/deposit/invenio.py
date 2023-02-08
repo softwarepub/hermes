@@ -4,7 +4,9 @@
 
 # SPDX-FileContributor: David Pape
 
-from datetime import date
+import json
+from datetime import date, datetime
+from io import BytesIO
 from os import environ
 
 import click
@@ -78,7 +80,26 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     deposit = response.json()
     print("New deposit:", deposit["links"]["html"])
 
-    # TODO: Update files if needed
+    # TODO: When updating existing releases, the files API can be used to delete
+    # existing files. GET ``deposit["links"]["files"]`` for a list of files with
+    # checksums.
+
+    # Upload the files. We'll use the bucket API rather than the files API as it
+    # supports file sizes above 100MB.
+    bucket_url = deposit["links"]["bucket"]
+    file_name, file_content = _get_file_for_upload(deposition_metadata)
+
+    # TODO: When uploading real files, open them in binary mode and pass the handle to
+    # the data kwarg. For now we'll upload just this one file.
+    # TODO: Do we need to URL-encode the ``file_name`` or does this always work?
+    response = click_ctx.session.put(
+        f"{bucket_url}/{file_name}",
+        data=file_content.encode()
+    )
+    response.raise_for_status()
+
+    # This can potentially be used to verify the checksum
+    # file_resource = response.json()
 
     # TODO: Publish
 
@@ -209,3 +230,23 @@ def _codemeta_to_invenio_deposition(metadata: dict) -> dict:
     }.items() if v is not None}
 
     return deposition_metadata
+
+
+def _get_file_for_upload(deposition_metadata: dict):
+    """Return a file name and some content to test the file upload with."""
+
+    timestamp = datetime.now().isoformat()
+    metadata_json = json.dumps(deposition_metadata, indent=2)
+    file_name = "README.md"
+    file_content = f"""# {deposition_metadata["title"]}
+
+{deposition_metadata["description"]}
+
+Here's a timestamp so that the file changes and we can create a new version of the record later: `{timestamp}`
+
+```json
+{metadata_json}
+```
+"""
+
+    return file_name, file_content
