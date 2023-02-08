@@ -6,7 +6,6 @@
 
 import json
 from datetime import date, datetime
-from io import BytesIO
 from os import environ
 
 import click
