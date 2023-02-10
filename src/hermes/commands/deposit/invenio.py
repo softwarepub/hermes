@@ -72,17 +72,23 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     if existing_record_url is not None:
         # TODO: Get by calling new version on existing record
         deposit_url = None
-        raise NotImplementedError("At the moment, hermes can not create new versions of existing records")
+        raise NotImplementedError(
+            "At the moment, hermes can not create new versions of existing records"
+        )
 
     deposition_metadata = invenio_ctx["depositionMetadata"]
-    response = click_ctx.session.post(deposit_url, json={"metadata": deposition_metadata})
+    response = click_ctx.session.post(
+        deposit_url,
+        json={"metadata": deposition_metadata}
+    )
     response.raise_for_status()
 
     deposit = response.json()
+    # TODO: Replace print
     print("New deposit:", deposit["links"]["html"])
 
     # TODO: When updating existing releases, the files API can be used to delete
-    # existing files. GET ``deposit["links"]["files"]`` for a list of files with
+    # existing files. GET ``deposit["links"]["files"]`` for a list of file names with
     # checksums.
 
     # Upload the files. We'll use the bucket API rather than the files API as it
@@ -107,6 +113,7 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     response.raise_for_status()
 
     record = response.json()
+    # TODO: Replace print
     print("Published record:", record["links"]["record_html"])
 
 
