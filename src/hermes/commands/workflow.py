@@ -109,8 +109,9 @@ def process():
 
 
 @click.group(invoke_without_command=True)
+@click.option("--auth-token", envvar="HERMES_DEPOSITION_AUTH_TOKEN")
 @click.pass_context
-def deposit(click_ctx: click.Context):
+def deposit(click_ctx: click.Context, auth_token):
     """
     Deposit processed (and curated) metadata
     """
@@ -123,6 +124,9 @@ def deposit(click_ctx: click.Context):
     click_ctx.session.headers = {
         "User-Agent": hermes_user_agent,
     }
+    # TODO: This seems weird. Is there an option to put it directly into the context
+    # instead of as an argument?
+    click_ctx.auth_token = auth_token
 
     # local import that can be removed later
     from hermes.model.path import ContextPath

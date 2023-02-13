@@ -7,12 +7,13 @@
 import json
 import logging
 from datetime import date, datetime
-from os import environ
 
 import click
 
 from hermes.model.context import CodeMetaContext
 from hermes.model.path import ContextPath
+
+from .error import DepositionUnauthorizedError
 
 
 # TODO: It turns out that the schema downloaded here can not be used. Figure out what to
@@ -63,10 +64,9 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     invenio_path = ContextPath.parse("deposit.invenio")
     invenio_ctx = ctx[invenio_path]
 
-    # TODO: Get from environment or parameter to the deposit command. This can be done
-    # using Click: https://click.palletsprojects.com/en/8.1.x/options/#values-from-environment-variables
-    token = environ["HERMES_INVENIO_AUTH_TOKEN"]
-    click_ctx.session.headers["Authorization"] = f"Bearer {token}"
+    if not click_ctx.auth_token:
+        raise DepositionUnauthorizedError("No auth token given for deposition platform")
+    click_ctx.session.headers["Authorization"] = f"Bearer {click_ctx.auth_token}"
 
     # TODO: Get this from config or determine from some value (DOI, ...) in config.
     existing_record_url = None

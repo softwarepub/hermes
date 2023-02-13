@@ -10,6 +10,7 @@ import click
 from click.testing import CliRunner
 
 from hermes import cli
+from hermes.commands.deposit.error import DepositionUnauthorizedError
 from hermes_test.mocks import mock_command
 
 
@@ -93,7 +94,7 @@ def test_hermes_with_deposit():
     runner = CliRunner()
     result = runner.invoke(cli.main, args=('--deposit', ))
 
-    assert isinstance(result.exception, KeyError)
+    assert isinstance(result.exception, DepositionUnauthorizedError)
 
 
 def test_hermes_with_postprocess():
@@ -114,14 +115,14 @@ def test_hermes_with_deposit_and_postprocess():
     runner = CliRunner()
     result = runner.invoke(cli.main, args=('--deposit', '--postprocess'))
 
-    assert isinstance(result.exception, KeyError)
+    assert isinstance(result.exception, DepositionUnauthorizedError)
 
 
 def test_hermes_with_deposit_and_path():
     runner = CliRunner()
     result = runner.invoke(cli.main, args=('--deposit', '--path', './'))
 
-    assert isinstance(result.exception, KeyError)
+    assert isinstance(result.exception, DepositionUnauthorizedError)
 
 
 def test_hermes_with_path_and_postprocess():
@@ -135,4 +136,4 @@ def test_hermes_with_deposit_and_postprocess_and_path():
     runner = CliRunner()
     result = runner.invoke(cli.main, args=('--deposit', '--postprocess', '--path', './'))
 
-    assert isinstance(result.exception, KeyError)
+    assert isinstance(result.exception, DepositionUnauthorizedError)
