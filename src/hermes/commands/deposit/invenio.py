@@ -9,7 +9,6 @@ from datetime import date, datetime
 from os import environ
 
 import click
-import requests
 
 from hermes.model.context import CodeMetaContext
 from hermes.model.path import ContextPath
