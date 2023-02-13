@@ -39,5 +39,13 @@ def add_contributors(ctx: CodeMetaContext, harvest_ctx: HermesHarvestContext):
             ctx.update(contributor_path, [])
         ctx.update(contributor_path['*'], contributor, tags=tags)
 
+    audit_log.info('')
+    audit_log.info('### Add git branch')
+
+    branch_path = ContextPath('hermes:branch')
+    branch = branch_path.get_from(data)
+    audit_log.debug(f'- {branch}')
+    ctx.update(branch_path, branch, tags=tags)
+
     ctx.tags.update(tags)
     harvest_ctx.finish()
