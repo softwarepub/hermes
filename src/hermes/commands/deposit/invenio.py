@@ -97,8 +97,9 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     # uploading them.
 
     # TODO: When updating existing releases, the files API can be used to delete
-    # existing files. GET ``deposit["links"]["files"]`` for a list of file names with
-    # checksums.
+    # existing files. GET ``deposit["links"]["files"]`` for a list of ``files`` (names,
+    # checksums, ...), then DELETE ``file["links"]["download"]`` for each ``file`` in
+    # the list.
 
     # Upload the files. We'll use the bucket API rather than the files API as it
     # supports file sizes above 100MB.
