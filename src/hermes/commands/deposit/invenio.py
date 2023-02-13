@@ -63,8 +63,9 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     invenio_path = ContextPath.parse("deposit.invenio")
     invenio_ctx = ctx[invenio_path]
 
-    # TODO: Get from environment or parameter to the deposit command. Click?
-    token = environ.get("HERMES_INVENIO_AUTH_TOKEN")
+    # TODO: Get from environment or parameter to the deposit command. This can be done
+    # using Click: https://click.palletsprojects.com/en/8.1.x/options/#values-from-environment-variables
+    token = environ["HERMES_INVENIO_AUTH_TOKEN"]
     click_ctx.session.headers["Authorization"] = f"Bearer {token}"
 
     # TODO: Get this from config or determine from some value (DOI, ...) in config.

@@ -93,7 +93,7 @@ def test_hermes_with_deposit():
     runner = CliRunner()
     result = runner.invoke(cli.main, args=('--deposit', ))
 
-    assert not result.exception
+    assert isinstance(result.exception, KeyError)
 
 
 def test_hermes_with_postprocess():
@@ -114,14 +114,14 @@ def test_hermes_with_deposit_and_postprocess():
     runner = CliRunner()
     result = runner.invoke(cli.main, args=('--deposit', '--postprocess'))
 
-    assert not result.exception
+    assert isinstance(result.exception, KeyError)
 
 
 def test_hermes_with_deposit_and_path():
     runner = CliRunner()
     result = runner.invoke(cli.main, args=('--deposit', '--path', './'))
 
-    assert not result.exception
+    assert isinstance(result.exception, KeyError)
 
 
 def test_hermes_with_path_and_postprocess():
@@ -135,4 +135,4 @@ def test_hermes_with_deposit_and_postprocess_and_path():
     runner = CliRunner()
     result = runner.invoke(cli.main, args=('--deposit', '--postprocess', '--path', './'))
 
-    assert not result.exception
+    assert isinstance(result.exception, KeyError)
