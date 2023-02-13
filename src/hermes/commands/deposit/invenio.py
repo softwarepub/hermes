@@ -5,6 +5,7 @@
 # SPDX-FileContributor: David Pape
 
 import json
+import logging
 from datetime import date, datetime
 from os import environ
 
@@ -57,6 +58,8 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     - Create a new record without any previous versions.
     """
 
+    _log = logging.getLogger("cli.deposit.invenio")
+
     invenio_path = ContextPath.parse("deposit.invenio")
     invenio_ctx = ctx[invenio_path]
 
@@ -83,8 +86,7 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     response.raise_for_status()
 
     deposit = response.json()
-    # TODO: Replace print
-    print("New deposit:", deposit["links"]["html"])
+    _log.debug("Created deposit: %s", deposit["links"]["html"])
 
     # ``deposit["metadata"]`` contains a ``prereserve_doi`` field which is a dict like
     # this: ``{'doi': '10.5072/zenodo.1234567', 'recid': 1234567}``. The ``recid`` can
@@ -119,8 +121,7 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     response.raise_for_status()
 
     record = response.json()
-    # TODO: Replace print
-    print("Published record:", record["links"]["record_html"])
+    _log.info("Published record: %s", record["links"]["record_html"])
 
 
 def _codemeta_to_invenio_deposition(metadata: dict) -> dict:
