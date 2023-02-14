@@ -320,7 +320,7 @@ def harvest_git(click_ctx: click.Context, ctx: HermesHarvestContext):
 
         '@type': "SoftwareSourceCode",
         'contributor': [contributor.to_codemeta() for contributor in git_contributors._all],
-    })
+    }, git_branch=git_branch)
     ctx.update('hermes:gitBranch', git_branch)
 
     try:
