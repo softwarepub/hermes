@@ -11,9 +11,11 @@ import logging
 from importlib import metadata
 
 import click
+import requests
 
 from hermes.model.context import HermesContext, HermesHarvestContext, CodeMetaContext
 from hermes.model.errors import MergeError
+from hermes.utils import hermes_user_agent
 
 
 @click.group(invoke_without_command=True)
@@ -107,12 +109,21 @@ def process():
 
 
 @click.group(invoke_without_command=True)
-def deposit():
+@click.option("--auth-token", envvar="HERMES_DEPOSITION_AUTH_TOKEN")
+@click.pass_context
+def deposit(click_ctx: click.Context, auth_token):
     """
     Deposit processed (and curated) metadata
     """
     click.echo("Metadata deposition")
     _log = logging.getLogger("cli.deposit")
+
+    # TODO: Better name than session?
+    # TODO: If this is needed in more places, it could be moved one level up.
+    click_ctx.session = requests.Session()
+    click_ctx.session.headers = {
+        "User-Agent": hermes_user_agent,
+    }
 
     # local import that can be removed later
     from hermes.model.path import ContextPath
@@ -138,10 +149,14 @@ def deposit():
 
     # TODO: Remove this
     # There are many Invenio instances. For now, we just use Zenodo as a default.
-    ctx.update(deposit_invenio_path["siteUrl"], "https://zenodo.org")
+    ctx.update(deposit_invenio_path["siteUrl"], "https://sandbox.zenodo.org")
     ctx.update(
-        deposit_invenio_path["recordSchemaPath"],
+        deposit_invenio_path["schemaPaths"]["record"],
         "api/schemas/records/record-v1.0.0.json"
+    )
+    ctx.update(
+        deposit_invenio_path["apiPaths"]["depositions"],
+        "api/deposit/depositions"
     )
 
     # The platform to which we want to deposit the (meta)data
@@ -155,7 +170,7 @@ def deposit():
     )
     if deposit_preparator_entrypoints:
         deposit_preparator = deposit_preparator_entrypoints[0].load()
-        deposit_preparator(ctx)
+        deposit_preparator(click_ctx, ctx)
 
     # Map metadata onto target schema
     metadata_mapping_entrypoints = metadata.entry_points(
@@ -164,9 +179,18 @@ def deposit():
     )
     if metadata_mapping_entrypoints:
         metadata_mapping = metadata_mapping_entrypoints[0].load()
-        metadata_mapping(ctx)
+        metadata_mapping(click_ctx, ctx)
 
-    # TODO: Deposit
+    # Make deposit: Update metadata, upload files, publish
+    # TODO: Do publish step manually? This would allow users to check the deposition on
+    # the site and decide whether they are happy with it.
+    deposition_entrypoints = metadata.entry_points(
+        group="hermes.deposit",
+        name=deposition_platform
+    )
+    if deposition_entrypoints:
+        deposition = deposition_entrypoints[0].load()
+        deposition(click_ctx, ctx)
 
 
 @click.group(invoke_without_command=True)

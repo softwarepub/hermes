@@ -4,17 +4,21 @@
 
 # SPDX-FileContributor: David Pape
 
-from datetime import date
+import json
+import logging
+from datetime import date, datetime
 
-import requests
+import click
 
 from hermes.model.context import CodeMetaContext
 from hermes.model.path import ContextPath
 
+from hermes.commands.deposit.error import DepositionUnauthorizedError
+
 
 # TODO: It turns out that the schema downloaded here can not be used. Figure out what to
 # do with this. Maybe the code can be removed.
-def prepare_deposit(ctx: CodeMetaContext):
+def prepare_deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     """Prepare the Invenio deposit.
 
     In this case, "prepare" means download the record schema that is required
@@ -26,15 +30,17 @@ def prepare_deposit(ctx: CodeMetaContext):
 
     invenio_ctx = ctx[invenio_path]
     # TODO: Get these values from config with reasonable defaults.
-    recordSchemaUrl = f"{invenio_ctx['siteUrl']}/{invenio_ctx['recordSchemaPath']}"
+    recordSchemaUrl = f"{invenio_ctx['siteUrl']}/{invenio_ctx['schemaPaths']['record']}"
 
     # TODO: cache this download in HERMES cache dir
     # TODO: ensure to use from cache instead of download if not expired (needs config)
-    recordSchema = _request_json(recordSchemaUrl)
+    response = click_ctx.session.get(recordSchemaUrl)
+    response.raise_for_status()
+    recordSchema = response.json()
     ctx.update(invenio_path["requiredSchema"], recordSchema)
 
 
-def map_metadata(ctx: CodeMetaContext):
+def map_metadata(click_ctx: click.Context, ctx: CodeMetaContext):
     """Map the harvested metadata onto the Invenio schema."""
 
     deposition_metadata = _codemeta_to_invenio_deposition(ctx["codemeta"])
@@ -43,13 +49,68 @@ def map_metadata(ctx: CodeMetaContext):
     ctx.update(metadata_path, deposition_metadata)
 
 
-def _request_json(url: str) -> dict:
-    """Request an URL and return the JSON response as dict."""
+def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
+    """Make a deposition on an Invenio-based platform.
 
-    # TODO: Store a requests.Session in a click_ctx in case we need it more frequently?
-    response = requests.get(url)
+    This function can:
+
+    - Create a new record without any previous versions.
+
+    Functionality to be added in the future:
+
+    - Update the metadata of an existing record
+    - Update the metadata and files of an existing record by creating a new version
+    """
+
+    _log = logging.getLogger("cli.deposit.invenio")
+
+    invenio_path = ContextPath.parse("deposit.invenio")
+    invenio_ctx = ctx[invenio_path]
+
+    if not click_ctx.params["auth_token"]:
+        raise DepositionUnauthorizedError("No auth token given for deposition platform")
+    click_ctx.session.headers["Authorization"] = f"Bearer {click_ctx.params['auth_token']}"
+
+    existing_record_url = None
+
+    deposit_url = f"{invenio_ctx['siteUrl']}/{invenio_ctx['apiPaths']['depositions']}"
+    if existing_record_url is not None:
+        # TODO: Get by calling new version on existing record
+        deposit_url = None
+        raise NotImplementedError(
+            "At the moment, hermes can not create new versions of existing records"
+        )
+
+    deposition_metadata = invenio_ctx["depositionMetadata"]
+    response = click_ctx.session.post(
+        deposit_url,
+        json={"metadata": deposition_metadata}
+    )
     response.raise_for_status()
-    return response.json()
+
+    deposit = response.json()
+    _log.debug("Created deposit: %s", deposit["links"]["html"])
+
+    # Upload the files. We'll use the bucket API rather than the files API as it
+    # supports file sizes above 100MB.
+    bucket_url = deposit["links"]["bucket"]
+    file_name, file_content = _get_file_for_upload(deposition_metadata)
+
+    response = click_ctx.session.put(
+        f"{bucket_url}/{file_name}",
+        data=file_content.encode()
+    )
+    response.raise_for_status()
+
+    # This can potentially be used to verify the checksum
+    # file_resource = response.json()
+
+    publish_url = deposit["links"]["publish"]
+    response = click_ctx.session.post(publish_url)
+    response.raise_for_status()
+
+    record = response.json()
+    _log.info("Published record: %s", record["links"]["record_html"])
 
 
 def _codemeta_to_invenio_deposition(metadata: dict) -> dict:
@@ -170,3 +231,23 @@ def _codemeta_to_invenio_deposition(metadata: dict) -> dict:
     }.items() if v is not None}
 
     return deposition_metadata
+
+
+def _get_file_for_upload(deposition_metadata: dict):
+    """Return a file name and some content to test the file upload with."""
+
+    timestamp = datetime.now().isoformat()
+    metadata_json = json.dumps(deposition_metadata, indent=2)
+    file_name = "README.md"
+    file_content = f"""# {deposition_metadata["title"]}
+
+{deposition_metadata["description"]}
+
+Here's a timestamp so that the file changes and we can create a new version of the record later: `{timestamp}`
+
+```json
+{metadata_json}
+```
+"""
+
+    return file_name, file_content
