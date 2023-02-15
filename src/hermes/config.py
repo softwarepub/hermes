@@ -100,8 +100,10 @@ def get(name: str) -> dict:
 
     if name not in _config:
         # If configuration is not present, create it.
-        _config['hermes'][name] = {}
+        if name not in _config['hermes']:
+            _config['hermes'][name] = {}
         _config[name] = _config['hermes'][name]
+
     elif not _config['hermes'][name] is _config[name]:
         # If a configuration was loaded, after the defaults were set, update it.
         _config[name].update(_config['hermes'].get('name', {}))

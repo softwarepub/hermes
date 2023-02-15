@@ -12,6 +12,7 @@ from importlib import metadata
 
 import click
 
+from hermes import config
 from hermes.model.context import HermesContext, HermesHarvestContext, CodeMetaContext
 from hermes.model.errors import MergeError
 
@@ -33,14 +34,22 @@ def harvest(click_ctx: click.Context):
     ctx.init_cache("harvest")
 
     # Get all harvesters
-    harvesters = metadata.entry_points(group='hermes.harvest')
-    for harvester in harvesters:
+    harvest_config = config.get("harvest")
+    harvester_names = harvest_config.get('from', [ep.name for ep in metadata.entry_points(group='hermes.harvest')])
+
+    for harvester_name in harvester_names:
+        harversters = metadata.entry_points(group='hermes.harvest', name=harvester_name)
+        if not harversters:
+            _log.warning("- Harvester %s selected but not found.", harvester_name)
+            continue
+
+        harvester = harversters[0]
         _log.info("- Running harvester %s", harvester.name)
 
         _log.debug(". Loading harvester from %s", harvester.value)
         harvest = harvester.load()
 
-        with HermesHarvestContext(ctx, harvester) as harvest_ctx:
+        with HermesHarvestContext(ctx, harvester, harvest_config.get(harvester.name, {})) as harvest_ctx:
             harvest(click_ctx, harvest_ctx)
             for _key, ((_value, _tag), *_trace) in harvest_ctx._data.items():
                 if any(v != _value and t == _tag for v, t in _trace):
@@ -70,7 +79,7 @@ def process():
     for harvester in harvesters:
         audit_log.info("## Process data from %s", harvester.name)
 
-        harvest_context = HermesHarvestContext(ctx, harvester)
+        harvest_context = HermesHarvestContext(ctx, harvester, {})
         try:
             harvest_context.load_cache()
         # when the harvest step ran, but there is no cache file, this is a serious flaw
