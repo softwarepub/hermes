@@ -92,19 +92,11 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     deposit = response.json()
     _log.debug("Created deposit: %s", deposit["links"]["html"])
 
-    # TODO: When updating existing releases, the files API can be used to delete
-    # existing files. GET ``deposit["links"]["files"]`` for a list of ``files`` (names,
-    # checksums, ...), then DELETE ``file["links"]["download"]`` for each ``file`` in
-    # the list.
-
     # Upload the files. We'll use the bucket API rather than the files API as it
     # supports file sizes above 100MB.
     bucket_url = deposit["links"]["bucket"]
     file_name, file_content = _get_file_for_upload(deposition_metadata)
 
-    # TODO: When uploading real files, open them in binary mode and pass the handle to
-    # the data kwarg. For now we'll upload just this one file.
-    # TODO: Do we need to URL-encode the ``file_name`` or does this always work?
     response = click_ctx.session.put(
         f"{bucket_url}/{file_name}",
         data=file_content.encode()
