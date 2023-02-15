@@ -13,7 +13,7 @@ import click
 from hermes.model.context import CodeMetaContext
 from hermes.model.path import ContextPath
 
-from .error import DepositionUnauthorizedError
+from hermes.commands.deposit.error import DepositionUnauthorizedError
 
 
 # TODO: It turns out that the schema downloaded here can not be used. Figure out what to
