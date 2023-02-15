@@ -71,7 +71,6 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
         raise DepositionUnauthorizedError("No auth token given for deposition platform")
     click_ctx.session.headers["Authorization"] = f"Bearer {click_ctx.params['auth_token']}"
 
-    # TODO: Get this from config or determine from some value (DOI, ...) in config.
     existing_record_url = None
 
     deposit_url = f"{invenio_ctx['siteUrl']}/{invenio_ctx['apiPaths']['depositions']}"
