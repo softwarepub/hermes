@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2022 German Aerospace Center (DLR)
 #
 # SPDX-License-Identifier: Apache-2.0
-
+import pathlib
 # SPDX-FileContributor: Michael Meinel
 
 from unittest import mock
@@ -44,6 +44,7 @@ def test_workflow_invoke():
     wf.add_command(eggs_cmd)
 
     ctx = click.Context(wf)
+    ctx.params['config'] = pathlib.Path.cwd() / 'hermes.conf'
     wf.invoke(ctx)
 
     spam.assert_called_once()
@@ -61,11 +62,12 @@ def test_workflow_invoke_with_cb():
     wf.result_callback()(cb_mock)
 
     ctx = click.Context(wf)
+    ctx.params['config'] = pathlib.Path.cwd() / 'hermes.conf'
     wf.invoke(ctx)
 
     spam.assert_called_once()
     eggs.assert_called_once()
-    cb_mock.assert_called_with(["spam", "eggs"])
+    cb_mock.assert_called_with(["spam", "eggs"], config=ctx.params['config'])
 
 
 def test_hermes_full():
