@@ -92,13 +92,6 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     deposit = response.json()
     _log.debug("Created deposit: %s", deposit["links"]["html"])
 
-    # ``deposit["metadata"]`` contains a ``prereserve_doi`` field which is a dict like
-    # this: ``{'doi': '10.5072/zenodo.1234567', 'recid': 1234567}``. The ``recid`` can
-    # be used to construct the URL to the record when published:
-    # ``f"https://sandbox.zenodo.org/record/{recid}"``.
-    # TODO: Use the URL and the DOI to update the data in the repo files before
-    # uploading them.
-
     # TODO: When updating existing releases, the files API can be used to delete
     # existing files. GET ``deposit["links"]["files"]`` for a list of ``files`` (names,
     # checksums, ...), then DELETE ``file["links"]["download"]`` for each ``file`` in
