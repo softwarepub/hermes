@@ -124,9 +124,6 @@ def deposit(click_ctx: click.Context, auth_token):
     click_ctx.session.headers = {
         "User-Agent": hermes_user_agent,
     }
-    # TODO: This seems weird. Is there an option to put it directly into the context
-    # instead of as an argument?
-    click_ctx.auth_token = auth_token
 
     # local import that can be removed later
     from hermes.model.path import ContextPath

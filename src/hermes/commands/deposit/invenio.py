@@ -67,9 +67,9 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     invenio_path = ContextPath.parse("deposit.invenio")
     invenio_ctx = ctx[invenio_path]
 
-    if not click_ctx.auth_token:
+    if not click_ctx.params["auth_token"]:
         raise DepositionUnauthorizedError("No auth token given for deposition platform")
-    click_ctx.session.headers["Authorization"] = f"Bearer {click_ctx.auth_token}"
+    click_ctx.session.headers["Authorization"] = f"Bearer {click_ctx.params['auth_token']}"
 
     # TODO: Get this from config or determine from some value (DOI, ...) in config.
     existing_record_url = None
