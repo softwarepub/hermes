@@ -54,9 +54,12 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
 
     This function can:
 
-    - Update the metadata of an existing record
-    - Update the metadata and files of an existing record y creating a new version
     - Create a new record without any previous versions.
+
+    Functionality to be added in the future:
+
+    - Update the metadata of an existing record
+    - Update the metadata and files of an existing record by creating a new version
     """
 
     _log = logging.getLogger("cli.deposit.invenio")
