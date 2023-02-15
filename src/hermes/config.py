@@ -6,6 +6,7 @@
 
 import logging
 import pathlib
+import sys
 
 import toml
 
@@ -64,7 +65,7 @@ def configure(config_path: pathlib.Path):
 
     :param config_path: The path to a TOML file containing HERMES configuration.
     """
-    if 'hermes' in _config:
+    if 'hermes' in _config and _config['hermes']:
         return
 
     # Load configuration if not present
@@ -76,10 +77,10 @@ def configure(config_path: pathlib.Path):
 
     # Exceptions are currently handled gracefully. Is this okay?
     except FileNotFoundError:
-        print(f"Configuration not present at {config_path}.")
+        print(f"Configuration not present at {config_path}.", file=sys.stderr)
 
     except KeyError:
-        print(f"Invalid configuration at {config_path}, no 'hermes' section found.")
+        print(f"Invalid configuration at {config_path}, no 'hermes' section found.", file=sys.stderr)
 
 
 def get(name: str) -> dict:
@@ -100,6 +101,8 @@ def get(name: str) -> dict:
 
     if name not in _config:
         # If configuration is not present, create it.
+        if 'hermes' not in _config:
+            _config['hermes'] = {}
         if name not in _config['hermes']:
             _config['hermes'][name] = {}
         _config[name] = _config['hermes'][name]

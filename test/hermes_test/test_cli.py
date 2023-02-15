@@ -1,9 +1,10 @@
 # SPDX-FileCopyrightText: 2022 German Aerospace Center (DLR)
 #
 # SPDX-License-Identifier: Apache-2.0
-import pathlib
+
 # SPDX-FileContributor: Michael Meinel
 
+import pathlib
 from unittest import mock
 
 import click
@@ -44,7 +45,7 @@ def test_workflow_invoke():
     wf.add_command(eggs_cmd)
 
     ctx = click.Context(wf)
-    ctx.params['config'] = pathlib.Path.cwd() / 'hermes.conf'
+    ctx.params['config'] = pathlib.Path.cwd() / 'hermes.toml'
     wf.invoke(ctx)
 
     spam.assert_called_once()
@@ -62,7 +63,7 @@ def test_workflow_invoke_with_cb():
     wf.result_callback()(cb_mock)
 
     ctx = click.Context(wf)
-    ctx.params['config'] = pathlib.Path.cwd() / 'hermes.conf'
+    ctx.params['config'] = pathlib.Path.cwd() / 'hermes.toml'
     wf.invoke(ctx)
 
     spam.assert_called_once()
@@ -112,7 +113,7 @@ def test_hermes_with_path():
     assert not result.exception
 
 
-def test_haggis_with_deposit_and_postprocess():
+def test_hermes_with_deposit_and_postprocess():
     runner = CliRunner()
     result = runner.invoke(cli.main, args=('--deposit', '--postprocess'))
 
@@ -126,14 +127,14 @@ def test_hermes_with_deposit_and_path():
     assert not result.exception
 
 
-def test_haggis_with_path_and_postprocess():
+def test_hermes_with_path_and_postprocess():
     runner = CliRunner()
     result = runner.invoke(cli.main, args=('--path', './', '--postprocess'))
 
     assert not result.exception
 
 
-def test_haggis_with_deposit_and_postprocess_and_path():
+def test_hermes_with_deposit_and_postprocess_and_path():
     runner = CliRunner()
     result = runner.invoke(cli.main, args=('--deposit', '--postprocess', '--path', './'))
 
