@@ -8,13 +8,9 @@ from = [ "cff", "git" ]
 [harvest.cff]
 validate = false
 
-[process]
-preprocess = [ "cff", "git" ]
-
 [deposit]
 mapping = "invenio"
 target = "invenio"
 
 [deposit.invenio]
 base_url = "https://sandbox.zenodo.org"
-auth_token = "UGOJ9fwRXUhshyWzQtqAqHKQRHlT6VPUrUNRV9v984zkjUvjhwFo8SnVYtXx"

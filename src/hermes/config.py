@@ -75,12 +75,11 @@ def configure(config_path: pathlib.Path):
             _config['hermes'] = hermes_config
             _config['logging'] = hermes_config.get('logging', _config['logging'])
 
-    # Exceptions are currently handled gracefully. Is this okay?
     except FileNotFoundError:
-        print(f"Configuration not present at {config_path}.", file=sys.stderr)
-
-    except KeyError:
-        print(f"Invalid configuration at {config_path}, no 'hermes' section found.", file=sys.stderr)
+        if config_path.name != 'hermes.toml':
+            # An explicit filename (different from default) was given, so the file should be available...
+            print(f"Configuration not present at {config_path}.", file=sys.stderr)
+            sys.exit(1)
 
 
 def get(name: str) -> dict:
