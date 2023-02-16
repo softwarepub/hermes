@@ -146,9 +146,9 @@ class WorkflowCommand(click.Group):
 @click.pass_context
 def main(ctx: click.Context, *args, **kwargs) -> None:
     """
-    HERMES aggregated interface script
+    HERMES
 
-    This script can be used to run the HERMES pipeline or parts of it.
+    This command runs the HERMES workflow or parts of it.
     """
 
     pass
