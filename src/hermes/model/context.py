@@ -172,7 +172,7 @@ class HermesHarvestContext(HermesContext):
 
         :param base: The base HermesContext that should receive the results of the harvesting.
         :param ep: The entry point that implements the harvester using this context.
-        :param config: Configuratin for the given harvester.
+        :param config: Configuration for the given harvester.
         """
 
         super().__init__()
