@@ -17,7 +17,7 @@ authors = [
     "Michael Meinel <michael.meinel@dlr.de>",
     "Oliver Bertuch <o.bertuch@fz-juelich.de>",
     "Jeffrey Kelling <j.kelling@hzdr.de>",
-    "Oliver Knodel <o.knodel@hzd.r.de>"
+    "Oliver Knodel <o.knodel@hzdr.de>",
 ]
 
 readme = "README.md"
