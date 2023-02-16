@@ -38,12 +38,12 @@ def harvest(click_ctx: click.Context):
     harvester_names = harvest_config.get('from', [ep.name for ep in metadata.entry_points(group='hermes.harvest')])
 
     for harvester_name in harvester_names:
-        harversters = metadata.entry_points(group='hermes.harvest', name=harvester_name)
-        if not harversters:
+        harvesters = metadata.entry_points(group='hermes.harvest', name=harvester_name)
+        if not harvesters:
             _log.warning("- Harvester %s selected but not found.", harvester_name)
             continue
 
-        harvester = harversters[0]
+        harvester, *_ = harvesters
         _log.info("- Running harvester %s", harvester.name)
 
         _log.debug(". Loading harvester from %s", harvester.value)
@@ -54,6 +54,7 @@ def harvest(click_ctx: click.Context):
             for _key, ((_value, _tag), *_trace) in harvest_ctx._data.items():
                 if any(v != _value and t == _tag for v, t in _trace):
                     raise MergeError(_key, None, _value)
+
         _log.info('')
     audit_log.info('')
 
@@ -74,9 +75,19 @@ def process():
         _log.error("You must run the harvest command before process")
         return 1
 
-    # TODO: needs a lookup in future configuration to loop only over enabled harvesters
-    harvesters = metadata.entry_points(group='hermes.harvest')
-    for harvester in harvesters:
+    # Get all harvesters
+
+    # Get all harvesters
+    harvest_config = config.get("harvest")
+    harvester_names = harvest_config.get('from', [ep.name for ep in metadata.entry_points(group='hermes.harvest')])
+
+    for harvester_name in harvester_names:
+        harvesters = metadata.entry_points(group='hermes.harvest', name=harvester_name)
+        if not harvesters:
+            _log.warning("- Harvester %s selected but not found.", harvester_name)
+            continue
+
+        harvester, *_ = harvesters
         audit_log.info("## Process data from %s", harvester.name)
 
         harvest_context = HermesHarvestContext(ctx, harvester, {})
