@@ -59,7 +59,7 @@ def harvest_cff(click_ctx: click.Context, ctx: HermesHarvestContext):
 
     # Validate the content to be correct CFF
     cff_dict = _load_cff_from_file(cff_data)
-    if not _validate(cff_file, cff_dict):
+    if ctx.config.get('validate', True) and not _validate(cff_file, cff_dict):
         raise HermesValidationError(cff_file)
 
     # Convert to CodeMeta using cffconvert

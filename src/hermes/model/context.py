@@ -166,12 +166,13 @@ class HermesHarvestContext(HermesContext):
     parent context.
     """
 
-    def __init__(self, base: HermesContext, ep: EntryPoint):
+    def __init__(self, base: HermesContext, ep: EntryPoint, config: dict = None):
         """
         Initialize a new harvesting context.
 
         :param base: The base HermesContext that should receive the results of the harvesting.
         :param ep: The entry point that implements the harvester using this context.
+        :param config: Configuration for the given harvester.
         """
 
         super().__init__()
@@ -179,6 +180,7 @@ class HermesHarvestContext(HermesContext):
         self._base = base
         self._ep = ep
         self._log = logging.getLogger(f'harvest.{self._ep.name}')
+        self.config = config or {}
 
     def load_cache(self):
         """
