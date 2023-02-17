@@ -76,8 +76,6 @@ def process():
         return 1
 
     # Get all harvesters
-
-    # Get all harvesters
     harvest_config = config.get("harvest")
     harvester_names = harvest_config.get('from', [ep.name for ep in metadata.entry_points(group='hermes.harvest')])
 
