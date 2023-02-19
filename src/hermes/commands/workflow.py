@@ -5,6 +5,7 @@
 # SPDX-FileContributor: Stephan Druskat
 # SPDX-FileContributor: Michael Meinel
 # SPDX-FileContributor: David Pape
+# SPDX-FileContributor: Oliver Bertuch
 
 import json
 import logging
@@ -127,14 +128,14 @@ def process():
 
 
 @click.group(invoke_without_command=True)
+# TODO: add description!
 @click.option("--auth-token", envvar="HERMES_DEPOSITION_AUTH_TOKEN")
-@click.argument('files', type=click.Path(exists=True, dir_okay=False, readable=True), nargs=-1, required=True)
+# TODO: add description!
+@click.option("--file", "-f", type=click.Path(exists=True, dir_okay=False, readable=True), multiple=True, required=True)
 @click.pass_context
 def deposit(click_ctx: click.Context, auth_token, files):
     """
     Deposit processed (and curated) metadata.
-
-    FILES are optional arguments of file artifacts to include in the deposit. May not be directories.
     """
     click.echo("Metadata deposition")
     _log = logging.getLogger("cli.deposit")
