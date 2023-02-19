@@ -6,14 +6,15 @@
 
 import json
 import logging
-from datetime import date, datetime
+from datetime import date
+from pathlib import Path
 
 import click
-
-from hermes.model.context import CodeMetaContext
-from hermes.model.path import ContextPath
+from requests.exceptions import HTTPError
 
 from hermes.commands.deposit.error import DepositionUnauthorizedError
+from hermes.model.context import CodeMetaContext
+from hermes.model.path import ContextPath
 
 
 # TODO: It turns out that the schema downloaded here can not be used. Figure out what to
@@ -48,8 +49,12 @@ def map_metadata(click_ctx: click.Context, ctx: CodeMetaContext):
     metadata_path = ContextPath.parse("deposit.invenio.depositionMetadata")
     ctx.update(metadata_path, deposition_metadata)
 
+    # Store a snapshot of the mapped data within the cache, useful for analysis, debugging, etc
+    with open(ctx.get_cache("deposit", "invenio", create=True), 'w') as invenio_json:
+        json.dump(deposition_metadata, invenio_json, indent='  ')
 
-def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
+
+def deposit(click_ctx: click.Context, ctx: CodeMetaContext, files: list[click.Path]):
     """Make a deposition on an Invenio-based platform.
 
     This function can:
@@ -71,6 +76,10 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
         raise DepositionUnauthorizedError("No auth token given for deposition platform")
     click_ctx.session.headers["Authorization"] = f"Bearer {click_ctx.params['auth_token']}"
 
+    # Any deposit must have at least one file - raise error otherwise.
+    if len(files) == 0:
+        raise ValueError("You must provide at least one file for upload (requirement by Invenio)")
+
     existing_record_url = None
 
     deposit_url = f"{invenio_ctx['siteUrl']}/{invenio_ctx['apiPaths']['depositions']}"
@@ -86,7 +95,11 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
         deposit_url,
         json={"metadata": deposition_metadata}
     )
-    response.raise_for_status()
+    try:
+        response.raise_for_status()
+    except HTTPError:
+        _log.warning(response.json())
+        click_ctx.exit(1)
 
     deposit = response.json()
     _log.debug("Created deposit: %s", deposit["links"]["html"])
@@ -94,20 +107,35 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     # Upload the files. We'll use the bucket API rather than the files API as it
     # supports file sizes above 100MB.
     bucket_url = deposit["links"]["bucket"]
-    file_name, file_content = _get_file_for_upload(deposition_metadata)
 
-    response = click_ctx.session.put(
-        f"{bucket_url}/{file_name}",
-        data=file_content.encode()
-    )
-    response.raise_for_status()
+    for path_arg in files:
+        path = Path(path_arg)
+
+        # This should not happen, as Click shall not accept dirs as arguments already. Zero trust anyway.
+        if not path.is_file():
+            raise ValueError("Any given argument to be included in the deposit must be a file.")
+
+        with open(path, "rb") as file_content:
+            response = click_ctx.session.put(
+                f"{bucket_url}/{path.name}",
+                data=file_content
+            )
+            try:
+                response.raise_for_status()
+            except HTTPError:
+                _log.warning(response.json())
+                click_ctx.exit(1)
 
     # This can potentially be used to verify the checksum
     # file_resource = response.json()
 
     publish_url = deposit["links"]["publish"]
     response = click_ctx.session.post(publish_url)
-    response.raise_for_status()
+    try:
+        response.raise_for_status()
+    except HTTPError:
+        _log.warning(response.json())
+        click_ctx.exit(1)
 
     record = response.json()
     _log.info("Published record: %s", record["links"]["record_html"])
@@ -231,23 +259,3 @@ def _codemeta_to_invenio_deposition(metadata: dict) -> dict:
     }.items() if v is not None}
 
     return deposition_metadata
-
-
-def _get_file_for_upload(deposition_metadata: dict):
-    """Return a file name and some content to test the file upload with."""
-
-    timestamp = datetime.now().isoformat()
-    metadata_json = json.dumps(deposition_metadata, indent=2)
-    file_name = "README.md"
-    file_content = f"""# {deposition_metadata["title"]}
-
-{deposition_metadata["description"]}
-
-Here's a timestamp so that the file changes and we can create a new version of the record later: `{timestamp}`
-
-```json
-{metadata_json}
-```
-"""
-
-    return file_name, file_content

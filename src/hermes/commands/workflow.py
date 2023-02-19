@@ -128,10 +128,13 @@ def process():
 
 @click.group(invoke_without_command=True)
 @click.option("--auth-token", envvar="HERMES_DEPOSITION_AUTH_TOKEN")
+@click.argument('files', type=click.Path(exists=True, dir_okay=False, readable=True), nargs=-1, required=True)
 @click.pass_context
-def deposit(click_ctx: click.Context, auth_token):
+def deposit(click_ctx: click.Context, auth_token, files):
     """
-    Deposit processed (and curated) metadata
+    Deposit processed (and curated) metadata.
+
+    FILES are optional arguments of file artifacts to include in the deposit. May not be directories.
     """
     click.echo("Metadata deposition")
     _log = logging.getLogger("cli.deposit")
@@ -208,7 +211,7 @@ def deposit(click_ctx: click.Context, auth_token):
     )
     if deposition_entrypoints:
         deposition = deposition_entrypoints[0].load()
-        deposition(click_ctx, ctx)
+        deposition(click_ctx, ctx, files)
 
 
 @click.group(invoke_without_command=True)
