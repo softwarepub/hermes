@@ -133,7 +133,7 @@ def process():
 # TODO: add description!
 @click.option("--file", "-f", type=click.Path(exists=True, dir_okay=False, readable=True), multiple=True, required=True)
 @click.pass_context
-def deposit(click_ctx: click.Context, auth_token, files):
+def deposit(click_ctx: click.Context, auth_token, file):
     """
     Deposit processed (and curated) metadata.
     """
@@ -212,7 +212,7 @@ def deposit(click_ctx: click.Context, auth_token, files):
     )
     if deposition_entrypoints:
         deposition = deposition_entrypoints[0].load()
-        deposition(click_ctx, ctx, files)
+        deposition(click_ctx, ctx, file)
 
 
 @click.group(invoke_without_command=True)
