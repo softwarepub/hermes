@@ -74,7 +74,7 @@ hermes
 
 The output will look like follows, indicating metadata is collated from `CITATION.cff` and `Git` history:
 
-```plain
+```text
 hermes workflow (0.1.0)
 =======================
 
@@ -236,7 +236,7 @@ hermes deposit --auth-token <PAT here> --file README.md --file showcase.zip
 ```
 
 If all goes well, you will find the URL of the deposit in the output:
-```plain
+```text
 hermes workflow (0.1.0)
 =======================
 
