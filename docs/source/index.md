@@ -1,8 +1,16 @@
 <!--
-SPDX-FileCopyrightText: 2022 German Aerospace Center (DLR), Forschungszentrum Jülich
+SPDX-FileCopyrightText: 2022 Forschungszentrum Jülich, German Aerospace Center (DLR)
 
 SPDX-License-Identifier: CC-BY-SA-4.0
 -->
+
+<!--
+SPDX-FileContributor: Oliver Bertuch
+SPDX-FileContributor: Stephan Druskat
+SPDX-FileContributor: Michael Meinel
+-->
+
+![](_static/img/header.png)
 
 # Overview
 
@@ -10,42 +18,39 @@ SPDX-License-Identifier: CC-BY-SA-4.0
 This is a work in progress. Expect disruptive changes.
 ```
 
-## README
+Research software must be formally published to satisfy FAIR principles and unlock academic credit. Publication
+repositories enable this and provide PIDs for software versions, but only through tedious, mostly manual process. 
 
-```{include} ../../README.md
-```
+The HERMES workflow enables automated publication of rich research software metadata and artifacts to publication
+repositories using open source tooling. 
 
-## Tutorials
+We follow a *push based* model and run in continuous integration (CI) infrastructures integrated in common code platforms 
+such as GitHub or GitLab to avoid going out of service and overcome limitations of pull-based web services. 
+
+Rich descriptive metadata is the key element to useful software publications. We harvest existing metadata from source
+code repos and connected platforms, then process, collate and present them for curation, thus preparing software for
+automatic submission to publication repositories. 
+
+![](_static/img/workflow-overview.svg)
+
+## Documentation
  
 ```{toctree}
 :glob:
 :maxdepth: 1
+:caption: Tutorials
 tutorials/*
 ```
-
-## Developer Documentation
 
 ```{toctree}
 :maxdepth: 1
 :caption: Developers
+dev/contribute
+Tutorial: Get started w/ development <dev/start>
 dev/data_model
 adr/index
-```
-
-## API Documentation
-
-```{toctree}
-:maxdepth: 2
-:caption: API
 api/index
 ```
-
-## Indices and tables
-
-* [](genindex)
-* [](modindex)
-* [](search)
-
 
 ```{toctree}
 :hidden:
@@ -58,11 +63,14 @@ Concept Paper <https://arxiv.org/abs/2201.09015>
 
 This is an open repository to collect feedback on the HERMES workflow.
 
-We see our project as part of a global and inter-disciplinary effort to improve the state of the art in research software engineering, maintenance and scholarly communications around research software. We therefore appreciate any feedback you may have on the HERMES project itself and any of its outputs.
+We see our project as part of a global and inter-disciplinary effort to improve the state of the art in 
+research software engineering, maintenance and scholarly communications around research software. We therefore
+appreciate any feedback you may have on the HERMES project itself and any of its outputs.
 
 **How to give feedback**
 
-Either [create an issue](https://github.com/hermes-hmc/workflow/issues/new/choose) in our project repository or [send us an email](mailto:team@software-metadata.pub?subject=HERMES%20WOrkflow%20Reachout).
+Either [create an issue](https://github.com/hermes-hmc/workflow/issues/new/choose) in our project repository or 
+[send us an email](mailto:team@software-metadata.pub?subject=HERMES%20WOrkflow%20Reachout).
 
 ## Acknowledgements
 
@@ -71,8 +79,11 @@ of the [Helmholtz Association](https://www.helmholtz.de/en/about-us/structure-an
 in the framework of the [Helmholtz Metadata Collaboration](https://helmholtz-metadaten.de)'s
 [2020 project call](https://helmholtz-metadaten.de/en/projects/hmc-projects-2020).
 
-## License
+```{include} ../../LICENSE.md
+```
 
-This project documentation is licensed under a [Creative Commons CC0 1.0 Universal (CC0 1.0) Public Domain Dedication](https://creativecommons.org/publicdomain/zero/1.0/legalcode). 
+## Indices and tables
 
-Our logo / key visual / icon is licensed under [Creative Commons Attribution-NoDerivatives 4.0 International (CC BY-ND 4.0) ](https://creativecommons.org/licenses/by-nd/4.0)
+* [](genindex)
+* [](modindex)
+* [](search)

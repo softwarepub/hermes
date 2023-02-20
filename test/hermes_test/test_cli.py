@@ -4,18 +4,15 @@
 
 # SPDX-FileContributor: Michael Meinel
 
-import typing as t
+import pathlib
 from unittest import mock
 
 import click
 from click.testing import CliRunner
 
 from hermes import cli
-
-
-def mock_command(name: str) -> t.Tuple[mock.Mock, click.Command]:
-    func = mock.Mock(return_value=name)
-    return func, click.command(name)(func)
+from hermes.commands.deposit.error import DepositionUnauthorizedError
+from hermes_test.mocks import mock_command
 
 
 def test_workflow_setup():
@@ -49,6 +46,7 @@ def test_workflow_invoke():
     wf.add_command(eggs_cmd)
 
     ctx = click.Context(wf)
+    ctx.params['config'] = pathlib.Path.cwd() / 'hermes.toml'
     wf.invoke(ctx)
 
     spam.assert_called_once()
@@ -66,11 +64,12 @@ def test_workflow_invoke_with_cb():
     wf.result_callback()(cb_mock)
 
     ctx = click.Context(wf)
+    ctx.params['config'] = pathlib.Path.cwd() / 'hermes.toml'
     wf.invoke(ctx)
 
     spam.assert_called_once()
     eggs.assert_called_once()
-    cb_mock.assert_called_with(["spam", "eggs"])
+    cb_mock.assert_called_with(["spam", "eggs"], config=ctx.params['config'])
 
 
 def test_hermes_full():
@@ -98,10 +97,10 @@ def test_hermes_with_deposit():
     runner = CliRunner()
     result = runner.invoke(cli.main, args=('--deposit', ))
 
-    assert not result.exception
+    assert isinstance(result.exception, DepositionUnauthorizedError)
 
 
-def test_haggis_with_postprocess():
+def test_hermes_with_postprocess():
     runner = CliRunner()
     result = runner.invoke(cli.main, args=('--postprocess', ))
 
@@ -115,29 +114,29 @@ def test_hermes_with_path():
     assert not result.exception
 
 
-def test_haggis_with_deposit_and_postprocess():
+def test_hermes_with_deposit_and_postprocess():
     runner = CliRunner()
     result = runner.invoke(cli.main, args=('--deposit', '--postprocess'))
 
-    assert not result.exception
+    assert isinstance(result.exception, DepositionUnauthorizedError)
 
 
 def test_hermes_with_deposit_and_path():
     runner = CliRunner()
     result = runner.invoke(cli.main, args=('--deposit', '--path', './'))
 
-    assert not result.exception
+    assert isinstance(result.exception, DepositionUnauthorizedError)
 
 
-def test_haggis_with_path_and_postprocess():
+def test_hermes_with_path_and_postprocess():
     runner = CliRunner()
     result = runner.invoke(cli.main, args=('--path', './', '--postprocess'))
 
     assert not result.exception
 
 
-def test_haggis_with_deposit_and_postprocess_and_path():
+def test_hermes_with_deposit_and_postprocess_and_path():
     runner = CliRunner()
     result = runner.invoke(cli.main, args=('--deposit', '--postprocess', '--path', './'))
 
-    assert not result.exception
+    assert isinstance(result.exception, DepositionUnauthorizedError)

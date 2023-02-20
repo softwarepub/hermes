@@ -84,7 +84,7 @@ class WorkflowCommand(click.Group):
         :param ctx: Context for the command.
         """
 
-        configure()
+        configure(ctx.params.get('config').absolute())
         init_logging()
         log_header(None)
 
@@ -139,20 +139,26 @@ class WorkflowCommand(click.Group):
 
 
 @click.group(cls=WorkflowCommand, invoke_without_command=True)
+@click.option(
+    "--config", default=pathlib.Path('hermes.toml'),
+    help="Configuration file in TOML format", type=pathlib.Path
+)
 @click.option("--deposit", is_flag=True, default=False)
 @click.option("--postprocess", is_flag=True, default=False)
+@click.option("--clean", is_flag=True, default=False)
 @click.option('--path', default=pathlib.Path('./'), help='Working path', type=pathlib.Path)
 @click.pass_context
 def main(ctx: click.Context, *args, **kwargs) -> None:
     """
-    HERMES aggregated interface script
+    HERMES
 
-    This script can be used to run the HERMES pipeline or parts of it.
+    This command runs the HERMES workflow or parts of it.
     """
 
     pass
 
 
+main.add_command(workflow.clean)
 main.add_command(workflow.harvest)
 main.add_command(workflow.process)
 main.add_command(workflow.deposit)

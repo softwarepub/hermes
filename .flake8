@@ -1,0 +1,7 @@
+# SPDX-FileCopyrightText: 2023 German Aerospace Center (DLR), Helmholtz-Zentrum Dresden-Rossendorf
+#
+# SPDX-License-Identifier: CC0-1.0
+
+[flake8]
+max-complexity = 15
+max-line-length = 120

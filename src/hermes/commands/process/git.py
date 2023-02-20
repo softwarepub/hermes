@@ -3,47 +3,73 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # SPDX-FileContributor: Michael Meinel
+# SPDX-FileContributor: Stephan Druskat
 
 import logging
 
 from hermes.model.context import CodeMetaContext, HermesHarvestContext, ContextPath
 
 
-_AUTHOR_KEYS = ('@id', 'email', 'name')
+audit_log = logging.getLogger('audit.git')
 
 
-def flag_authors(ctx: CodeMetaContext, harverst_ctx: HermesHarvestContext):
+def add_contributors(ctx: CodeMetaContext, harvest_ctx: HermesHarvestContext):
     """
-    Identify all authors that are not yet in the target context and flag them with role `Contributor`.
+    Add all git authors and committers with role `Contributor`.
 
     :param ctx: The target context containting harmonized data.
-    :param harverst_ctx: Data as it was harvested.
+    :param harvest_ctx: Data as it was harvested.
     """
-    audit_log = logging.getLogger('audit.git')
     audit_log.info('')
-    audit_log.info('### Flag new authors')
+    audit_log.info('### Add git authors and committers as contributors')
 
-    author_path = ContextPath('author')
     contributor_path = ContextPath('contributor')
 
     tags = {}
     try:
-        data = harverst_ctx.get_data(tags=tags)
+        data = harvest_ctx.get_data(tags=tags)
     except ValueError:
         audit_log.info("- Inconsistent data, skipping.")
         return
 
-    for i, contributor in enumerate(author_path.get_from(data)):
-        query = {k: contributor[k] for k in _AUTHOR_KEYS if k in contributor}
-        author_key, target, path = author_path['*'].resolve(ctx._data, query=query)
-
-        if author_key._item == '*':
-            audit_log.debug('- %s', contributor['name'])
-            if contributor_path not in ctx.keys():
-                ctx.update(contributor_path, [])
-            ctx.update(contributor_path['*'], contributor, tags=tags)
-        else:
-            ctx.update(author_key, contributor, tags=tags)
+    for i, contributor in enumerate(contributor_path.get_from(data)):
+        audit_log.debug('- %s', contributor['name'])
+        if contributor_path not in ctx.keys():
+            ctx.update(contributor_path, [])
+        ctx.update(contributor_path['*'], contributor, tags=tags)
 
     ctx.tags.update(tags)
-    harverst_ctx.finish()
+
+
+def add_branch(ctx: CodeMetaContext, harvest_ctx: HermesHarvestContext):
+    """
+    Add the git branch.
+
+    :param ctx: The target context containting harmonized data.
+    :param harvest_ctx: Data as it was harvested.
+    """
+    audit_log.info('')
+    audit_log.info('### Add git branch')
+
+    branch_path = ContextPath('hermes:gitBranch')
+
+    tags = {}
+    try:
+        data = harvest_ctx.get_data(tags=tags)
+    except ValueError:
+        audit_log.info("- Inconsistent data, skipping.")
+        return
+
+    branch = branch_path.get_from(data)
+    audit_log.debug('- %s', branch)
+    if branch_path not in ctx.keys():
+        ctx.update(branch_path, None)
+    ctx.update(branch_path, branch, tags=tags)
+
+    ctx.tags.update(tags)
+
+
+def process(ctx: CodeMetaContext, harvest_ctx: HermesHarvestContext):
+    add_contributors(ctx, harvest_ctx)
+    add_branch(ctx, harvest_ctx)
+    harvest_ctx.finish()

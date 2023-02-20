@@ -11,7 +11,9 @@ import pathlib
 import typing as t
 
 import click
+from convert_codemeta.validate import validate_codemeta
 
+from hermes.commands.harvest import util
 from hermes.model.context import HermesHarvestContext
 from hermes.model.errors import HermesValidationError
 
@@ -23,11 +25,8 @@ def harvest_codemeta(click_ctx: click.Context, ctx: HermesHarvestContext):
     :param click_ctx: Click context that this command was run inside (might be used to extract command line arguments).
     :param ctx: The harvesting context that should contain the provided metadata.
     """
-    # Get the parent context (every subcommand has its own context with the main click context as parent)
-    parent_ctx = click_ctx.parent
-    if parent_ctx is None:
-        raise RuntimeError('No parent context!')
-    path = parent_ctx.params['path']
+    # Get project path
+    path = util.get_project_path(click_ctx)
 
     # Get source files
     codemeta_file = _get_single_codemeta(path)
@@ -46,8 +45,12 @@ def harvest_codemeta(click_ctx: click.Context, ctx: HermesHarvestContext):
 
 
 def _validate(codemeta_file: pathlib.Path) -> bool:
-    # TODO: Implement
-    return codemeta_file.exists()
+    with open(codemeta_file, 'r') as fi:
+        try:
+            codemeta_json = json.load(fi)
+        except json.decoder.JSONDecodeError as jde:
+            raise HermesValidationError(f'CodeMeta file at {codemeta_file} cannot be decoded into JSON.', jde)
+    return validate_codemeta(codemeta_json)
 
 
 def _get_single_codemeta(path: pathlib.Path) -> t.Optional[pathlib.Path]:

@@ -4,6 +4,7 @@
 
 # SPDX-FileContributor: Stephan Druskat
 # SPDX-FileContributor: Michael Meinel
+# SPDX-FileContributor: David Pape
 
 [tool.poetry]
 name = "hermes"
@@ -16,7 +17,8 @@ authors = [
     "Michael Meinel <michael.meinel@dlr.de>",
     "Oliver Bertuch <o.bertuch@fz-juelich.de>",
     "Jeffrey Kelling <j.kelling@hzdr.de>",
-    "Oliver Knodel <o.knodel@hzd.r.de>"
+    "Oliver Knodel <o.knodel@hzdr.de>",
+    "David Pape <d.pape@hzdr.de>",
 ]
 
 readme = "README.md"
@@ -34,8 +36,10 @@ click = "^8.1"
 "ruamel.yaml" = "^0.17.21"
 jsonschema = "^3.0.0"
 cffconvert = "^2.0.0"
+convert-codemeta = "^0.4.0"
 toml = "^0.10.2"
 pyparsing = "^3.0.9"
+requests = "^2.28.1"
 
 # Packages for developers
 [tool.poetry.group.dev.dependencies]
@@ -67,63 +71,28 @@ reuse = "^1.0.0"
 hermes = "hermes.cli:main"
 
 [tool.poetry.plugins."hermes.harvest"]
-000_cff = "hermes.commands.harvest.cff:harvest_cff"
-010_codemeta = "hermes.commands.harvest.codemeta:harvest_codemeta"
-020_git = "hermes.commands.harvest.git:harvest_git"
+cff = "hermes.commands.harvest.cff:harvest_cff"
+codemeta = "hermes.commands.harvest.codemeta:harvest_codemeta"
+git = "hermes.commands.harvest.git:harvest_git"
 
 [tool.poetry.plugins."hermes.preprocess"]
-000_cff = "hermes.commands.process.cff:add_name"
-020_git = "hermes.commands.process.git:flag_authors"
+cff = "hermes.commands.process.cff:add_name"
+git = "hermes.commands.process.git:process"
 
+[tool.poetry.plugins."hermes.prepare_deposit"]
+invenio = "hermes.commands.deposit.invenio:prepare_deposit"
 
+[tool.poetry.plugins."hermes.metadata_mapping"]
+invenio = "hermes.commands.deposit.invenio:map_metadata"
 
-[tool.hermes.logging.formatters.plain]
-format = "%(message)s"
-
-[tool.hermes.logging.formatters.logfile]
-format = "%(created)16f:%(name)20s:%(levelname)10s | %(message)s"
-
-[tool.hermes.logging.formatters.auditlog]
-format = "%(asctime)s %(name)-20s  %(message)s"
-
-[tool.hermes.logging]
-version = 1
-
-[tool.hermes.logging.handlers.terminal]
-class = "logging.StreamHandler"
-formatter = "plain"
-level = "INFO"
-stream = "ext://sys.stdout"
-
-[tool.hermes.logging.handlers.logfile]
-class = "logging.FileHandler"
-formatter = "logfile"
-level = "DEBUG"
-filename = "hermes.log"
-
-[tool.hermes.logging.handlers.auditfile]
-class = "logging.FileHandler"
-formatter = "plain"
-level = "DEBUG"
-filename = "hermes-audit.md"
-mode = "w"
-
-[tool.hermes.logging.loggers.cli]
-level = "DEBUG"
-handlers = ["terminal"]
-
-[tool.hermes.logging.loggers.hermes]
-level = "DEBUG"
-handlers = ["terminal", "logfile"]
-
-[tool.hermes.logging.loggers.audit]
-level = "DEBUG"
-handlers = ["terminal", "auditfile"]
+[tool.poetry.plugins."hermes.deposit"]
+invenio = "hermes.commands.deposit.invenio:deposit"
 
 [tool.taskipy.tasks]
 docs-build = "poetry run sphinx-build -M html docs/source docs/build -W"
 docs-clean = "poetry run sphinx-build -M clean docs/source docs/build"
 docs-live = "poetry run sphinx-autobuild docs/source docs/build"
+flake8 = "poetry run flake8 ./test/ ./src/ --count --select=E9,F63,F7,F82 --statistics"
 
 [build-system]
 requires = ["poetry-core>=1.2.0"]

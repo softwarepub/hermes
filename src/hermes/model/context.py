@@ -9,6 +9,7 @@ import pathlib
 import traceback
 import json
 import logging
+import shutil
 import typing as t
 
 from pathlib import Path
@@ -36,6 +37,7 @@ class HermesContext:
     """
 
     default_timestamp = datetime.datetime.now().isoformat(timespec='seconds')
+    hermes_cache_name = ".hermes"
 
     def __init__(self, project_dir: t.Optional[Path] = None):
         """
@@ -46,17 +48,40 @@ class HermesContext:
         """
 
         #: Base dir for the hermes metadata cache (default is `.hermes` in the project root).
-        self.hermes_dir = Path(project_dir or '.') / '.hermes'
+        self.hermes_dir = Path(project_dir or '.') / self.hermes_cache_name
 
         self._caches = {}
         self._data = {}
         self._errors = []
+
+    def __getitem__(self, key: ContextPath | str) -> t.Any:
+        """
+        Access a single entry from the context.
+
+        :param key: The path to the item that should be retrieved.
+                    Can be in dotted syntax or as a :class:`ContextPath` instance.
+        :return: The value stored under the given key.
+        """
+        if isinstance(key, str):
+            key = ContextPath.parse(key)
+        return key.get_from(self._data)
 
     def keys(self) -> t.List[ContextPath]:
         """
         Get all the keys for the data stored in this context.
         """
         return [ContextPath.parse(k) for k in self._data.keys()]
+
+    def init_cache(self, *path: str) -> Path:
+        """
+        Initialize a cache directory if not present.
+
+        :param path: The (local) path to identify the requested cache.
+        :return: The path to the requested cache file.
+        """
+        cache_dir = self.hermes_dir.joinpath(*path)
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        return cache_dir
 
     def get_cache(self, *path: str, create: bool = False) -> Path:
         """
@@ -75,9 +100,11 @@ class HermesContext:
             return self._caches[path]
 
         *subdir, name = path
-        cache_dir = self.hermes_dir.joinpath(*subdir)
         if create:
-            cache_dir.mkdir(parents=True, exist_ok=True)
+            cache_dir = self.init_cache(*subdir)
+        else:
+            cache_dir = self.hermes_dir.joinpath(*subdir)
+
         data_file = cache_dir / (name + '.json')
         self._caches[path] = data_file
 
@@ -103,10 +130,10 @@ class HermesContext:
         if data is None:
             data = {}
         if path is not None:
-            data.update(path.get_from(self._data))
+            data.update({str(path): path.get_from(self._data)})
         else:
             for key in self.keys():
-                data.update(key.get_from(self._data))
+                data.update({str(key): key.get_from(self._data)})
         return data
 
     def error(self, ep: EntryPoint, error: Exception):
@@ -118,6 +145,14 @@ class HermesContext:
         """
 
         self._errors.append((ep, error))
+
+    def purge_caches(self) -> None:
+        """
+        Delete `.hermes` cache-directory if it exsis.
+        """
+
+        if self.hermes_dir.exists():
+            shutil.rmtree(self.hermes_dir)
 
 
 class HermesHarvestContext(HermesContext):
@@ -131,12 +166,13 @@ class HermesHarvestContext(HermesContext):
     parent context.
     """
 
-    def __init__(self, base: HermesContext, ep: EntryPoint):
+    def __init__(self, base: HermesContext, ep: EntryPoint, config: dict = None):
         """
         Initialize a new harvesting context.
 
         :param base: The base HermesContext that should receive the results of the harvesting.
         :param ep: The entry point that implements the harvester using this context.
+        :param config: Configuration for the given harvester.
         """
 
         super().__init__()
@@ -144,6 +180,7 @@ class HermesHarvestContext(HermesContext):
         self._base = base
         self._ep = ep
         self._log = logging.getLogger(f'harvest.{self._ep.name}')
+        self.config = config or {}
 
     def load_cache(self):
         """
@@ -173,6 +210,9 @@ class HermesHarvestContext(HermesContext):
         if exc_type is not None and issubclass(exc_type, HermesValidationError):
             exc = traceback.TracebackException(exc_type, exc_val, exc_tb)
             self._base.error(self._ep, exc)
+            self._log.warning("%s: %s",
+                              exc_type,
+                              ' '.join(map(str, exc_val.args)))
             return True
 
     def update(self, _key: str, _value: t.Any, **kwargs: t.Any):

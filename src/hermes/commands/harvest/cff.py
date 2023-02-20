@@ -19,6 +19,7 @@ from cffconvert import Citation
 
 from hermes.model.context import HermesHarvestContext, ContextPath
 from hermes.model.errors import HermesValidationError
+from hermes.commands.harvest import util
 
 # TODO: should this be configurable via a CLI option?
 _CFF_VERSION = '1.2.0'
@@ -34,6 +35,10 @@ def harvest_cff(click_ctx: click.Context, ctx: HermesHarvestContext):
     :param click_ctx: Click context that this command was run inside (might be used to extract command line arguments).
     :param ctx: The harvesting context that should contain the provided metadata.
     """
+
+    # Get project path
+    path = util.get_project_path(click_ctx)
+
     # Get the parent context (every subcommand has its own context with the main click context as parent)
     audit_log = logging.getLogger('audit.cff')
     audit_log.info('')
@@ -42,7 +47,6 @@ def harvest_cff(click_ctx: click.Context, ctx: HermesHarvestContext):
     parent_ctx = click_ctx.parent
     if parent_ctx is None:
         raise RuntimeError('No parent context!')
-    path = parent_ctx.params['path']
 
     # Get source files
     cff_file = _get_single_cff(path)
@@ -55,7 +59,7 @@ def harvest_cff(click_ctx: click.Context, ctx: HermesHarvestContext):
 
     # Validate the content to be correct CFF
     cff_dict = _load_cff_from_file(cff_data)
-    if not _validate(cff_file, cff_dict):
+    if ctx.config.get('validate', True) and not _validate(cff_file, cff_dict):
         raise HermesValidationError(cff_file)
 
     # Convert to CodeMeta using cffconvert
