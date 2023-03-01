@@ -13,4 +13,4 @@ mapping = "invenio"
 target = "invenio"
 
 [deposit.invenio]
-base_url = "https://sandbox.zenodo.org"
+base_url = "https://zenodo.org"
