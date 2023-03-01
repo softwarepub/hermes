@@ -26,6 +26,6 @@ jobs:
       - run: pip install git+https://github.com/sdruskat/workflow.git@deRSE23
       - run: git archive --format zip HEAD src > hermes.zip
       - run: hermes
-      - run: hermes deposit --auth-token ${{ secrets.ZENODO_SANDBOX }} --file hermes.zip --file README.md
+      - run: hermes deposit --auth-token ${{ secrets.ZENODO }} --file hermes.zip --file README.md
       # - run: hermes postprocess # (Not implemented yet)
       # - uses: peter-evans/create-pull-request@v4 (TODO once postprocessing has it)
