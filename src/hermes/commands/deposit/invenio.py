@@ -55,7 +55,7 @@ def map_metadata(click_ctx: click.Context, ctx: CodeMetaContext):
         json.dump(deposition_metadata, invenio_json, indent='  ')
 
 
-def deposit(click_ctx: click.Context, ctx: CodeMetaContext, files: list[click.Path]):
+def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     """Make a deposition on an Invenio-based platform.
 
     This function can:
@@ -77,15 +77,11 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext, files: list[click.Pa
         raise DepositionUnauthorizedError("No auth token given for deposition platform")
     click_ctx.session.headers["Authorization"] = f"Bearer {click_ctx.params['auth_token']}"
 
-    # Any deposit must have at least one file - raise error otherwise.
-    if len(files) == 0:
-        raise ValueError("You must provide at least one file for upload (requirement by Invenio)")
-
     existing_record_url = None
 
     deposit_url = f"{invenio_ctx['siteUrl']}/{invenio_ctx['apiPaths']['depositions']}"
     if existing_record_url is not None:
-        # TODO: Get by calling new version on existing record
+        # TODO: Get by calling new version on latest existing record
         deposit_url = None
         raise NotImplementedError(
             "At the moment, hermes can not create new versions of existing records"
@@ -109,6 +105,7 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext, files: list[click.Pa
     # supports file sizes above 100MB.
     bucket_url = deposit["links"]["bucket"]
 
+    files: list[click.Path] = click_ctx.params["file"]
     for path_arg in files:
         path = Path(path_arg)
 

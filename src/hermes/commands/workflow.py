@@ -212,7 +212,7 @@ def deposit(click_ctx: click.Context, auth_token, file):
     )
     if deposition_entrypoints:
         deposition = deposition_entrypoints[0].load()
-        deposition(click_ctx, ctx, file)
+        deposition(click_ctx, ctx)
 
 
 @click.group(invoke_without_command=True)
