@@ -5,6 +5,7 @@
 # SPDX-FileContributor: Stephan Druskat
 # SPDX-FileContributor: Michael Meinel
 # SPDX-FileContributor: David Pape
+# SPDX-FileContributor: Oliver Bertuch
 
 import json
 import logging
@@ -127,11 +128,21 @@ def process():
 
 
 @click.group(invoke_without_command=True)
-@click.option("--auth-token", envvar="HERMES_DEPOSITION_AUTH_TOKEN")
+@click.option(
+    "--auth-token", envvar="HERMES_DEPOSITION_AUTH_TOKEN",
+    help="Token used to authenticate the user with the target deposition platform. "
+         "Can be passed on the command line or as an environment variable."
+)
+@click.option(
+    "--file", "-f", multiple=True, required=True,
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+    help="Files to be uploaded on the target deposition platform. "
+         "This option may be passed multiple times."
+)
 @click.pass_context
-def deposit(click_ctx: click.Context, auth_token):
+def deposit(click_ctx: click.Context, auth_token, file):
     """
-    Deposit processed (and curated) metadata
+    Deposit processed (and curated) metadata.
     """
     click.echo("Metadata deposition")
     _log = logging.getLogger("cli.deposit")
