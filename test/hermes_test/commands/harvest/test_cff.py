@@ -74,8 +74,8 @@ def codemeta_with_email():
       "author": [
         {
           "@type": "Person",
-          "name": "Author",
-          "email": "em@il.notexist"
+          "email": "em@il.notexist",
+          "name": "Author"
         }
       ],
       "name": "Title"
@@ -101,4 +101,4 @@ def valid_minimal_cff_with_email(tmp_path):
 
 def test_convert_cff_to_codemeta_with_email(valid_minimal_cff_with_email, codemeta_with_email):
     actual_result = harvest._convert_cff_to_codemeta(valid_minimal_cff_with_email.read_text())
-    assert codemeta == actual_result
+    assert codemeta_with_email == actual_result
