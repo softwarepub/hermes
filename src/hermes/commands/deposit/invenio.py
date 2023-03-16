@@ -92,9 +92,7 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
         deposit_url,
         json={"metadata": deposition_metadata}
     )
-    try:
-        response.raise_for_status()
-    except HTTPError:
+    if not response.ok:
         _log.warning(response.json())
         click_ctx.exit(1)
 
@@ -118,9 +116,7 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
                 f"{bucket_url}/{path.name}",
                 data=file_content
             )
-            try:
-                response.raise_for_status()
-            except HTTPError:
+            if not response.ok:
                 _log.warning(response.json())
                 click_ctx.exit(1)
 
@@ -129,9 +125,7 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
 
     publish_url = deposit["links"]["publish"]
     response = click_ctx.session.post(publish_url)
-    try:
-        response.raise_for_status()
-    except HTTPError:
+    if not response.ok:
         _log.warning(response.json())
         click_ctx.exit(1)
 
