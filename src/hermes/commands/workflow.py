@@ -17,6 +17,7 @@ import requests
 from hermes import config
 from hermes.model.context import HermesContext, HermesHarvestContext, CodeMetaContext
 from hermes.model.errors import MergeError
+from hermes.model.path import ContextPath
 from hermes.utils import hermes_user_agent
 
 
@@ -153,9 +154,6 @@ def deposit(click_ctx: click.Context, auth_token, file):
     click_ctx.session.headers = {
         "User-Agent": hermes_user_agent,
     }
-
-    # local import that can be removed later
-    from hermes.model.path import ContextPath
 
     ctx = CodeMetaContext()
 
