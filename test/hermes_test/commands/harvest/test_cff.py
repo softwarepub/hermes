@@ -66,7 +66,6 @@ def test_validate_fail():
     assert harvest._validate(pathlib.Path("foobar"), {}) is False
 
 
-
 # Regression test for https://github.com/hermes-hmc/workflow/issues/112
 
 @pytest.fixture
