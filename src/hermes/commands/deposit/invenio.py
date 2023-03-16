@@ -92,7 +92,7 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
         json={"metadata": deposition_metadata}
     )
     if not response.ok:
-        _log.warning(response.json())
+        _log.error(f"Could not update metadata of deposit {deposit_url!r}")
         click_ctx.exit(1)
 
     deposit = response.json()
@@ -116,7 +116,7 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
                 data=file_content
             )
             if not response.ok:
-                _log.warning(response.json())
+                _log.error(f"Could not upload file {path.name!r} into bucket {bucket_url!r}")
                 click_ctx.exit(1)
 
     # This can potentially be used to verify the checksum
@@ -125,7 +125,7 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     publish_url = deposit["links"]["publish"]
     response = click_ctx.session.post(publish_url)
     if not response.ok:
-        _log.warning(response.json())
+        _log.error(f"Could not publish deposit via {publish_url!r}")
         click_ctx.exit(1)
 
     record = response.json()
