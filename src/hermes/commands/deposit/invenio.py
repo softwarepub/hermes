@@ -11,7 +11,6 @@ from datetime import date
 from pathlib import Path
 
 import click
-from requests.exceptions import HTTPError
 
 from hermes.commands.deposit.error import DepositionUnauthorizedError
 from hermes.model.context import CodeMetaContext
