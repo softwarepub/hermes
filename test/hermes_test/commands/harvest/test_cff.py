@@ -29,7 +29,7 @@ def codemeta():
     }""")
 
 
-@pytest.fixture()
+@pytest.fixture
 def valid_minimal_cff(tmp_path):
     cff = """\
     cff-version: 1.2.0
@@ -84,7 +84,7 @@ def codemeta_with_email():
     }""")
 
 
-@pytest.fixture()
+@pytest.fixture
 def valid_minimal_cff_with_email(tmp_path):
     cff = """\
     cff-version: 1.2.0
