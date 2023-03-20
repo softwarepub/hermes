@@ -12,9 +12,14 @@ from pathlib import Path
 
 import click
 
+from hermes import config
 from hermes.commands.deposit.error import DepositionUnauthorizedError
 from hermes.model.context import CodeMetaContext
 from hermes.model.path import ContextPath
+
+_DEFAULT_SITE_URL = "https://sandbox.zenodo.org"
+_DEFAULT_DEPOSITIONS_API_PATH = "api/deposit/depositions"
+_DEFAULT_RECORD_SCHEMA_PATH = "api/schemas/records/record-v1.0.0.json"
 
 
 # TODO: It turns out that the schema downloaded here can not be used. Figure out what to
@@ -28,10 +33,13 @@ def prepare_deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     """
 
     invenio_path = ContextPath.parse("deposit.invenio")
+    invenio_config = config.get("deposit").get("invenio", {})
 
-    invenio_ctx = ctx[invenio_path]
-    # TODO: Get these values from config with reasonable defaults.
-    recordSchemaUrl = f"{invenio_ctx['siteUrl']}/{invenio_ctx['schemaPaths']['record']}"
+    site_url = invenio_config.get("site_url", _DEFAULT_SITE_URL)
+    record_schema_path = invenio_config.get("schema_paths", {}).get(
+        "record", _DEFAULT_RECORD_SCHEMA_PATH
+    )
+    recordSchemaUrl = f"{site_url}/{record_schema_path}"
 
     # TODO: cache this download in HERMES cache dir
     # TODO: ensure to use from cache instead of download if not expired (needs config)
@@ -69,6 +77,7 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
 
     _log = logging.getLogger("cli.deposit.invenio")
 
+    invenio_config = config.get("deposit").get("invenio", {})
     invenio_path = ContextPath.parse("deposit.invenio")
     invenio_ctx = ctx[invenio_path]
 
@@ -78,7 +87,12 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
 
     existing_record_url = None
 
-    deposit_url = f"{invenio_ctx['siteUrl']}/{invenio_ctx['apiPaths']['depositions']}"
+    site_url = invenio_config.get("site_url", _DEFAULT_SITE_URL)
+    depositions_api_path = invenio_config.get("api_paths", {}).get(
+        "depositions", _DEFAULT_DEPOSITIONS_API_PATH
+    )
+    deposit_url = f"{site_url}/{depositions_api_path}"
+
     if existing_record_url is not None:
         # TODO: Get by calling new version on latest existing record
         deposit_url = None
