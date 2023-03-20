@@ -7,9 +7,12 @@
 import json
 import logging
 from datetime import date, datetime
+from urllib.parse import urlparse
 
 import click
+import requests
 
+from hermes import config
 from hermes.model.context import CodeMetaContext
 from hermes.model.path import ContextPath
 
@@ -27,6 +30,7 @@ def prepare_deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     """
 
     invenio_path = ContextPath.parse("deposit.invenio")
+    latest_id = _resolve_latest_invenio_id(ctx)
 
     invenio_ctx = ctx[invenio_path]
     # TODO: Get these values from config with reasonable defaults.
@@ -111,6 +115,90 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
 
     record = response.json()
     _log.info("Published record: %s", record["links"]["record_html"])
+
+
+def _resolve_latest_invenio_id(ctx: CodeMetaContext) -> str:
+    """
+    Using the given configuration and metadata, figure out the latest record id.
+
+    If a record id is present as configuration ``deposit.invenio.record_id`` this one will be used to identify the
+    latest version of the record. Otherwise, if there is a doi present (either as configuration with key
+    ``deposit.invenio.doi``  or as a codemeta identifier, the DOI will be used to resolve the base record id.
+
+    Anyway, the record id will always be use to resolve the latest version.
+
+    If some of the resolution steps fail or produce an unexpected result, a ValueError will be thrown.
+
+    :param ctx: The context for which the record id should be resolved.
+    :return: The Invenio record id.
+    """
+
+    cfg = config.get('deposit').get('invenio', {})
+    base_url = cfg.get('base_url', 'https://sandbox.zenodo.org')
+    record_id = cfg.get('record_id')
+
+    # Check if we configured an Invenio record ID (of the concept...)
+    if record_id is None:
+        doi = cfg.get('doi')
+        if doi is None:
+            # TODO: There might be more seantic in the codemeta.identifier... (also see schema.org)
+            identifier = ctx['codemeta.identifier']
+            if identifier.startswith('https://doi.org/'):
+                doi = identifier[16:]
+
+        if doi is not None:
+            # If we got a DOI, resolve it (using doi.org) into a Invenio URL ... and extract the record id.
+            record_id = _invenio_resolve_doi(base_url, doi)
+
+    if record_id is not None:
+        # If we got a record id by now, resolve it using the Invenio API to the latests record.
+        return _invenio_resolve_record_id(base_url, record_id)
+
+
+def _invenio_resolve_doi(base_url, doi) -> str:
+    """
+    Resolve an DOI to a Invenio URL and extract the record id.
+
+    :param base_url: Root URL for the Invenio instance to use.
+    :param doi: The DOI to be resolved (only the identifier *without* the ``https://doi.org/`` prefix).
+    :return: The record ID on the respective instance.
+    """
+
+    res = requests.get(f'https://doi.org/{doi}')
+
+    # This is a mean hack due to DataCite answering a 404 with a 200 status
+    if res.url == 'https://datacite.org/404.html':
+        raise ValueError(f"Invalid DOI: {doi}")
+
+    # Ensure the resolved record is on the correct instance
+    if not res.url.startswith(base_url):
+        raise ValueError(f"{res.url} is not on configured host {base_url}.")
+
+    # Extract the record id as last part of the URL path
+    page_url = urlparse(res.url)
+    *_, record_id = page_url.path.split('/')
+    return record_id
+
+
+def _invenio_resolve_record_id(base_url: str, record_id: str) -> str:
+    """
+    Find the latest version of a given record.
+
+    :param base_url: Root URL for the Invenio instance to use.
+    :param record_id: The record that sould be resolved.
+    :return: The record id of the latest version for the requested record.
+    """
+    res = requests.get(f"{base_url}/api/records/{record_id}")
+    if res.status_code != 200:
+        raise ValueError(f"Could not retrieve record from {res.url}: {res.text}")
+
+    res_json = res.json()
+    res = requests.get(res_json['links']['latest'])
+    if res.status_code != 200:
+        raise ValueError(f"Could not retrieve record from {res.url}: {res.text}")
+
+    res_json = res.json()
+    return res_json['id']
 
 
 def _codemeta_to_invenio_deposition(metadata: dict) -> dict:
