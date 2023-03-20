@@ -148,13 +148,13 @@ def deposit(click_ctx: click.Context, auth_token, file):
     click.echo("Metadata deposition")
     _log = logging.getLogger("cli.deposit")
 
-    # TODO: Move into context object
-    # TODO: Better name than session?
-    # TODO: If this is needed in more places, it could be moved one level up.
-    click_ctx.session = requests.Session()
-    click_ctx.session.headers = {
+    http_client = requests.Session()
+    http_client.headers = {
         "User-Agent": hermes_user_agent,
     }
+
+    click_ctx.ensure_object(dict)
+    click_ctx.obj["http_client"] = http_client
 
     ctx = CodeMetaContext()
 

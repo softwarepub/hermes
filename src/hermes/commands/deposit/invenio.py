@@ -41,9 +41,10 @@ def prepare_deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     )
     record_schema_url = f"{site_url}/{record_schema_path}"
 
+    http_client = click_ctx.obj.get("http_client")
     # TODO: cache this download in HERMES cache dir
     # TODO: ensure to use from cache instead of download if not expired (needs config)
-    response = click_ctx.session.get(record_schema_url)
+    response = http_client.get(record_schema_url)
     response.raise_for_status()
     record_schema = response.json()
     ctx.update(invenio_path["requiredSchema"], record_schema)
@@ -83,7 +84,9 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
 
     if not click_ctx.params["auth_token"]:
         raise DepositionUnauthorizedError("No auth token given for deposition platform")
-    click_ctx.session.headers["Authorization"] = f"Bearer {click_ctx.params['auth_token']}"
+
+    http_client = click_ctx.obj.get("http_client")
+    http_client.headers["Authorization"] = f"Bearer {click_ctx.params['auth_token']}"
 
     existing_record_url = None
 
@@ -101,7 +104,7 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
         )
 
     deposition_metadata = invenio_ctx["depositionMetadata"]
-    response = click_ctx.session.post(
+    response = http_client.post(
         deposit_url,
         json={"metadata": deposition_metadata}
     )
@@ -125,7 +128,7 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
             raise ValueError("Any given argument to be included in the deposit must be a file.")
 
         with open(path, "rb") as file_content:
-            response = click_ctx.session.put(
+            response = http_client.put(
                 f"{bucket_url}/{path.name}",
                 data=file_content
             )
@@ -137,7 +140,7 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     # file_resource = response.json()
 
     publish_url = deposit["links"]["publish"]
-    response = click_ctx.session.post(publish_url)
+    response = http_client.post(publish_url)
     if not response.ok:
         _log.error(f"Could not publish deposit via {publish_url!r}")
         click_ctx.exit(1)
