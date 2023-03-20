@@ -4,10 +4,11 @@
 
 # SPDX-FileContributor: David Pape
 # SPDX-FileContributor: Oliver Bertuch
+# SPDX-FileContributor: Michael Meinel
 
 import json
 import logging
-from datetime import date, datetime
+from datetime import date
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -31,7 +32,7 @@ def prepare_deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     """
 
     invenio_path = ContextPath.parse("deposit.invenio")
-    latest_id = _resolve_latest_invenio_id(ctx)
+    _resolve_latest_invenio_id(ctx)
 
     invenio_ctx = ctx[invenio_path]
     # TODO: Get these values from config with reasonable defaults.
