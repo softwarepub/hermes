@@ -36,5 +36,6 @@ jobs:
           flake8 ./test/ ./src/ --count --statistics
       - name: Test with pytest
         run: |
-          pip install -e ".[dev]"
+          pip install -e .
+          pip install requests-mock
           pytest ./test/
