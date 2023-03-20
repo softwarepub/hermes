@@ -39,14 +39,14 @@ def prepare_deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     record_schema_path = invenio_config.get("schema_paths", {}).get(
         "record", _DEFAULT_RECORD_SCHEMA_PATH
     )
-    recordSchemaUrl = f"{site_url}/{record_schema_path}"
+    record_schema_url = f"{site_url}/{record_schema_path}"
 
     # TODO: cache this download in HERMES cache dir
     # TODO: ensure to use from cache instead of download if not expired (needs config)
-    response = click_ctx.session.get(recordSchemaUrl)
+    response = click_ctx.session.get(record_schema_url)
     response.raise_for_status()
-    recordSchema = response.json()
-    ctx.update(invenio_path["requiredSchema"], recordSchema)
+    record_schema = response.json()
+    ctx.update(invenio_path["requiredSchema"], record_schema)
 
 
 def map_metadata(click_ctx: click.Context, ctx: CodeMetaContext):
