@@ -181,6 +181,7 @@ class HermesHarvestContext(HermesContext):
         self._ep = ep
         self._log = logging.getLogger(f'harvest.{self._ep.name}')
         self.config = config or {}
+        self.contexts = set()
 
     def load_cache(self):
         """
@@ -351,6 +352,15 @@ class HermesHarvestContext(HermesContext):
         Calling this method will lead to further processors not handling the context anymore.
         """
         self._data.clear()
+
+
+    def add_context(self, new_context: tuple) -> None:
+        """
+        Add a new linked data context to the harvest context.
+
+        :param new_context: The new context as tuple (context name, context URI)
+        """
+        self.contexts.add(new_context)
 
 
 class CodeMetaContext(HermesContext):
