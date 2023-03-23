@@ -12,13 +12,11 @@ import logging
 from importlib import metadata
 
 import click
-import requests
 
 from hermes import config
 from hermes.model.context import HermesContext, HermesHarvestContext, CodeMetaContext
 from hermes.model.errors import MergeError
 from hermes.model.path import ContextPath
-from hermes.utils import hermes_user_agent
 
 
 @click.group(invoke_without_command=True)
@@ -147,14 +145,6 @@ def deposit(click_ctx: click.Context, auth_token, file):
     """
     click.echo("Metadata deposition")
     _log = logging.getLogger("cli.deposit")
-
-    http_client = requests.Session()
-    http_client.headers = {
-        "User-Agent": hermes_user_agent,
-    }
-
-    click_ctx.ensure_object(dict)
-    click_ctx.obj["http_client"] = http_client
 
     ctx = CodeMetaContext()
 
