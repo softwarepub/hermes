@@ -15,11 +15,11 @@ import requests
 
 from hermes import config
 from hermes.commands.deposit.error import DepositionUnauthorizedError
+from hermes.error import MisconfigurationError
 from hermes.model.context import CodeMetaContext
 from hermes.model.path import ContextPath
 from hermes.utils import hermes_user_agent
 
-_DEFAULT_SITE_URL = "https://sandbox.zenodo.org"
 _DEFAULT_DEPOSITIONS_API_PATH = "api/deposit/depositions"
 _DEFAULT_RECORD_SCHEMA_PATH = "api/schemas/records/record-v1.0.0.json"
 
@@ -37,7 +37,10 @@ def prepare_deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     invenio_path = ContextPath.parse("deposit.invenio")
     invenio_config = config.get("deposit").get("invenio", {})
 
-    site_url = invenio_config.get("site_url", _DEFAULT_SITE_URL)
+    site_url = invenio_config.get("site_url")
+    if site_url is None:
+        raise MisconfigurationError("invenio.site_url is not configured")
+
     record_schema_path = invenio_config.get("schema_paths", {}).get(
         "record", _DEFAULT_RECORD_SCHEMA_PATH
     )
