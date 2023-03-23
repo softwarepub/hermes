@@ -17,8 +17,13 @@ import requests
 
 from hermes import config
 from hermes.commands.deposit.error import DepositionUnauthorizedError
+from hermes.error import MisconfigurationError
 from hermes.model.context import CodeMetaContext
 from hermes.model.path import ContextPath
+from hermes.utils import hermes_user_agent
+
+_DEFAULT_DEPOSITIONS_API_PATH = "api/deposit/depositions"
+_DEFAULT_RECORD_SCHEMA_PATH = "api/schemas/records/record-v1.0.0.json"
 
 
 # TODO: It turns out that the schema downloaded here can not be used. Figure out what to
@@ -32,18 +37,26 @@ def prepare_deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     """
 
     invenio_path = ContextPath.parse("deposit.invenio")
-    _resolve_latest_invenio_id(ctx)
+    invenio_config = config.get("deposit").get("invenio", {})
+    _ = _resolve_latest_invenio_id(ctx)
 
-    invenio_ctx = ctx[invenio_path]
-    # TODO: Get these values from config with reasonable defaults.
-    recordSchemaUrl = f"{invenio_ctx['siteUrl']}/{invenio_ctx['schemaPaths']['record']}"
+    site_url = invenio_config.get("site_url")
+    if site_url is None:
+        raise MisconfigurationError("deposit.invenio.site_url is not configured")
+
+    record_schema_path = invenio_config.get("schema_paths", {}).get(
+        "record", _DEFAULT_RECORD_SCHEMA_PATH
+    )
+    record_schema_url = f"{site_url}/{record_schema_path}"
 
     # TODO: cache this download in HERMES cache dir
     # TODO: ensure to use from cache instead of download if not expired (needs config)
-    response = click_ctx.session.get(recordSchemaUrl)
+    response = requests.get(
+        record_schema_url, headers={"User-Agent": hermes_user_agent}
+    )
     response.raise_for_status()
-    recordSchema = response.json()
-    ctx.update(invenio_path["requiredSchema"], recordSchema)
+    record_schema = response.json()
+    ctx.update(invenio_path["requiredSchema"], record_schema)
 
 
 def map_metadata(click_ctx: click.Context, ctx: CodeMetaContext):
@@ -74,16 +87,30 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
 
     _log = logging.getLogger("cli.deposit.invenio")
 
+    invenio_config = config.get("deposit").get("invenio", {})
     invenio_path = ContextPath.parse("deposit.invenio")
     invenio_ctx = ctx[invenio_path]
 
     if not click_ctx.params["auth_token"]:
         raise DepositionUnauthorizedError("No auth token given for deposition platform")
-    click_ctx.session.headers["Authorization"] = f"Bearer {click_ctx.params['auth_token']}"
+
+    session = requests.Session()
+    session.headers = {
+        "User-Agent": hermes_user_agent,
+        "Authorization": f"Bearer {click_ctx.params['auth_token']}",
+    }
 
     existing_record_url = None
 
-    deposit_url = f"{invenio_ctx['siteUrl']}/{invenio_ctx['apiPaths']['depositions']}"
+    site_url = invenio_config.get("site_url")
+    if site_url is None:
+        raise MisconfigurationError("deposit.invenio.site_url is not configured")
+
+    depositions_api_path = invenio_config.get("api_paths", {}).get(
+        "depositions", _DEFAULT_DEPOSITIONS_API_PATH
+    )
+    deposit_url = f"{site_url}/{depositions_api_path}"
+
     if existing_record_url is not None:
         # TODO: Get by calling new version on latest existing record
         deposit_url = None
@@ -92,7 +119,7 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
         )
 
     deposition_metadata = invenio_ctx["depositionMetadata"]
-    response = click_ctx.session.post(
+    response = session.post(
         deposit_url,
         json={"metadata": deposition_metadata}
     )
@@ -116,7 +143,7 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
             raise ValueError("Any given argument to be included in the deposit must be a file.")
 
         with open(path, "rb") as file_content:
-            response = click_ctx.session.put(
+            response = session.put(
                 f"{bucket_url}/{path.name}",
                 data=file_content
             )
@@ -128,7 +155,7 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     # file_resource = response.json()
 
     publish_url = deposit["links"]["publish"]
-    response = click_ctx.session.post(publish_url)
+    response = session.post(publish_url)
     if not response.ok:
         _log.error(f"Could not publish deposit via {publish_url!r}")
         click_ctx.exit(1)
@@ -154,7 +181,7 @@ def _resolve_latest_invenio_id(ctx: CodeMetaContext) -> str:
     """
 
     cfg = config.get('deposit').get('invenio', {})
-    base_url = cfg.get('base_url', 'https://sandbox.zenodo.org')
+    base_url = cfg.get('site_url')
     record_id = cfg.get('record_id')
 
     # Check if we configured an Invenio record ID (of the concept...)
