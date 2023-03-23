@@ -172,9 +172,9 @@ def _resolve_latest_invenio_id(ctx: CodeMetaContext) -> str:
     latest version of the record. Otherwise, if there is a doi present (either as configuration with key
     ``deposit.invenio.doi``  or as a codemeta identifier, the DOI will be used to resolve the base record id.
 
-    Anyway, the record id will always be use to resolve the latest version.
+    Anyway, the record id will always be used to resolve the latest version.
 
-    If some of the resolution steps fail or produce an unexpected result, a ValueError will be thrown.
+    If any of the resolution steps fail or produce an unexpected result, a ValueError will be thrown.
 
     :param ctx: The context for which the record id should be resolved.
     :return: The Invenio record id.
@@ -190,10 +190,12 @@ def _resolve_latest_invenio_id(ctx: CodeMetaContext) -> str:
     if record_id is None:
         doi = invenio_config.get('doi')
         if doi is None:
-            # TODO: There might be more seantic in the codemeta.identifier... (also see schema.org)
+            # TODO: There might be more semantic in the codemeta.identifier... (also see schema.org)
             identifier = ctx['codemeta.identifier']
             if identifier.startswith('https://doi.org/'):
                 doi = identifier[16:]
+            elif identifier.startswith('http://dx.doi.org/'):
+                doi = identifier[18:]
 
         if doi is not None:
             # If we got a DOI, resolve it (using doi.org) into a Invenio URL ... and extract the record id.
@@ -202,6 +204,8 @@ def _resolve_latest_invenio_id(ctx: CodeMetaContext) -> str:
     if record_id is not None:
         # If we got a record id by now, resolve it using the Invenio API to the latests record.
         return _invenio_resolve_record_id(site_url, record_id)
+
+    raise ValueError("Could not figure out how to retrieve record id.")
 
 
 def _invenio_resolve_doi(site_url, doi) -> str:
