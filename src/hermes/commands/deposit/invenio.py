@@ -99,7 +99,10 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
 
     existing_record_url = None
 
-    site_url = invenio_config.get("site_url", _DEFAULT_SITE_URL)
+    site_url = invenio_config.get("site_url")
+    if site_url is None:
+        raise MisconfigurationError("deposit.invenio.site_url is not configured")
+
     depositions_api_path = invenio_config.get("api_paths", {}).get(
         "depositions", _DEFAULT_DEPOSITIONS_API_PATH
     )
