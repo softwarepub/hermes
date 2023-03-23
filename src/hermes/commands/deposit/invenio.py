@@ -180,13 +180,15 @@ def _resolve_latest_invenio_id(ctx: CodeMetaContext) -> str:
     :return: The Invenio record id.
     """
 
-    cfg = config.get('deposit').get('invenio', {})
-    base_url = cfg.get('site_url')
-    record_id = cfg.get('record_id')
+    invenio_config = config.get('deposit').get('invenio', {})
+    site_url = invenio_config.get('site_url')
+    if site_url is None:
+        raise MisconfigurationError("deposit.invenio.site_url is not configured")
 
     # Check if we configured an Invenio record ID (of the concept...)
+    record_id = invenio_config.get('record_id')
     if record_id is None:
-        doi = cfg.get('doi')
+        doi = invenio_config.get('doi')
         if doi is None:
             # TODO: There might be more seantic in the codemeta.identifier... (also see schema.org)
             identifier = ctx['codemeta.identifier']
@@ -195,18 +197,18 @@ def _resolve_latest_invenio_id(ctx: CodeMetaContext) -> str:
 
         if doi is not None:
             # If we got a DOI, resolve it (using doi.org) into a Invenio URL ... and extract the record id.
-            record_id = _invenio_resolve_doi(base_url, doi)
+            record_id = _invenio_resolve_doi(site_url, doi)
 
     if record_id is not None:
         # If we got a record id by now, resolve it using the Invenio API to the latests record.
-        return _invenio_resolve_record_id(base_url, record_id)
+        return _invenio_resolve_record_id(site_url, record_id)
 
 
-def _invenio_resolve_doi(base_url, doi) -> str:
+def _invenio_resolve_doi(site_url, doi) -> str:
     """
     Resolve an DOI to a Invenio URL and extract the record id.
 
-    :param base_url: Root URL for the Invenio instance to use.
+    :param site_url: Root URL for the Invenio instance to use.
     :param doi: The DOI to be resolved (only the identifier *without* the ``https://doi.org/`` prefix).
     :return: The record ID on the respective instance.
     """
@@ -218,8 +220,8 @@ def _invenio_resolve_doi(base_url, doi) -> str:
         raise ValueError(f"Invalid DOI: {doi}")
 
     # Ensure the resolved record is on the correct instance
-    if not res.url.startswith(base_url):
-        raise ValueError(f"{res.url} is not on configured host {base_url}.")
+    if not res.url.startswith(site_url):
+        raise ValueError(f"{res.url} is not on configured host {site_url}.")
 
     # Extract the record id as last part of the URL path
     page_url = urlparse(res.url)
@@ -227,15 +229,15 @@ def _invenio_resolve_doi(base_url, doi) -> str:
     return record_id
 
 
-def _invenio_resolve_record_id(base_url: str, record_id: str) -> str:
+def _invenio_resolve_record_id(site_url: str, record_id: str) -> str:
     """
     Find the latest version of a given record.
 
-    :param base_url: Root URL for the Invenio instance to use.
+    :param site_url: Root URL for the Invenio instance to use.
     :param record_id: The record that sould be resolved.
     :return: The record id of the latest version for the requested record.
     """
-    res = requests.get(f"{base_url}/api/records/{record_id}")
+    res = requests.get(f"{site_url}/api/records/{record_id}")
     if res.status_code != 200:
         raise ValueError(f"Could not retrieve record from {res.url}: {res.text}")
 
