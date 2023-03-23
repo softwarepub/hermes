@@ -39,7 +39,7 @@ def prepare_deposit(click_ctx: click.Context, ctx: CodeMetaContext):
 
     site_url = invenio_config.get("site_url")
     if site_url is None:
-        raise MisconfigurationError("invenio.site_url is not configured")
+        raise MisconfigurationError("deposit.invenio.site_url is not configured")
 
     record_schema_path = invenio_config.get("schema_paths", {}).get(
         "record", _DEFAULT_RECORD_SCHEMA_PATH
