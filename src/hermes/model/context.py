@@ -202,6 +202,11 @@ class HermesHarvestContext(HermesContext):
         self._log.debug("Writing cache to %s...", data_file)
         json.dump(self._data, data_file.open('w'), indent=2)
 
+        if self.contexts:
+            contexts_file = self.get_cache('harvest', self._ep.name + '_contexts', create=True)
+            self._log.debug("Writing contexts to %s...", contexts_file)
+            json.dump(list(self.contexts), contexts_file.open('w'), indent=2)
+
     def __enter__(self):
         self.load_cache()
         return self
@@ -352,7 +357,6 @@ class HermesHarvestContext(HermesContext):
         Calling this method will lead to further processors not handling the context anymore.
         """
         self._data.clear()
-
 
     def add_context(self, new_context: tuple) -> None:
         """
