@@ -379,12 +379,25 @@ class CodeMetaContext(HermesContext):
         'author': ('@id', 'email', 'name'),
     }
 
+    _CODEMETA_CONTEXT_URL = "https://doi.org/10.5063/schema/codemeta-2.0"
+
     def __init__(self, project_dir: pathlib.Path | None = None):
         super().__init__(project_dir)
         self.tags = {}
+        self.contexts = set()
 
     def merge_from(self, other: HermesHarvestContext):
         other.get_data(self._data, tags=self.tags)
+
+    def merge_contexts_from(self, other: HermesHarvestContext):
+        """
+        Merges any linked data contexts from a harvesting context into the instance's set of contexts.
+
+        :param other: The :py:class:`HermesHarvestContext` to merge the linked data contexts from
+        """
+        if other.contexts:
+            for context in other.contexts:
+                self.contexts.add(context)
 
     def update(self, _key: ContextPath, _value: t.Any, tags: t.Dict[str, t.Dict] | None = None):
         if _key._item == '*':
@@ -415,3 +428,13 @@ class CodeMetaContext(HermesContext):
             if any(other.get(k, None) == v for k, v in match):
                 return item[i]
         return None
+
+    def prepare_codemeta(self):
+        """
+        Updates the linked data contexts, where the CodeMeta context is the default context,
+        and any additional contexts are named contexts.
+        Also sets the type to 'SoftwareSourceCode'.
+        """
+        if self.contexts:
+            self.update(ContextPath('@context'), [self._CODEMETA_CONTEXT_URL, dict(self.contexts)])
+        self.update(ContextPath('@type'), 'SoftwareSourceCode')
