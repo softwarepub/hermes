@@ -193,6 +193,13 @@ class HermesHarvestContext(HermesContext):
             self._log.debug("Loading cache from %s...", data_file)
             self._data = json.load(data_file.open('r'))
 
+        contexts_file = self._base.get_cache('harvest', self._ep.name + '_contexts')
+        if contexts_file.is_file():
+            self._log.debug("Loading contexts from %s...", contexts_file)
+            contexts = json.load(contexts_file.open('r'))
+            for context in contexts:
+                self.contexts.add((tuple(context)))
+
     def store_cache(self):
         """
         Store the collected data to the :py:attr:`HermesContext.hermes_dir`.
