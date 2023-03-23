@@ -12,12 +12,11 @@ import logging
 from importlib import metadata
 
 import click
-import requests
 
 from hermes import config
 from hermes.model.context import HermesContext, HermesHarvestContext, CodeMetaContext
 from hermes.model.errors import MergeError
-from hermes.utils import hermes_user_agent
+from hermes.model.path import ContextPath
 
 
 @click.group(invoke_without_command=True)
@@ -147,16 +146,6 @@ def deposit(click_ctx: click.Context, auth_token, file):
     click.echo("Metadata deposition")
     _log = logging.getLogger("cli.deposit")
 
-    # TODO: Better name than session?
-    # TODO: If this is needed in more places, it could be moved one level up.
-    click_ctx.session = requests.Session()
-    click_ctx.session.headers = {
-        "User-Agent": hermes_user_agent,
-    }
-
-    # local import that can be removed later
-    from hermes.model.path import ContextPath
-
     ctx = CodeMetaContext()
 
     codemeta_file = ctx.get_cache("process", "codemeta")
@@ -168,29 +157,12 @@ def deposit(click_ctx: click.Context, auth_token, file):
     with open(codemeta_file) as codemeta_fh:
         ctx.update(codemeta_path, json.load(codemeta_fh))
 
-    # TODO: Remove this
-    deposition_platform_path = ContextPath("depositionPlatform")
-    deposit_invenio_path = ContextPath.parse("deposit.invenio")
-
-    # TODO: Remove this
-    # Which kind of platform do we target here? For now, we just put "invenio" there.
-    ctx.update(deposition_platform_path, "invenio")
-
-    # TODO: Remove this
-    # There are many Invenio instances. For now, we just use Zenodo as a default.
-    ctx.update(deposit_invenio_path["siteUrl"], "https://sandbox.zenodo.org")
-    ctx.update(
-        deposit_invenio_path["schemaPaths"]["record"],
-        "api/schemas/records/record-v1.0.0.json"
-    )
-    ctx.update(
-        deposit_invenio_path["apiPaths"]["depositions"],
-        "api/deposit/depositions"
-    )
+    deposit_config = config.get("deposit")
 
     # The platform to which we want to deposit the (meta)data
-    # TODO: Get this from config
-    deposition_platform = ctx["depositionPlatform"]
+    deposition_platform = deposit_config.get("target", "invenio")
+    # The metadata mapping logic for the target platform
+    deposition_mapping = deposit_config.get("mapping", "invenio")
 
     # Prepare the deposit
     deposit_preparator_entrypoints = metadata.entry_points(
@@ -204,7 +176,7 @@ def deposit(click_ctx: click.Context, auth_token, file):
     # Map metadata onto target schema
     metadata_mapping_entrypoints = metadata.entry_points(
         group="hermes.metadata_mapping",
-        name=deposition_platform
+        name=deposition_mapping
     )
     if metadata_mapping_entrypoints:
         metadata_mapping = metadata_mapping_entrypoints[0].load()
