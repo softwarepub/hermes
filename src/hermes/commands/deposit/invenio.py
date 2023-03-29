@@ -38,7 +38,8 @@ def prepare_deposit(click_ctx: click.Context, ctx: CodeMetaContext):
 
     invenio_path = ContextPath.parse("deposit.invenio")
     invenio_config = config.get("deposit").get("invenio", {})
-    _ = _resolve_latest_invenio_id(ctx)
+    rec_id, rec_meta = _resolve_latest_invenio_id(ctx)
+    ctx.update(invenio_path['latestRecord'], {'id': rec_id, 'metadata': rec_meta})
 
     site_url = invenio_config.get("site_url")
     if site_url is None:
@@ -119,6 +120,10 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
         )
 
     deposition_metadata = invenio_ctx["depositionMetadata"]
+    latest_metadata = invenio_ctx["latestRecord"]["metadata"]
+    if deposition_metadata.get("version") == latest_metadata.get("version"):
+        raise ValueError("Deposited version already version to deposit.")
+
     response = session.post(
         deposit_url,
         json={"metadata": deposition_metadata}
@@ -164,7 +169,7 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     _log.info("Published record: %s", record["links"]["record_html"])
 
 
-def _resolve_latest_invenio_id(ctx: CodeMetaContext) -> str:
+def _resolve_latest_invenio_id(ctx: CodeMetaContext) -> (str, dict):
     """
     Using the given configuration and metadata, figure out the latest record id.
 
@@ -177,7 +182,7 @@ def _resolve_latest_invenio_id(ctx: CodeMetaContext) -> str:
     If any of the resolution steps fail or produce an unexpected result, a ValueError will be thrown.
 
     :param ctx: The context for which the record id should be resolved.
-    :return: The Invenio record id.
+    :return: The Invenio record id and the metadata of the record
     """
 
     invenio_config = config.get('deposit').get('invenio', {})
@@ -205,7 +210,12 @@ def _resolve_latest_invenio_id(ctx: CodeMetaContext) -> str:
         # If we got a record id by now, resolve it using the Invenio API to the latests record.
         return _invenio_resolve_record_id(site_url, record_id)
 
-    raise ValueError("Could not figure out how to retrieve record id.")
+    # TODO figure out whether an initial deposit is what we want...
+    trigger_initial_deposit = False
+    if trigger_initial_deposit:
+        return None, {}
+    else:
+        raise ValueError("Could not figure out how to retrieve record id.")
 
 
 def _invenio_resolve_doi(site_url, doi) -> str:
@@ -233,7 +243,7 @@ def _invenio_resolve_doi(site_url, doi) -> str:
     return record_id
 
 
-def _invenio_resolve_record_id(site_url: str, record_id: str) -> str:
+def _invenio_resolve_record_id(site_url: str, record_id: str) -> (str, dict):
     """
     Find the latest version of a given record.
 
@@ -251,7 +261,7 @@ def _invenio_resolve_record_id(site_url: str, record_id: str) -> str:
         raise ValueError(f"Could not retrieve record from {res.url}: {res.text}")
 
     res_json = res.json()
-    return res_json['id']
+    return res_json['id'], res_json['metadata']
 
 
 def _codemeta_to_invenio_deposition(metadata: dict) -> dict:
@@ -368,7 +378,7 @@ def _codemeta_to_invenio_deposition(metadata: dict) -> dict:
         "grants": None,
         "subjects": None,
         # TODO: Get this from config
-        "version": None,
+        "version": metadata.get('version'),
     }.items() if v is not None}
 
     return deposition_metadata
