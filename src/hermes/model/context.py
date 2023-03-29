@@ -437,4 +437,6 @@ class CodeMetaContext(HermesContext):
         """
         if self.contexts:
             self.update(ContextPath('@context'), [self._CODEMETA_CONTEXT_URL, dict(self.contexts)])
+        else:
+            self.update(ContextPath('@context'), self._CODEMETA_CONTEXT_URL)
         self.update(ContextPath('@type'), 'SoftwareSourceCode')
