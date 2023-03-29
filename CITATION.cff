@@ -15,6 +15,7 @@ message: >-
   If you use this software, please cite it using the
   metadata from this file.
 version: "proof-of-concept"
+license: "Apache-2.0"
 abstract: "Proof-of-concept implementation of the HERMES workflow."
 type: software
 authors:
