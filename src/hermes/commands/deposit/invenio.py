@@ -124,10 +124,23 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     if deposition_metadata.get("version") == latest_metadata.get("version"):
         raise ValueError("Deposited version already version to deposit.")
 
-    response = session.post(
-        deposit_url,
-        json={"metadata": deposition_metadata}
-    )
+    record_id = invenio_ctx["latestRecord"]["id"]
+    if record_id is not None:
+        deposit_url += f'/{record_id}/actions/newversion'
+        response = session.post(
+            deposit_url,
+            json={"metadata": deposition_metadata}
+        )
+        old_deposit = response.json()
+        response = session.get(
+            old_deposit['links']['latest_draft']
+        )
+    else:
+        response = session.post(
+            deposit_url,
+            json={"metadata": deposition_metadata}
+        )
+
     if not response.ok:
         _log.error(f"Could not update metadata of deposit {deposit_url!r}")
         click_ctx.exit(1)
