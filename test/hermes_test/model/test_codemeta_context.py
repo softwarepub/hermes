@@ -9,11 +9,13 @@ from unittest.mock import Mock
 
 from hermes.model.context import CodeMetaContext, HermesHarvestContext
 
+
 @pytest.fixture
 def mock_ep():
     ep = Mock()
     ep.name = 'mock_name'
     return ep
+
 
 def test_merge_contexts_from(mock_ep):
     _self = CodeMetaContext()
