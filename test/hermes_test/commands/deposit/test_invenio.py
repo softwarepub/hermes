@@ -43,9 +43,9 @@ def test_resolve_doi_unknown(requests_mock):
 def test_resolve_record_id(requests_mock):
     requests_mock.get('https://foo.bar/api/records/6789',
                       text='{"links":{"latest":"https://foo.bar/api/records/12345"}}')
-    requests_mock.get('https://foo.bar/api/records/12345', text='{"id":"12345"}')
+    requests_mock.get('https://foo.bar/api/records/12345', text='{"id":"12345","metadata":{"mock":42}}')
 
-    assert invenio._invenio_resolve_record_id('https://foo.bar', '6789') == '12345'
+    assert invenio._invenio_resolve_record_id('https://foo.bar', '6789') == ('12345', {"mock": 42})
 
 
 def test_resolve_record_id_unknown(requests_mock):
