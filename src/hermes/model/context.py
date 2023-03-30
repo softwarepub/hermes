@@ -341,7 +341,10 @@ class HermesHarvestContext(HermesContext):
                 try:
                     key.update(data, value, tags, **tag)
                     if tags is not None and tag:
-                        tags[str(key)] = tag
+                        if str(key) in tags:
+                            tags[str(key)].update(tag)
+                        else:
+                            tags[str(key)] = tag
                 except errors.MergeError as e:
                     self.error(self._ep, e)
         return data

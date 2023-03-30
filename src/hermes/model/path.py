@@ -349,9 +349,17 @@ class ContextPath:
         """
         prefix, _target, tail = self.resolve(target, create=True)
         try:
-            prefix.set_item(_target, tail, value, **kwargs)
+            _tag = {}
+            if tags:
+                if str(self) in tags:
+                    _tag = tags[str(self)]
+                else:
+                    tags[str(self)] = _tag
+
+            prefix.set_item(_target, tail, value, tag=_tag, **kwargs)
             if tags is not None and kwargs:
-                tags[str(self)] = kwargs
+                _tag.update(kwargs)
+
         except (KeyError, IndexError, TypeError, ValueError):
             raise errors.MergeError(self, _target, value, **kwargs)
 
