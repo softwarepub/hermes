@@ -101,8 +101,12 @@ class CollectionMergeStrategy(MergeStrategy):
                     case dict() as item: item.update(value)
                     case list() as item: item[:] = value
                     case _:
-                        if key in target:
-                            print(target[key], value)
+                        if target[key] != value:
+                            tag = kwargs.pop('tag', {})
+                            alt = tag.pop('alternatives', [])
+                            alt.append((target[key], tag.copy()))
+                            tag.clear()
+                            tag['alternatives'] = alt
                         target[key] = value
 
             case dict(), str() as key:
@@ -135,8 +139,8 @@ class ObjectMergeStrategy(MergeStrategy):
                     case dict() as item: item.update(value)
                     case list() as item: item[:] = value
                     case _:
-                        if key in target and target[key] != value:
-                            tag = kwargs.pop('tag')
+                        if target[key] != value:
+                            tag = kwargs.pop('tag', {})
                             alt = tag.pop('alternatives', [])
                             alt.append((target[key], tag.copy()))
                             tag.clear()

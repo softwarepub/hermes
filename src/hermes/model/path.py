@@ -247,7 +247,7 @@ class ContextPath:
                     case list() as item: item[:] = value
                     case _:
                         if target[key] != value:
-                            tag = kwargs.pop('tag')
+                            tag = kwargs.pop('tag', {})
                             alt = tag.pop('alternatives', [])
                             alt.append((target[key], tag.copy()))
                             tag.clear()
