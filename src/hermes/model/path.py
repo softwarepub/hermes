@@ -245,7 +245,14 @@ class ContextPath:
                 match target[key]:
                     case dict() as item: item.update(value)
                     case list() as item: item[:] = value
-                    case _: target[key] = value
+                    case _:
+                        if target[key] != value:
+                            tag = kwargs.pop('tag')
+                            alt = tag.pop('alternatives', [])
+                            alt.append((target[key], tag.copy()))
+                            tag.clear()
+                            tag['alternatives'] = alt
+                        target[key] = value
 
             case dict(), str() as key:
                 target[key] = value
