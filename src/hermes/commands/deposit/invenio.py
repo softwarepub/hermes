@@ -22,6 +22,7 @@ from hermes.model.context import CodeMetaContext
 from hermes.model.path import ContextPath
 from hermes.utils import hermes_user_agent
 
+_DEFAULT_LICENSES_API_PATH = "api/licenses"
 _DEFAULT_DEPOSITIONS_API_PATH = "api/deposit/depositions"
 _DEFAULT_RECORD_SCHEMA_PATH = "api/schemas/records/record-v1.0.0.json"
 
@@ -31,9 +32,9 @@ _DEFAULT_RECORD_SCHEMA_PATH = "api/schemas/records/record-v1.0.0.json"
 def prepare_deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     """Prepare the Invenio deposit.
 
-    In this case, "prepare" means download the record schema that is required
-    by Invenio instances. This is the basis that will be used for metadata
-    mapping in the next step.
+    In this case, "prepare" means download the record schema that is required by
+    Invenio instances and checking wether we have a valid license identifier that is
+    supported by the instance.
     """
 
     invenio_path = ContextPath.parse("deposit.invenio")
@@ -56,13 +57,20 @@ def prepare_deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     )
     response.raise_for_status()
     record_schema = response.json()
-    ctx.update(invenio_path["requiredSchema"], record_schema)
+    ctx.update(invenio_path["record_schema"], record_schema)
+
+    licenses_api_path = invenio_config.get("api_paths", {}).get(
+        "licenses", _DEFAULT_LICENSES_API_PATH
+    )
+    licenses_api_url = f"{site_url}/{licenses_api_path}"
+    license = _get_license_identifier(ctx, licenses_api_url)
+    ctx.update(invenio_path["license"], license)
 
 
 def map_metadata(click_ctx: click.Context, ctx: CodeMetaContext):
     """Map the harvested metadata onto the Invenio schema."""
 
-    deposition_metadata = _codemeta_to_invenio_deposition(ctx["codemeta"])
+    deposition_metadata = _codemeta_to_invenio_deposition(ctx)
 
     metadata_path = ContextPath.parse("deposit.invenio.depositionMetadata")
     ctx.update(metadata_path, deposition_metadata)
@@ -254,7 +262,7 @@ def _invenio_resolve_record_id(site_url: str, record_id: str) -> str:
     return res_json['id']
 
 
-def _codemeta_to_invenio_deposition(metadata: dict) -> dict:
+def _codemeta_to_invenio_deposition(ctx: CodeMetaContext) -> dict:
     """The mapping logic.
 
     Functionality similar to this exists in the ``convert_codemeta`` package which uses
@@ -277,6 +285,9 @@ def _codemeta_to_invenio_deposition(metadata: dict) -> dict:
     to be a schema one can download in order to validate these metadata. There might be
     differences between Invenio-based platforms.
     """
+
+    metadata = ctx["codemeta"]
+    license = ctx["deposit"]["invenio"]["license"]
 
     creators = [
         # TODO: Distinguish between @type "Person" and others
@@ -341,8 +352,7 @@ def _codemeta_to_invenio_deposition(metadata: dict) -> dict:
         # restricted should come with a `license`, embargoed with an `embargo_date`,
         # restricted with `access_conditions`.
         "access_right": "open",
-        # TODO: Get this from config/codemeta/GitHub API/...
-        "license": "Apache-2.0",
+        "license": license,
         "embargo_date": None,
         "access_conditions": None,
         # TODO: If a publisher already has assigned a DOI to the files we want to
@@ -372,3 +382,43 @@ def _codemeta_to_invenio_deposition(metadata: dict) -> dict:
     }.items() if v is not None}
 
     return deposition_metadata
+
+
+def _get_license_identifier(ctx: CodeMetaContext, license_api_url: str):
+    """Get Invenio license representation from CodeMeta.
+
+    The license to use is extracted from the ``license`` field in the
+    :class:`CodeMetaContext` and converted into an appropiate license identifier to be
+    passed to an Invenio instance.
+
+    A license according to CodeMeta may be a URL (text) or a CreativeWork. This function
+    only handles URLs. If the extracted ``license`` is not of type :class:`str`, a
+    :class:`RuntimeError` is raised.
+
+    Invenio instances take a license string which refers to a license identifier.
+    Typically, Invenio instances offer licenses from https://opendefinition.org and
+    https://spdx.org. However, it is possible to mint PIDs for custom licenses.
+
+    An API endpoint (usually ``/api/licenses``) can be used to check whether a given
+    license is supported by the Invenio instance. This function tries to retrieve the
+    license by the identifier at the end of the license URL path. If this identifier
+    does not exist on the Invenio instance, a :class:`RuntimeError` is raised.
+    """
+
+    license_url = ctx["codemeta"].get("license")
+    if not isinstance(license_url, str):
+        raise RuntimeError("The given license must be of type str")
+
+    parsed_url = urlparse(license_url)
+    url_path = parsed_url.path.rstrip("/")
+    license_id = url_path.split("/")[-1]
+
+    response = requests.get(
+        f"{license_api_url}/{license_id}", headers={"User-Agent": hermes_user_agent}
+    )
+    if response.status_code == 404:
+        raise RuntimeError(f"Not a valid license identifier: {license_id}")
+    # Catch other problems
+    response.raise_for_status()
+
+    return response.json()["id"]
