@@ -57,7 +57,7 @@ def prepare_deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     )
     response.raise_for_status()
     record_schema = response.json()
-    ctx.update(invenio_path["record_schema"], record_schema)
+    ctx.update(invenio_path["requiredSchema"], record_schema)
 
     licenses_api_path = invenio_config.get("api_paths", {}).get(
         "licenses", _DEFAULT_LICENSES_API_PATH
