@@ -153,6 +153,10 @@ def deposit(click_ctx: click.Context, auth_token, file):
         _log.error("You must run the process command before deposit")
         return 1
 
+    # Loading the data into the "codemeta" field is a temporary workaround used because
+    # the CodeMetaContext does not provide an update_from method. Eventually we want the
+    # the context to contain `{**data}` rather than `{"codemeta": data}`. Then, for
+    # additional data, the hermes namespace should be used.
     codemeta_path = ContextPath("codemeta")
     with open(codemeta_file) as codemeta_fh:
         ctx.update(codemeta_path, json.load(codemeta_fh))
