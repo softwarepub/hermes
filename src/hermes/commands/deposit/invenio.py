@@ -33,7 +33,7 @@ def prepare_deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     """Prepare the Invenio deposit.
 
     In this case, "prepare" means download the record schema that is required by
-    Invenio instances and checking wether we have a valid license identifier that is
+    Invenio instances and checking whether we have a valid license identifier that is
     supported by the instance.
     """
 
