@@ -38,6 +38,7 @@ class HermesContext:
 
     default_timestamp = datetime.datetime.now().isoformat(timespec='seconds')
     hermes_cache_name = ".hermes"
+    hermes_lod_context = ("hermes", "https://software-metadata.pub/ns/hermes/")
 
     def __init__(self, project_dir: t.Optional[Path] = None):
         """
@@ -53,6 +54,7 @@ class HermesContext:
         self._caches = {}
         self._data = {}
         self._errors = []
+        self.contexts = {self.hermes_lod_context}
 
     def __getitem__(self, key: ContextPath | str) -> t.Any:
         """
@@ -155,6 +157,15 @@ class HermesContext:
             shutil.rmtree(self.hermes_dir)
 
 
+    def add_context(self, new_context: tuple) -> None:
+        """
+        Add a new linked data context to the harvest context.
+
+        :param new_context: The new context as tuple (context name, context URI)
+        """
+        self.contexts.add(new_context)
+
+
 class HermesHarvestContext(HermesContext):
     """
     A specialized context for use in *harvest* stage.
@@ -181,7 +192,6 @@ class HermesHarvestContext(HermesContext):
         self._ep = ep
         self._log = logging.getLogger(f'harvest.{self._ep.name}')
         self.config = config or {}
-        self.contexts = set()
 
     def load_cache(self):
         """
@@ -364,14 +374,6 @@ class HermesHarvestContext(HermesContext):
         Calling this method will lead to further processors not handling the context anymore.
         """
         self._data.clear()
-
-    def add_context(self, new_context: tuple) -> None:
-        """
-        Add a new linked data context to the harvest context.
-
-        :param new_context: The new context as tuple (context name, context URI)
-        """
-        self.contexts.add(new_context)
 
 
 class CodeMetaContext(HermesContext):
