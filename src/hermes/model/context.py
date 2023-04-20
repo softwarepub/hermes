@@ -156,7 +156,6 @@ class HermesContext:
         if self.hermes_dir.exists():
             shutil.rmtree(self.hermes_dir)
 
-
     def add_context(self, new_context: tuple) -> None:
         """
         Add a new linked data context to the harvest context.
@@ -386,7 +385,6 @@ class CodeMetaContext(HermesContext):
     def __init__(self, project_dir: pathlib.Path | None = None):
         super().__init__(project_dir)
         self.tags = {}
-        self.contexts = set()
 
     def merge_from(self, other: HermesHarvestContext):
         other.get_data(self._data, tags=self.tags)
