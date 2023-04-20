@@ -30,7 +30,9 @@ def _codemeta_context():
 @pytest.fixture
 def _data(_codemeta_context):
     return {
-        '@context': 'https://doi.org/10.5063/schema/codemeta-2.0',
+        '@context': [
+            'https://doi.org/10.5063/schema/codemeta-2.0',
+            {'hermes': 'https://software-metadata.pub/ns/hermes/'}],
         '@type': 'SoftwareSourceCode'
     }
 
@@ -41,17 +43,18 @@ def _data_with_contexts(_codemeta_context):
         '@type': 'SoftwareSourceCode',
         '@context': [
             'https://doi.org/10.5063/schema/codemeta-2.0',
-            {'foo': 'bar'}
+            {'foo': 'bar',
+             'hermes': 'https://software-metadata.pub/ns/hermes/'}
         ]
     }
 
 
 def test_merge_contexts_from(mock_ep, _context, _codemeta_context):
-    assert not _codemeta_context.contexts
+    assert _codemeta_context.contexts == {_codemeta_context.hermes_lod_context}
     other = HermesHarvestContext(None, mock_ep)
     other.contexts.add(_context)
     _codemeta_context.merge_contexts_from(other)
-    assert _codemeta_context.contexts == {_context}
+    assert _codemeta_context.contexts == {_context, _codemeta_context.hermes_lod_context}
 
 
 def test_prepare_codemeta(_codemeta_context, _context, _data):
@@ -62,6 +65,7 @@ def test_prepare_codemeta(_codemeta_context, _context, _data):
 
 def test_prepare_codemeta_with_contexts(_codemeta_context, _context, _data_with_contexts):
     assert not _codemeta_context.keys()
-    _codemeta_context.contexts = {_context}
+    assert _codemeta_context.contexts == {_codemeta_context.hermes_lod_context}
+    _codemeta_context.add_context(_context)
     _codemeta_context.prepare_codemeta()
     assert _codemeta_context.get_data() == _data_with_contexts
