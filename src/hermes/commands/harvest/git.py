@@ -315,7 +315,6 @@ def harvest_git(click_ctx: click.Context, ctx: HermesHarvestContext):
     ctx.update('contributor',
                [contributor.to_codemeta() for contributor in git_contributors._all],
                git_branch=git_branch)
-    ctx.add_context(('hermes', 'https://software-metadata.pub/ns/hermes/'))
     ctx.update('hermes:gitBranch', git_branch)
 
     try:
