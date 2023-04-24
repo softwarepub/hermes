@@ -122,13 +122,11 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
 
     if record_id is not None:
         deposit_url += f'/{record_id}/actions/newversion'
-        response = session.post(
-            deposit_url,
-            json={"metadata": deposition_metadata}
-        )
+        response = session.post(deposit_url)
         old_deposit = response.json()
-        response = session.get(
-            old_deposit['links']['latest_draft']
+        response = session.put(
+            old_deposit['links']['latest_draft'],
+            json={"metadata": deposition_metadata}
         )
     else:
         response = session.post(
@@ -171,6 +169,7 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     response = session.post(publish_url)
     if not response.ok:
         _log.error(f"Could not publish deposit via {publish_url!r}")
+        _log.debug(response.text)
         click_ctx.exit(1)
 
     record = response.json()
@@ -218,12 +217,7 @@ def _resolve_latest_invenio_id(ctx: CodeMetaContext) -> (str, dict):
         # If we got a record id by now, resolve it using the Invenio API to the latests record.
         return _invenio_resolve_record_id(site_url, record_id)
 
-    # TODO figure out whether an initial deposit is what we want...
-    trigger_initial_deposit = False
-    if trigger_initial_deposit:
-        return None, {}
-    else:
-        raise ValueError("Could not figure out how to retrieve record id.")
+    return None, {}
 
 
 def _invenio_resolve_doi(site_url, doi) -> str:
