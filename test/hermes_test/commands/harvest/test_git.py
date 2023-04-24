@@ -28,13 +28,6 @@ def harvest_ctx(request: FixtureRequest):
 def codemeta():
     return json.loads("""
 {
-  "@context": [
-    "https://doi.org/10.5063/schema/codemeta-2.0",
-    {
-      "hermes": "https://software-metadata.pub/ns/hermes/"
-    }
-  ],
-  "@type": "SoftwareSourceCode",
   "contributor": [
     {
       "@type": "Person",

@@ -107,6 +107,7 @@ def process():
             process(ctx, harvest_context)
 
         ctx.merge_from(harvest_context)
+        ctx.merge_contexts_from(harvest_context)
         _log.info('')
     audit_log.info('')
 
@@ -118,10 +119,12 @@ def process():
 
     tags_path = ctx.get_cache('process', 'tags', create=True)
     with tags_path.open('w') as tags_file:
-        json.dump(ctx.tags, tags_file, indent='  ')
+        json.dump(ctx.tags, tags_file, indent=2)
+
+    ctx.prepare_codemeta()
 
     with open(ctx.get_cache("process", "codemeta", create=True), 'w') as codemeta_file:
-        json.dump(ctx._data, codemeta_file, indent='  ')
+        json.dump(ctx._data, codemeta_file, indent=2)
 
     logging.shutdown()
 
