@@ -62,8 +62,6 @@ def add_branch(ctx: CodeMetaContext, harvest_ctx: HermesHarvestContext):
 
     branch = branch_path.get_from(data)
     audit_log.debug('- %s', branch)
-    if branch_path not in ctx.keys():
-        ctx.update(branch_path, None)
     ctx.update(branch_path, branch, tags=tags)
 
     ctx.tags.update(tags)
