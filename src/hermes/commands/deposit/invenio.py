@@ -101,8 +101,6 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
         "Authorization": f"Bearer {click_ctx.params['auth_token']}",
     }
 
-    existing_record_url = None
-
     site_url = invenio_config.get("site_url")
     if site_url is None:
         raise MisconfigurationError("deposit.invenio.site_url is not configured")
@@ -112,19 +110,16 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     )
     deposit_url = f"{site_url}/{depositions_api_path}"
 
-    if existing_record_url is not None:
-        # TODO: Get by calling new version on latest existing record
-        deposit_url = None
-        raise NotImplementedError(
-            "At the moment, hermes can not create new versions of existing records"
-        )
-
     deposition_metadata = invenio_ctx["depositionMetadata"]
-    latest_metadata = invenio_ctx["latestRecord"]["metadata"]
-    if deposition_metadata.get("version") == latest_metadata.get("version"):
-        raise ValueError("Deposited version already version to deposit.")
+    try:
+        latest_metadata = invenio_ctx["latestRecord"]["metadata"]
+        if deposition_metadata.get("version") == latest_metadata.get("version"):
+            raise ValueError("Deposited version already version to deposit.")
 
-    record_id = invenio_ctx["latestRecord"]["id"]
+        record_id = invenio_ctx["latestRecord"]["id"]
+    except KeyError:
+        record_id = None
+
     if record_id is not None:
         deposit_url += f'/{record_id}/actions/newversion'
         response = session.post(
