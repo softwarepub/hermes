@@ -4,7 +4,9 @@
 
 # SPDX-FileContributor: Michael Meinel
 
-from hermes.model.path import ContextPath
+from hermes.model.path import ContextPath, set_in_dict
+
+
 
 
 class MergeStrategies:
@@ -100,14 +102,7 @@ class CollectionMergeStrategy(MergeStrategy):
                 match target[key]:
                     case dict() as item: item.update(value)
                     case list() as item: item[:] = value
-                    case _:
-                        if target[key] != value:
-                            tag = kwargs.pop('tag', {})
-                            alt = tag.pop('alternatives', [])
-                            alt.append((target[key], tag.copy()))
-                            tag.clear()
-                            tag['alternatives'] = alt
-                        target[key] = value
+                    case _: set_in_dict(target, key, value, kwargs)
 
             case dict(), str() as key:
                 target[key] = value
@@ -138,14 +133,7 @@ class ObjectMergeStrategy(MergeStrategy):
                 match target[key]:
                     case dict() as item: item.update(value)
                     case list() as item: item[:] = value
-                    case _:
-                        if target[key] != value:
-                            tag = kwargs.pop('tag', {})
-                            alt = tag.pop('alternatives', [])
-                            alt.append((target[key], tag.copy()))
-                            tag.clear()
-                            tag['alternatives'] = alt
-                        target[key] = value
+                    case _: set_in_dict(target, key, value, kwargs)
 
             case dict(), str() as key:
                 target[key] = value
