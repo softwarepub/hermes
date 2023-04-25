@@ -202,12 +202,15 @@ def _resolve_latest_invenio_id(ctx: CodeMetaContext) -> (str, dict):
     if record_id is None:
         doi = invenio_config.get('doi')
         if doi is None:
-            # TODO: There might be more semantic in the codemeta.identifier... (also see schema.org)
-            identifier = ctx['codemeta.identifier']
-            if identifier.startswith('https://doi.org/'):
-                doi = identifier[16:]
-            elif identifier.startswith('http://dx.doi.org/'):
-                doi = identifier[18:]
+            try:
+                # TODO: There might be more semantic in the codemeta.identifier... (also see schema.org)
+                identifier = ctx['codemeta.identifier']
+                if identifier.startswith('https://doi.org/'):
+                    doi = identifier[16:]
+                elif identifier.startswith('http://dx.doi.org/'):
+                    doi = identifier[18:]
+            except KeyError:
+                pass
 
         if doi is not None:
             # If we got a DOI, resolve it (using doi.org) into a Invenio URL ... and extract the record id.
