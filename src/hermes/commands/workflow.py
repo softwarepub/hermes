@@ -9,6 +9,8 @@
 
 import json
 import logging
+import os
+import shutil
 from importlib import metadata
 
 import click
@@ -127,6 +129,13 @@ def process():
         json.dump(ctx._data, codemeta_file, indent=2)
 
     logging.shutdown()
+
+
+@click.group(invoke_without_command=True)
+def curate():
+    ctx = CodeMetaContext()
+    os.makedirs(ctx.hermes_dir / 'curate', exist_ok=True)
+    shutil.copy(ctx.hermes_dir / 'process' / 'codemeta.json', ctx.hermes_dir / 'curate' / 'codemeta.json')
 
 
 @click.group(invoke_without_command=True)
