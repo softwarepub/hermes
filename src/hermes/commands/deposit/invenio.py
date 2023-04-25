@@ -8,6 +8,7 @@
 
 import json
 import logging
+import typing as t
 from datetime import date
 from pathlib import Path
 from urllib.parse import urlparse
@@ -177,7 +178,7 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     _log.info("Published record: %s", record["links"]["record_html"])
 
 
-def _resolve_latest_invenio_id(ctx: CodeMetaContext) -> (str, dict):
+def _resolve_latest_invenio_id(ctx: CodeMetaContext) -> t.Tuple[str, dict]:
     """
     Using the given configuration and metadata, figure out the latest record id.
 
@@ -249,7 +250,7 @@ def _invenio_resolve_doi(site_url, doi) -> str:
     return record_id
 
 
-def _invenio_resolve_record_id(site_url: str, record_id: str) -> (str, dict):
+def _invenio_resolve_record_id(site_url: str, record_id: str) -> t.Tuple[str, dict]:
     """
     Find the latest version of a given record.
 
@@ -383,7 +384,6 @@ def _codemeta_to_invenio_deposition(metadata: dict) -> dict:
         "communities": None,
         "grants": None,
         "subjects": None,
-        # TODO: Get this from config
         "version": metadata.get('version'),
     }.items() if v is not None}
 
