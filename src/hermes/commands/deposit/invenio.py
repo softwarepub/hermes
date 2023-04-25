@@ -8,6 +8,7 @@
 
 import json
 import logging
+import typing as t
 from datetime import date
 from pathlib import Path
 from urllib.parse import urlparse
@@ -39,7 +40,8 @@ def prepare_deposit(click_ctx: click.Context, ctx: CodeMetaContext):
 
     invenio_path = ContextPath.parse("deposit.invenio")
     invenio_config = config.get("deposit").get("invenio", {})
-    _ = _resolve_latest_invenio_id(ctx)
+    rec_id, rec_meta = _resolve_latest_invenio_id(ctx)
+    ctx.update(invenio_path['latestRecord'], {'id': rec_id, 'metadata': rec_meta})
 
     site_url = invenio_config.get("site_url")
     if site_url is None:
@@ -108,8 +110,6 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
         "Authorization": f"Bearer {click_ctx.params['auth_token']}",
     }
 
-    existing_record_url = None
-
     site_url = invenio_config.get("site_url")
     if site_url is None:
         raise MisconfigurationError("deposit.invenio.site_url is not configured")
@@ -119,18 +119,31 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     )
     deposit_url = f"{site_url}/{depositions_api_path}"
 
-    if existing_record_url is not None:
-        # TODO: Get by calling new version on latest existing record
-        deposit_url = None
-        raise NotImplementedError(
-            "At the moment, hermes can not create new versions of existing records"
+    deposition_metadata = invenio_ctx["depositionMetadata"]
+    try:
+        latest_metadata = invenio_ctx["latestRecord"]["metadata"]
+        if deposition_metadata.get("version") == latest_metadata.get("version"):
+            raise ValueError("Version already deposited.")
+
+        record_id = invenio_ctx["latestRecord"]["id"]
+    except KeyError:
+        record_id = None
+
+    if record_id is not None:
+        deposit_url += f'/{record_id}/actions/newversion'
+        response = session.post(deposit_url)
+        if response.ok:
+            old_deposit = response.json()
+            response = session.put(
+                old_deposit['links']['latest_draft'],
+                json={"metadata": deposition_metadata}
+            )
+    else:
+        response = session.post(
+            deposit_url,
+            json={"metadata": deposition_metadata}
         )
 
-    deposition_metadata = invenio_ctx["depositionMetadata"]
-    response = session.post(
-        deposit_url,
-        json={"metadata": deposition_metadata}
-    )
     if not response.ok:
         _log.error(f"Could not update metadata of deposit {deposit_url!r}")
         click_ctx.exit(1)
@@ -166,13 +179,14 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     response = session.post(publish_url)
     if not response.ok:
         _log.error(f"Could not publish deposit via {publish_url!r}")
+        _log.debug(response.text)
         click_ctx.exit(1)
 
     record = response.json()
     _log.info("Published record: %s", record["links"]["record_html"])
 
 
-def _resolve_latest_invenio_id(ctx: CodeMetaContext) -> str:
+def _resolve_latest_invenio_id(ctx: CodeMetaContext) -> t.Tuple[str, dict]:
     """
     Using the given configuration and metadata, figure out the latest record id.
 
@@ -185,7 +199,7 @@ def _resolve_latest_invenio_id(ctx: CodeMetaContext) -> str:
     If any of the resolution steps fail or produce an unexpected result, a ValueError will be thrown.
 
     :param ctx: The context for which the record id should be resolved.
-    :return: The Invenio record id.
+    :return: The Invenio record id and the metadata of the record
     """
 
     invenio_config = config.get('deposit').get('invenio', {})
@@ -198,12 +212,15 @@ def _resolve_latest_invenio_id(ctx: CodeMetaContext) -> str:
     if record_id is None:
         doi = invenio_config.get('doi')
         if doi is None:
-            # TODO: There might be more semantic in the codemeta.identifier... (also see schema.org)
-            identifier = ctx['codemeta.identifier']
-            if identifier.startswith('https://doi.org/'):
-                doi = identifier[16:]
-            elif identifier.startswith('http://dx.doi.org/'):
-                doi = identifier[18:]
+            try:
+                # TODO: There might be more semantic in the codemeta.identifier... (also see schema.org)
+                identifier = ctx['codemeta.identifier']
+                if identifier.startswith('https://doi.org/'):
+                    doi = identifier[16:]
+                elif identifier.startswith('http://dx.doi.org/'):
+                    doi = identifier[18:]
+            except KeyError:
+                pass
 
         if doi is not None:
             # If we got a DOI, resolve it (using doi.org) into a Invenio URL ... and extract the record id.
@@ -213,7 +230,7 @@ def _resolve_latest_invenio_id(ctx: CodeMetaContext) -> str:
         # If we got a record id by now, resolve it using the Invenio API to the latests record.
         return _invenio_resolve_record_id(site_url, record_id)
 
-    raise ValueError("Could not figure out how to retrieve record id.")
+    return None, {}
 
 
 def _invenio_resolve_doi(site_url, doi) -> str:
@@ -241,7 +258,7 @@ def _invenio_resolve_doi(site_url, doi) -> str:
     return record_id
 
 
-def _invenio_resolve_record_id(site_url: str, record_id: str) -> str:
+def _invenio_resolve_record_id(site_url: str, record_id: str) -> t.Tuple[str, dict]:
     """
     Find the latest version of a given record.
 
@@ -259,7 +276,7 @@ def _invenio_resolve_record_id(site_url: str, record_id: str) -> str:
         raise ValueError(f"Could not retrieve record from {res.url}: {res.text}")
 
     res_json = res.json()
-    return res_json['id']
+    return res_json['id'], res_json['metadata']
 
 
 def _codemeta_to_invenio_deposition(ctx: CodeMetaContext) -> dict:
@@ -377,8 +394,7 @@ def _codemeta_to_invenio_deposition(ctx: CodeMetaContext) -> dict:
         "communities": None,
         "grants": None,
         "subjects": None,
-        # TODO: Get this from config
-        "version": None,
+        "version": metadata.get('version'),
     }.items() if v is not None}
 
     return deposition_metadata

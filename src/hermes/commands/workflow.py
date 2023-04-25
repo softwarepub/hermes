@@ -98,13 +98,13 @@ def process():
             _log.warning("No output data from harvester %s found, skipping", harvester.name)
             continue
 
-        processors = metadata.entry_points(group='hermes.preprocess', name=harvester.name)
-        for processor in processors:
-            _log.debug(". Loading context processor %s", processor.value)
-            process = processor.load()
+        preprocessors = metadata.entry_points(group='hermes.preprocess', name=harvester.name)
+        for preprocessor in preprocessors:
+            _log.debug(". Loading context preprocessor %s", preprocessor.value)
+            preprocess = preprocessor.load()
 
-            _log.debug(". Apply processor %s", processor.value)
-            process(ctx, harvest_context)
+            _log.debug(". Apply preprocessor %s", preprocessor.value)
+            preprocess(ctx, harvest_context)
 
         ctx.merge_from(harvest_context)
         ctx.merge_contexts_from(harvest_context)

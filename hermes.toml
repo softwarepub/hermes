@@ -16,3 +16,4 @@ target = "invenio"
 site_url = "https://sandbox.zenodo.org"
 api_paths = { depositions = "api/deposit/depositions", licenses = "api/licenses" }
 schema_paths = { record = "api/schemas/records/record-v1.0.0.json" }
+record_id = 1177603
