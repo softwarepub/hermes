@@ -13,6 +13,7 @@ from hermes.model import errors
 
 _log = logging.getLogger('hermes.model.path')
 
+
 def set_in_dict(target: dict, key: str, value: object, kwargs):
     if target[key] != value:
         tag = kwargs.pop('tag', {})

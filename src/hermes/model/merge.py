@@ -7,8 +7,6 @@
 from hermes.model.path import ContextPath, set_in_dict
 
 
-
-
 class MergeStrategies:
     def __init__(self):
         self._strategies = []
