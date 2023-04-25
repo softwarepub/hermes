@@ -151,9 +151,9 @@ def deposit(click_ctx: click.Context, auth_token, file):
 
     ctx = CodeMetaContext()
 
-    codemeta_file = ctx.get_cache("process", "codemeta")
+    codemeta_file = ctx.get_cache("curate", "codemeta")
     if not codemeta_file.exists():
-        _log.error("You must run the process command before deposit")
+        _log.error("You must run the 'curate' command before deposit")
         return 1
 
     # Loading the data into the "codemeta" field is a temporary workaround used because
