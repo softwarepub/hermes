@@ -123,11 +123,12 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     if record_id is not None:
         deposit_url += f'/{record_id}/actions/newversion'
         response = session.post(deposit_url)
-        old_deposit = response.json()
-        response = session.put(
-            old_deposit['links']['latest_draft'],
-            json={"metadata": deposition_metadata}
-        )
+        if response.ok:
+            old_deposit = response.json()
+            response = session.put(
+                old_deposit['links']['latest_draft'],
+                json={"metadata": deposition_metadata}
+            )
     else:
         response = session.post(
             deposit_url,
