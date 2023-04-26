@@ -14,6 +14,16 @@ from hermes.model import errors
 _log = logging.getLogger('hermes.model.path')
 
 
+def set_in_dict(target: dict, key: str, value: object, kwargs):
+    if target[key] != value:
+        tag = kwargs.pop('tag', {})
+        alt = tag.pop('alternatives', [])
+        alt.append((target[key], tag.copy()))
+        tag.clear()
+        tag['alternatives'] = alt
+    target[key] = value
+
+
 class ContextPathGrammar:
     """
     The pyparsing grammar for ContextGrammar paths.
@@ -245,7 +255,7 @@ class ContextPath:
                 match target[key]:
                     case dict() as item: item.update(value)
                     case list() as item: item[:] = value
-                    case _: target[key] = value
+                    case _: set_in_dict(target, key, value, kwargs)
 
             case dict(), str() as key:
                 target[key] = value
@@ -349,9 +359,17 @@ class ContextPath:
         """
         prefix, _target, tail = self.resolve(target, create=True)
         try:
-            prefix.set_item(_target, tail, value, **kwargs)
+            _tag = {}
+            if tags:
+                if str(self) in tags:
+                    _tag = tags[str(self)]
+                else:
+                    tags[str(self)] = _tag
+
+            prefix.set_item(_target, tail, value, tag=_tag, **kwargs)
             if tags is not None and kwargs:
-                tags[str(self)] = kwargs
+                _tag.update(kwargs)
+
         except (KeyError, IndexError, TypeError, ValueError):
             raise errors.MergeError(self, _target, value, **kwargs)
 
