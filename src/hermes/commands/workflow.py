@@ -9,6 +9,8 @@
 
 import json
 import logging
+import os
+import shutil
 from importlib import metadata
 
 import click
@@ -130,6 +132,13 @@ def process():
 
 
 @click.group(invoke_without_command=True)
+def curate():
+    ctx = CodeMetaContext()
+    os.makedirs(ctx.hermes_dir / 'curate', exist_ok=True)
+    shutil.copy(ctx.hermes_dir / 'process' / 'codemeta.json', ctx.hermes_dir / 'curate' / 'codemeta.json')
+
+
+@click.group(invoke_without_command=True)
 @click.option(
     "--auth-token", envvar="HERMES_DEPOSITION_AUTH_TOKEN",
     help="Token used to authenticate the user with the target deposition platform. "
@@ -151,9 +160,9 @@ def deposit(click_ctx: click.Context, auth_token, file):
 
     ctx = CodeMetaContext()
 
-    codemeta_file = ctx.get_cache("process", "codemeta")
+    codemeta_file = ctx.get_cache("curate", "codemeta")
     if not codemeta_file.exists():
-        _log.error("You must run the process command before deposit")
+        _log.error("You must run the 'curate' command before deposit")
         return 1
 
     # Loading the data into the "codemeta" field is a temporary workaround used because
