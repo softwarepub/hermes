@@ -503,7 +503,7 @@ def _get_access_modalities(license):
     - closed access depositions have no further requirements
 
     This function also makes sure that the given embargo date can be parsed as an ISO
-    8061 string representation and that the access rights given as a string.
+    8061 string representation and that the access rights are given as a string.
     """
     invenio_config = config.get("deposit").get("invenio", {})
 
