@@ -76,6 +76,9 @@ def prepare_deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     communities = _get_community_identifiers(ctx, communities_api_url)
     ctx.update(invenio_path["communities"], communities)
 
+    access_right = _get_access_right()
+    ctx.update(invenio_path["access_right"], access_right)
+
 
 def map_metadata(click_ctx: click.Context, ctx: CodeMetaContext):
     """Map the harvested metadata onto the Invenio schema."""
@@ -314,6 +317,7 @@ def _codemeta_to_invenio_deposition(ctx: CodeMetaContext) -> dict:
     metadata = ctx["codemeta"]
     license = ctx["deposit"]["invenio"]["license"]
     communities = ctx["deposit"]["invenio"]["communities"]
+    access_right = ctx["deposit"]["invenio"]["access_right"]
 
     creators = [
         # TODO: Distinguish between @type "Person" and others
@@ -377,7 +381,7 @@ def _codemeta_to_invenio_deposition(ctx: CodeMetaContext) -> dict:
         # Possible options are: open, embargoed, restricted, closed. open and
         # restricted should come with a `license`, embargoed with an `embargo_date`,
         # restricted with `access_conditions`.
-        "access_right": "open",
+        "access_right": access_right,
         "license": license,
         "embargo_date": None,
         "access_conditions": None,
@@ -484,3 +488,24 @@ def _get_community_identifiers(ctx: CodeMetaContext, communities_api_url: str):
         community_ids.append({"identifier": response.json()["id"]})
 
     return community_ids
+
+def _get_access_right():
+    invenio_config = config.get("deposit").get("invenio", {})
+
+    access_right = invenio_config.get("access_right")
+    if access_right is None:
+        raise MisconfigurationError("deposit.invenio.access_right is not configured")
+
+    access_right_options = ["open", "embargoed", "restricted", "closed"]
+    if access_right not in access_right_options:
+        raise MisconfigurationError(
+            "deposition.invenio.access_right must be one of: "
+            f"{', '.join(access_right_options)}"
+        )
+
+    if access_right not in ["open"]:
+        raise NotImplementedError(
+            f"Currently, access_right {access_right} is not supported"
+        )
+
+    return access_right
