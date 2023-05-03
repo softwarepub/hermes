@@ -542,9 +542,7 @@ def _get_access_modalities(license):
             f"With access_right {access_right}, a license is required."
         )
 
-    if access_right not in ["open", "embargoed", "restricted"]:
-        raise NotImplementedError(
-            f"Currently, access_right {access_right} is not supported"
-        )
+    if access_right == "closed":
+        pass
 
     return access_right, embargo_date, access_conditions
