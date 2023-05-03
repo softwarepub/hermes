@@ -14,6 +14,6 @@ target = "invenio"
 
 [deposit.invenio]
 site_url = "https://sandbox.zenodo.org"
-api_paths = { depositions = "api/deposit/depositions", licenses = "api/licenses" }
+api_paths = { depositions = "api/deposit/depositions", licenses = "api/licenses", communities = "api/communities" }
 schema_paths = { record = "api/schemas/records/record-v1.0.0.json" }
 communities = ["zenodo"]

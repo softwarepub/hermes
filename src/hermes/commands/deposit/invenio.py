@@ -23,6 +23,7 @@ from hermes.model.path import ContextPath
 from hermes.utils import hermes_user_agent
 
 _DEFAULT_LICENSES_API_PATH = "api/licenses"
+_DEFAULT_COMMUNITIES_API_PATH = "api/communities"
 _DEFAULT_DEPOSITIONS_API_PATH = "api/deposit/depositions"
 _DEFAULT_RECORD_SCHEMA_PATH = "api/schemas/records/record-v1.0.0.json"
 
@@ -33,8 +34,8 @@ def prepare_deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     """Prepare the Invenio deposit.
 
     In this case, "prepare" means download the record schema that is required by
-    Invenio instances and checking whether we have a valid license identifier that is
-    supported by the instance.
+    Invenio instances and checking whether we have a valid license identifier and
+    communities (if any are configured) that are supported by the instance.
     """
 
     invenio_path = ContextPath.parse("deposit.invenio")
@@ -65,6 +66,13 @@ def prepare_deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     licenses_api_url = f"{site_url}/{licenses_api_path}"
     license = _get_license_identifier(ctx, licenses_api_url)
     ctx.update(invenio_path["license"], license)
+
+    communities_api_path = invenio_config.get("api_paths", {}).get(
+        "communities", _DEFAULT_COMMUNITIES_API_PATH
+    )
+    communities_api_url = f"{site_url}/{communities_api_path}"
+    communities = _get_community_identifiers(ctx, communities_api_url)
+    ctx.update(invenio_path["communities"], communities)
 
 
 def map_metadata(click_ctx: click.Context, ctx: CodeMetaContext):
@@ -288,6 +296,7 @@ def _codemeta_to_invenio_deposition(ctx: CodeMetaContext) -> dict:
 
     metadata = ctx["codemeta"]
     license = ctx["deposit"]["invenio"]["license"]
+    communities = ctx["deposit"]["invenio"]["communities"]
 
     creators = [
         # TODO: Distinguish between @type "Person" and others
@@ -373,8 +382,7 @@ def _codemeta_to_invenio_deposition(ctx: CodeMetaContext) -> dict:
         # be specified in the processing step.
         "contributors": None,
         "references": None,
-        # TODO: This has to come from config.
-        "communities": None,
+        "communities": communities,
         "grants": None,
         "subjects": None,
         # TODO: Get this from config
@@ -422,3 +430,25 @@ def _get_license_identifier(ctx: CodeMetaContext, license_api_url: str):
     response.raise_for_status()
 
     return response.json()["id"]
+
+def _get_community_identifiers(ctx: CodeMetaContext, communities_api_url: str):
+    communities = config.get("deposit").get("invenio", {}).get("communities")
+    if communities is None:
+        return None
+
+    session = requests.Session()
+    session.headers = {"User-Agent": hermes_user_agent}
+
+    community_ids = []
+    for community_id in communities:
+        url = f"{communities_api_url}/{community_id}"
+        response = session.get(url)
+        if response.status_code == 404:
+            raise MisconfigurationError(
+                f"Not a valid community identifier: {community_id}"
+            )
+        # Catch other problems
+        response.raise_for_status()
+        community_ids.append({"identifier": response.json()["id"]})
+
+    return community_ids
