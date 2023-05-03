@@ -132,10 +132,17 @@ def process():
 
 
 @click.group(invoke_without_command=True)
-def curate():
+@click.pass_context
+def curate(click_ctx: click.Context):
     ctx = CodeMetaContext()
+    process_output = ctx.hermes_dir / 'process' / 'codemeta.json'
+
+    if not process_output.is_file():
+        click.echo("No processed metadata found. Please run `hermes process` before curation.")
+        click_ctx.exit(69)
+
     os.makedirs(ctx.hermes_dir / 'curate', exist_ok=True)
-    shutil.copy(ctx.hermes_dir / 'process' / 'codemeta.json', ctx.hermes_dir / 'curate' / 'codemeta.json')
+    shutil.copy(process_output, ctx.hermes_dir / 'curate' / 'codemeta.json')
 
 
 @click.group(invoke_without_command=True)
