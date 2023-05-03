@@ -16,6 +16,7 @@ from importlib import metadata
 import click
 
 from hermes import config
+from hermes.error import MisconfigurationError
 from hermes.model.context import HermesContext, HermesHarvestContext, CodeMetaContext
 from hermes.model.errors import MergeError
 from hermes.model.path import ContextPath
@@ -64,7 +65,8 @@ def harvest(click_ctx: click.Context):
 
 
 @click.group(invoke_without_command=True)
-def process():
+@click.pass_context
+def process(click_ctx: click.Context):
     """
     Process metadata and prepare it for deposition
     """
@@ -77,7 +79,7 @@ def process():
 
     if not (ctx.hermes_dir / "harvest").exists():
         _log.error("You must run the harvest command before process")
-        return 1
+        click_ctx.exit(1)
 
     # Get all harvesters
     harvest_config = config.get("harvest")
@@ -163,7 +165,7 @@ def deposit(click_ctx: click.Context, auth_token, file):
     codemeta_file = ctx.get_cache("curate", "codemeta")
     if not codemeta_file.exists():
         _log.error("You must run the 'curate' command before deposit")
-        return 1
+        click_ctx.exit(1)
 
     # Loading the data into the "codemeta" field is a temporary workaround used because
     # the CodeMetaContext does not provide an update_from method. Eventually we want the
@@ -187,7 +189,11 @@ def deposit(click_ctx: click.Context, auth_token, file):
     )
     if deposit_preparator_entrypoints:
         deposit_preparator = deposit_preparator_entrypoints[0].load()
-        deposit_preparator(click_ctx, ctx)
+        try:
+            deposit_preparator(click_ctx, ctx)
+        except (RuntimeError, MisconfigurationError) as e:
+            _log.error(e)
+            click_ctx.exit(1)
 
     # Map metadata onto target schema
     metadata_mapping_entrypoints = metadata.entry_points(
