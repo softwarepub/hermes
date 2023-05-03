@@ -431,7 +431,16 @@ def _get_license_identifier(ctx: CodeMetaContext, license_api_url: str):
 
     return response.json()["id"]
 
+
 def _get_community_identifiers(ctx: CodeMetaContext, communities_api_url: str):
+    """Get Invenio community identifiers from config.
+
+    This function gets the communities to be used for the deposition on an Invenio-based
+    site from the config and checks their validity against the site's API. If one of the
+    identifiers can not be found on the site, a :class:`MisconfigurationError` is
+    raised.
+    """
+
     communities = config.get("deposit").get("invenio", {}).get("communities")
     if communities is None:
         return None
