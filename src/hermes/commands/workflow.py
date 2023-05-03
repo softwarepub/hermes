@@ -148,6 +148,7 @@ def curate(click_ctx: click.Context):
 
 
 @click.group(invoke_without_command=True)
+@click.option("--initial", is_flag=True, default=False)
 @click.option(
     "--auth-token", envvar="HERMES_DEPOSITION_AUTH_TOKEN",
     help="Token used to authenticate the user with the target deposition platform. "
@@ -160,7 +161,7 @@ def curate(click_ctx: click.Context):
          "This option may be passed multiple times."
 )
 @click.pass_context
-def deposit(click_ctx: click.Context, auth_token, file):
+def deposit(click_ctx: click.Context, initial, auth_token, file):
     """
     Deposit processed (and curated) metadata.
     """
