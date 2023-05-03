@@ -430,8 +430,15 @@ def _get_license_identifier(ctx: CodeMetaContext, license_api_url: str):
     """
 
     license_url = ctx["codemeta"].get("license")
+
+    if license_url is None:
+        raise RuntimeError("No license was found in CodeMeta")
+
     if not isinstance(license_url, str):
-        raise RuntimeError("The given license must be of type str")
+        raise RuntimeError(
+            "The given license in CodeMeta must be of type str. "
+            "Licenses of type 'CreativeWork' are not supported."
+        )
 
     parsed_url = urlparse(license_url)
     url_path = parsed_url.path.rstrip("/")
