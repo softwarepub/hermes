@@ -139,7 +139,7 @@ def curate(click_ctx: click.Context):
 
     if not process_output.is_file():
         click.echo("No processed metadata found. Please run `hermes process` before curation.")
-        click_ctx.exit(69)
+        click_ctx.exit(1)
 
     os.makedirs(ctx.hermes_dir / 'curate', exist_ok=True)
     shutil.copy(process_output, ctx.hermes_dir / 'curate' / 'codemeta.json')
