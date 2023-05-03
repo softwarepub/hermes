@@ -491,6 +491,20 @@ def _get_community_identifiers(ctx: CodeMetaContext, communities_api_url: str):
 
 
 def _get_access_modalities(license):
+    """Get access right, embargo date and access conditions based on configuration and given license.
+
+    This function implements the rules laid out in the `Zenodo developer documentation
+    <https://developers.zenodo.org/#representation>`_:
+
+    - ``access_right`` is a controlled vocabulary
+    - embargoed access depositions need an embargo date
+    - restricted access depositions need access conditions
+    - open and embargoed access depositions need a license
+    - closed access depositions have no further requirements
+
+    This function also makes sure that the given embargo date can be parsed as an ISO
+    8061 string representation and that the access rights given as a string.
+    """
     invenio_config = config.get("deposit").get("invenio", {})
 
     access_right = invenio_config.get("access_right")
