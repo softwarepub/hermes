@@ -130,7 +130,7 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     deposition_metadata = invenio_ctx["depositionMetadata"]
     try:
         latest_metadata = invenio_ctx["latestRecord"]["metadata"]
-        if deposition_metadata.get("version") == latest_metadata.get("version"):
+        if latest_metadata and (deposition_metadata.get("version") == latest_metadata.get("version")):
             raise ValueError("Version already deposited.")
 
         record_id = invenio_ctx["latestRecord"]["id"]
