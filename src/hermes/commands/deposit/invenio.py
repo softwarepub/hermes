@@ -380,11 +380,6 @@ def _codemeta_to_invenio_deposition(ctx: CodeMetaContext) -> dict:
         # `tool.poetry.description` from pyproject.toml or `abstract` from
         # CITATION.cff. This should then be stored in codemeta description field.
         "description": metadata["name"],
-        # TODO: Get from config. This needs to be specified; we can not guess this.
-        # TODO: Needs some more logic:
-        # Possible options are: open, embargoed, restricted, closed. open and
-        # restricted should come with a `license`, embargoed with an `embargo_date`,
-        # restricted with `access_conditions`.
         "access_right": access_right,
         "license": license,
         "embargo_date": embargo_date,
