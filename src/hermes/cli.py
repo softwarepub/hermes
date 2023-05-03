@@ -143,6 +143,7 @@ class WorkflowCommand(click.Group):
     "--config", default=pathlib.Path('hermes.toml'),
     help="Configuration file in TOML format", type=pathlib.Path
 )
+@click.option("--curate", is_flag=True, default=False)
 @click.option("--deposit", is_flag=True, default=False)
 @click.option("--postprocess", is_flag=True, default=False)
 @click.option("--clean", is_flag=True, default=False)
@@ -161,5 +162,6 @@ def main(ctx: click.Context, *args, **kwargs) -> None:
 main.add_command(workflow.clean)
 main.add_command(workflow.harvest)
 main.add_command(workflow.process)
+main.add_command(workflow.curate)
 main.add_command(workflow.deposit)
 main.add_command(workflow.postprocess)

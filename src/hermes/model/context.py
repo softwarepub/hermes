@@ -363,7 +363,10 @@ class HermesHarvestContext(HermesContext):
                 try:
                     key.update(data, value, tags, **tag)
                     if tags is not None and tag:
-                        tags[str(key)] = tag
+                        if str(key) in tags:
+                            tags[str(key)].update(tag)
+                        else:
+                            tags[str(key)] = tag
                 except errors.MergeError as e:
                     self.error(self._ep, e)
         return data
@@ -403,7 +406,7 @@ class CodeMetaContext(HermesContext):
         if _key._item == '*':
             _item_path, _item, _path = _key.resolve(self._data, query=_value, create=True)
             if tags:
-                _tags = {k.lstrip(str(_key) + '.'): t for k, t in tags.items() if ContextPath.parse(k) in _key}
+                _tags = {k[len(str(_key) + '.'):]: t for k, t in tags.items() if ContextPath.parse(k) in _key}
             else:
                 _tags = {}
             _path._set_item(_item, _path, _value, **_tags)
