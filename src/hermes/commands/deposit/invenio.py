@@ -9,7 +9,7 @@
 import json
 import logging
 import typing as t
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -76,8 +76,9 @@ def prepare_deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     communities = _get_community_identifiers(ctx, communities_api_url)
     ctx.update(invenio_path["communities"], communities)
 
-    access_right = _get_access_right()
+    access_right, embargo_date = _get_access_modalities()
     ctx.update(invenio_path["access_right"], access_right)
+    ctx.update(invenio_path["embargo_date"], embargo_date)
 
 
 def map_metadata(click_ctx: click.Context, ctx: CodeMetaContext):
@@ -318,6 +319,7 @@ def _codemeta_to_invenio_deposition(ctx: CodeMetaContext) -> dict:
     license = ctx["deposit"]["invenio"]["license"]
     communities = ctx["deposit"]["invenio"]["communities"]
     access_right = ctx["deposit"]["invenio"]["access_right"]
+    embargo_date = ctx["deposit"]["invenio"]["embargo_date"]
 
     creators = [
         # TODO: Distinguish between @type "Person" and others
@@ -383,7 +385,7 @@ def _codemeta_to_invenio_deposition(ctx: CodeMetaContext) -> dict:
         # restricted with `access_conditions`.
         "access_right": access_right,
         "license": license,
-        "embargo_date": None,
+        "embargo_date": embargo_date.isoformat(),
         "access_conditions": None,
         # TODO: If a publisher already has assigned a DOI to the files we want to
         # upload, it should be used here. In this case, Invenio will not give us a new
@@ -489,7 +491,8 @@ def _get_community_identifiers(ctx: CodeMetaContext, communities_api_url: str):
 
     return community_ids
 
-def _get_access_right():
+
+def _get_access_modalities():
     invenio_config = config.get("deposit").get("invenio", {})
 
     access_right = invenio_config.get("access_right")
@@ -503,9 +506,27 @@ def _get_access_right():
             f"{', '.join(access_right_options)}"
         )
 
-    if access_right not in ["open"]:
+    embargo_date = invenio_config.get("embargo_date")
+    if access_right == "embargoed" and embargo_date is None:
+        raise MisconfigurationError(
+            f"With access_right {access_right}, "
+            "deposit.invenio.embargo_date must be configured"
+        )
+
+    # Invenio ignores embargo_date if access_right is "open".
+    # Should _we_ intervene if embargo_date is set but access_right is "open"?
+    if embargo_date is not None:
+        try:
+            embargo_date = datetime.fromisoformat(embargo_date)
+        except ValueError:
+            raise MisconfigurationError(
+                f"Could not parse deposit.invenio.embargo_date {embargo_date!r}. "
+                "Must be in ISO 8601 format."
+            )
+
+    if access_right not in ["open", "embargoed"]:
         raise NotImplementedError(
             f"Currently, access_right {access_right} is not supported"
         )
 
-    return access_right
+    return access_right, embargo_date
