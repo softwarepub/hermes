@@ -170,3 +170,13 @@ def test_get_access_modalities_open_with_license():
         }
         access_right, _, _ = invenio._get_access_modalities("Apache-2.0")
         assert access_right == "open"
+
+def test_get_access_modalities_broken_access_right():
+    with mock.patch("hermes.config.get") as mocked_deposit_config:
+        mocked_deposit_config.return_value = {
+            'invenio': {
+                'access_right': 'unknown',  # does not exist
+            }
+        }
+        with pytest.raises(MisconfigurationError):
+            invenio._get_access_modalities(None)
