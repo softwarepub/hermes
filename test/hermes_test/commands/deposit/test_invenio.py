@@ -142,7 +142,7 @@ def test_get_access_modalities_restricted_with_conditions():
         mocked_deposit_config.return_value = {
             'invenio': {
                 'access_right': 'restricted',
-                'access_conditions': 'You must be cool'
+                'access_conditions': 'You must be cool',
             }
         }
         access_right, _, access_conditions = invenio._get_access_modalities(None)
