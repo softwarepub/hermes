@@ -148,7 +148,10 @@ def curate(click_ctx: click.Context):
 
 
 @click.group(invoke_without_command=True)
-@click.option("--initial", is_flag=True, default=False)
+@click.option(
+    "--initial", is_flag=True, default=False,
+    help="Make initial deposition. This is required if you do not have configured any reference to a previous version."
+)
 @click.option(
     "--auth-token", envvar="HERMES_DEPOSITION_AUTH_TOKEN",
     help="Token used to authenticate the user with the target deposition platform. "
