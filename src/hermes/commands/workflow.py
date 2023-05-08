@@ -224,11 +224,58 @@ def deposit(click_ctx: click.Context, auth_token, file):
 
 
 @click.group(invoke_without_command=True)
-def postprocess():
+@click.pass_context
+def postprocess(click_ctx: click.Context):
     """
     Postprocess metadata after deposition
     """
-    click.echo("Post-processing")
+    """
+    Process metadata and prepare it for deposition
+    """
+    _log = logging.getLogger('cli.postprocess')
+
+    audit_log = logging.getLogger('audit')
+    audit_log.info("# Post-processing")
+
+    ctx = CodeMetaContext()
+
+    if not (ctx.hermes_dir / "deposit").exists():
+        _log.error("You must run the deposit command before post-process")
+        click_ctx.exit(1)
+
+    # Get all harvesters
+    postprocess_config = config.get("post")
+    postprocess_names = postprocess_config.get('process', [ep.name for ep in metadata.entry_points(group='hermes.postprocess')])
+
+    for postprocess_name in postprocess_names:
+        postprocessors = metadata.entry_points(group='hermes.postprocess', name=postprocess_name)
+        if not postprocessors:
+            _log.warning("- Post-processor %s selected but not found.", postprocess_name)
+            continue
+
+        postprocessor_ep, *_ = postprocessors
+        audit_log.info("## Post-process data with %s", postprocessor_ep.name)
+        postprocessor = postprocessor_ep.load()
+        postprocessor(ctx)
+
+    audit_log.info('')
+
+    if ctx._errors:
+        audit_log.error('!!! warning "Errors during merge"')
+
+        for ep, error in ctx._errors:
+            audit_log.info('    - %s: %s', ep.name, error)
+
+    tags_path = ctx.get_cache('process', 'tags', create=True)
+    with tags_path.open('w') as tags_file:
+        json.dump(ctx.tags, tags_file, indent=2)
+
+    ctx.prepare_codemeta()
+
+    with open(ctx.get_cache("process", "codemeta", create=True), 'w') as codemeta_file:
+        json.dump(ctx._data, codemeta_file, indent=2)
+
+    logging.shutdown()
 
 
 @click.group(invoke_without_command=True)
