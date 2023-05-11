@@ -245,7 +245,7 @@ def postprocess(click_ctx: click.Context):
 
     # Get all harvesters
     postprocess_config = config.get("post")
-    postprocess_names = postprocess_config.get('process', [ep.name for ep in metadata.entry_points(group='hermes.postprocess')])
+    postprocess_names = postprocess_config.get('process', [])
 
     for postprocess_name in postprocess_names:
         postprocessors = metadata.entry_points(group='hermes.postprocess', name=postprocess_name)
