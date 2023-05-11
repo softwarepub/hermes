@@ -150,7 +150,8 @@ def curate(click_ctx: click.Context):
 @click.group(invoke_without_command=True)
 @click.option(
     "--initial", is_flag=True, default=False,
-    help="Make initial deposition. This is required if you do not have configured any reference to a previous version."
+    help="Allow initial deposition if no previous version exists in target repository. "
+         "Otherwise only an existing, configured upstream record may be updated."
 )
 @click.option(
     "--auth-token", envvar="HERMES_DEPOSITION_AUTH_TOKEN",
