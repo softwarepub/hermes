@@ -9,7 +9,7 @@
 import json
 import logging
 import typing as t
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -75,6 +75,11 @@ def prepare_deposit(click_ctx: click.Context, ctx: CodeMetaContext):
     communities_api_url = f"{site_url}/{communities_api_path}"
     communities = _get_community_identifiers(ctx, communities_api_url)
     ctx.update(invenio_path["communities"], communities)
+
+    access_right, embargo_date, access_conditions = _get_access_modalities(license)
+    ctx.update(invenio_path["access_right"], access_right)
+    ctx.update(invenio_path["embargo_date"], embargo_date)
+    ctx.update(invenio_path["access_conditions"], access_conditions)
 
 
 def map_metadata(click_ctx: click.Context, ctx: CodeMetaContext):
@@ -314,6 +319,9 @@ def _codemeta_to_invenio_deposition(ctx: CodeMetaContext) -> dict:
     metadata = ctx["codemeta"]
     license = ctx["deposit"]["invenio"]["license"]
     communities = ctx["deposit"]["invenio"]["communities"]
+    access_right = ctx["deposit"]["invenio"]["access_right"]
+    embargo_date = ctx["deposit"]["invenio"]["embargo_date"]
+    access_conditions = ctx["deposit"]["invenio"]["access_conditions"]
 
     creators = [
         # TODO: Distinguish between @type "Person" and others
@@ -372,15 +380,10 @@ def _codemeta_to_invenio_deposition(ctx: CodeMetaContext) -> dict:
         # `tool.poetry.description` from pyproject.toml or `abstract` from
         # CITATION.cff. This should then be stored in codemeta description field.
         "description": metadata["name"],
-        # TODO: Get from config. This needs to be specified; we can not guess this.
-        # TODO: Needs some more logic:
-        # Possible options are: open, embargoed, restricted, closed. open and
-        # restricted should come with a `license`, embargoed with an `embargo_date`,
-        # restricted with `access_conditions`.
-        "access_right": "open",
+        "access_right": access_right,
         "license": license,
-        "embargo_date": None,
-        "access_conditions": None,
+        "embargo_date": embargo_date,
+        "access_conditions": access_conditions,
         # TODO: If a publisher already has assigned a DOI to the files we want to
         # upload, it should be used here. In this case, Invenio will not give us a new
         # one. Set "prereserve_doi" accordingly.
@@ -416,8 +419,8 @@ def _get_license_identifier(ctx: CodeMetaContext, license_api_url: str):
     passed to an Invenio instance.
 
     A license according to CodeMeta may be a URL (text) or a CreativeWork. This function
-    only handles URLs. If the extracted ``license`` is not of type :class:`str`, a
-    :class:`RuntimeError` is raised.
+    only handles URLs. If a ``license`` field is present in the CodeMeta and it is not
+    of type :class:`str`, a :class:`RuntimeError` is raised.
 
     Invenio instances take a license string which refers to a license identifier.
     Typically, Invenio instances offer licenses from https://opendefinition.org and
@@ -426,13 +429,14 @@ def _get_license_identifier(ctx: CodeMetaContext, license_api_url: str):
     An API endpoint (usually ``/api/licenses``) can be used to check whether a given
     license is supported by the Invenio instance. This function tries to retrieve the
     license by the identifier at the end of the license URL path. If this identifier
-    does not exist on the Invenio instance, a :class:`RuntimeError` is raised.
+    does not exist on the Invenio instance, a :class:`RuntimeError` is raised. If no
+    license is given in the CodeMeta, ``None`` is returned.
     """
 
     license_url = ctx["codemeta"].get("license")
 
     if license_url is None:
-        raise RuntimeError("No license was found in CodeMeta")
+        return None
 
     if not isinstance(license_url, str):
         raise RuntimeError(
@@ -484,3 +488,70 @@ def _get_community_identifiers(ctx: CodeMetaContext, communities_api_url: str):
         community_ids.append({"identifier": response.json()["id"]})
 
     return community_ids
+
+
+def _get_access_modalities(license):
+    """Get access right, embargo date and access conditions based on configuration and given license.
+
+    This function implements the rules laid out in the `Zenodo developer documentation
+    <https://developers.zenodo.org/#representation>`_:
+
+    - ``access_right`` is a controlled vocabulary
+    - embargoed access depositions need an embargo date
+    - restricted access depositions need access conditions
+    - open and embargoed access depositions need a license
+    - closed access depositions have no further requirements
+
+    This function also makes sure that the given embargo date can be parsed as an ISO
+    8061 string representation and that the access rights are given as a string.
+    """
+    invenio_config = config.get("deposit").get("invenio", {})
+
+    access_right = invenio_config.get("access_right")
+    if access_right is None:
+        raise MisconfigurationError("deposit.invenio.access_right is not configured")
+
+    access_right_options = ["open", "embargoed", "restricted", "closed"]
+    if access_right not in access_right_options:
+        raise MisconfigurationError(
+            "deposition.invenio.access_right must be one of: "
+            f"{', '.join(access_right_options)}"
+        )
+
+    embargo_date = invenio_config.get("embargo_date")
+    if access_right == "embargoed" and embargo_date is None:
+        raise MisconfigurationError(
+            f"With access_right {access_right}, "
+            "deposit.invenio.embargo_date must be configured"
+        )
+
+    if embargo_date is not None:
+        try:
+            datetime.fromisoformat(embargo_date)
+        except ValueError:
+            raise MisconfigurationError(
+                f"Could not parse deposit.invenio.embargo_date {embargo_date!r}. "
+                "Must be in ISO 8601 format."
+            )
+
+    access_conditions = invenio_config.get("access_conditions")
+    if access_right == "restricted" and access_conditions is None:
+        raise MisconfigurationError(
+            f"With access_right {access_right}, "
+            "deposit.invenio.access_conditions must be configured"
+        )
+
+    if access_conditions is not None and not isinstance(access_conditions, str):
+        raise MisconfigurationError(
+            "deposit.invenio.access_conditions must be a string (HTML is allowed)."
+        )
+
+    if license is None and access_right in ["open", "embargoed"]:
+        raise MisconfigurationError(
+            f"With access_right {access_right}, a license is required."
+        )
+
+    if access_right == "closed":
+        pass
+
+    return access_right, embargo_date, access_conditions
