@@ -259,22 +259,6 @@ def postprocess(click_ctx: click.Context):
         postprocessor(ctx)
 
     audit_log.info('')
-
-    if ctx._errors:
-        audit_log.error('!!! warning "Errors during merge"')
-
-        for ep, error in ctx._errors:
-            audit_log.info('    - %s: %s', ep.name, error)
-
-    tags_path = ctx.get_cache('process', 'tags', create=True)
-    with tags_path.open('w') as tags_file:
-        json.dump(ctx.tags, tags_file, indent=2)
-
-    ctx.prepare_codemeta()
-
-    with open(ctx.get_cache("process", "codemeta", create=True), 'w') as codemeta_file:
-        json.dump(ctx._data, codemeta_file, indent=2)
-
     logging.shutdown()
 
 
