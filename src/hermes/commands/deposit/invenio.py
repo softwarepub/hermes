@@ -166,6 +166,8 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
 
     deposit = response.json()
     _log.debug("Created deposit: %s", deposit["links"]["html"])
+    with open(ctx.get_cache('deposit', 'deposit', create=True), 'w') as deposit_file:
+        json.dump(deposit, deposit_file, indent='    ')
 
     # Upload the files. We'll use the bucket API rather than the files API as it
     # supports file sizes above 100MB.

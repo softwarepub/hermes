@@ -229,11 +229,42 @@ def deposit(click_ctx: click.Context, initial, auth_token, file):
 
 
 @click.group(invoke_without_command=True)
-def postprocess():
+@click.pass_context
+def postprocess(click_ctx: click.Context):
     """
     Postprocess metadata after deposition
     """
-    click.echo("Post-processing")
+    """
+    Process metadata and prepare it for deposition
+    """
+    _log = logging.getLogger('cli.postprocess')
+
+    audit_log = logging.getLogger('audit')
+    audit_log.info("# Post-processing")
+
+    ctx = CodeMetaContext()
+
+    if not (ctx.hermes_dir / "deposit").exists():
+        _log.error("You must run the deposit command before post-process")
+        click_ctx.exit(1)
+
+    # Get all harvesters
+    postprocess_config = config.get("post")
+    postprocess_names = postprocess_config.get('process', [])
+
+    for postprocess_name in postprocess_names:
+        postprocessors = metadata.entry_points(group='hermes.postprocess', name=postprocess_name)
+        if not postprocessors:
+            _log.warning("- Post-processor %s selected but not found.", postprocess_name)
+            continue
+
+        postprocessor_ep, *_ = postprocessors
+        audit_log.info("## Post-process data with %s", postprocessor_ep.name)
+        postprocessor = postprocessor_ep.load()
+        postprocessor(ctx)
+
+    audit_log.info('')
+    logging.shutdown()
 
 
 @click.group(invoke_without_command=True)
