@@ -8,7 +8,7 @@ import json
 import logging
 
 import toml
-import yaml
+from ruamel import yaml
 
 from hermes import config
 
