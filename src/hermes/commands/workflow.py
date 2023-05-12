@@ -149,6 +149,11 @@ def curate(click_ctx: click.Context):
 
 @click.group(invoke_without_command=True)
 @click.option(
+    "--initial", is_flag=True, default=False,
+    help="Allow initial deposition if no previous version exists in target repository. "
+         "Otherwise only an existing, configured upstream record may be updated."
+)
+@click.option(
     "--auth-token", envvar="HERMES_DEPOSITION_AUTH_TOKEN",
     help="Token used to authenticate the user with the target deposition platform. "
          "Can be passed on the command line or as an environment variable."
@@ -160,7 +165,7 @@ def curate(click_ctx: click.Context):
          "This option may be passed multiple times."
 )
 @click.pass_context
-def deposit(click_ctx: click.Context, auth_token, file):
+def deposit(click_ctx: click.Context, initial, auth_token, file):
     """
     Deposit processed (and curated) metadata.
     """

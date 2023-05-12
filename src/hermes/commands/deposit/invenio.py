@@ -151,11 +151,14 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
                 old_deposit['links']['latest_draft'],
                 json={"metadata": deposition_metadata}
             )
-    else:
+    elif click_ctx.params['initial']:
         response = session.post(
             deposit_url,
             json={"metadata": deposition_metadata}
         )
+    else:
+        _log.error("Please use `--initial` to make an initial deposition.")
+        click_ctx.exit(1)
 
     if not response.ok:
         _log.error(f"Could not update metadata of deposit {deposit_url!r}")
