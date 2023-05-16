@@ -229,9 +229,6 @@ def postprocess(click_ctx: click.Context):
     """
     Postprocess metadata after deposition
     """
-    """
-    Process metadata and prepare it for deposition
-    """
     _log = logging.getLogger('cli.postprocess')
 
     audit_log = logging.getLogger('audit')

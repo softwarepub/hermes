@@ -26,7 +26,7 @@ def config_record_id(ctx):
         conf['deposit']['invenio']['record_id'] = deposition['record_id']
         toml.dump(conf, open('hermes.toml', 'w'))
     except KeyError as e:
-        raise RuntimeError("No configuration for deposition on Invenio available to store record id") from e
+        raise RuntimeError("No Invenio deposition configuration available to store record id in") from e
 
 
 def cff_doi(ctx):
