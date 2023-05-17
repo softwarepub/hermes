@@ -71,8 +71,10 @@ def configure(config_path: pathlib.Path, working_path: pathlib.Path):
         return
 
     # Load sane default paths for log files before potentially overwritting via configuration
-    _config['logging']['handlers']['logfile']['filename'] = working_path / HermesContext.hermes_cache_name / "hermes.log"
-    _config['logging']['handlers']['auditfile']['filename'] = working_path / HermesContext.hermes_cache_name / "audit.log"
+    _config['logging']['handlers']['logfile']['filename'] = \
+        working_path / HermesContext.hermes_cache_name / "hermes.log"
+    _config['logging']['handlers']['auditfile']['filename'] = \
+        working_path / HermesContext.hermes_cache_name / "audit.log"
 
     # Load configuration if not present
     try:
