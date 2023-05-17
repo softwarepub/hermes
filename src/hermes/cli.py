@@ -84,13 +84,16 @@ class WorkflowCommand(click.Group):
         :param ctx: Context for the command.
         """
 
-        configure(ctx.params.get('config').absolute())
+        # Get the user provided working dir from the --path option or default to current working directory.
+        working_path = ctx.params.get('path', pathlib.Path.cwd()).absolute()
+
+        configure(ctx.params.get('config').absolute(), working_path)
         init_logging()
         log_header(None)
 
         audit_log = logging.getLogger('audit')
         audit_log.info("# Running Hermes")
-        audit_log.info("Running Hermes command line in: %s", ctx.params.get('path', pathlib.Path.cwd()).absolute())
+        audit_log.info("Running Hermes command line in: %s", working_path)
         audit_log.debug("")
         audit_log.debug("Invoked `%s` with", ctx.invoked_subcommand or self.name)
         audit_log.debug("")
