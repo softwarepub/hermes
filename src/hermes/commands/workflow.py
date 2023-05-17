@@ -5,18 +5,21 @@
 # SPDX-FileContributor: Stephan Druskat
 # SPDX-FileContributor: Michael Meinel
 # SPDX-FileContributor: David Pape
+# SPDX-FileContributor: Oliver Bertuch
 
 import json
 import logging
+import os
+import shutil
 from importlib import metadata
 
 import click
-import requests
 
 from hermes import config
+from hermes.error import MisconfigurationError
 from hermes.model.context import HermesContext, HermesHarvestContext, CodeMetaContext
 from hermes.model.errors import MergeError
-from hermes.utils import hermes_user_agent
+from hermes.model.path import ContextPath
 
 
 @click.group(invoke_without_command=True)
@@ -62,7 +65,8 @@ def harvest(click_ctx: click.Context):
 
 
 @click.group(invoke_without_command=True)
-def process():
+@click.pass_context
+def process(click_ctx: click.Context):
     """
     Process metadata and prepare it for deposition
     """
@@ -75,7 +79,7 @@ def process():
 
     if not (ctx.hermes_dir / "harvest").exists():
         _log.error("You must run the harvest command before process")
-        return 1
+        click_ctx.exit(1)
 
     # Get all harvesters
     harvest_config = config.get("harvest")
@@ -98,15 +102,16 @@ def process():
             _log.warning("No output data from harvester %s found, skipping", harvester.name)
             continue
 
-        processors = metadata.entry_points(group='hermes.preprocess', name=harvester.name)
-        for processor in processors:
-            _log.debug(". Loading context processor %s", processor.value)
-            process = processor.load()
+        preprocessors = metadata.entry_points(group='hermes.preprocess', name=harvester.name)
+        for preprocessor in preprocessors:
+            _log.debug(". Loading context preprocessor %s", preprocessor.value)
+            preprocess = preprocessor.load()
 
-            _log.debug(". Apply processor %s", processor.value)
-            process(ctx, harvest_context)
+            _log.debug(". Apply preprocessor %s", preprocessor.value)
+            preprocess(ctx, harvest_context)
 
         ctx.merge_from(harvest_context)
+        ctx.merge_contexts_from(harvest_context)
         _log.info('')
     audit_log.info('')
 
@@ -118,68 +123,76 @@ def process():
 
     tags_path = ctx.get_cache('process', 'tags', create=True)
     with tags_path.open('w') as tags_file:
-        json.dump(ctx.tags, tags_file, indent='  ')
+        json.dump(ctx.tags, tags_file, indent=2)
+
+    ctx.prepare_codemeta()
 
     with open(ctx.get_cache("process", "codemeta", create=True), 'w') as codemeta_file:
-        json.dump(ctx._data, codemeta_file, indent='  ')
+        json.dump(ctx._data, codemeta_file, indent=2)
 
     logging.shutdown()
 
 
 @click.group(invoke_without_command=True)
-@click.option("--auth-token", envvar="HERMES_DEPOSITION_AUTH_TOKEN")
 @click.pass_context
-def deposit(click_ctx: click.Context, auth_token):
+def curate(click_ctx: click.Context):
+    ctx = CodeMetaContext()
+    process_output = ctx.hermes_dir / 'process' / 'codemeta.json'
+
+    if not process_output.is_file():
+        click.echo("No processed metadata found. Please run `hermes process` before curation.")
+        click_ctx.exit(1)
+
+    os.makedirs(ctx.hermes_dir / 'curate', exist_ok=True)
+    shutil.copy(process_output, ctx.hermes_dir / 'curate' / 'codemeta.json')
+
+
+@click.group(invoke_without_command=True)
+@click.option(
+    "--initial", is_flag=True, default=False,
+    help="Allow initial deposition if no previous version exists in target repository. "
+         "Otherwise only an existing, configured upstream record may be updated."
+)
+@click.option(
+    "--auth-token", envvar="HERMES_DEPOSITION_AUTH_TOKEN",
+    help="Token used to authenticate the user with the target deposition platform. "
+         "Can be passed on the command line or as an environment variable."
+)
+@click.option(
+    "--file", "-f", multiple=True, required=True,
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+    help="Files to be uploaded on the target deposition platform. "
+         "This option may be passed multiple times."
+)
+@click.pass_context
+def deposit(click_ctx: click.Context, initial, auth_token, file):
     """
-    Deposit processed (and curated) metadata
+    Deposit processed (and curated) metadata.
     """
     click.echo("Metadata deposition")
     _log = logging.getLogger("cli.deposit")
 
-    # TODO: Better name than session?
-    # TODO: If this is needed in more places, it could be moved one level up.
-    click_ctx.session = requests.Session()
-    click_ctx.session.headers = {
-        "User-Agent": hermes_user_agent,
-    }
-
-    # local import that can be removed later
-    from hermes.model.path import ContextPath
-
     ctx = CodeMetaContext()
 
-    codemeta_file = ctx.get_cache("process", "codemeta")
+    codemeta_file = ctx.get_cache("curate", "codemeta")
     if not codemeta_file.exists():
-        _log.error("You must run the process command before deposit")
-        return 1
+        _log.error("You must run the 'curate' command before deposit")
+        click_ctx.exit(1)
 
+    # Loading the data into the "codemeta" field is a temporary workaround used because
+    # the CodeMetaContext does not provide an update_from method. Eventually we want the
+    # the context to contain `{**data}` rather than `{"codemeta": data}`. Then, for
+    # additional data, the hermes namespace should be used.
     codemeta_path = ContextPath("codemeta")
     with open(codemeta_file) as codemeta_fh:
         ctx.update(codemeta_path, json.load(codemeta_fh))
 
-    # TODO: Remove this
-    deposition_platform_path = ContextPath("depositionPlatform")
-    deposit_invenio_path = ContextPath.parse("deposit.invenio")
-
-    # TODO: Remove this
-    # Which kind of platform do we target here? For now, we just put "invenio" there.
-    ctx.update(deposition_platform_path, "invenio")
-
-    # TODO: Remove this
-    # There are many Invenio instances. For now, we just use Zenodo as a default.
-    ctx.update(deposit_invenio_path["siteUrl"], "https://sandbox.zenodo.org")
-    ctx.update(
-        deposit_invenio_path["schemaPaths"]["record"],
-        "api/schemas/records/record-v1.0.0.json"
-    )
-    ctx.update(
-        deposit_invenio_path["apiPaths"]["depositions"],
-        "api/deposit/depositions"
-    )
+    deposit_config = config.get("deposit")
 
     # The platform to which we want to deposit the (meta)data
-    # TODO: Get this from config
-    deposition_platform = ctx["depositionPlatform"]
+    deposition_platform = deposit_config.get("target", "invenio")
+    # The metadata mapping logic for the target platform
+    deposition_mapping = deposit_config.get("mapping", "invenio")
 
     # Prepare the deposit
     deposit_preparator_entrypoints = metadata.entry_points(
@@ -188,12 +201,16 @@ def deposit(click_ctx: click.Context, auth_token):
     )
     if deposit_preparator_entrypoints:
         deposit_preparator = deposit_preparator_entrypoints[0].load()
-        deposit_preparator(click_ctx, ctx)
+        try:
+            deposit_preparator(click_ctx, ctx)
+        except (RuntimeError, MisconfigurationError) as e:
+            _log.error(e)
+            click_ctx.exit(1)
 
     # Map metadata onto target schema
     metadata_mapping_entrypoints = metadata.entry_points(
         group="hermes.metadata_mapping",
-        name=deposition_platform
+        name=deposition_mapping
     )
     if metadata_mapping_entrypoints:
         metadata_mapping = metadata_mapping_entrypoints[0].load()

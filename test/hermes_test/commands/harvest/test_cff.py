@@ -29,7 +29,7 @@ def codemeta():
     }""")
 
 
-@pytest.fixture()
+@pytest.fixture
 def valid_minimal_cff(tmp_path):
     cff = """\
     cff-version: 1.2.0
@@ -64,3 +64,43 @@ def test_validate_success(valid_minimal_cff):
 
 def test_validate_fail():
     assert harvest._validate(pathlib.Path("foobar"), {}) is False
+
+
+# Regression test for https://github.com/hermes-hmc/workflow/issues/112
+
+@pytest.fixture
+def codemeta_with_email():
+    return json.loads("""{
+      "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+      "@type": "SoftwareSourceCode",
+      "author": [
+        {
+          "@type": "Person",
+          "email": "em@il.notexist",
+          "name": "Author"
+        }
+      ],
+      "name": "Title"
+    }""")
+
+
+@pytest.fixture
+def valid_minimal_cff_with_email(tmp_path):
+    cff = """\
+    cff-version: 1.2.0
+    authors:
+      - name: Author
+        email: em@il.notexist
+    message: Message
+    title: Title
+    """
+    yaml = YAML()
+    cff_yml = yaml.load(cff)
+    cff_file = tmp_path / 'CITATION.cff'
+    yaml.dump(cff_yml, cff_file)
+    return cff_file
+
+
+def test_convert_cff_to_codemeta_with_email(valid_minimal_cff_with_email, codemeta_with_email):
+    actual_result = harvest._convert_cff_to_codemeta(valid_minimal_cff_with_email.read_text())
+    assert codemeta_with_email == actual_result

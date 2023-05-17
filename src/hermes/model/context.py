@@ -38,6 +38,7 @@ class HermesContext:
 
     default_timestamp = datetime.datetime.now().isoformat(timespec='seconds')
     hermes_cache_name = ".hermes"
+    hermes_lod_context = ("hermes", "https://software-metadata.pub/ns/hermes/")
 
     def __init__(self, project_dir: t.Optional[Path] = None):
         """
@@ -53,6 +54,7 @@ class HermesContext:
         self._caches = {}
         self._data = {}
         self._errors = []
+        self.contexts = {self.hermes_lod_context}
 
     def __getitem__(self, key: ContextPath | str) -> t.Any:
         """
@@ -154,6 +156,14 @@ class HermesContext:
         if self.hermes_dir.exists():
             shutil.rmtree(self.hermes_dir)
 
+    def add_context(self, new_context: tuple) -> None:
+        """
+        Add a new linked data context to the harvest context.
+
+        :param new_context: The new context as tuple (context name, context URI)
+        """
+        self.contexts.add(new_context)
+
 
 class HermesHarvestContext(HermesContext):
     """
@@ -192,6 +202,13 @@ class HermesHarvestContext(HermesContext):
             self._log.debug("Loading cache from %s...", data_file)
             self._data = json.load(data_file.open('r'))
 
+        contexts_file = self._base.get_cache('harvest', self._ep.name + '_contexts')
+        if contexts_file.is_file():
+            self._log.debug("Loading contexts from %s...", contexts_file)
+            contexts = json.load(contexts_file.open('r'))
+            for context in contexts:
+                self.contexts.add((tuple(context)))
+
     def store_cache(self):
         """
         Store the collected data to the :py:attr:`HermesContext.hermes_dir`.
@@ -200,6 +217,11 @@ class HermesHarvestContext(HermesContext):
         data_file = self.get_cache('harvest', self._ep.name, create=True)
         self._log.debug("Writing cache to %s...", data_file)
         json.dump(self._data, data_file.open('w'), indent=2)
+
+        if self.contexts:
+            contexts_file = self.get_cache('harvest', self._ep.name + '_contexts', create=True)
+            self._log.debug("Writing contexts to %s...", contexts_file)
+            json.dump(list(self.contexts), contexts_file.open('w'), indent=2)
 
     def __enter__(self):
         self.load_cache()
@@ -341,7 +363,10 @@ class HermesHarvestContext(HermesContext):
                 try:
                     key.update(data, value, tags, **tag)
                     if tags is not None and tag:
-                        tags[str(key)] = tag
+                        if str(key) in tags:
+                            tags[str(key)].update(tag)
+                        else:
+                            tags[str(key)] = tag
                 except errors.MergeError as e:
                     self.error(self._ep, e)
         return data
@@ -358,6 +383,8 @@ class CodeMetaContext(HermesContext):
         'author': ('@id', 'email', 'name'),
     }
 
+    _CODEMETA_CONTEXT_URL = "https://doi.org/10.5063/schema/codemeta-2.0"
+
     def __init__(self, project_dir: pathlib.Path | None = None):
         super().__init__(project_dir)
         self.tags = {}
@@ -365,11 +392,21 @@ class CodeMetaContext(HermesContext):
     def merge_from(self, other: HermesHarvestContext):
         other.get_data(self._data, tags=self.tags)
 
+    def merge_contexts_from(self, other: HermesHarvestContext):
+        """
+        Merges any linked data contexts from a harvesting context into the instance's set of contexts.
+
+        :param other: The :py:class:`HermesHarvestContext` to merge the linked data contexts from
+        """
+        if other.contexts:
+            for context in other.contexts:
+                self.contexts.add(context)
+
     def update(self, _key: ContextPath, _value: t.Any, tags: t.Dict[str, t.Dict] | None = None):
         if _key._item == '*':
             _item_path, _item, _path = _key.resolve(self._data, query=_value, create=True)
             if tags:
-                _tags = {k.lstrip(str(_key) + '.'): t for k, t in tags.items() if ContextPath.parse(k) in _key}
+                _tags = {k[len(str(_key) + '.'):]: t for k, t in tags.items() if ContextPath.parse(k) in _key}
             else:
                 _tags = {}
             _path._set_item(_item, _path, _value, **_tags)
@@ -394,3 +431,15 @@ class CodeMetaContext(HermesContext):
             if any(other.get(k, None) == v for k, v in match):
                 return item[i]
         return None
+
+    def prepare_codemeta(self):
+        """
+        Updates the linked data contexts, where the CodeMeta context is the default context,
+        and any additional contexts are named contexts.
+        Also sets the type to 'SoftwareSourceCode'.
+        """
+        if self.contexts:
+            self.update(ContextPath('@context'), [self._CODEMETA_CONTEXT_URL, dict(self.contexts)])
+        else:
+            self.update(ContextPath('@context'), self._CODEMETA_CONTEXT_URL)
+        self.update(ContextPath('@type'), 'SoftwareSourceCode')
