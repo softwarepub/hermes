@@ -43,6 +43,10 @@ tutorials/*
 ```
 
 ```{toctree}
+cli
+```
+
+```{toctree}
 :maxdepth: 1
 :caption: Developers
 dev/contribute
