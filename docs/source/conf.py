@@ -55,6 +55,7 @@ extensions = [
     "sphinxext.opengraph",
     'myst_parser',
     'autoapi.extension',
+    'sphinx_click',
 ]
 
 language = 'en'
