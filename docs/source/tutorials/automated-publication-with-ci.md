@@ -136,7 +136,7 @@ You then have the chance to curate the metadata, i.e., make sure that it looks t
 If you merge the pull request, the actual publication is created, 
 and the HERMES configuration file is updated 
 with the ID of the publication.
-This is needed so that future published versions are collected under the same *concept DOI*.
+This is needed so that future published versions are collected under the same [*concept DOI*](https://help.zenodo.org/#versioning).
 
 If the updates from the publication actually change the configuration file, or the `CITATION.cff` file,
 HERMES will create another pull request after publication.
