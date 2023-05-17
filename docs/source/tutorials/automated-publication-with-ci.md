@@ -121,7 +121,7 @@ git push
 
 ## Automatic publication workflow
 
-```{success}
+```{note}
 Congratulations, you can now automatically publish your repository to Zenodo Sandbox!
 ```
 
