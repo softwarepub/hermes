@@ -35,15 +35,17 @@ automatic submission to publication repositories.
 
 ## Documentation
  
+<!--
+```{toctree}
+ cli
+```
+-->
+
 ```{toctree}
 :glob:
 :maxdepth: 1
 :caption: Tutorials
 tutorials/*
-```
-
-```{toctree}
-cli
 ```
 
 ```{toctree}
