@@ -116,7 +116,7 @@ html_theme_options = {
                     target='_blank'>Helmholtz Association</a> in the framework of the \
                     <a href='https://helmholtz-metadaten.de' targe='_blank'>Helmholtz Metadata \
                     Collaboration</a></div>",
-    "repository_url": "https://github.com/hermes-hmc/project",
+    "repository_url": "https://github.com/hermes-hmc/workflow",
     "use_repository_button": True,
 }
 
