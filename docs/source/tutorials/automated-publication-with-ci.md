@@ -22,7 +22,7 @@ This tutorial should also work with the "real" Zenodo.
 ## Configure your .gitignore
  
 The HERMES workflow (`hermes`) uses temporary caches in `.hermes/`.
-Ignore this directory in your git repository: 
+Ignore this directory in your git repository.
 
 Add `.hermes/` to your `.gitignore` file:
  
