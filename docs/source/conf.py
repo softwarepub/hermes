@@ -56,6 +56,7 @@ extensions = [
     'myst_parser',
     'autoapi.extension',
     'sphinx_click',
+    'sphinxcontrib.mermaid',
 ]
 
 language = 'en'
