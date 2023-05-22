@@ -128,10 +128,24 @@ git push
 You can now automatically publish your repository to Zenodo Sandbox!
 ```
 
+````{margin}
+```{mermaid}
+---
+---
+flowchart TD
+    t(("Trigger\n (i.e. push)")) -->
+    ci1("Run Harvest, Process,\n Curate steps") -->
+    pr1("Create Curation PR") -->
+    d{"Accept?"}
+    d -->|Merge| ci2("Run Deposit &\n Postprocess step") --> pr2("Create PR from\n Postprocessing") --> e((("End")))
+    d -->|Close| ci3("Cleanup") --> e((("End")))
+```
+````
+
 Now, whenever the GitHub Actions workflow is triggered, it will publish a new version of your repository to Zenodo Sandbox.
 If you haven't adapted the workflow file, this will happen whenever you push to your `main` branch.
 
-<!-- TODO: Add user workflow chart here? -->
+The diagram on the right shows the different steps that will happen each time.
 
 When the workflow runs, it harvests and processes the metadata from Git and your `CITATION.cff` file,
 and creates a new pull request in your repository.
