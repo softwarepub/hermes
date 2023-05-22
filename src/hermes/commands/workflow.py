@@ -241,8 +241,8 @@ def postprocess(click_ctx: click.Context):
         click_ctx.exit(1)
 
     # Get all postprocessors
-    postprocess_config = config.get("post")
-    postprocess_names = postprocess_config.get('process', [])
+    postprocess_config = config.get("postprocess")
+    postprocess_names = postprocess_config.get('execute', [])
 
     for postprocess_name in postprocess_names:
         postprocessors = metadata.entry_points(group='hermes.postprocess', name=postprocess_name)
