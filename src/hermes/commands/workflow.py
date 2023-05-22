@@ -240,7 +240,7 @@ def postprocess(click_ctx: click.Context):
         _log.error("You must run the deposit command before post-process")
         click_ctx.exit(1)
 
-    # Get all harvesters
+    # Get all postprocessors
     postprocess_config = config.get("post")
     postprocess_names = postprocess_config.get('process', [])
 
