@@ -26,8 +26,8 @@ Ignore this directory in your git repository.
 
 Add `.hermes/` to your `.gitignore` file:
  
-```bash
-# .gitignore
+```{code-block} bash
+:caption: .gitignore
 
 .hermes/
 ```
@@ -60,7 +60,10 @@ Configure HERMES to:
 - deposit on Zenodo Sandbox (which is built on the InvenioRDM)
 - use Zenodo Sandbox as the target publication repository
 
-```toml
+```{code-block} toml
+:caption: hermes.toml
+:name: hermes.toml
+
 [harvest]
 from = [ "cff", "git" ]
 
@@ -121,8 +124,8 @@ git push
 
 ## Automatic publication workflow
 
-```{note}
-Congratulations, you can now automatically publish your repository to Zenodo Sandbox!
+```{admonition} Congratulations!
+You can now automatically publish your repository to Zenodo Sandbox!
 ```
 
 Now, whenever the GitHub Actions workflow is triggered, it will publish a new version of your repository to Zenodo Sandbox.
