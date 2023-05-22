@@ -47,5 +47,5 @@ def cff_doi(ctx):
             cff['identifiers'] = [new_identifier]
         yaml.dump(cff, open('CITATION.cff', 'w'),
                   indent=4, default_flow_style=False, block_seq_indent=2, allow_unicode=True)
-    except IOError as e:
-        raise RuntimeError("CITATION.cff not found.") from e
+    except Exception as e:
+        raise RuntimeError("Update of CITATION.cff failed.") from e
