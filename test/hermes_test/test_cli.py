@@ -134,14 +134,14 @@ def test_hermes_with_deposit_and_path():
     runner = CliRunner()
     result = runner.invoke(cli.main, args=('--deposit', '--path', './'))
 
-    assert isinstance(result.exception, DepositionUnauthorizedError)
+    assert result.exit_code == 2
 
 
 def test_hermes_with_path_and_postprocess():
     runner = CliRunner()
     result = runner.invoke(cli.main, args=('--path', './', '--postprocess'))
 
-    assert not result.exception
+    assert result.exit_code == 1
 
 
 @pytest.mark.skip(reason="No clean way at the moment of adding more required options that are parsed by Click, \

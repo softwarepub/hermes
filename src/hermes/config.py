@@ -106,7 +106,7 @@ def get(name: str) -> dict:
             _config['hermes'][name] = {}
         _config[name] = _config['hermes'][name]
 
-    elif not _config['hermes'][name] is _config[name]:
+    elif name != 'hermes' and _config['hermes'][name] is not _config[name]:
         # If a configuration was loaded, after the defaults were set, update it.
         _config[name].update(_config['hermes'].get('name', {}))
 
