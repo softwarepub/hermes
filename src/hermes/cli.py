@@ -85,7 +85,7 @@ class WorkflowCommand(click.Group):
         """
 
         # Get the user provided working dir from the --path option or default to current working directory.
-        working_path = ctx.params.get('path', pathlib.Path.cwd()).absolute()
+        working_path = ctx.params.get('path').absolute()
 
         configure(ctx.params.get('config').absolute(), working_path)
         init_logging()
