@@ -76,6 +76,7 @@ target = "invenio"
 
 [deposit.invenio]
 site_url = "https://sandbox.zenodo.org"
+access_right = "open"
 
 [postprocess]
 execute = [ "config_record_id" ]
