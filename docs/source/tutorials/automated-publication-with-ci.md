@@ -41,7 +41,7 @@ If you don't have one yet,
 use the [cffinit](https://citation-file-format.github.io/cff-initializer-javascript/) website
 to create a `CITATION.cff` file.
 
-```{important} Don't forget the license!
+```{important}
 Make sure that you define the [license](https://spdx.org/licenses/) for your repository in the `CITATION.cff` file! Otherwise, Zenodo Sandbox will not accept your publication as open access.
 ```
 
