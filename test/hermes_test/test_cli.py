@@ -47,6 +47,7 @@ def test_workflow_invoke():
     wf.add_command(eggs_cmd)
 
     ctx = click.Context(wf)
+    ctx.params['path'] = pathlib.Path.cwd()
     ctx.params['config'] = pathlib.Path.cwd() / 'hermes.toml'
     wf.invoke(ctx)
 
@@ -65,12 +66,13 @@ def test_workflow_invoke_with_cb():
     wf.result_callback()(cb_mock)
 
     ctx = click.Context(wf)
+    ctx.params['path'] = pathlib.Path.cwd()
     ctx.params['config'] = pathlib.Path.cwd() / 'hermes.toml'
     wf.invoke(ctx)
 
     spam.assert_called_once()
     eggs.assert_called_once()
-    cb_mock.assert_called_with(["spam", "eggs"], config=ctx.params['config'])
+    cb_mock.assert_called_with(["spam", "eggs"], config=ctx.params['config'], path=ctx.params['path'])
 
 
 def test_hermes_full():

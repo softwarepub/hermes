@@ -10,6 +10,8 @@ import sys
 
 import toml
 
+from hermes.model.context import HermesContext
+
 # This is the default logging configuration, required to see log output at all.
 #  - Maybe it could possibly somehow be a somewhat good idea to move this into an own module ... later perhaps
 _logging_config = {
@@ -33,14 +35,14 @@ _logging_config = {
             'class': "logging.FileHandler",
             'formatter': "logfile",
             'level': "DEBUG",
-            'filename': "hermes.log",
+            'filename': "./.hermes/hermes.log",
         },
 
         'auditfile': {
             'class': "logging.FileHandler",
             'formatter': "plain",
             'level': "DEBUG",
-            'filename': "hermes-audit.md",
+            'filename': "./.hermes/audit.log",
             'mode': "w",
         },
     },
@@ -59,7 +61,7 @@ _config = {
 }
 
 
-def configure(config_path: pathlib.Path):
+def configure(config_path: pathlib.Path, working_path: pathlib.Path):
     """
     Load the configuration from the given path as global hermes configuration.
 
@@ -67,6 +69,12 @@ def configure(config_path: pathlib.Path):
     """
     if 'hermes' in _config and _config['hermes']:
         return
+
+    # Load sane default paths for log files before potentially overwritting via configuration
+    _config['logging']['handlers']['logfile']['filename'] = \
+        working_path / HermesContext.hermes_cache_name / "hermes.log"
+    _config['logging']['handlers']['auditfile']['filename'] = \
+        working_path / HermesContext.hermes_cache_name / "audit.log"
 
     # Load configuration if not present
     try:
@@ -120,6 +128,10 @@ _loggers = {}
 def init_logging():
     if _loggers:
         return
+
+    # Make sure the directories to hold the log files exists (or else create)
+    pathlib.Path(_config['logging']['handlers']['logfile']['filename']).parent.mkdir(exist_ok=True, parents=True)
+    pathlib.Path(_config['logging']['handlers']['auditfile']['filename']).parent.mkdir(exist_ok=True, parents=True)
 
     # Inintialize logging system
     import logging.config
