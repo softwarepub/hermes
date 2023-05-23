@@ -130,8 +130,8 @@ def init_logging():
         return
 
     # Make sure the directories to hold the log files exists (or else create)
-    _config['logging']['handlers']['logfile']['filename'].parent.mkdir(exist_ok=True, parents=True)
-    _config['logging']['handlers']['auditfile']['filename'].parent.mkdir(exist_ok=True, parents=True)
+    pathlib.Path(_config['logging']['handlers']['logfile']['filename']).parent.mkdir(exist_ok=True, parents=True)
+    pathlib.Path(_config['logging']['handlers']['auditfile']['filename']).parent.mkdir(exist_ok=True, parents=True)
 
     # Inintialize logging system
     import logging.config
