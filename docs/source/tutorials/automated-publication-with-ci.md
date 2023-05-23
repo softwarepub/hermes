@@ -67,9 +67,6 @@ Configure HERMES to:
 [harvest]
 from = [ "git", "cff" ]
 
-[harvest.cff]
-validate = false
-
 [deposit]
 mapping = "invenio"
 target = "invenio"
