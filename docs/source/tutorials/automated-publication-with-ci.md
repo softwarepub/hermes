@@ -128,33 +128,36 @@ git push
 You can now automatically publish your repository to Zenodo Sandbox!
 ```
 
-````{margin}
-```{mermaid}
----
----
-flowchart TD
-    t(("Trigger\n (i.e. push)")) -->
-    ci1("Run Harvest, Process,\n Curate steps") -->
-    pr1("Create Curation PR") -->
-    d{"Accept?"}
-    d -->|Merge| ci2("Run Deposit &\n Postprocess step") --> pr2("Create PR from\n Postprocessing") --> e((("End")))
-    d -->|Close| ci3("Cleanup") --> e((("End")))
-```
-````
-
 Now, whenever the GitHub Actions workflow is triggered, it will publish a new version of your repository to Zenodo Sandbox.
 If you haven't adapted the workflow file, this will happen whenever you push to your `main` branch.
 
-The diagram on the right shows the different steps that will happen each time.
+The following diagram shows the different steps that will happen each time.
+
+```{mermaid}
+flowchart LR
+    t(("Trigger\nGitHub Action\n(e.g. push)"))
+    rh("Run hermes")
+    subgraph "hermes (harvest, process, curate)"
+    ci1("Harvest & process metadata")
+    pr1("Create curation pull request")
+    end
+    d{"Merge?"}
+    subgraph "hermes (deposit, postprocess)"
+    ci2("Publish software")
+    pp("Postprocessing")
+    pr2("Create pull request\nfrom postprocessing")
+    ci3("Cleanup")
+    end
+    e((("End")))
+    t --> rh --> ci1 --> pr1 --> d -->|Merge| ci2 --> pp --> pr2 --> e
+    d -->|Close| ci3 --> e
+```
 
 When the workflow runs, it harvests and processes the metadata from Git and your `CITATION.cff` file,
 and creates a new pull request in your repository.
 You then have the chance to curate the metadata, i.e., make sure that it looks the way you want.
 If you merge the pull request, the actual publication is created, 
-and the HERMES configuration file is updated 
+and a new pull request is opened to update the HERMES configuration file
+in your repository
 with the ID of the publication.
 This is needed so that future published versions are collected under the same [*concept DOI*](https://help.zenodo.org/#versioning).
-
-If the updates from the publication actually change the configuration file, or the `CITATION.cff` file,
-HERMES will create another pull request after publication.
-In this pull request, you can accept or reject the changes that are made.
