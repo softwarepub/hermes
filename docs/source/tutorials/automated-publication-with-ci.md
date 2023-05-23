@@ -127,15 +127,6 @@ git push
 
 ## Automatic publication workflow
 
-```{admonition} Congratulations!
-You can now automatically publish your repository to Zenodo Sandbox!
-```
-
-Now, whenever the GitHub Actions workflow is triggered, it will publish a new version of your repository to Zenodo Sandbox.
-If you haven't adapted the workflow file, this will happen whenever you push to your `main` branch.
-
-The diagram to the right shows the different steps that will happen each time.
-
 ````{margin}
 ```{mermaid}
 flowchart TD
@@ -157,6 +148,15 @@ flowchart TD
     d -->|Close| ci3 --> e
 ```
 ````
+
+```{admonition} Congratulations!
+You can now automatically publish your repository to Zenodo Sandbox!
+```
+
+Now, whenever the GitHub Actions workflow is triggered, it will publish a new version of your repository to Zenodo Sandbox.
+If you haven't adapted the workflow file, this will happen whenever you push to your `main` branch.
+
+The diagram to the right shows the different steps that will happen each time.
 
 When the workflow runs, it harvests and processes the metadata from Git and your `CITATION.cff` file,
 and creates a new pull request in your repository.
