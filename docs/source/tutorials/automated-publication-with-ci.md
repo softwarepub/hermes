@@ -117,7 +117,7 @@ Copy the newly created token into a new [GitHub Secret](https://docs.github.com/
 The HERMES project provides templates for continous integration systems in a dedicated repository:
 [hermes-hmc/ci-templates](https://github.com/hermes-hmc/ci-templates).
 
-Copy the [template file for "GitHub to Zenodo Sandbox Publication"](https://github.com/hermes-hmc/ci-templates/blob/main/TEMPLATE_hermes_github_to_zenodo.yml)
+Copy the [template file for GitHub to Zenodo Sandbox publication](https://github.com/hermes-hmc/ci-templates/blob/main/TEMPLATE_hermes_github_to_zenodo.yml)
 into the `.github/workflows/` directory in your repository, and rename it as you like (e.g. `hermes_github_to_zenodo.yml`).
 
 Go through the file, and look for comments marked with `# ADAPT`. Adapt the file to your needs.
