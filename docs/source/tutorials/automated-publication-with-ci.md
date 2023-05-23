@@ -40,7 +40,12 @@ provide a `CITATION.cff` file in the [Citation File Format](https://citation-fil
 If you don't have one yet,
 use the [cffinit](https://citation-file-format.github.io/cff-initializer-javascript/) website
 to create a `CITATION.cff` file.
-Save it to the root directory of your repository, and add it to version control.
+
+```{important} Don't forget the license!
+Make sure that you define the [license](https://spdx.org/licenses/) for your repository in the `CITATION.cff` file! Otherwise, Zenodo Sandbox will not accept your publication as open access.
+```
+
+Save the `CITATION.cff` file to the root directory of your repository, and add it to version control.
 
 ```bash
 git add CITATION.cff
