@@ -125,6 +125,15 @@ git commit -m "Configure automatic publication with HERMES"
 git push
 ```
 
+### Allow GitHub Actions to create pull requests in your repository
+
+The automated HERMES workflow will not publish any metadata without your approval.
+It will instead create a pull request for you to approve or change the metadata that is being deposited.
+To do this, GitHub Actions needs to be able to create pull requests in your repository.
+
+To enable this, go to *Settings* > *Actions* > *General* in your repository,
+and activate the option "Allow GitHub Actions to create and approve pull requests" in the section *Workflow permissions*.
+
 ## Automatic publication workflow
 
 ````{margin}
