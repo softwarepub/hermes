@@ -133,3 +133,7 @@ ogp_image = "https://docs.software-metadata.pub/_static/img/opengraph-workflow.p
 ogp_image_alt = "The HERMES key visual on a blue background with pipelines and the Workflow subproject title"
 ogp_description_length = 200
 ogp_type = "website"
+
+# -- Options for sphinx-togglebutton -----------------------------------------
+
+togglebutton_hint = "Click to show screenshot"
