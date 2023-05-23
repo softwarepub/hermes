@@ -42,7 +42,7 @@ use the [cffinit](https://citation-file-format.github.io/cff-initializer-javascr
 to create a `CITATION.cff` file.
 
 ```{important}
-Make sure that you define the [license](https://spdx.org/licenses/) for your repository in the `CITATION.cff` file! Otherwise, Zenodo Sandbox will not accept your publication as open access.
+Make sure that you define the [license](https://spdx.org/licenses/) for your repository [in the `CITATION.cff` file](https://github.com/citation-file-format/citation-file-format/blob/main/schema-guide.md#license)! Otherwise, Zenodo Sandbox will not accept your publication as open access.
 ```
 
 Save the `CITATION.cff` file to the root directory of your repository, and add it to version control.
