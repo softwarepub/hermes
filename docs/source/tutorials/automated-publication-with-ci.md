@@ -65,7 +65,7 @@ Configure HERMES to:
 :name: hermes.toml
 
 [harvest]
-from = [ "cff", "git" ]
+from = [ "git", "cff" ]
 
 [harvest.cff]
 validate = false
