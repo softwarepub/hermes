@@ -113,8 +113,8 @@ have a look at the [documentation on GitHub](https://docs.github.com/actions).
 
 Add the workflow file to version control and push it.
 
-```{warning}
-If you haven't adapted the workflow file, and push it to the branch `main`, you will create an automatic publication at this point.
+```{note}
+If you haven't adapted the workflow file and push it to the branch `main`, the HERMES workflow will run for the first time. This will create a new pull request with compiled metadata for curation. You can safely close it at this point.
 ```
 
 ```bash
@@ -160,16 +160,16 @@ flowchart TD
 You can now automatically publish your repository to Zenodo Sandbox!
 ```
 
-Now, whenever the GitHub Actions workflow is triggered, it will publish a new version of your repository to Zenodo Sandbox.
-If you haven't adapted the workflow file, this will happen whenever you push to your `main` branch.
+Now the HERMES workflow is ready to run.
+If you haven't adapted the workflow file, it will be triggered whenever you push to your `main` branch.
 
 The diagram to the right shows the different steps that will happen each time.
 
 When the workflow runs, it harvests and processes the metadata from Git and your `CITATION.cff` file,
 and creates a new pull request in your repository.
 You then have the chance to curate the metadata, i.e., make sure that it looks the way you want.
-If you merge the pull request, the actual publication is created, 
-and a new pull request is opened to update the HERMES configuration file
+If you merge this pull request, a new publication is created on Zenodo Sandbox. 
+In postprocessing, a new pull request is opened to update the HERMES configuration file
 in your repository
 with the ID of the publication.
 This is needed so that future published versions are collected under the same [*concept DOI*](https://help.zenodo.org/#versioning).
