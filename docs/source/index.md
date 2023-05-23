@@ -34,6 +34,19 @@ automatic submission to publication repositories.
 ![](_static/img/workflow-overview.svg)
 
 ## Documentation
+ 
+<!--
+```{toctree}
+ cli
+```
+-->
+
+```{toctree}
+:glob:
+:maxdepth: 1
+:caption: Tutorials
+tutorials/*
+```
 
 ```{toctree}
 :maxdepth: 1

@@ -66,6 +66,8 @@ sphinx-autobuild = "^2021.3.14"
 sphinx-autoapi = "^2.0.0"
 sphinxemoji = "^0.2.0"
 sphinxext-opengraph = "^0.6.3"
+sphinx-click = "^4.4.0"
+sphinxcontrib-mermaid="^0.8.1"
 reuse = "^1.0.0"
 
 [tool.poetry.plugins.console_scripts]
