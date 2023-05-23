@@ -75,7 +75,7 @@ mapping = "invenio"
 target = "invenio"
 
 [deposit.invenio]
-base_url = "https://sandbox.zenodo.org"
+site_url = "https://sandbox.zenodo.org"
 
 [postprocess]
 execute = [ "config_record_id" ]
