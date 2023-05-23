@@ -76,6 +76,9 @@ target = "invenio"
 
 [deposit.invenio]
 base_url = "https://sandbox.zenodo.org"
+
+[postprocess]
+execute = [ "config_record_id" ]
 ```
 
 Copy this file to your repository and add it to version control:
