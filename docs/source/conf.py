@@ -57,6 +57,7 @@ extensions = [
     'autoapi.extension',
     'sphinx_click',
     'sphinxcontrib.mermaid',
+    'sphinx_togglebutton',
 ]
 
 language = 'en'

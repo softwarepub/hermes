@@ -68,6 +68,7 @@ sphinxemoji = "^0.2.0"
 sphinxext-opengraph = "^0.6.3"
 sphinx-click = "^4.4.0"
 sphinxcontrib-mermaid="^0.8.1"
+sphinx-togglebutton="^0.3.2"
 reuse = "^1.0.0"
 
 [tool.poetry.plugins.console_scripts]

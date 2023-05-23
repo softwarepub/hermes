@@ -13,10 +13,10 @@ SPDX-FileContributor: Stephan Druskat
 # Set up automatic software publishing
  
 ```{note}
-This tutorial works for repositories hosted on GitHub, and shows how to automatically publish to Zenodo Sandbox.
-Zenodo Sandbox is a "toy" repository that can be used to try things out.
+This tutorial works for repositories hosted on GitHub, and shows how to automatically publish to 
+[Zenodo Sandbox](https://sandbox.zenodo.org). Zenodo Sandbox is a "toy" repository that can be used to try things out.
 
-This tutorial should also work with the "real" Zenodo.
+This tutorial should also work with the "real" [Zenodo](https://zenodo.org).
 ```
  
 ## Configure your .gitignore
@@ -84,7 +84,7 @@ access_right = "open"
 execute = [ "config_record_id" ]
 ```
 
-Copy this file to your repository and add it to version control:
+Copy this file to the root directory of your repository and add it to version control:
 
 ```bash
 git add hermes.toml
@@ -94,38 +94,49 @@ git push
 
 ## Get a personal access token for Zenodo Sandbox
 
-To allow GitHub Actions to publish our repository to Zenodo Sandbox for us,
-we need a personal access token from Zenodo Sandbox.
+To allow GitHub Actions to publish your repository to Zenodo Sandbox for you,
+you need a personal access token from Zenodo Sandbox.
 
-Log in at https://sandbox.zenodo.org (you may have to register first),
-then [create a personal access token in your user profile](https://sandbox.zenodo.org/account/settings/applications/tokens/new/)
+Log in at [Zenodo Sandbox](https://sandbox.zenodo.org) (you may have to register first).
+
+Then [create a new personal access token in your user profile](https://sandbox.zenodo.org/account/settings/applications/tokens/new/)
 with the scopes `deposit:actions` and `deposit:write`.
+
+```{toggle}
+![](img/zenodo-pat.png)
+```
 
 Copy the newly created token into a new [GitHub Secret](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-a-repository) called `ZENODO_SANDBOX` in your repository.
 
-## Configure a GitHub Action to automate publication 
-
-The HERMES project provides templates for continous integration systems in a dedicated repository:
-https://github.com/hermes-hmc/ci-templates.
-
-Copy the [template for GitHub to Zenodo Sandbox publication](https://github.com/hermes-hmc/ci-templates/blob/main/TEMPLATE_hermes_github_to_zenodo.yml)
-into the `.github/workflows/` directory in your repository, and rename it as you like (e.g. `hermes_github_to_zenodo.yml`).
-
-Go through the file, and look for comments marked with `# ADAPT`.
-Adapt the file to your needs.
-If you need help with how GitHub Action workflows work in general,
-have a look at the [documentation on GitHub](https://docs.github.com/actions).
-
-Add the workflow file to version control and push it.
-
-```{note}
-If you haven't adapted the workflow file and push it to the branch `main`, the HERMES workflow will run for the first time. This will create a new pull request with compiled metadata for curation. You can safely close it at this point.
+```{toggle}
+![](img/github-secret-zenodo-pat.png)
 ```
 
+## Configure a GitHub Action to automate publication 
+
+```{admonition} Learning GitHub Actions
+:class: toggle
+If you need help with how GitHub Action workflows work in general, have a look at the 
+[Github Actions documentation](https://docs.github.com/actions).
+```
+
+The HERMES project provides templates for continous integration systems in a dedicated repository:
+[hermes-hmc/ci-templates](https://github.com/hermes-hmc/ci-templates).
+
+Copy the [template file for "GitHub to Zenodo Sandbox Publication"](https://github.com/hermes-hmc/ci-templates/blob/main/TEMPLATE_hermes_github_to_zenodo.yml)
+into the `.github/workflows/` directory in your repository, and rename it as you like (e.g. `hermes_github_to_zenodo.yml`).
+
+Go through the file, and look for comments marked with `# ADAPT`. Adapt the file to your needs.
+
+Add the workflow file to version control and push it:
 ```bash
 git add .github/workflows/hermes_github_to_zenodo.yml
 git commit -m "Configure automatic publication with HERMES"
 git push
+```
+
+```{note}
+If you haven't adapted the workflow file and push it to the branch `main`, the HERMES workflow will run for the first time. This will create a new pull request with compiled metadata for curation. You can safely close it at this point.
 ```
 
 ### Allow GitHub Actions to create pull requests in your repository
@@ -136,6 +147,10 @@ To do this, GitHub Actions needs to be able to create pull requests in your repo
 
 To enable this, go to *Settings* > *Actions* > *General* in your repository,
 and activate the option "Allow GitHub Actions to create and approve pull requests" in the section *Workflow permissions*.
+
+```{toggle}
+![](img/github-action-allow-pr.png)
+```
 
 ## Automatic publication workflow
 
