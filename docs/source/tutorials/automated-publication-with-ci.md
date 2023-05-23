@@ -114,12 +114,6 @@ Copy the newly created token into a new [GitHub Secret](https://docs.github.com/
 
 ## Configure a GitHub Action to automate publication 
 
-```{admonition} Learning GitHub Actions
-:class: toggle
-If you need help with how GitHub Action workflows work in general, have a look at the 
-[Github Actions documentation](https://docs.github.com/actions).
-```
-
 The HERMES project provides templates for continous integration systems in a dedicated repository:
 [hermes-hmc/ci-templates](https://github.com/hermes-hmc/ci-templates).
 
@@ -127,6 +121,9 @@ Copy the [template file for "GitHub to Zenodo Sandbox Publication"](https://gith
 into the `.github/workflows/` directory in your repository, and rename it as you like (e.g. `hermes_github_to_zenodo.yml`).
 
 Go through the file, and look for comments marked with `# ADAPT`. Adapt the file to your needs.
+
+If you need help with how GitHub Action workflows work in general, have a look at the 
+[Github Actions documentation](https://docs.github.com/actions).
 
 Add the workflow file to version control and push it:
 ```bash
