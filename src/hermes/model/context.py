@@ -37,8 +37,9 @@ class HermesContext:
     """
 
     default_timestamp = datetime.datetime.now().isoformat(timespec='seconds')
-    hermes_cache_name = ".hermes"
-    hermes_lod_context = ("hermes", "https://software-metadata.pub/ns/hermes/")
+    hermes_name = "hermes"
+    hermes_cache_name = "." + hermes_name
+    hermes_lod_context = (hermes_name, "https://software-metadata.pub/ns/hermes/")
 
     def __init__(self, project_dir: t.Optional[Path] = None):
         """

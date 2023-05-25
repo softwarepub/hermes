@@ -127,7 +127,7 @@ def process(click_ctx: click.Context):
 
     ctx.prepare_codemeta()
 
-    with open(ctx.get_cache("process", "codemeta", create=True), 'w') as codemeta_file:
+    with open(ctx.get_cache("process", ctx.hermes_name, create=True), 'w') as codemeta_file:
         json.dump(ctx._data, codemeta_file, indent=2)
 
     logging.shutdown()
@@ -137,14 +137,14 @@ def process(click_ctx: click.Context):
 @click.pass_context
 def curate(click_ctx: click.Context):
     ctx = CodeMetaContext()
-    process_output = ctx.hermes_dir / 'process' / 'codemeta.json'
+    process_output = ctx.hermes_dir / 'process' / (ctx.hermes_name + ".json")
 
     if not process_output.is_file():
         click.echo("No processed metadata found. Please run `hermes process` before curation.")
         click_ctx.exit(1)
 
     os.makedirs(ctx.hermes_dir / 'curate', exist_ok=True)
-    shutil.copy(process_output, ctx.hermes_dir / 'curate' / 'codemeta.json')
+    shutil.copy(process_output, ctx.hermes_dir / 'curate' / (ctx.hermes_name + '.json'))
 
 
 @click.group(invoke_without_command=True)
@@ -174,7 +174,7 @@ def deposit(click_ctx: click.Context, initial, auth_token, file):
 
     ctx = CodeMetaContext()
 
-    codemeta_file = ctx.get_cache("curate", "codemeta")
+    codemeta_file = ctx.get_cache("curate", ctx.hermes_name)
     if not codemeta_file.exists():
         _log.error("You must run the 'curate' command before deposit")
         click_ctx.exit(1)
