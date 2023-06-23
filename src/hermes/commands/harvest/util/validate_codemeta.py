@@ -9,13 +9,15 @@
 import copy
 from pyld import jsonld
 
-# Original source at https://github.com/caltechlibrary/convert_codemeta/blob/337e39338bcce4f0f201fe03500061ab14b2ae5c/convert_codemeta/validate.py
+
+# Original source at https://github.com/caltechlibrary/convert_codemeta/blob/337e39338bcce4f0f201fe03500061ab14b2ae5c
+# /convert_codemeta/validate.py
 
 def validate_codemeta(json: dict) -> bool:
     """Check whether a codemeta json object is valid"""
     try:
         context = json["@context"]
-    except:
+    except KeyError:
         print("Not a jsonld file")
         return False
     if context == "https://doi.org/10.5063/schema/codemeta-2.0":
