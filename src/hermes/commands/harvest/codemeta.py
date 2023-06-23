@@ -11,9 +11,9 @@ import pathlib
 import typing as t
 
 import click
-from convert_codemeta.validate import validate_codemeta
 
 from hermes.commands.harvest import util
+from hermes.commands.harvest.util.validate_codemeta import validate_codemeta
 from hermes.model.context import HermesHarvestContext
 from hermes.model.errors import HermesValidationError
 
