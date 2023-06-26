@@ -404,6 +404,7 @@ def _codemeta_to_invenio_deposition(ctx: CodeMetaContext) -> dict:
     the crosswalk tables to do the mapping:
 
     .. code-block:: python
+
        invenio_metadata = convert_codemeta.crosswalk(
            metadata, "codemeta", "Zenodo"
        )
