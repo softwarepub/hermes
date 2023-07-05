@@ -138,6 +138,8 @@ def create_initial_version(click_ctx: click.Context, ctx: CodeMetaContext):
 
     deposit = response.json()
     _log.debug("Created initial version deposit: %s", deposit["links"]["html"])
+    with open(ctx.get_cache('deposit', 'deposit', create=True), 'w') as deposit_file:
+        json.dump(deposit, deposit_file, indent=4)
 
     ctx.update(invenio_path["links"]["bucket"], deposit["links"]["bucket"])
     ctx.update(invenio_path["links"]["publish"], deposit["links"]["publish"])
