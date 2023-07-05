@@ -52,7 +52,7 @@ def _validate(codemeta_file: pathlib.Path) -> bool:
             raise HermesValidationError(f'CodeMeta file at {codemeta_file} cannot be decoded into JSON.', jde)
 
     if not validate_codemeta(codemeta_json):
-        raise HermesValidationError(f'Validation of CodeMeta file failed.')
+        raise HermesValidationError('Validation of CodeMeta file failed.')
 
     return True
 
