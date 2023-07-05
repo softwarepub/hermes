@@ -189,43 +189,65 @@ def deposit(click_ctx: click.Context, initial, auth_token, file):
 
     deposit_config = config.get("deposit")
 
-    # The platform to which we want to deposit the (meta)data
-    deposition_platform = deposit_config.get("target", "invenio")
-    # The metadata mapping logic for the target platform
-    deposition_mapping = deposit_config.get("mapping", "invenio")
+    # This is used as the default value for all entry point names for the deposit step
+    target_platform = deposit_config.get("target", "invenio")
 
-    # Prepare the deposit
-    deposit_preparator_entrypoints = metadata.entry_points(
-        group="hermes.prepare_deposit",
-        name=deposition_platform
-    )
-    if deposit_preparator_entrypoints:
-        deposit_preparator = deposit_preparator_entrypoints[0].load()
+    entry_point_groups = [
+        "hermes.deposit.prepare",
+        "hermes.deposit.map",
+        "hermes.deposit.create_initial_version",
+        "hermes.deposit.create_new_version",
+        "hermes.deposit.update_metadata",
+        "hermes.deposit.delete_artifacts",
+        "hermes.deposit.upload_artifacts",
+        "hermes.deposit.publish",
+    ]
+
+    # For each group, an entry point can be configured via ``deposit_config`` using the
+    # the part after the last dot as the config key. If no such key is found, the target
+    # platform value is used to search for an entry point in the respective group.
+    selected_entry_points = {
+        group: deposit_config.get(group.split(".")[-1], target_platform)
+        for group in entry_point_groups
+    }
+
+    # Try to load all entrypoints first, so we don't fail because of misconfigured
+    # entry points while some tasks of the deposition step were already started. (E.g.
+    # new version was already created on the deposition platform but artifact upload
+    # fails due to the entry point not being found.)
+    loaded_entry_points = []
+    for group, name in selected_entry_points.items():
         try:
-            deposit_preparator(click_ctx, ctx)
-        except (RuntimeError, MisconfigurationError) as e:
-            _log.error(e)
+            ep, *eps = metadata.entry_points(group=group, name=name)
+        except ValueError:  # not enough values to unpack
+            if name != target_platform:
+                _log.error(
+                    f"Explicitly configured entry point name {name!r} "
+                    f"not found in group {group!r}"
+                )
+                click_ctx.exit(1)
+            _log.debug(
+                f"Group {group!r} has no entry point with name {name!r}; skipping"
+            )
+            continue
+
+        if eps:
+            # Entry point names in these groups refer to the deposition platforms. For
+            # each platform, only a single implementation should exist. Otherwise we
+            # would not be able to decide which implementation to choose.
+            _log.error(
+                f"Entry point name {name!r} is not unique within group {group!r}"
+            )
             click_ctx.exit(1)
 
-    # Map metadata onto target schema
-    metadata_mapping_entrypoints = metadata.entry_points(
-        group="hermes.metadata_mapping",
-        name=deposition_mapping
-    )
-    if metadata_mapping_entrypoints:
-        metadata_mapping = metadata_mapping_entrypoints[0].load()
-        metadata_mapping(click_ctx, ctx)
+        loaded_entry_points.append(ep.load())
 
-    # Make deposit: Update metadata, upload files, publish
-    # TODO: Do publish step manually? This would allow users to check the deposition on
-    # the site and decide whether they are happy with it.
-    deposition_entrypoints = metadata.entry_points(
-        group="hermes.deposit",
-        name=deposition_platform
-    )
-    if deposition_entrypoints:
-        deposition = deposition_entrypoints[0].load()
-        deposition(click_ctx, ctx)
+    for entry_point in loaded_entry_points:
+        try:
+            entry_point(click_ctx, ctx)
+        except (RuntimeError, MisconfigurationError) as e:
+            _log.error(f"Error in {group!r} entry point {name!r}: {e}")
+            click_ctx.exit(1)
 
 
 @click.group(invoke_without_command=True)

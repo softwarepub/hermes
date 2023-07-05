@@ -86,14 +86,29 @@ git = "hermes.commands.process.git:process"
 git_add_contributors = "hermes.commands.process.git:add_contributors"
 git_add_branch = "hermes.commands.process.git:add_branch"
 
-[tool.poetry.plugins."hermes.prepare_deposit"]
-invenio = "hermes.commands.deposit.invenio:prepare_deposit"
+[tool.poetry.plugins."hermes.deposit.prepare"]
+invenio = "hermes.commands.deposit.invenio:prepare"
 
-[tool.poetry.plugins."hermes.metadata_mapping"]
+[tool.poetry.plugins."hermes.deposit.map"]
 invenio = "hermes.commands.deposit.invenio:map_metadata"
 
-[tool.poetry.plugins."hermes.deposit"]
-invenio = "hermes.commands.deposit.invenio:deposit"
+[tool.poetry.plugins."hermes.deposit.create_initial_version"]
+invenio = "hermes.commands.deposit.invenio:create_initial_version"
+
+[tool.poetry.plugins."hermes.deposit.create_new_version"]
+invenio = "hermes.commands.deposit.invenio:create_new_version"
+
+[tool.poetry.plugins."hermes.deposit.update_metadata"]
+invenio = "hermes.commands.deposit.invenio:update_metadata"
+
+[tool.poetry.plugins."hermes.deposit.delete_artifacts"]
+invenio = "hermes.commands.deposit.invenio:delete_artifacts"
+
+[tool.poetry.plugins."hermes.deposit.upload_artifacts"]
+invenio = "hermes.commands.deposit.invenio:upload_artifacts"
+
+[tool.poetry.plugins."hermes.deposit.publish"]
+invenio = "hermes.commands.deposit.invenio:publish"
 
 [tool.poetry.plugins."hermes.postprocess"]
 config_record_id = "hermes.commands.postprocess.invenio:config_record_id"
