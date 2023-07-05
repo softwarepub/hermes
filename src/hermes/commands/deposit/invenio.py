@@ -26,41 +26,40 @@ from hermes.utils import hermes_user_agent
 _DEFAULT_LICENSES_API_PATH = "api/licenses"
 _DEFAULT_COMMUNITIES_API_PATH = "api/communities"
 _DEFAULT_DEPOSITIONS_API_PATH = "api/deposit/depositions"
-_DEFAULT_RECORD_SCHEMA_PATH = "api/schemas/records/record-v1.0.0.json"
 
 
-# TODO: It turns out that the schema downloaded here can not be used. Figure out what to
-# do with this. Maybe the code can be removed.
-def prepare_deposit(click_ctx: click.Context, ctx: CodeMetaContext):
-    """Prepare the Invenio deposit.
+def prepare(click_ctx: click.Context, ctx: CodeMetaContext):
+    """Prepare the deposition on an Invenio-based platform.
 
-    In this case, "prepare" means download the record schema that is required by
-    Invenio instances and checking whether we have a valid license identifier and
-    communities (if any are configured) that are supported by the instance.
+    In this function we do the following:
+
+    - resolve the latest published version of this publication (if any)
+    - check whether the current version (given in the CodeMeta) was already published
+    - check whether we have a valid license identifier (if any)
+    - check wether the communities are valid (if configured)
+    - check access modalities (access right, access conditions, embargo data, existence
+      of license)
+    - check whether required configuration options are present
+    - check whether an auth token is given
+    - update ``ctx`` with metadata collected during the checks
     """
+
+    if not click_ctx.params["auth_token"]:
+        raise DepositionUnauthorizedError("No auth token given for deposition platform")
 
     invenio_path = ContextPath.parse("deposit.invenio")
     invenio_config = config.get("deposit").get("invenio", {})
     rec_id, rec_meta = _resolve_latest_invenio_id(ctx)
+
+    version = ctx["codemeta"].get("version")
+    if rec_meta and (version == rec_meta.get("version")):
+        raise ValueError(f"Version {version} already deposited.")
+
     ctx.update(invenio_path['latestRecord'], {'id': rec_id, 'metadata': rec_meta})
 
     site_url = invenio_config.get("site_url")
     if site_url is None:
         raise MisconfigurationError("deposit.invenio.site_url is not configured")
-
-    record_schema_path = invenio_config.get("schema_paths", {}).get(
-        "record", _DEFAULT_RECORD_SCHEMA_PATH
-    )
-    record_schema_url = f"{site_url}/{record_schema_path}"
-
-    # TODO: cache this download in HERMES cache dir
-    # TODO: ensure to use from cache instead of download if not expired (needs config)
-    response = requests.get(
-        record_schema_url, headers={"User-Agent": hermes_user_agent}
-    )
-    response.raise_for_status()
-    record_schema = response.json()
-    ctx.update(invenio_path["requiredSchema"], record_schema)
 
     licenses_api_path = invenio_config.get("api_paths", {}).get(
         "licenses", _DEFAULT_LICENSES_API_PATH
@@ -95,27 +94,70 @@ def map_metadata(click_ctx: click.Context, ctx: CodeMetaContext):
         json.dump(deposition_metadata, invenio_json, indent='  ')
 
 
-def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
-    """Make a deposition on an Invenio-based platform.
+def create_initial_version(click_ctx: click.Context, ctx: CodeMetaContext):
+    """Create an initial version of a publication.
 
-    This function can:
-
-    - Create a new record without any previous versions.
-
-    Functionality to be added in the future:
-
-    - Update the metadata of an existing record
-    - Update the metadata and files of an existing record by creating a new version
+    If a previous publication exists, this function does nothing, leaving the work for
+    :func:`create_new_version`.
     """
+
+    invenio_path = ContextPath.parse("deposit.invenio")
+    invenio_ctx = ctx[invenio_path]
+    latest_record_id = invenio_ctx.get("latestRecord", {}).get("id")
+
+    if latest_record_id is not None:
+        # A previous version exists. This means that we need to create a new version in
+        # the next step. Thus, there is nothing to do here.
+        return
+
+    if not click_ctx.params['initial']:
+        raise RuntimeError("Please use `--initial` to make an initial deposition.")
 
     _log = logging.getLogger("cli.deposit.invenio")
 
     invenio_config = config.get("deposit").get("invenio", {})
+    site_url = invenio_config["site_url"]
+    depositions_api_path = invenio_config.get("api_paths", {}).get(
+        "depositions", _DEFAULT_DEPOSITIONS_API_PATH
+    )
+
+    deposition_metadata = invenio_ctx["depositionMetadata"]
+
+    deposit_url = f"{site_url}/{depositions_api_path}"
+    response = requests.post(
+        deposit_url,
+        json={"metadata": deposition_metadata},
+        headers={
+            "User-Agent": hermes_user_agent,
+            "Authorization": f"Bearer {click_ctx.params['auth_token']}",
+        }
+    )
+
+    if not response.ok:
+        raise RuntimeError(f"Could not create initial deposit {deposit_url!r}")
+
+    deposit = response.json()
+    _log.debug("Created initial version deposit: %s", deposit["links"]["html"])
+
+    ctx.update(invenio_path["links"]["bucket"], deposit["links"]["bucket"])
+    ctx.update(invenio_path["links"]["publish"], deposit["links"]["publish"])
+
+
+def create_new_version(click_ctx: click.Context, ctx: CodeMetaContext):
+    """Create a new version of an existing publication.
+
+    If no previous publication exists, this function does nothing because
+    :func:`create_initial_version` will have done the work.
+    """
+
     invenio_path = ContextPath.parse("deposit.invenio")
     invenio_ctx = ctx[invenio_path]
+    latest_record_id = invenio_ctx.get("latestRecord", {}).get("id")
 
-    if not click_ctx.params["auth_token"]:
-        raise DepositionUnauthorizedError("No auth token given for deposition platform")
+    if latest_record_id is None:
+        # No previous version exists. This means that an initial version was created in
+        # the previous step. Thus, there is nothing to do here.
+        return
 
     session = requests.Session()
     session.headers = {
@@ -123,55 +165,96 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
         "Authorization": f"Bearer {click_ctx.params['auth_token']}",
     }
 
-    site_url = invenio_config.get("site_url")
-    if site_url is None:
-        raise MisconfigurationError("deposit.invenio.site_url is not configured")
-
+    invenio_config = config.get("deposit").get("invenio", {})
+    site_url = invenio_config["site_url"]
     depositions_api_path = invenio_config.get("api_paths", {}).get(
         "depositions", _DEFAULT_DEPOSITIONS_API_PATH
     )
-    deposit_url = f"{site_url}/{depositions_api_path}"
+
+    # Get current deposit
+    deposit_url = f"{site_url}/{depositions_api_path}/{latest_record_id}"
+    response = session.get(deposit_url)
+    if not response.ok:
+        raise RuntimeError(f"Failed to get current deposit {deposit_url!r}")
+
+    # Create a new version using the newversion action
+    deposit_url = response.json()["links"]["newversion"]
+    response = session.post(deposit_url)
+    if not response.ok:
+        raise RuntimeError(f"Could not create new version deposit {deposit_url!r}")
+
+    # Store link to latest draft to be used in :func:`update_metadata`.
+    old_deposit = response.json()
+    ctx.update(invenio_path["links"]["latestDraft"], old_deposit['links']['latest_draft'])
+
+
+def update_metadata(click_ctx: click.Context, ctx: CodeMetaContext):
+    """Update the metadata of a draft.
+
+    If no draft is found in the context, it is assumed that no metadata has to be
+    updated (e.g. because an initial version was created already containing the
+    metadata).
+    """
+
+    invenio_path = ContextPath.parse("deposit.invenio")
+    invenio_ctx = ctx[invenio_path]
+    draft_url = invenio_ctx.get("links", {}).get("latestDraft")
+
+    if draft_url is None:
+        return
+
+    _log = logging.getLogger("cli.deposit.invenio")
 
     deposition_metadata = invenio_ctx["depositionMetadata"]
-    try:
-        latest_metadata = invenio_ctx["latestRecord"]["metadata"]
-        if latest_metadata and (deposition_metadata.get("version") == latest_metadata.get("version")):
-            raise ValueError("Version already deposited.")
 
-        record_id = invenio_ctx["latestRecord"]["id"]
-    except KeyError:
-        record_id = None
-
-    if record_id is not None:
-        deposit_url += f'/{record_id}/actions/newversion'
-        response = session.post(deposit_url)
-        if response.ok:
-            old_deposit = response.json()
-            response = session.put(
-                old_deposit['links']['latest_draft'],
-                json={"metadata": deposition_metadata}
-            )
-    elif click_ctx.params['initial']:
-        response = session.post(
-            deposit_url,
-            json={"metadata": deposition_metadata}
-        )
-    else:
-        _log.error("Please use `--initial` to make an initial deposition.")
-        click_ctx.exit(1)
+    response = requests.put(
+        draft_url,
+        json={"metadata": deposition_metadata},
+        headers={
+            "User-Agent": hermes_user_agent,
+            "Authorization": f"Bearer {click_ctx.params['auth_token']}",
+        }
+    )
 
     if not response.ok:
-        _log.error(f"Could not update metadata of deposit {deposit_url!r}")
-        click_ctx.exit(1)
+        raise RuntimeError(f"Could not update metadata of draft {draft_url!r}")
 
     deposit = response.json()
-    _log.debug("Created deposit: %s", deposit["links"]["html"])
+    _log.debug("Created new version deposit: %s", deposit["links"]["html"])
     with open(ctx.get_cache('deposit', 'deposit', create=True), 'w') as deposit_file:
         json.dump(deposit, deposit_file, indent=4)
 
-    # Upload the files. We'll use the bucket API rather than the files API as it
-    # supports file sizes above 100MB.
-    bucket_url = deposit["links"]["bucket"]
+    ctx.update(invenio_path["links"]["bucket"], deposit["links"]["bucket"])
+    ctx.update(invenio_path["links"]["publish"], deposit["links"]["publish"])
+
+
+def delete_artifacts(click_ctx: click.Context, ctx: CodeMetaContext):
+    """Delete existing file artifacts.
+
+    This is done so that files which existed in an earlier publication but don't exist
+    any more, are removed. Otherwise they would cause an error because the didn't change
+    between versions.
+    """
+    # TODO: This needs to be implemented!
+    pass
+
+
+def upload_artifacts(click_ctx: click.Context, ctx: CodeMetaContext):
+    """Upload file artifacts to the deposit.
+
+    We'll use the bucket API rather than the files API as it supports file sizes above
+    100MB. The URL to the bucket of the deposit is taken from the context at
+    ``deposit.invenio.links.bucket``.
+    """
+
+    bucket_url_path = ContextPath.parse("deposit.invenio.links.bucket")
+    bucket_url = ctx[bucket_url_path]
+
+    session = requests.Session()
+    session.headers = {
+        "User-Agent": hermes_user_agent,
+        "Authorization": f"Bearer {click_ctx.params['auth_token']}",
+    }
 
     files: list[click.Path] = click_ctx.params["file"]
     for path_arg in files:
@@ -187,18 +270,35 @@ def deposit(click_ctx: click.Context, ctx: CodeMetaContext):
                 data=file_content
             )
             if not response.ok:
-                _log.error(f"Could not upload file {path.name!r} into bucket {bucket_url!r}")
-                click_ctx.exit(1)
+                raise RuntimeError(f"Could not upload file {path.name!r} into bucket {bucket_url!r}")
 
-    # This can potentially be used to verify the checksum
-    # file_resource = response.json()
+        # This can potentially be used to verify the checksum
+        # file_resource = response.json()
 
-    publish_url = deposit["links"]["publish"]
-    response = session.post(publish_url)
+
+def publish(click_ctx: click.Context, ctx: CodeMetaContext):
+    """Publish the deposited record.
+
+    This is done by doing a POST request to the publication URL stored in the context at
+    ``deposit.invenio.links.publish``.
+    """
+
+    _log = logging.getLogger("cli.deposit.invenio")
+
+    publish_url_path = ContextPath.parse("deposit.invenio.links.publish")
+    publish_url = ctx[publish_url_path]
+
+    response = requests.post(
+        publish_url,
+        headers={
+            "User-Agent": hermes_user_agent,
+            "Authorization": f"Bearer {click_ctx.params['auth_token']}"
+        }
+    )
+
     if not response.ok:
-        _log.error(f"Could not publish deposit via {publish_url!r}")
         _log.debug(response.text)
-        click_ctx.exit(1)
+        raise RuntimeError(f"Could not publish deposit via {publish_url!r}")
 
     record = response.json()
     _log.info("Published record: %s", record["links"]["record_html"])
@@ -508,7 +608,7 @@ def _get_access_modalities(license):
     - closed access depositions have no further requirements
 
     This function also makes sure that the given embargo date can be parsed as an ISO
-    8061 string representation and that the access rights are given as a string.
+    8601 string representation and that the access rights are given as a string.
     """
     invenio_config = config.get("deposit").get("invenio", {})
 

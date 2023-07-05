@@ -18,5 +18,7 @@ record_id = 1177603
 communities = ["zenodo"]
 access_right = "open"
 
-api_paths = { depositions = "api/deposit/depositions", licenses = "api/licenses", communities = "api/communities" }
-schema_paths = { record = "api/schemas/records/record-v1.0.0.json" }
+[deposit.invenio.api_paths]
+depositions = "api/deposit/depositions"
+licenses = "api/licenses"
+communities = "api/communities"
