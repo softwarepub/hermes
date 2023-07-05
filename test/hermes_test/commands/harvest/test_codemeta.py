@@ -127,7 +127,8 @@ def test_validate_invalid_json_raises(invalid_json_path, tmp_path):
 
 
 def test_validate_invalid_codemeta(invalid_codemeta_path, tmp_path):
-    assert not harvest._validate(invalid_codemeta_path)
+    with pytest.raises(HermesValidationError, match="Validation of CodeMeta file failed."):
+        harvest._validate(invalid_codemeta_path)
 
 
 def test_validate_success(valid_codemeta_path):
