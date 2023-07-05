@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2022 German Aerospace Center (DLR), Forschungszentrum Jülich, Helmholtz-Zentrum Dresden-Rossendorf
+
+SPDX-License-Identifier: CC-BY-SA-4.0
+-->
 # Record provenance of metadata
 
 * Status: proposed

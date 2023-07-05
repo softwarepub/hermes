@@ -11,9 +11,9 @@ import pathlib
 import typing as t
 
 import click
-from convert_codemeta.validate import validate_codemeta
 
 from hermes.commands.harvest import util
+from hermes.commands.harvest.util.validate_codemeta import validate_codemeta
 from hermes.model.context import HermesHarvestContext
 from hermes.model.errors import HermesValidationError
 
@@ -50,7 +50,11 @@ def _validate(codemeta_file: pathlib.Path) -> bool:
             codemeta_json = json.load(fi)
         except json.decoder.JSONDecodeError as jde:
             raise HermesValidationError(f'CodeMeta file at {codemeta_file} cannot be decoded into JSON.', jde)
-    return validate_codemeta(codemeta_json)
+
+    if not validate_codemeta(codemeta_json):
+        raise HermesValidationError('Validation of CodeMeta file failed.')
+
+    return True
 
 
 def _get_single_codemeta(path: pathlib.Path) -> t.Optional[pathlib.Path]:
