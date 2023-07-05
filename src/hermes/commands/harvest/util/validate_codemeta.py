@@ -7,18 +7,22 @@
 # SPDX-FileContributor: Oliver Bertuch
 
 import copy
-from pyld import jsonld
+import logging
 
+from pyld import jsonld
 
 # Original source at https://github.com/caltechlibrary/convert_codemeta/blob/337e39338bcce4f0f201fe03500061ab14b2ae5c
 # /convert_codemeta/validate.py
+
+_log = logging.getLogger(__name__)
+
 
 def validate_codemeta(json: dict) -> bool:
     """Check whether a codemeta json object is valid"""
     try:
         context = json["@context"]
     except KeyError:
-        print("Not a jsonld file")
+        _log.error("Not a jsonld file")
         return False
     if context == "https://doi.org/10.5063/schema/codemeta-2.0":
         # Temp replacement for https resolution issues for schema.org
@@ -33,15 +37,15 @@ def validate_codemeta(json: dict) -> bool:
     # Using len because @type elements get returned as type
     same = len(set(keys)) == len(set(json.keys()))
     if not same:
-        print("Unsupported terms in codemeta file")
+        _log.error("Unsupported terms in codemeta file")
         diff = set(json.keys() - set(keys))
         if "@type" in diff:
             diff.remove("@type")
-        print(sorted(diff))
+        _log.debug("%s", ", ".join(sorted(diff)))
     fail = ":" in keys
     if fail:
-        print("Not in schema")
+        _log.error("Not in schema")
         for k in keys:
             if ":" in k:
-                print(k)
+                _log.debug(k)
     return same and not fail
