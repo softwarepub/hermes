@@ -13,7 +13,7 @@ SPDX-FileContributor: Stephan Druskat
 # Set up automatic software publishing
  
 ```{note}
-This tutorial works for repositories hosted on GitHub, and shows how to automatically publish to 
+This tutorial works for repositories hosted on GitHub or GitLab, and shows how to automatically publish to 
 [Zenodo Sandbox](https://sandbox.zenodo.org). Zenodo Sandbox is a "toy" repository that can be used to try things out.
 
 This tutorial should also work with the "real" [Zenodo](https://zenodo.org).
@@ -61,7 +61,6 @@ Each step in the publication workflow has its own section.
 Configure HERMES to:
 
 - harvest metadata from Git and `CITATION.cff`
-- skip validation of `CITATION.cff`
 - deposit on Zenodo Sandbox (which is built on the InvenioRDM)
 - use Zenodo Sandbox as the target publication repository
 
@@ -92,6 +91,12 @@ git commit -m "Configure HERMES to harvest git and CFF, and deposit on Zenodo Sa
 git push
 ```
 
+```{note}
+If you decide to start from an existing `hermes.toml` (e.g., the one found in this repository),
+be sure that there is no `record_id` value defined in the `deposit.invenio` section.
+Otherwise, your deposition will fail as *hermes* would try to deposit a new version for the given record.
+```
+
 ## Get a personal access token for Zenodo Sandbox
 
 To allow GitHub Actions to publish your repository to Zenodo Sandbox for you,
@@ -106,16 +111,25 @@ with the scopes `deposit:actions` and `deposit:write`.
 ![](img/zenodo-pat.png)
 ```
 
-Copy the newly created token into a new [GitHub Secret](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-a-repository) called `ZENODO_SANDBOX` in your repository.
+Keep the generated token somewhere from where you can easily retrieve it later on (e.g., a password safe).
+
+## Configure continuous integration build to use `hermes`
+
+The following instructions differ depending on whether you are using GitHub actions or GitLab CI for your
+development workflow.
+
+To support this, the HERMES project provides templates for continuous integration systems in a dedicated repository:
+[hermes-hmc/ci-templates](https://github.com/hermes-hmc/ci-templates).
+
+
+### Configure a GitHub Action to automate publication 
+
+Copy the Zenodo sandbox token you just created into a new [GitHub Secret](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-a-repository)
+called `ZENODO_SANDBOX` in your repository.
 
 ```{toggle}
 ![](img/github-secret-zenodo-pat.png)
 ```
-
-## Configure a GitHub Action to automate publication 
-
-The HERMES project provides templates for continous integration systems in a dedicated repository:
-[hermes-hmc/ci-templates](https://github.com/hermes-hmc/ci-templates).
 
 Copy the [template file for GitHub to Zenodo Sandbox publication](https://github.com/hermes-hmc/ci-templates/blob/main/TEMPLATE_hermes_github_to_zenodo.yml)
 into the `.github/workflows/` directory in your repository, and rename it as you like (e.g. `hermes_github_to_zenodo.yml`).
@@ -136,7 +150,7 @@ git push
 If you haven't adapted the workflow file and push it to the branch `main`, the HERMES workflow will run for the first time. This will create a new pull request with compiled metadata for curation. You can safely close it at this point.
 ```
 
-### Allow GitHub Actions to create pull requests in your repository
+#### Allow GitHub Actions to create pull requests in your repository
 
 The automated HERMES workflow will not publish any metadata without your approval.
 It will instead create a pull request for you to approve or change the metadata that is being deposited.
@@ -148,6 +162,52 @@ and activate the option "Allow GitHub Actions to create and approve pull request
 ```{toggle}
 ![](img/github-action-allow-pr.png)
 ```
+
+### Configure GitLab CI to automate publication
+
+Copy the [template file for GitLab to Zenodo Sandbox publication](https://github.com/hermes-hmc/ci-templates/blob/main/gitlab/hermes-ci.yml)
+into your project to `.gitlab/hermes-ci.yml`.
+
+To integrate the workflows into your `.gitlab-ci.yml`, you need to add the following:
+
+```{code-block} yaml
+:caption: .gitlab-ci.yml
+
+# Use jobs defined by the HERMES GitLab template  
+include:
+  - .gitlab/hermes-ci.yml
+
+# Run the first half of the pipeline, resulting in a Merge Request for curation
+hermes_curate:
+  extends:
+    - .hermes_curate
+
+# Run the second half, resulting in a new deposition and a Merge Request with post-processing results
+hermes_deposit:
+  extends:
+    - .hermes_deposit
+```
+
+If you need help with how GitLab CI works in general, have a look at the 
+[GitLab CI documentation](https://docs.gitlab.com/ee/ci/).
+
+Add the template file and changes in the `gitlab-ci.yml` to version control and push it:
+
+```bash
+git add .gitlab/hermes-ci.yml
+git add .gitlab-ci.yml
+git commit -m "Configure automatic publication with HERMES"
+git push
+```
+
+By default, the first part of the workflow (i.e., `.hermes_curate`)
+will run on every new push during the *deploy* stage.
+
+```{note}
+If you haven't adapted the workflow file and push it to the branch `main`, the HERMES workflow will run for the first time.
+This will create a new mrege request with compiled metadata for curation. You can safely close it at this point.
+```
+
 
 ## Automatic publication workflow
 
