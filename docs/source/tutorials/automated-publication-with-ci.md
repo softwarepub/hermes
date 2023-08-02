@@ -165,6 +165,9 @@ and activate the option "Allow GitHub Actions to create and approve pull request
 
 ### Configure GitLab CI to automate publication
 
+Copy the Zenodo sandbox token you just created into a new [GitLab CI variable](https://docs.gitlab.com/ee/ci/variables/#for-a-project)
+called `ZENODO_TOKEN`.
+
 Copy the [template file for GitLab to Zenodo Sandbox publication](https://github.com/hermes-hmc/ci-templates/blob/main/gitlab/hermes-ci.yml)
 into your project to `.gitlab/hermes-ci.yml`.
 
