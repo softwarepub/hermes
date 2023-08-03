@@ -22,7 +22,7 @@ def codemeta():
       "author": [
         {
           "@type": "Person",
-          "name": "Author"
+          "givenName": "Author"
         }
       ],
       "name": "Title"
@@ -34,7 +34,7 @@ def valid_minimal_cff(tmp_path):
     cff = """\
     cff-version: 1.2.0
     authors:
-      - name: Author
+      - given-names: Author
     message: Message
     title: Title
     """
@@ -76,8 +76,8 @@ def codemeta_with_email():
       "author": [
         {
           "@type": "Person",
-          "email": "em@il.notexist",
-          "name": "Author"
+          "email": "email@example.com",
+          "familyName": "Author"
         }
       ],
       "name": "Title"
@@ -89,8 +89,8 @@ def valid_minimal_cff_with_email(tmp_path):
     cff = """\
     cff-version: 1.2.0
     authors:
-      - name: Author
-        email: em@il.notexist
+      - family-names: Author
+        email: email@example.com
     message: Message
     title: Title
     """
