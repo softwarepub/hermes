@@ -14,7 +14,6 @@ target = "invenio"
 
 [deposit.invenio]
 site_url = "https://sandbox.zenodo.org"
-record_id = 1177603
 communities = ["zenodo"]
 access_right = "open"
 
