@@ -208,7 +208,7 @@ will run on every new push during the *deploy* stage.
 
 ```{note}
 If you haven't adapted the workflow file and push it to the branch `main`, the HERMES workflow will run for the first time.
-This will create a new mrege request with compiled metadata for curation. You can safely close it at this point.
+This will create a new merge request with compiled metadata for curation. You can safely close it at this point.
 ```
 
 
