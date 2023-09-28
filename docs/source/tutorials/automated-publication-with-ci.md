@@ -72,7 +72,6 @@ Configure HERMES to:
 from = [ "git", "cff" ]
 
 [deposit]
-mapping = "invenio"
 target = "invenio"
 
 [deposit.invenio]
