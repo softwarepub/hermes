@@ -14,32 +14,12 @@ from hermes.model.context import CodeMetaContext
 from hermes.model.path import ContextPath
 
 
-def prepare(click_ctx: click.Context, ctx: CodeMetaContext):
+def dummy_noop(click_ctx: click.Context, ctx: CodeMetaContext):
     pass
 
 
-def prepare_metadata(click_ctx: click.Context, ctx: CodeMetaContext):
+def map_metadata(click_ctx: click.Context, ctx: CodeMetaContext):
     ctx.update(ContextPath.parse('deposit.file'), ctx['codemeta'])
-
-
-def create_initial_version(click_ctx: click.Context, ctx: CodeMetaContext):
-    pass
-
-
-def create_new_version(click_ctx: click.Context, ctx: CodeMetaContext):
-    pass
-
-
-def update_metadata(click_ctx: click.Context, ctx: CodeMetaContext):
-    pass
-
-
-def delete_artifacts(click_ctx: click.Context, ctx: CodeMetaContext):
-    pass
-
-
-def upload_artifacts(click_ctx: click.Context, ctx: CodeMetaContext):
-    pass
 
 
 def publish(click_ctx: click.Context, ctx: CodeMetaContext):
