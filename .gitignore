@@ -18,6 +18,7 @@ docs/build/
 
 .idea/
 .venv/
+.vscode/
 dist/
 
 # HERMES workflow specifics
