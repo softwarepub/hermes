@@ -27,7 +27,7 @@ SHELL_ENCODING = 'utf-8'
 
 _GIT_SEP = '|'
 _GIT_FORMAT = ['%aN', '%aE', '%aI', '%cN', '%cE', '%cI']
-_GIT_ARGS = []
+_GIT_ARGS = ["--no-show-signature"]
 
 
 # TODO The following code contains a lot of duplicate implementation that can be found in hermes.model
