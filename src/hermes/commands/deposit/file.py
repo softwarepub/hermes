@@ -7,24 +7,19 @@
 
 import json
 
-import click
-
 from hermes import config
-from hermes.model.context import CodeMetaContext
+from hermes.commands.deposit.base import BaseDepositPlugin
 from hermes.model.path import ContextPath
 
 
-def dummy_noop(click_ctx: click.Context, ctx: CodeMetaContext):
-    pass
+class FileDepositPlugin(BaseDepositPlugin):
+    def map(self) -> None:
+        self.ctx.update(ContextPath.parse('deposit.file'), self.ctx['codemeta'])
 
 
-def map_metadata(click_ctx: click.Context, ctx: CodeMetaContext):
-    ctx.update(ContextPath.parse('deposit.file'), ctx['codemeta'])
+    def publish(self) -> None:
+        file_config = config.get("deposit").get("file", {})
+        output_data = self.ctx['deposit.file']
 
-
-def publish(click_ctx: click.Context, ctx: CodeMetaContext):
-    file_config = config.get("deposit").get("file", {})
-    output_data = ctx['deposit.file']
-
-    with open(file_config.get('filename', 'hermes.json'), 'w') as deposition_file:
-        json.dump(output_data, deposition_file)
+        with open(file_config.get('filename', 'hermes.json'), 'w') as deposition_file:
+            json.dump(output_data, deposition_file, indent=2)

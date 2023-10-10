@@ -87,6 +87,7 @@ git_add_contributors = "hermes.commands.process.git:add_contributors"
 git_add_branch = "hermes.commands.process.git:add_branch"
 
 [tool.poetry.plugins."hermes.deposit"]
+file = "hermes.commands.deposit.file:FileDepositPlugin"
 invenio = "hermes.commands.deposit.invenio:InvenioDepositPlugin"
 
 [tool.poetry.plugins."hermes.postprocess"]
