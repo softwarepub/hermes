@@ -16,6 +16,7 @@ from importlib import metadata
 import click
 
 from hermes import config
+from hermes.commands.deposit.base import BaseDepositPlugin
 from hermes.error import MisconfigurationError
 from hermes.model.context import HermesContext, HermesHarvestContext, CodeMetaContext
 from hermes.model.errors import MergeError
@@ -210,8 +211,7 @@ def deposit(click_ctx: click.Context, initial, auth_token, file):
         click_ctx.exit(1)
 
     # TODO: Could this raise an exception?
-    # TODO: Add "BaseDepositionPlugin" as type annotation
-    deposit_plugin_class = ep.load()
+    deposit_plugin_class: BaseDepositPlugin = ep.load()
     deposit_plugin = deposit_plugin_class(click_ctx, ctx)
 
     try:

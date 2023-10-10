@@ -17,6 +17,7 @@ import click
 import requests
 
 from hermes import config
+from hermes.commands.deposit.base import BaseDepositPlugin
 from hermes.commands.deposit.error import DepositionUnauthorizedError
 from hermes.error import MisconfigurationError
 from hermes.model.context import CodeMetaContext
@@ -24,35 +25,14 @@ from hermes.model.path import ContextPath
 from hermes.utils import hermes_user_agent
 
 
-# TODO: Move common functionality into base class
 # TODO: Add type annotations to aid subclass implementation
-class InvenioDepositPlugin:
+class InvenioDepositPlugin(BaseDepositPlugin):
     default_licenses_api_path = "api/licenses"
     default_communities_api_path = "api/communities"
     default_depositions_api_path = "api/deposit/depositions"
 
-    def __init__(self, click_ctx: click.Context, ctx: CodeMetaContext) -> None:
-        self.click_ctx = click_ctx
-        self.ctx = ctx
 
-    def run(self):
-        # TODO: Decide here which of initial/new/... to run?
-        steps = [
-            "prepare",
-            "map",
-            "create_initial_version",
-            "create_new_version",
-            "update_metadata",
-            "delete_artifacts",
-            "upload_artifacts",
-            "publish",
-        ]
-
-        for step in steps:
-            getattr(self, step)()
-
-
-    def prepare(self):
+    def prepare(self) -> None:
         """Prepare the deposition on an Invenio-based platform.
 
         In this function we do the following:
@@ -105,7 +85,7 @@ class InvenioDepositPlugin:
         self.ctx.update(invenio_path["access_conditions"], access_conditions)
 
 
-    def map(self):
+    def map(self) -> None:
         """Map the harvested metadata onto the Invenio schema."""
 
         deposition_metadata = _codemeta_to_invenio_deposition(self.ctx)
@@ -118,7 +98,7 @@ class InvenioDepositPlugin:
             json.dump(deposition_metadata, invenio_json, indent='  ')
 
 
-    def create_initial_version(self):
+    def create_initial_version(self) -> None:
         """Create an initial version of a publication.
 
         If a previous publication exists, this function does nothing, leaving the work for
@@ -169,7 +149,7 @@ class InvenioDepositPlugin:
         self.ctx.update(invenio_path["links"]["publish"], deposit["links"]["publish"])
 
 
-    def create_new_version(self):
+    def create_new_version(self) -> None:
         """Create a new version of an existing publication.
 
         If no previous publication exists, this function does nothing because
@@ -214,7 +194,7 @@ class InvenioDepositPlugin:
         self.ctx.update(invenio_path["links"]["latestDraft"], old_deposit['links']['latest_draft'])
 
 
-    def update_metadata(self):
+    def update_metadata(self) -> None:
         """Update the metadata of a draft.
 
         If no draft is found in the context, it is assumed that no metadata has to be
@@ -254,7 +234,7 @@ class InvenioDepositPlugin:
         self.ctx.update(invenio_path["links"]["publish"], deposit["links"]["publish"])
 
 
-    def delete_artifacts(self):
+    def delete_artifacts(self) -> None:
         """Delete existing file artifacts.
 
         This is done so that files which existed in an earlier publication but don't exist
@@ -265,7 +245,7 @@ class InvenioDepositPlugin:
         pass
 
 
-    def upload_artifacts(self):
+    def upload_artifacts(self) -> None:
         """Upload file artifacts to the deposit.
 
         We'll use the bucket API rather than the files API as it supports file sizes above
@@ -302,7 +282,7 @@ class InvenioDepositPlugin:
             # file_resource = response.json()
 
 
-    def publish(self):
+    def publish(self) -> None:
         """Publish the deposited record.
 
         This is done by doing a POST request to the publication URL stored in the context at
