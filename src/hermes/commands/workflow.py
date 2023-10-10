@@ -189,65 +189,36 @@ def deposit(click_ctx: click.Context, initial, auth_token, file):
 
     deposit_config = config.get("deposit")
 
-    # This is used as the default value for all entry point names for the deposit step
-    target_platform = deposit_config.get("target", "invenio")
+    # TODO: Rename group → ?
+    group = "hermes.deposit"
+    # TODO: Is having a default a good idea?
+    # TODO: Should we allow a list here so that multiple plugins are run?
+    plugin = deposit_config.get("target", "invenio")
 
-    entry_point_groups = [
-        "hermes.deposit.prepare",
-        "hermes.deposit.map",
-        "hermes.deposit.create_initial_version",
-        "hermes.deposit.create_new_version",
-        "hermes.deposit.update_metadata",
-        "hermes.deposit.delete_artifacts",
-        "hermes.deposit.upload_artifacts",
-        "hermes.deposit.publish",
-    ]
-
-    # For each group, an entry point can be configured via ``deposit_config`` using the
-    # the part after the last dot as the config key. If no such key is found, the target
-    # platform value is used to search for an entry point in the respective group.
-    selected_entry_points = {
-        group: deposit_config.get(group.split(".")[-1], target_platform)
-        for group in entry_point_groups
-    }
-
-    # Try to load all entrypoints first, so we don't fail because of misconfigured
-    # entry points while some tasks of the deposition step were already started. (E.g.
-    # new version was already created on the deposition platform but artifact upload
-    # fails due to the entry point not being found.)
-    loaded_entry_points = []
-    for group, name in selected_entry_points.items():
-        try:
-            ep, *eps = metadata.entry_points(group=group, name=name)
-        except ValueError:  # not enough values to unpack
-            if name != target_platform:
-                _log.error(
-                    f"Explicitly configured entry point name {name!r} "
-                    f"not found in group {group!r}"
-                )
-                click_ctx.exit(1)
-            _log.debug(
-                f"Group {group!r} has no entry point with name {name!r}; skipping"
-            )
-            continue
-
+    try:
+        ep, *eps = metadata.entry_points(group=group, name=plugin)
         if eps:
             # Entry point names in these groups refer to the deposition platforms. For
             # each platform, only a single implementation should exist. Otherwise we
             # would not be able to decide which implementation to choose.
             _log.error(
-                f"Entry point name {name!r} is not unique within group {group!r}"
+                f"Entry point name {plugin!r} is not unique within group {group!r}"
             )
             click_ctx.exit(1)
+    except ValueError:  # not enough values to unpack
+        _log.error(f"Entry point name {plugin!r} not found in group {group!r}")
+        click_ctx.exit(1)
 
-        loaded_entry_points.append(ep.load())
+    # TODO: Could this raise an exception?
+    # TODO: Add "BaseDepositionPlugin" as type annotation
+    deposit_plugin_class = ep.load()
+    deposit_plugin = deposit_plugin_class(click_ctx, ctx)
 
-    for entry_point in loaded_entry_points:
-        try:
-            entry_point(click_ctx, ctx)
-        except (RuntimeError, MisconfigurationError) as e:
-            _log.error(f"Error in {group!r} entry point {name!r}: {e}")
-            click_ctx.exit(1)
+    try:
+        deposit_plugin.run()
+    except (RuntimeError, MisconfigurationError) as e:
+        _log.error(f"Error in {group!r} entry point {plugin!r}: {e}")
+        click_ctx.exit(1)
 
 
 @click.group(invoke_without_command=True)
