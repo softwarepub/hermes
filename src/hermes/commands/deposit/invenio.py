@@ -32,6 +32,15 @@ class InvenioDepositPlugin(BaseDepositPlugin):
     default_depositions_api_path = "api/deposit/depositions"
 
 
+    def __init__(self, click_ctx: click.Context, ctx: CodeMetaContext) -> None:
+        super().__init__(click_ctx, ctx)
+        self.session = requests.Session()
+        self.session.headers.update({"User-Agent": hermes_user_agent})
+        self.auth_headers = {
+            "Authorization": f"Bearer {self.click_ctx.params['auth_token']}",
+        }
+
+
     def prepare(self) -> None:
         """Prepare the deposition on an Invenio-based platform.
 
@@ -128,13 +137,10 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         deposition_metadata = invenio_ctx["depositionMetadata"]
 
         deposit_url = f"{site_url}/{depositions_api_path}"
-        response = requests.post(
+        response = self.session.post(
             deposit_url,
             json={"metadata": deposition_metadata},
-            headers={
-                "User-Agent": hermes_user_agent,
-                "Authorization": f"Bearer {self.click_ctx.params['auth_token']}",
-            }
+            headers=self.auth_headers
         )
 
         if not response.ok:
@@ -165,12 +171,6 @@ class InvenioDepositPlugin(BaseDepositPlugin):
             # the previous step. Thus, there is nothing to do here.
             return
 
-        session = requests.Session()
-        session.headers = {
-            "User-Agent": hermes_user_agent,
-            "Authorization": f"Bearer {self.click_ctx.params['auth_token']}",
-        }
-
         invenio_config = config.get("deposit").get("invenio", {})
         site_url = invenio_config["site_url"]
         depositions_api_path = invenio_config.get("api_paths", {}).get(
@@ -179,13 +179,13 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
         # Get current deposit
         deposit_url = f"{site_url}/{depositions_api_path}/{latest_record_id}"
-        response = session.get(deposit_url)
+        response = self.session.get(deposit_url, headers=self.auth_headers)
         if not response.ok:
             raise RuntimeError(f"Failed to get current deposit {deposit_url!r}")
 
         # Create a new version using the newversion action
         deposit_url = response.json()["links"]["newversion"]
-        response = session.post(deposit_url)
+        response = self.session.post(deposit_url, headers=self.auth_headers)
         if not response.ok:
             raise RuntimeError(f"Could not create new version deposit {deposit_url!r}")
 
@@ -213,13 +213,10 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
         deposition_metadata = invenio_ctx["depositionMetadata"]
 
-        response = requests.put(
+        response = self.session.put(
             draft_url,
             json={"metadata": deposition_metadata},
-            headers={
-                "User-Agent": hermes_user_agent,
-                "Authorization": f"Bearer {self.click_ctx.params['auth_token']}",
-            }
+            headers=self.auth_headers
         )
 
         if not response.ok:
@@ -256,12 +253,6 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         bucket_url_path = ContextPath.parse("deposit.invenio.links.bucket")
         bucket_url = self.ctx[bucket_url_path]
 
-        session = requests.Session()
-        session.headers = {
-            "User-Agent": hermes_user_agent,
-            "Authorization": f"Bearer {self.click_ctx.params['auth_token']}",
-        }
-
         files: list[click.Path] = self.click_ctx.params["file"]
         for path_arg in files:
             path = Path(path_arg)
@@ -271,9 +262,10 @@ class InvenioDepositPlugin(BaseDepositPlugin):
                 raise ValueError("Any given argument to be included in the deposit must be a file.")
 
             with open(path, "rb") as file_content:
-                response = session.put(
+                response = self.session.put(
                     f"{bucket_url}/{path.name}",
-                    data=file_content
+                    data=file_content,
+                    headers=self.auth_headers,
                 )
                 if not response.ok:
                     raise RuntimeError(f"Could not upload file {path.name!r} into bucket {bucket_url!r}")
@@ -294,14 +286,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         publish_url_path = ContextPath.parse("deposit.invenio.links.publish")
         publish_url = self.ctx[publish_url_path]
 
-        response = requests.post(
-            publish_url,
-            headers={
-                "User-Agent": hermes_user_agent,
-                "Authorization": f"Bearer {self.click_ctx.params['auth_token']}"
-            }
-        )
-
+        response = self.session.post(publish_url, headers=self.auth_headers)
         if not response.ok:
             _log.debug(response.text)
             raise RuntimeError(f"Could not publish deposit via {publish_url!r}")
@@ -366,7 +351,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         :return: The record ID on the respective instance.
         """
 
-        res = requests.get(f'https://doi.org/{doi}')
+        res = self.session.get(f'https://doi.org/{doi}')
 
         # This is a mean hack due to DataCite answering a 404 with a 200 status
         if res.url == 'https://datacite.org/404.html':
@@ -390,12 +375,12 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         :param record_id: The record that sould be resolved.
         :return: The record id of the latest version for the requested record.
         """
-        res = requests.get(f"{site_url}/api/records/{record_id}")
+        res = self.sesssion.get(f"{site_url}/api/records/{record_id}")
         if res.status_code != 200:
             raise ValueError(f"Could not retrieve record from {res.url}: {res.text}")
 
         res_json = res.json()
-        res = requests.get(res_json['links']['latest'])
+        res = self.session.get(res_json['links']['latest'])
         if res.status_code != 200:
             raise ValueError(f"Could not retrieve record from {res.url}: {res.text}")
 
@@ -559,9 +544,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         url_path = parsed_url.path.rstrip("/")
         license_id = url_path.split("/")[-1]
 
-        response = requests.get(
-            f"{license_api_url}/{license_id}", headers={"User-Agent": hermes_user_agent}
-        )
+        response = self.session.get(f"{license_api_url}/{license_id}")
         if response.status_code == 404:
             raise RuntimeError(f"Not a valid license identifier: {license_id}")
         # Catch other problems
@@ -583,13 +566,10 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         if communities is None:
             return None
 
-        session = requests.Session()
-        session.headers = {"User-Agent": hermes_user_agent}
-
         community_ids = []
         for community_id in communities:
             url = f"{communities_api_url}/{community_id}"
-            response = session.get(url)
+            response = self.session.get(url)
             if response.status_code == 404:
                 raise MisconfigurationError(
                     f"Not a valid community identifier: {community_id}"
