@@ -27,9 +27,10 @@ from hermes.utils import hermes_user_agent
 
 # TODO: Add type annotations to aid subclass implementation
 class InvenioDepositPlugin(BaseDepositPlugin):
-    default_licenses_api_path = "api/licenses"
-    default_communities_api_path = "api/communities"
-    default_depositions_api_path = "api/deposit/depositions"
+    DEFAULT_LICENSES_API_PATH = "api/licenses"
+    DEFAULT_COMMUNITIES_API_PATH = "api/communities"
+    DEFAULT_DEPOSITIONS_API_PATH = "api/deposit/depositions"
+    DEFAULT_RECORDS_API_PATH = "api/records"
 
 
     def __init__(self, click_ctx: click.Context, ctx: CodeMetaContext) -> None:
@@ -39,6 +40,22 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         self.auth_headers = {
             "Authorization": f"Bearer {self.click_ctx.params['auth_token']}",
         }
+
+        self.config = config.get("deposit").get("invenio", {})
+
+        api_paths = self.config.get("api_paths", {})
+        self.licenses_api_path = api_paths.get(
+            "licenses", self.DEFAULT_LICENSES_API_PATH
+        )
+        self.communities_api_path = api_paths.get(
+            "communities", self.DEFAULT_COMMUNITIES_API_PATH
+        )
+        self.depositions_api_path = api_paths.get(
+            "depositions", self.DEFAULT_DEPOSITIONS_API_PATH
+        )
+        self.records_api_path = api_paths.get(
+            "records", self.DEFAULT_RECORDS_API_PATH
+        )
 
 
     def prepare(self) -> None:
@@ -61,7 +78,6 @@ class InvenioDepositPlugin(BaseDepositPlugin):
             raise DepositionUnauthorizedError("No auth token given for deposition platform")
 
         invenio_path = ContextPath.parse("deposit.invenio")
-        invenio_config = config.get("deposit").get("invenio", {})
         rec_id, rec_meta = self._resolve_latest_invenio_id()
 
         version = self.ctx["codemeta"].get("version")
@@ -70,21 +86,15 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
         self.ctx.update(invenio_path['latestRecord'], {'id': rec_id, 'metadata': rec_meta})
 
-        site_url = invenio_config.get("site_url")
+        site_url = self.config.get("site_url")
         if site_url is None:
             raise MisconfigurationError("deposit.invenio.site_url is not configured")
 
-        licenses_api_path = invenio_config.get("api_paths", {}).get(
-            "licenses", self.default_licenses_api_path
-        )
-        licenses_api_url = f"{site_url}/{licenses_api_path}"
+        licenses_api_url = f"{site_url}/{self.licenses_api_path}"
         license = self._get_license_identifier(licenses_api_url)
         self.ctx.update(invenio_path["license"], license)
 
-        communities_api_path = invenio_config.get("api_paths", {}).get(
-            "communities", self.default_communities_api_path
-        )
-        communities_api_url = f"{site_url}/{communities_api_path}"
+        communities_api_url = f"{site_url}/{self.communities_api_path}"
         communities = self._get_community_identifiers(communities_api_url)
         self.ctx.update(invenio_path["communities"], communities)
 
@@ -128,15 +138,11 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
         _log = logging.getLogger("cli.deposit.invenio")
 
-        invenio_config = config.get("deposit").get("invenio", {})
-        site_url = invenio_config["site_url"]
-        depositions_api_path = invenio_config.get("api_paths", {}).get(
-            "depositions", self.default_depositions_api_path
-        )
+        site_url = self.config["site_url"]
 
         deposition_metadata = invenio_ctx["depositionMetadata"]
 
-        deposit_url = f"{site_url}/{depositions_api_path}"
+        deposit_url = f"{site_url}/{self.depositions_api_path}"
         response = self.session.post(
             deposit_url,
             json={"metadata": deposition_metadata},
@@ -171,14 +177,10 @@ class InvenioDepositPlugin(BaseDepositPlugin):
             # the previous step. Thus, there is nothing to do here.
             return
 
-        invenio_config = config.get("deposit").get("invenio", {})
-        site_url = invenio_config["site_url"]
-        depositions_api_path = invenio_config.get("api_paths", {}).get(
-            "depositions", self.default_depositions_api_path
-        )
+        site_url = self.config["site_url"]
 
         # Get current deposit
-        deposit_url = f"{site_url}/{depositions_api_path}/{latest_record_id}"
+        deposit_url = f"{site_url}/{self.depositions_api_path}/{latest_record_id}"
         response = self.session.get(deposit_url, headers=self.auth_headers)
         if not response.ok:
             raise RuntimeError(f"Failed to get current deposit {deposit_url!r}")
@@ -311,15 +313,14 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         :return: The Invenio record id and the metadata of the record
         """
 
-        invenio_config = config.get('deposit').get('invenio', {})
-        site_url = invenio_config.get('site_url')
+        site_url = self.config.get('site_url')
         if site_url is None:
             raise MisconfigurationError("deposit.invenio.site_url is not configured")
 
         # Check if we configured an Invenio record ID (of the concept...)
-        record_id = invenio_config.get('record_id')
+        record_id = self.config.get('record_id')
         if record_id is None:
-            doi = invenio_config.get('doi')
+            doi = self.config.get('doi')
             if doi is None:
                 try:
                     # TODO: There might be more semantic in the codemeta.identifier... (also see schema.org)
@@ -375,7 +376,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         :param record_id: The record that sould be resolved.
         :return: The record id of the latest version for the requested record.
         """
-        res = self.sesssion.get(f"{site_url}/api/records/{record_id}")
+        res = self.sesssion.get(f"{site_url}/{self.records_api_path}/{record_id}")
         if res.status_code != 200:
             raise ValueError(f"Could not retrieve record from {res.url}: {res.text}")
 
@@ -562,7 +563,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         raised.
         """
 
-        communities = config.get("deposit").get("invenio", {}).get("communities")
+        communities = self.config.get("communities")
         if communities is None:
             return None
 
@@ -596,9 +597,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         This function also makes sure that the given embargo date can be parsed as an ISO
         8601 string representation and that the access rights are given as a string.
         """
-        invenio_config = config.get("deposit").get("invenio", {})
-
-        access_right = invenio_config.get("access_right")
+        access_right = self.config.get("access_right")
         if access_right is None:
             raise MisconfigurationError("deposit.invenio.access_right is not configured")
 
@@ -609,7 +608,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
                 f"{', '.join(access_right_options)}"
             )
 
-        embargo_date = invenio_config.get("embargo_date")
+        embargo_date = self.config.get("embargo_date")
         if access_right == "embargoed" and embargo_date is None:
             raise MisconfigurationError(
                 f"With access_right {access_right}, "
@@ -625,7 +624,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
                     "Must be in ISO 8601 format."
                 )
 
-        access_conditions = invenio_config.get("access_conditions")
+        access_conditions = self.config.get("access_conditions")
         if access_right == "restricted" and access_conditions is None:
             raise MisconfigurationError(
                 f"With access_right {access_right}, "
