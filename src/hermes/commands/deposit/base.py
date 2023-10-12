@@ -15,7 +15,7 @@ class BaseDepositPlugin:
         self.click_ctx = click_ctx
         self.ctx = ctx
 
-    def run(self) -> None:
+    def __call__(self) -> None:
         # TODO: Decide here which of initial/new/... to run?
         steps = [
             "prepare",
