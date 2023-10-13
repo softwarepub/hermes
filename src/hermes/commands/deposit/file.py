@@ -13,7 +13,7 @@ from hermes.model.path import ContextPath
 
 
 class FileDepositPlugin(BaseDepositPlugin):
-    def map(self) -> None:
+    def map_metadata(self) -> None:
         self.ctx.update(ContextPath.parse('deposit.file'), self.ctx['codemeta'])
 
 
