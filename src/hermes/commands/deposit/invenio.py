@@ -104,7 +104,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         self.ctx.update(invenio_path["access_conditions"], access_conditions)
 
 
-    def map(self) -> None:
+    def map_metadata(self) -> None:
         """Map the harvested metadata onto the Invenio schema."""
 
         deposition_metadata = self._codemeta_to_invenio_deposition()

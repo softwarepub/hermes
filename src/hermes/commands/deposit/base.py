@@ -19,7 +19,7 @@ class BaseDepositPlugin:
         # TODO: Decide here which of initial/new/... to run?
         steps = [
             "prepare",
-            "map",
+            "map_metadata",
             "create_initial_version",
             "create_new_version",
             "update_metadata",
@@ -34,7 +34,7 @@ class BaseDepositPlugin:
     def prepare(self) -> None:
         pass
 
-    def map(self) -> None:
+    def map_metadata(self) -> None:
         pass
 
     def create_initial_version(self) -> None:
