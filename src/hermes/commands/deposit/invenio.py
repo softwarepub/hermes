@@ -25,6 +25,9 @@ from hermes.model.path import ContextPath
 from hermes.utils import hermes_user_agent
 
 
+_log = logging.getLogger("cli.deposit.invenio")
+
+
 # TODO: Add type annotations to aid subclass implementation
 class InvenioDepositPlugin(BaseDepositPlugin):
     DEFAULT_LICENSES_API_PATH = "api/licenses"
@@ -136,8 +139,6 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         if not self.click_ctx.params['initial']:
             raise RuntimeError("Please use `--initial` to make an initial deposition.")
 
-        _log = logging.getLogger("cli.deposit.invenio")
-
         site_url = self.config["site_url"]
 
         deposition_metadata = invenio_ctx["depositionMetadata"]
@@ -211,8 +212,6 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         if draft_url is None:
             return
 
-        _log = logging.getLogger("cli.deposit.invenio")
-
         deposition_metadata = invenio_ctx["depositionMetadata"]
 
         response = self.session.put(
@@ -282,8 +281,6 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         This is done by doing a POST request to the publication URL stored in the context at
         ``deposit.invenio.links.publish``.
         """
-
-        _log = logging.getLogger("cli.deposit.invenio")
 
         publish_url_path = ContextPath.parse("deposit.invenio.links.publish")
         publish_url = self.ctx[publish_url_path]
