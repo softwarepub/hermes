@@ -28,14 +28,14 @@ from hermes.utils import hermes_user_agent
 _log = logging.getLogger("cli.deposit.invenio")
 
 
-# TODO: Update docstrings
 class InvenioResolver:
     def __init__(self):
         self.session = requests.Session()
         self.session.headers.update({"User-Agent": hermes_user_agent})
 
     def resolve_latest_id(
-            self, site_url, record_id=None, doi=None, codemeta_identifier=None
+            self, site_url, records_api_path="api/records", record_id=None, doi=None,
+            codemeta_identifier=None
         ) -> t.Tuple[str, dict]:
         """
         Using the given metadata parameters, figure out the latest record id.
@@ -67,7 +67,7 @@ class InvenioResolver:
 
         if record_id is not None:
             # If we got a record id by now, resolve it using the Invenio API to the latests record.
-            return self.resolve_record_id(site_url, record_id)
+            return self.resolve_record_id(site_url, record_id, records_api_path)
 
         return None, {}
 
@@ -96,7 +96,9 @@ class InvenioResolver:
         *_, record_id = page_url.path.split('/')
         return record_id
 
-    def resolve_record_id(self, site_url: str, record_id: str) -> t.Tuple[str, dict]:
+    def resolve_record_id(
+            self, site_url: str, record_id: str, records_api_path: str = "api/records"
+        ) -> t.Tuple[str, dict]:
         """
         Find the latest version of a given record.
 
@@ -104,7 +106,7 @@ class InvenioResolver:
         :param record_id: The record that sould be resolved.
         :return: The record id of the latest version for the requested record.
         """
-        res = self.sesssion.get(f"{site_url}/{self.records_api_path}/{record_id}")
+        res = self.session.get(f"{site_url}/{records_api_path}/{record_id}")
         if res.status_code != 200:
             raise ValueError(f"Could not retrieve record from {res.url}: {res.text}")
 
@@ -185,7 +187,8 @@ class InvenioDepositPlugin(BaseDepositPlugin):
             codemeta_identifier = None
 
         rec_id, rec_meta = self.resolver.resolve_latest_id(
-            site_url, record_id=rec_id, doi=doi, codemeta_identifier=codemeta_identifier
+            site_url, self.records_api_path, record_id=rec_id, doi=doi,
+            codemeta_identifier=codemeta_identifier
         )
 
         version = self.ctx["codemeta"].get("version")
