@@ -553,7 +553,7 @@ def _get_license_identifier(ctx: CodeMetaContext, license_api_url: str):
 
     parsed_url = urlparse(license_url)
     url_path = parsed_url.path.rstrip("/")
-    license_id = url_path.split("/")[-1]
+    license_id = url_path.split("/")[-1].lower()
 
     response = requests.get(
         f"{license_api_url}/{license_id}", headers={"User-Agent": hermes_user_agent}
