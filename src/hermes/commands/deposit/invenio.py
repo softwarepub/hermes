@@ -34,9 +34,9 @@ class InvenioResolver:
         self.session.headers.update({"User-Agent": hermes_user_agent})
 
     def resolve_latest_id(
-            self, site_url, records_api_path="api/records", record_id=None, doi=None,
-            codemeta_identifier=None
-        ) -> t.Tuple[str, dict]:
+        self, site_url, records_api_path="api/records", record_id=None, doi=None,
+        codemeta_identifier=None
+    ) -> t.Tuple[str, dict]:
         """
         Using the given metadata parameters, figure out the latest record id.
 
@@ -71,7 +71,6 @@ class InvenioResolver:
 
         return None, {}
 
-
     def resolve_doi(self, site_url, doi) -> str:
         """
         Resolve a DOI to an Invenio URL and extract the record id.
@@ -97,8 +96,8 @@ class InvenioResolver:
         return record_id
 
     def resolve_record_id(
-            self, site_url: str, record_id: str, records_api_path: str = "api/records"
-        ) -> t.Tuple[str, dict]:
+        self, site_url: str, record_id: str, records_api_path: str = "api/records"
+    ) -> t.Tuple[str, dict]:
         """
         Find the latest version of a given record.
 
@@ -150,7 +149,6 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         self.records_api_path = api_paths.get(
             "records", self.DEFAULT_RECORDS_API_PATH
         )
-
 
     # TODO: Populate some data structure here? Or move more of this into __init__?
     def prepare(self) -> None:
@@ -210,7 +208,6 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         self.ctx.update(invenio_path["embargo_date"], embargo_date)
         self.ctx.update(invenio_path["access_conditions"], access_conditions)
 
-
     def map_metadata(self) -> None:
         """Map the harvested metadata onto the Invenio schema."""
 
@@ -222,7 +219,6 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         # Store a snapshot of the mapped data within the cache, useful for analysis, debugging, etc
         with open(self.ctx.get_cache("deposit", "invenio", create=True), 'w') as invenio_json:
             json.dump(deposition_metadata, invenio_json, indent='  ')
-
 
     def create_initial_version(self) -> None:
         """Create an initial version of a publication.
@@ -265,7 +261,6 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         self.ctx.update(invenio_path["links"]["bucket"], deposit["links"]["bucket"])
         self.ctx.update(invenio_path["links"]["publish"], deposit["links"]["publish"])
 
-
     def create_new_version(self) -> None:
         """Create a new version of an existing publication.
 
@@ -299,7 +294,6 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         # Store link to latest draft to be used in :func:`update_metadata`.
         old_deposit = response.json()
         self.ctx.update(invenio_path["links"]["latestDraft"], old_deposit['links']['latest_draft'])
-
 
     def update_metadata(self) -> None:
         """Update the metadata of a draft.
@@ -335,7 +329,6 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         self.ctx.update(invenio_path["links"]["bucket"], deposit["links"]["bucket"])
         self.ctx.update(invenio_path["links"]["publish"], deposit["links"]["publish"])
 
-
     def delete_artifacts(self) -> None:
         """Delete existing file artifacts.
 
@@ -345,7 +338,6 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         """
         # TODO: This needs to be implemented!
         pass
-
 
     def upload_artifacts(self) -> None:
         """Upload file artifacts to the deposit.
@@ -378,7 +370,6 @@ class InvenioDepositPlugin(BaseDepositPlugin):
             # This can potentially be used to verify the checksum
             # file_resource = response.json()
 
-
     def publish(self) -> None:
         """Publish the deposited record.
 
@@ -396,7 +387,6 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
         record = response.json()
         _log.info("Published record: %s", record["links"]["record_html"])
-
 
     def _codemeta_to_invenio_deposition(self) -> dict:
         """The mapping logic.
@@ -516,7 +506,6 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
         return deposition_metadata
 
-
     def _get_license_identifier(self, license_api_url: str):
         """Get Invenio license representation from CodeMeta.
 
@@ -562,7 +551,6 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
         return response.json()["id"]
 
-
     def _get_community_identifiers(self, communities_api_url: str):
         """Get Invenio community identifiers from config.
 
@@ -589,7 +577,6 @@ class InvenioDepositPlugin(BaseDepositPlugin):
             community_ids.append({"identifier": response.json()["id"]})
 
         return community_ids
-
 
     def _get_access_modalities(self, license):
         """Get access right, embargo date and access conditions based on configuration and given license.

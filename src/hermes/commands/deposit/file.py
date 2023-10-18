@@ -16,7 +16,6 @@ class FileDepositPlugin(BaseDepositPlugin):
     def map_metadata(self) -> None:
         self.ctx.update(ContextPath.parse('deposit.file'), self.ctx['codemeta'])
 
-
     def publish(self) -> None:
         file_config = config.get("deposit").get("file", {})
         output_data = self.ctx['deposit.file']
