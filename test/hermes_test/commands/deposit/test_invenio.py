@@ -5,8 +5,7 @@
 # SPDX-FileContributor: Michael Meinel
 # SPDX-FileContributor: David Pape
 
-from unittest import mock
-
+import click
 import pytest
 
 from hermes.commands.deposit import invenio
@@ -16,6 +15,13 @@ from hermes.error import MisconfigurationError
 @pytest.fixture
 def resolver():
     return invenio.InvenioResolver()
+
+
+@pytest.fixture
+def depositor():
+    click_ctx = click.Context(click.Command("deposit"))
+    click_ctx.params.update({"auth_token": ""})
+    return invenio.InvenioDepositPlugin(click_ctx, None)
 
 
 def test_resolve_doi(requests_mock, resolver):
@@ -73,116 +79,74 @@ def test_resolve_record_id_latest_unknown(requests_mock, resolver):
         resolver.resolve_record_id('https://foo.bar', '6789')
 
 
-def test_get_access_modalities_closed():
-    with mock.patch("hermes.config.get") as mocked_deposit_config:
-        mocked_deposit_config.return_value = {
-            'invenio': {
-                'access_right': 'closed',
-            }
-        }
-        access_right, _, _ = invenio._get_access_modalities(None)
-        assert access_right == "closed"
+def test_get_access_modalities_closed(depositor):
+    depositor.config = {'access_right': 'closed'}
+    access_right, _, _ = depositor._get_access_modalities(None)
+    assert access_right == "closed"
 
 
-def test_get_access_modalities_embargoed_no_date_no_license():
-    with mock.patch("hermes.config.get") as mocked_deposit_config:
-        mocked_deposit_config.return_value = {
-            'invenio': {
-                'access_right': 'embargoed',
-            }
-        }
-        with pytest.raises(MisconfigurationError):
-            invenio._get_access_modalities(None)
+def test_get_access_modalities_embargoed_no_date_no_license(depositor):
+    depositor.config = {'access_right': 'embargoed'}
+    with pytest.raises(MisconfigurationError):
+        depositor._get_access_modalities(None)
 
 
-def test_get_access_modalities_embargoed_no_date_with_license():
-    with mock.patch("hermes.config.get") as mocked_deposit_config:
-        mocked_deposit_config.return_value = {
-            'invenio': {
-                'access_right': 'embargoed',
-            }
-        }
-        with pytest.raises(MisconfigurationError):
-            invenio._get_access_modalities("Apache-2.0")
+def test_get_access_modalities_embargoed_no_date_with_license(depositor):
+    depositor.config = {'access_right': 'embargoed'}
+    with pytest.raises(MisconfigurationError):
+        depositor._get_access_modalities("Apache-2.0")
 
 
-def test_get_access_modalities_embargoed_with_date_with_license():
-    with mock.patch("hermes.config.get") as mocked_deposit_config:
-        mocked_deposit_config.return_value = {
-            'invenio': {
-                'access_right': 'embargoed',
-                'embargo_date': '2050-05-01',
-            }
-        }
-        access_right, embargo_date, _ = invenio._get_access_modalities("Apache-2.0")
-        assert access_right == "embargoed"
-        assert embargo_date == "2050-05-01"
+def test_get_access_modalities_embargoed_with_date_with_license(depositor):
+    depositor.config = {
+        'access_right': 'embargoed',
+        'embargo_date': '2050-05-01',
+    }
+    access_right, embargo_date, _ = depositor._get_access_modalities("Apache-2.0")
+    assert access_right == "embargoed"
+    assert embargo_date == "2050-05-01"
 
 
-def test_get_access_modalities_embargoed_with_broken_date_with_license():
-    with mock.patch("hermes.config.get") as mocked_deposit_config:
-        mocked_deposit_config.return_value = {
-            'invenio': {
-                'access_right': 'embargoed',
-                'embargo_date': 'not-a-date',
-            }
-        }
-        with pytest.raises(MisconfigurationError):
-            invenio._get_access_modalities("Apache-2.0")
+def test_get_access_modalities_embargoed_with_broken_date_with_license(depositor):
+    depositor.config = {
+        'access_right': 'embargoed',
+        'embargo_date': 'not-a-date',
+    }
+    with pytest.raises(MisconfigurationError):
+        depositor._get_access_modalities("Apache-2.0")
 
 
-def test_get_access_modalities_restricted_no_conditions():
-    with mock.patch("hermes.config.get") as mocked_deposit_config:
-        mocked_deposit_config.return_value = {
-            'invenio': {
-                'access_right': 'restricted',
-            }
-        }
-        with pytest.raises(MisconfigurationError):
-            invenio._get_access_modalities(None)
+def test_get_access_modalities_restricted_no_conditions(depositor):
+    depositor.config = {'access_right': 'restricted'}
+    with pytest.raises(MisconfigurationError):
+        depositor._get_access_modalities(None)
 
 
-def test_get_access_modalities_restricted_with_conditions():
-    with mock.patch("hermes.config.get") as mocked_deposit_config:
-        mocked_deposit_config.return_value = {
-            'invenio': {
-                'access_right': 'restricted',
-                'access_conditions': 'You must be cool',
-            }
-        }
-        access_right, _, access_conditions = invenio._get_access_modalities(None)
-        assert access_right == "restricted"
-        assert access_conditions == "You must be cool"
+def test_get_access_modalities_restricted_with_conditions(depositor):
+    depositor.config = {
+        'access_right': 'restricted',
+        'access_conditions': 'You must be cool',
+    }
+    access_right, _, access_conditions = depositor._get_access_modalities(None)
+    assert access_right == "restricted"
+    assert access_conditions == "You must be cool"
 
 
-def test_get_access_modalities_open_no_license():
-    with mock.patch("hermes.config.get") as mocked_deposit_config:
-        mocked_deposit_config.return_value = {
-            'invenio': {
-                'access_right': 'open',
-            }
-        }
-        with pytest.raises(MisconfigurationError):
-            invenio._get_access_modalities(None)
+def test_get_access_modalities_open_no_license(depositor):
+    depositor.config = {'access_right': 'open'}
+    with pytest.raises(MisconfigurationError):
+        depositor._get_access_modalities(None)
 
 
-def test_get_access_modalities_open_with_license():
-    with mock.patch("hermes.config.get") as mocked_deposit_config:
-        mocked_deposit_config.return_value = {
-            'invenio': {
-                'access_right': 'open',
-            }
-        }
-        access_right, _, _ = invenio._get_access_modalities("Apache-2.0")
-        assert access_right == "open"
+def test_get_access_modalities_open_with_license(depositor):
+    depositor.config = {'access_right': 'open'}
+    access_right, _, _ = depositor._get_access_modalities("Apache-2.0")
+    assert access_right == "open"
 
 
-def test_get_access_modalities_broken_access_right():
-    with mock.patch("hermes.config.get") as mocked_deposit_config:
-        mocked_deposit_config.return_value = {
-            'invenio': {
-                'access_right': 'unknown',  # does not exist
-            }
-        }
-        with pytest.raises(MisconfigurationError):
-            invenio._get_access_modalities(None)
+def test_get_access_modalities_broken_access_right(depositor):
+    depositor.config = {
+        'access_right': 'unknown',  # does not exist
+    }
+    with pytest.raises(MisconfigurationError):
+        depositor._get_access_modalities(None)
