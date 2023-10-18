@@ -28,14 +28,15 @@ from hermes.utils import hermes_user_agent
 _log = logging.getLogger("cli.deposit.invenio")
 
 
+# TODO: Update docstrings
 class InvenioResolver:
-    def __init__(self, ctx: CodeMetaContext):
-        self.ctx = ctx
+    def __init__(self):
         self.session = requests.Session()
         self.session.headers.update({"User-Agent": hermes_user_agent})
 
-    # TODO: Pass codemeta.identifier rather than context
-    def resolve_latest_id(self, site_url, record_id=None, doi=None) -> t.Tuple[str, dict]:
+    def resolve_latest_id(
+            self, site_url, record_id=None, doi=None, codemeta_identifier=None
+        ) -> t.Tuple[str, dict]:
         """
         Using the given configuration and metadata, figure out the latest record id.
 
@@ -52,15 +53,12 @@ class InvenioResolver:
 
         if record_id is None:
             if doi is None:
-                try:
+                if codemeta_identifier is not None:
                     # TODO: There might be more semantic in the codemeta.identifier... (also see schema.org)
-                    identifier = self.ctx['codemeta.identifier']
-                    if identifier.startswith('https://doi.org/'):
-                        doi = identifier[16:]
-                    elif identifier.startswith('http://dx.doi.org/'):
-                        doi = identifier[18:]
-                except KeyError:
-                    pass
+                    if codemeta_identifier.startswith('https://doi.org/'):
+                        doi = codemeta_identifier[16:]
+                    elif codemeta_identifier.startswith('http://dx.doi.org/'):
+                        doi = codemeta_identifier[18:]
 
             if doi is not None:
                 # If we got a DOI, resolve it (using doi.org) into a Invenio URL ... and extract the record id.
@@ -126,7 +124,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
     def __init__(self, click_ctx: click.Context, ctx: CodeMetaContext, resolver=None) -> None:
         super().__init__(click_ctx, ctx)
-        self.resolver = resolver or InvenioResolver(ctx)
+        self.resolver = resolver or InvenioResolver()
 
         self.session = requests.Session()
         self.session.headers.update({"User-Agent": hermes_user_agent})
@@ -180,8 +178,13 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         rec_id = self.config.get('record_id')
         doi = self.config.get('doi')
 
+        try:
+            codemeta_identifier = self.ctx["codemeta.identifier"]
+        except KeyError:
+            codemeta_identifier = None
+
         rec_id, rec_meta = self.resolver.resolve_latest_id(
-            site_url, record_id=rec_id, doi=doi
+            site_url, record_id=rec_id, doi=doi, codemeta_identifier=codemeta_identifier
         )
 
         version = self.ctx["codemeta"].get("version")
