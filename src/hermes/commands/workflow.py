@@ -216,7 +216,7 @@ def deposit(click_ctx: click.Context, initial, auth_token, file):
     try:
         deposit_plugin()
     except (RuntimeError, MisconfigurationError) as e:
-        _log.error(f"Error in {plugin_group!r} entry point {plugin_name!r}: {e}")
+        _log.error(f"Error in {plugin_group!r} plugin {plugin_name!r}: {e}")
         click_ctx.exit(1)
 
 
