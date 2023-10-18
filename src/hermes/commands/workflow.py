@@ -190,24 +190,23 @@ def deposit(click_ctx: click.Context, initial, auth_token, file):
 
     deposit_config = config.get("deposit")
 
-    # TODO: Rename group → ?
-    group = "hermes.deposit"
+    plugin_group = "hermes.deposit"
     # TODO: Is having a default a good idea?
     # TODO: Should we allow a list here so that multiple plugins are run?
-    plugin = deposit_config.get("target", "invenio")
+    plugin_name = deposit_config.get("target", "invenio")
 
     try:
-        ep, *eps = metadata.entry_points(group=group, name=plugin)
+        ep, *eps = metadata.entry_points(group=plugin_group, name=plugin_name)
         if eps:
             # Entry point names in these groups refer to the deposition platforms. For
             # each platform, only a single implementation should exist. Otherwise we
             # would not be able to decide which implementation to choose.
             _log.error(
-                f"Entry point name {plugin!r} is not unique within group {group!r}"
+                f"Plugin name {plugin_name!r} is not unique within group {plugin_group!r}"
             )
             click_ctx.exit(1)
     except ValueError:  # not enough values to unpack
-        _log.error(f"Entry point name {plugin!r} not found in group {group!r}")
+        _log.error(f"Plugin name {plugin_name!r} was not found in group {plugin_group!r}")
         click_ctx.exit(1)
 
     # TODO: Could this raise an exception?
@@ -217,7 +216,7 @@ def deposit(click_ctx: click.Context, initial, auth_token, file):
     try:
         deposit_plugin()
     except (RuntimeError, MisconfigurationError) as e:
-        _log.error(f"Error in {group!r} entry point {plugin!r}: {e}")
+        _log.error(f"Error in {plugin_group!r} entry point {plugin_name!r}: {e}")
         click_ctx.exit(1)
 
 
