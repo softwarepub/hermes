@@ -28,13 +28,11 @@ from hermes.utils import hermes_user_agent
 _log = logging.getLogger("cli.deposit.invenio")
 
 
-# TODO: Add type annotations to aid subclass implementation
 class InvenioDepositPlugin(BaseDepositPlugin):
     DEFAULT_LICENSES_API_PATH = "api/licenses"
     DEFAULT_COMMUNITIES_API_PATH = "api/communities"
     DEFAULT_DEPOSITIONS_API_PATH = "api/deposit/depositions"
     DEFAULT_RECORDS_API_PATH = "api/records"
-
 
     def __init__(self, click_ctx: click.Context, ctx: CodeMetaContext) -> None:
         super().__init__(click_ctx, ctx)
@@ -74,7 +72,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         of license)
         - check whether required configuration options are present
         - check whether an auth token is given
-        - update ``ctx`` with metadata collected during the checks
+        - update ``self.ctx`` with metadata collected during the checks
         """
 
         if not self.click_ctx.params["auth_token"]:
@@ -124,7 +122,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         """Create an initial version of a publication.
 
         If a previous publication exists, this function does nothing, leaving the work for
-        :func:`create_new_version`.
+        :meth:`create_new_version`.
         """
 
         invenio_path = ContextPath.parse("deposit.invenio")
@@ -166,7 +164,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         """Create a new version of an existing publication.
 
         If no previous publication exists, this function does nothing because
-        :func:`create_initial_version` will have done the work.
+        :meth:`create_initial_version` will have done the work.
         """
 
         invenio_path = ContextPath.parse("deposit.invenio")
@@ -305,9 +303,6 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         Anyway, the record id will always be used to resolve the latest version.
 
         If any of the resolution steps fail or produce an unexpected result, a ValueError will be thrown.
-
-        :param ctx: The context for which the record id should be resolved.
-        :return: The Invenio record id and the metadata of the record
         """
 
         site_url = self.config.get('site_url')
