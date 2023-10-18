@@ -13,28 +13,31 @@ from hermes.commands.deposit import invenio
 from hermes.error import MisconfigurationError
 
 
-def test_resolve_doi(requests_mock):
+@pytest.fixture
+def resolver():
+    return invenio.InvenioResolver()
+
+
+def test_resolve_doi(requests_mock, resolver):
     requests_mock.get('https://doi.org/123.45/foo.bar-6789',
                       status_code=302,
                       headers={'Location': 'https://foo.bar/record/6789'})
     requests_mock.get('https://foo.bar/record/6789')
 
-    resolver = invenio.InvenioResolver()
     assert resolver.resolve_doi('https://foo.bar', '123.45/foo.bar-6789') == '6789'
 
 
-def test_resolve_doi_wrong_host(requests_mock):
+def test_resolve_doi_wrong_host(requests_mock, resolver):
     requests_mock.get('https://doi.org/123.45/foo.bar-6789',
                       status_code=302,
                       headers={'Location': 'https://foo.baz/record/6789'})
     requests_mock.get('https://foo.baz/record/6789')
 
-    resolver = invenio.InvenioResolver()
     with pytest.raises(ValueError):
         resolver.resolve_doi('https://foo.bar', '123.45/foo.bar-6789')
 
 
-def test_resolve_doi_unknown(requests_mock):
+def test_resolve_doi_unknown(requests_mock, resolver):
     requests_mock.get('https://doi.org/123.45/foo.bar-6789',
                       status_code=302,
                       headers={'Location': 'https://datacite.org/404.html'})
@@ -42,34 +45,30 @@ def test_resolve_doi_unknown(requests_mock):
     # To show how broken datacite is right now
     requests_mock.get('https://datacite.org/404.html', status_code=200)
 
-    resolver = invenio.InvenioResolver()
     with pytest.raises(ValueError):
         resolver.resolve_doi('https://foo.bar', '123.45/foo.bar-6789')
 
 
-def test_resolve_record_id(requests_mock):
+def test_resolve_record_id(requests_mock, resolver):
     requests_mock.get('https://foo.bar/api/records/6789',
                       text='{"links":{"latest":"https://foo.bar/api/records/12345"}}')
     requests_mock.get('https://foo.bar/api/records/12345', text='{"id":"12345","metadata":{"mock":42}}')
 
-    resolver = invenio.InvenioResolver()
     assert resolver.resolve_record_id('https://foo.bar', '6789') == ('12345', {"mock": 42})
 
 
-def test_resolve_record_id_unknown(requests_mock):
+def test_resolve_record_id_unknown(requests_mock, resolver):
     requests_mock.get('https://foo.bar/api/records/6789', status_code=404, text="Not found")
 
-    resolver = invenio.InvenioResolver()
     with pytest.raises(ValueError):
         resolver.resolve_record_id('https://foo.bar', '6789')
 
 
-def test_resolve_record_id_latest_unknown(requests_mock):
+def test_resolve_record_id_latest_unknown(requests_mock, resolver):
     requests_mock.get('https://foo.bar/api/records/6789',
                       text='{"links":{"latest":"https://foo.bar/api/records/12345"}}')
     requests_mock.get('https://foo.bar/api/records/12345', status_code=404)
 
-    resolver = invenio.InvenioResolver()
     with pytest.raises(ValueError):
         resolver.resolve_record_id('https://foo.bar', '6789')
 
