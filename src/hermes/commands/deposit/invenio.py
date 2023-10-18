@@ -38,15 +38,16 @@ class InvenioResolver:
             self, site_url, record_id=None, doi=None, codemeta_identifier=None
         ) -> t.Tuple[str, dict]:
         """
-        Using the given configuration and metadata, figure out the latest record id.
+        Using the given metadata parameters, figure out the latest record id.
 
-        If a record id is present as configuration ``deposit.invenio.record_id`` this one will be used to identify the
-        latest version of the record. Otherwise, if there is a doi present (either as configuration with key
-        ``deposit.invenio.doi``  or as a codemeta identifier, the DOI will be used to resolve the base record id.
+        If ``record_id`` is given, it will be used to identify the latest version of the
+        record. Otherwise, if there is a DOI present (either as ``doi`` parameter or as
+        ``codemeta_identifier``), the DOI will be used to resolve the base record id.
 
-        Anyway, the record id will always be used to resolve the latest version.
+        Either way the record id will be used to resolve the latest version.
 
-        If any of the resolution steps fail or produce an unexpected result, a ValueError will be thrown.
+        If any of the resolution steps fail or produce an unexpected result, a
+        ``ValueError`` will be raised.
         """
 
         # Check if we configured an Invenio record ID (of the concept...)
@@ -73,7 +74,7 @@ class InvenioResolver:
 
     def resolve_doi(self, site_url, doi) -> str:
         """
-        Resolve an DOI to a Invenio URL and extract the record id.
+        Resolve a DOI to an Invenio URL and extract the record id.
 
         :param site_url: Root URL for the Invenio instance to use.
         :param doi: The DOI to be resolved (only the identifier *without* the ``https://doi.org/`` prefix).
