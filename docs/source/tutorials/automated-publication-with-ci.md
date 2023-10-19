@@ -8,6 +8,7 @@ SPDX-License-Identifier: CC-BY-SA-4.0
 SPDX-FileContributor: Oliver Bertuch
 SPDX-FileContributor: Michael Meinel
 SPDX-FileContributor: Stephan Druskat
+SPDX-FileContributor: Sophie Kernchen
 -->
 
 # Set up automatic software publishing
