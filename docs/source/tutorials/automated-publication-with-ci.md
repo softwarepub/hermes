@@ -172,6 +172,13 @@ Therefore, you [create an access token in your project](https://docs.gitlab.com/
 The Token needs to have at least the `developer` role and `write` access (e.g. write_repository scope).
 Then you create a Gitlab CI variable with the token called `HERMES_PUSH_TOKEN`.
 
+```{note}
+The two Gitlab CI Variables include sensitive and powerful information.
+Therefore you should at least select the flag `Mask variable` when creating.
+If possible you should also select the flag `Protect variable` and define all branches `hermes/*` as
+protected branch.
+```
+
 Copy the [template file for GitLab to Zenodo Sandbox publication](https://github.com/hermes-hmc/ci-templates/blob/main/gitlab/hermes-ci.yml)
 into your project to `.gitlab/hermes-ci.yml`.
 
