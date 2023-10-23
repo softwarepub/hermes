@@ -130,8 +130,13 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
         self.session = requests.Session()
         self.session.headers.update({"User-Agent": hermes_user_agent})
+
+        auth_token = self.click_ctx.params.get("auth_token")
+        if auth_token is None:
+            raise DepositionUnauthorizedError("No auth token given for deposition platform")
+
         self.auth_headers = {
-            "Authorization": f"Bearer {self.click_ctx.params['auth_token']}",
+            "Authorization": f"Bearer {auth_token}",
         }
 
         self.config = config.get("deposit").get("invenio", {})
@@ -163,12 +168,8 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         - check access modalities (access right, access conditions, embargo data, existence
         of license)
         - check whether required configuration options are present
-        - check whether an auth token is given
         - update ``self.ctx`` with metadata collected during the checks
         """
-
-        if not self.click_ctx.params["auth_token"]:
-            raise DepositionUnauthorizedError("No auth token given for deposition platform")
 
         invenio_path = ContextPath.parse("deposit.invenio")
 
