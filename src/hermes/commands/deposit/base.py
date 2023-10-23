@@ -17,19 +17,14 @@ class BaseDepositPlugin:
 
     def __call__(self) -> None:
         # TODO: Decide here which of initial/new/... to run?
-        steps = [
-            "prepare",
-            "map_metadata",
-            "create_initial_version",
-            "create_new_version",
-            "update_metadata",
-            "delete_artifacts",
-            "upload_artifacts",
-            "publish",
-        ]
-
-        for step in steps:
-            getattr(self, step)()
+        self.prepare()
+        self.map_metadata()
+        self.create_initial_version()
+        self.create_new_version()
+        self.update_metadata()
+        self.delete_artifacts()
+        self.upload_artifacts()
+        self.publish()
 
     def prepare(self) -> None:
         pass
