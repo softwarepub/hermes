@@ -28,14 +28,77 @@ from hermes.utils import hermes_user_agent
 _log = logging.getLogger("cli.deposit.invenio")
 
 
+# TODO: Move auth into client
+class InvenioClient(requests.Session):
+    DEFAULT_LICENSES_API_PATH = "api/licenses"
+    DEFAULT_COMMUNITIES_API_PATH = "api/communities"
+    DEFAULT_DEPOSITIONS_API_PATH = "api/deposit/depositions"
+    DEFAULT_RECORDS_API_PATH = "api/records"
+
+    def __init__(self, auth_token=None) -> None:
+        super().__init__()
+
+        self.config = config.get("deposit").get("invenio", {})
+        self.headers.update({"User-Agent": hermes_user_agent})
+
+        self.auth_token = auth_token
+        self.site_url = self.config.get("site_url")
+        if self.site_url is None:
+            raise MisconfigurationError("deposit.invenio.site_url is not configured")
+
+    # Override request method to automatically set Authorization header for all requests
+    # to the configured site.
+    def request(self, method, url, headers=None, **kwargs) -> requests.Response:
+        if self.auth_token is not None and url.startswith(self.site_url):
+            headers = {"Authorization": f"Bearer {self.auth_token}"} | (headers or {})
+        return super().request(method, url, headers=headers, **kwargs)
+
+    def get_record(self, record_id):
+        return self.get(f"{self.site_url}/{self.records_api_path}/{record_id}")
+
+    def get_deposit(self, latest_record_id):
+        return self.get(
+            f"{self.site_url}/{self.depositions_api_path}/{latest_record_id}"
+        )
+
+    def get_license(self, license_id):
+        return self.get(f"{self.site_url}/{self.licenses_api_path}/{license_id}")
+
+    def get_community(self, community_id):
+        return self.get(f"{self.site_url}/{self.communities_api_path}/{community_id}")
+
+    def new_deposit(self, metadata):
+        return self.post(
+            f"{self.site_url}/{self.depositions_api_path}", json={"metadata": metadata},
+        )
+
+    @property
+    def api_paths(self):
+        return self.config.get("api_paths", {})
+
+    @property
+    def licenses_api_path(self):
+        return self.api_paths.get("licenses", self.DEFAULT_LICENSES_API_PATH)
+
+    @property
+    def communities_api_path(self):
+        return self.api_paths.get("communities", self.DEFAULT_COMMUNITIES_API_PATH)
+
+    @property
+    def depositions_api_path(self):
+        return self.api_paths.get("depositions", self.DEFAULT_DEPOSITIONS_API_PATH)
+
+    @property
+    def records_api_path(self):
+        return self.api_paths.get("records", self.DEFAULT_RECORDS_API_PATH)
+
+
 class InvenioResolver:
-    def __init__(self):
-        self.session = requests.Session()
-        self.session.headers.update({"User-Agent": hermes_user_agent})
+    def __init__(self, client=None):
+        self.client = client or InvenioClient()
 
     def resolve_latest_id(
-        self, site_url, records_api_path="api/records", record_id=None, doi=None,
-        codemeta_identifier=None
+        self, record_id=None, doi=None, codemeta_identifier=None
     ) -> t.Tuple[str, dict]:
         """
         Using the given metadata parameters, figure out the latest record id.
@@ -63,15 +126,15 @@ class InvenioResolver:
 
             if doi is not None:
                 # If we got a DOI, resolve it (using doi.org) into a Invenio URL ... and extract the record id.
-                record_id = self.resolve_doi(site_url, doi)
+                record_id = self.resolve_doi(doi)
 
         if record_id is not None:
             # If we got a record id by now, resolve it using the Invenio API to the latests record.
-            return self.resolve_record_id(site_url, record_id, records_api_path)
+            return self.resolve_record_id(record_id)
 
         return None, {}
 
-    def resolve_doi(self, site_url, doi) -> str:
+    def resolve_doi(self, doi) -> str:
         """
         Resolve a DOI to an Invenio URL and extract the record id.
 
@@ -80,24 +143,22 @@ class InvenioResolver:
         :return: The record ID on the respective instance.
         """
 
-        res = self.session.get(f'https://doi.org/{doi}')
+        res = self.client.get(f'https://doi.org/{doi}')
 
         # This is a mean hack due to DataCite answering a 404 with a 200 status
         if res.url == 'https://datacite.org/404.html':
             raise ValueError(f"Invalid DOI: {doi}")
 
         # Ensure the resolved record is on the correct instance
-        if not res.url.startswith(site_url):
-            raise ValueError(f"{res.url} is not on configured host {site_url}.")
+        if not res.url.startswith(self.client.site_url):
+            raise ValueError(f"{res.url} is not on configured host {self.client.site_url}.")
 
         # Extract the record id as last part of the URL path
         page_url = urlparse(res.url)
         *_, record_id = page_url.path.split('/')
         return record_id
 
-    def resolve_record_id(
-        self, site_url: str, record_id: str, records_api_path: str = "api/records"
-    ) -> t.Tuple[str, dict]:
+    def resolve_record_id(self, record_id: str) -> t.Tuple[str, dict]:
         """
         Find the latest version of a given record.
 
@@ -105,12 +166,12 @@ class InvenioResolver:
         :param record_id: The record that sould be resolved.
         :return: The record id of the latest version for the requested record.
         """
-        res = self.session.get(f"{site_url}/{records_api_path}/{record_id}")
+        res = self.client.get_record(record_id)
         if res.status_code != 200:
             raise ValueError(f"Could not retrieve record from {res.url}: {res.text}")
 
         res_json = res.json()
-        res = self.session.get(res_json['links']['latest'])
+        res = self.client.get(res_json['links']['latest'])
         if res.status_code != 200:
             raise ValueError(f"Could not retrieve record from {res.url}: {res.text}")
 
@@ -119,41 +180,17 @@ class InvenioResolver:
 
 
 class InvenioDepositPlugin(BaseDepositPlugin):
-    DEFAULT_LICENSES_API_PATH = "api/licenses"
-    DEFAULT_COMMUNITIES_API_PATH = "api/communities"
-    DEFAULT_DEPOSITIONS_API_PATH = "api/deposit/depositions"
-    DEFAULT_RECORDS_API_PATH = "api/records"
-
-    def __init__(self, click_ctx: click.Context, ctx: CodeMetaContext, resolver=None) -> None:
+    def __init__(self, click_ctx: click.Context, ctx: CodeMetaContext, client=None, resolver=None) -> None:
         super().__init__(click_ctx, ctx)
-        self.resolver = resolver or InvenioResolver()
-
-        self.session = requests.Session()
-        self.session.headers.update({"User-Agent": hermes_user_agent})
 
         auth_token = self.click_ctx.params.get("auth_token")
         if auth_token is None:
             raise DepositionUnauthorizedError("No auth token given for deposition platform")
 
-        self.auth_headers = {
-            "Authorization": f"Bearer {auth_token}",
-        }
+        self.client = client or InvenioClient(auth_token=auth_token)
+        self.resolver = resolver or InvenioResolver(self.client)
 
         self.config = config.get("deposit").get("invenio", {})
-
-        api_paths = self.config.get("api_paths", {})
-        self.licenses_api_path = api_paths.get(
-            "licenses", self.DEFAULT_LICENSES_API_PATH
-        )
-        self.communities_api_path = api_paths.get(
-            "communities", self.DEFAULT_COMMUNITIES_API_PATH
-        )
-        self.depositions_api_path = api_paths.get(
-            "depositions", self.DEFAULT_DEPOSITIONS_API_PATH
-        )
-        self.records_api_path = api_paths.get(
-            "records", self.DEFAULT_RECORDS_API_PATH
-        )
 
     # TODO: Populate some data structure here? Or move more of this into __init__?
     def prepare(self) -> None:
@@ -173,10 +210,6 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
         invenio_path = ContextPath.parse("deposit.invenio")
 
-        site_url = self.config.get("site_url")
-        if site_url is None:
-            raise MisconfigurationError("deposit.invenio.site_url is not configured")
-
         rec_id = self.config.get('record_id')
         doi = self.config.get('doi')
 
@@ -186,8 +219,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
             codemeta_identifier = None
 
         rec_id, rec_meta = self.resolver.resolve_latest_id(
-            site_url, self.records_api_path, record_id=rec_id, doi=doi,
-            codemeta_identifier=codemeta_identifier
+            record_id=rec_id, doi=doi, codemeta_identifier=codemeta_identifier
         )
 
         version = self.ctx["codemeta"].get("version")
@@ -196,12 +228,10 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
         self.ctx.update(invenio_path['latestRecord'], {'id': rec_id, 'metadata': rec_meta})
 
-        licenses_api_url = f"{site_url}/{self.licenses_api_path}"
-        license = self._get_license_identifier(licenses_api_url)
+        license = self._get_license_identifier()
         self.ctx.update(invenio_path["license"], license)
 
-        communities_api_url = f"{site_url}/{self.communities_api_path}"
-        communities = self._get_community_identifiers(communities_api_url)
+        communities = self._get_community_identifiers()
         self.ctx.update(invenio_path["communities"], communities)
 
         access_right, embargo_date, access_conditions = self._get_access_modalities(license)
@@ -240,19 +270,12 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         if not self.click_ctx.params['initial']:
             raise RuntimeError("Please use `--initial` to make an initial deposition.")
 
-        site_url = self.config["site_url"]
-
         deposition_metadata = invenio_ctx["depositionMetadata"]
 
-        deposit_url = f"{site_url}/{self.depositions_api_path}"
-        response = self.session.post(
-            deposit_url,
-            json={"metadata": deposition_metadata},
-            headers=self.auth_headers
-        )
+        response = self.client.new_deposit(deposition_metadata)
 
         if not response.ok:
-            raise RuntimeError(f"Could not create initial deposit {deposit_url!r}")
+            raise RuntimeError(f"Could not create initial deposit {response.url!r}")
 
         deposit = response.json()
         _log.debug("Created initial version deposit: %s", deposit["links"]["html"])
@@ -278,17 +301,14 @@ class InvenioDepositPlugin(BaseDepositPlugin):
             # the previous step. Thus, there is nothing to do here.
             return
 
-        site_url = self.config["site_url"]
-
         # Get current deposit
-        deposit_url = f"{site_url}/{self.depositions_api_path}/{latest_record_id}"
-        response = self.session.get(deposit_url, headers=self.auth_headers)
+        response = self.client.get_deposit(latest_record_id)
         if not response.ok:
-            raise RuntimeError(f"Failed to get current deposit {deposit_url!r}")
+            raise RuntimeError(f"Failed to get current deposit {response.url!r}")
 
         # Create a new version using the newversion action
         deposit_url = response.json()["links"]["newversion"]
-        response = self.session.post(deposit_url, headers=self.auth_headers)
+        response = self.client.post(deposit_url)
         if not response.ok:
             raise RuntimeError(f"Could not create new version deposit {deposit_url!r}")
 
@@ -313,10 +333,9 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
         deposition_metadata = invenio_ctx["depositionMetadata"]
 
-        response = self.session.put(
+        response = self.client.put(
             draft_url,
-            json={"metadata": deposition_metadata},
-            headers=self.auth_headers
+            json={"metadata": deposition_metadata}
         )
 
         if not response.ok:
@@ -360,10 +379,8 @@ class InvenioDepositPlugin(BaseDepositPlugin):
                 raise ValueError("Any given argument to be included in the deposit must be a file.")
 
             with open(path, "rb") as file_content:
-                response = self.session.put(
-                    f"{bucket_url}/{path.name}",
-                    data=file_content,
-                    headers=self.auth_headers,
+                response = self.client.put(
+                    f"{bucket_url}/{path.name}", data=file_content,
                 )
                 if not response.ok:
                     raise RuntimeError(f"Could not upload file {path.name!r} into bucket {bucket_url!r}")
@@ -381,7 +398,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         publish_url_path = ContextPath.parse("deposit.invenio.links.publish")
         publish_url = self.ctx[publish_url_path]
 
-        response = self.session.post(publish_url, headers=self.auth_headers)
+        response = self.client.post(publish_url)
         if not response.ok:
             _log.debug(response.text)
             raise RuntimeError(f"Could not publish deposit via {publish_url!r}")
@@ -507,7 +524,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
         return deposition_metadata
 
-    def _get_license_identifier(self, license_api_url: str):
+    def _get_license_identifier(self):
         """Get Invenio license representation from CodeMeta.
 
         The license to use is extracted from the ``license`` field in the
@@ -544,7 +561,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         url_path = parsed_url.path.rstrip("/")
         license_id = url_path.split("/")[-1]
 
-        response = self.session.get(f"{license_api_url}/{license_id}")
+        response = self.client.get_license(license_id)
         if response.status_code == 404:
             raise RuntimeError(f"Not a valid license identifier: {license_id}")
         # Catch other problems
@@ -552,7 +569,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
         return response.json()["id"]
 
-    def _get_community_identifiers(self, communities_api_url: str):
+    def _get_community_identifiers(self):
         """Get Invenio community identifiers from config.
 
         This function gets the communities to be used for the deposition on an Invenio-based
@@ -567,8 +584,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
         community_ids = []
         for community_id in communities:
-            url = f"{communities_api_url}/{community_id}"
-            response = self.session.get(url)
+            response = self.client.get_community(community_id)
             if response.status_code == 404:
                 raise MisconfigurationError(
                     f"Not a valid community identifier: {community_id}"
