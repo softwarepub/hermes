@@ -557,14 +557,31 @@ def _get_license_identifier(ctx: CodeMetaContext, license_api_url: str):
     )
     response.raise_for_status()
 
-    for license_info in response.json()['hits']['hits']:
-        try:
-            if license_info['props']['url'] == license_url:
+    valid_licenses = response.json()
+    def _search_license_info(_url):
+        for license_info in valid_licenses['hits']['hits']:
+            try:
+                if license_info['props']['url'] == _url:
+                    return license_info
+            except KeyError:
+                continue
+        else:
+            return None
+
+    license_info = _search_license_info(license_url)
+    if license_info is None and license_url.startswith('https://spdx.org/licenses/'):
+        response = requests.get(f"{license_url}.json", headers={"User-Agent": hermes_user_agent})
+        response.raise_for_status()
+
+        for license_cross_ref in response.json()['crossRef']:
+            if not license_cross_ref['isValid']:
+                continue
+
+            license_info = _search_license_info(license_cross_ref["url"])
+            if license_info is not None:
                 break
-        except KeyError:
-            continue
-    else:
-        raise RuntimeError(f"Not a valid license identifier: {license_url}")
+        else:
+            raise RuntimeError(f"Could not resolve license URL {license_url} to a valid identifier.")
 
     return license_info["id"]
 
