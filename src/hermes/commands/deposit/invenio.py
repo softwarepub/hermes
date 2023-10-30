@@ -23,7 +23,7 @@ from hermes.model.context import CodeMetaContext
 from hermes.model.path import ContextPath
 from hermes.utils import hermes_user_agent
 
-_DEFAULT_LICENSES_API_PATH = "api/licenses"
+_DEFAULT_LICENSES_API_PATH = "api/vocabulary/licenses"
 _DEFAULT_COMMUNITIES_API_PATH = "api/communities"
 _DEFAULT_DEPOSITIONS_API_PATH = "api/deposit/depositions"
 
@@ -551,21 +551,22 @@ def _get_license_identifier(ctx: CodeMetaContext, license_api_url: str):
             "Licenses of type 'CreativeWork' are not supported."
         )
 
-    parsed_url = urlparse(license_url)
-    url_path = parsed_url.path.rstrip("/")
-    license_id = url_path.split("/")[-1].lower()
-
-    print(f"DEBUG: License is said to be {license_url} -> {license_id}")
-    
+    # Fetch full list of licenses available... maybe we should cache this.
     response = requests.get(
-        f"{license_api_url}/{license_id}", headers={"User-Agent": hermes_user_agent}
+        f"{license_api_url}", headers={"User-Agent": hermes_user_agent}
     )
-    if response.status_code == 404:
-        raise RuntimeError(f"Not a valid license identifier: {license_id}")
-    # Catch other problems
     response.raise_for_status()
 
-    return response.json()["id"]
+    for license_info in response.json()['hits']['hits']:
+        try:
+            if license_info['props']['url'] == license_url:
+                break
+        except KeyError:
+            continue
+    else:
+        raise RuntimeError(f"Not a valid license identifier: {license_url}")
+
+    return license_info["id"]
 
 
 def _get_community_identifiers(ctx: CodeMetaContext, communities_api_url: str):
