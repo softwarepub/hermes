@@ -556,8 +556,8 @@ def _get_license_identifier(ctx: CodeMetaContext, license_api_url: str):
         f"{license_api_url}?size=1000", headers={"User-Agent": hermes_user_agent}
     )
     response.raise_for_status()
-
     valid_licenses = response.json()
+
     def _search_license_info(_url):
         for license_info in valid_licenses['hits']['hits']:
             try:
