@@ -23,7 +23,7 @@ from hermes.model.context import CodeMetaContext
 from hermes.model.path import ContextPath
 from hermes.utils import hermes_user_agent
 
-_DEFAULT_LICENSES_API_PATH = "api/vocabulary/licenses"
+_DEFAULT_LICENSES_API_PATH = "api/vocabularies/licenses"
 _DEFAULT_COMMUNITIES_API_PATH = "api/communities"
 _DEFAULT_DEPOSITIONS_API_PATH = "api/deposit/depositions"
 
@@ -553,7 +553,7 @@ def _get_license_identifier(ctx: CodeMetaContext, license_api_url: str):
 
     # Fetch full list of licenses available... maybe we should cache this.
     response = requests.get(
-        f"{license_api_url}", headers={"User-Agent": hermes_user_agent}
+        f"{license_api_url}?size=1000", headers={"User-Agent": hermes_user_agent}
     )
     response.raise_for_status()
 
