@@ -134,6 +134,7 @@ def create_initial_version(click_ctx: click.Context, ctx: CodeMetaContext):
     )
 
     if not response.ok:
+        print(response.text)
         raise RuntimeError(f"Could not create initial deposit {deposit_url!r}")
 
     deposit = response.json()
@@ -533,7 +534,7 @@ def _get_license_identifier(ctx: CodeMetaContext, license_api_url: str):
     Typically, Invenio instances offer licenses from https://opendefinition.org and
     https://spdx.org. However, it is possible to mint PIDs for custom licenses.
 
-    An API endpoint (usually ``/api/licenses``) can be used to check whether a given
+    An API endpoint (usually ``/api/vocabularies/licenses``) can be used to check whether a given
     license is supported by the Invenio instance. This function tries to retrieve the
     license by the identifier at the end of the license URL path. If this identifier
     does not exist on the Invenio instance, a :class:`RuntimeError` is raised. If no
@@ -551,7 +552,39 @@ def _get_license_identifier(ctx: CodeMetaContext, license_api_url: str):
             "Licenses of type 'CreativeWork' are not supported."
         )
 
-    # Fetch full list of licenses available... maybe we should cache this.
+    # First try: Look up license by assuming lower-case name is the correct identifier
+    parsed_url = urlparse(license_url)
+    url_path = parsed_url.path.rstrip("/")
+    license_id = url_path.split("/")[-1].lower()
+
+    response = requests.get(
+        f"{license_api_url}/{license_id}", headers={"User-Agent": hermes_user_agent}
+    )
+    if response.ok:
+        license_info = response.json()
+
+    # Second try: Fetch full list of licenses available... maybe we should cache this.
+    else:
+        license_info = _look_up_license_info(license_api_url, license_url)
+
+    return license_info["id"]
+
+
+def _look_up_license_info(license_api_url, license_url):
+    """Deliberately try to resolve the license URL to a valid InvenioRDM license information record from the
+    vocabulary.
+
+    First, this method tries to find the license URL in the list of known license vocabulary (which is fetched each
+    time, ouch...).
+
+    If the URL is not found (what is pretty probable by now, as CFFConvert produces SPDX-URLs while InvenioRDM still
+    relies on the overhauled opensource.org URLs), the SPDX information record is fetched and all valid cross references
+    are sought for.
+
+    :param license_api_url: Base API endpoint for InvenioRDM license vocabulary queries.
+    :param license_url: The URL for the license we are search an identifier for.
+    :return: The vocabulary record that is provided by InvenioRDM.
+    """
     response = requests.get(
         f"{license_api_url}?size=1000", headers={"User-Agent": hermes_user_agent}
     )
@@ -583,7 +616,7 @@ def _get_license_identifier(ctx: CodeMetaContext, license_api_url: str):
         else:
             raise RuntimeError(f"Could not resolve license URL {license_url} to a valid identifier.")
 
-    return license_info["id"]
+    return license_info
 
 
 def _get_community_identifiers(ctx: CodeMetaContext, communities_api_url: str):
