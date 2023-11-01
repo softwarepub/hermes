@@ -263,6 +263,8 @@ def clean():
     """
     audit_log = logging.getLogger('cli')
     audit_log.info("# Cleanup")
+    # shut down logging so that .hermes/ can safely be removed
+    logging.shutdown()
 
     # Create Hermes context (i.e., all collected metadata for all stages...)
     ctx = HermesContext()
