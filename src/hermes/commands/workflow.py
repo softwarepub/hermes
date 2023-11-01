@@ -261,7 +261,7 @@ def clean():
     """
     Remove cached data.
     """
-    audit_log = logging.getLogger('audit')
+    audit_log = logging.getLogger('cli')
     audit_log.info("# Cleanup")
 
     # Create Hermes context (i.e., all collected metadata for all stages...)
