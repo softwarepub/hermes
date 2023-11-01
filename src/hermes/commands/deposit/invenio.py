@@ -28,7 +28,6 @@ from hermes.utils import hermes_user_agent
 _log = logging.getLogger("cli.deposit.invenio")
 
 
-# TODO: Move auth into client
 class InvenioClient(requests.Session):
     DEFAULT_LICENSES_API_PATH = "api/licenses"
     DEFAULT_COMMUNITIES_API_PATH = "api/communities"
@@ -49,8 +48,9 @@ class InvenioClient(requests.Session):
     # Override request method to automatically set Authorization header for all requests
     # to the configured site.
     def request(self, method, url, headers=None, **kwargs) -> requests.Response:
-        if self.auth_token is not None and url.startswith(self.site_url):
-            headers = {"Authorization": f"Bearer {self.auth_token}"} | (headers or {})
+        if self.auth_token:
+            if urlparse(self.site_url).hostname == urlparse(url).hostname:
+                headers = (headers or {}) | {"Authorization": f"Bearer {self.auth_token}"}
         return super().request(method, url, headers=headers, **kwargs)
 
     def get_record(self, record_id):
