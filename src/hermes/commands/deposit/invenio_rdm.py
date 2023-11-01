@@ -23,7 +23,7 @@ from hermes.model.context import CodeMetaContext
 from hermes.model.path import ContextPath
 from hermes.utils import hermes_user_agent
 
-_DEFAULT_LICENSES_API_PATH = "api/licenses"
+_DEFAULT_LICENSES_API_PATH = "api/vocabularies/licenses"
 _DEFAULT_COMMUNITIES_API_PATH = "api/communities"
 _DEFAULT_DEPOSITIONS_API_PATH = "api/deposit/depositions"
 
@@ -47,8 +47,8 @@ def prepare(click_ctx: click.Context, ctx: CodeMetaContext):
     if not click_ctx.params["auth_token"]:
         raise DepositionUnauthorizedError("No auth token given for deposition platform")
 
-    invenio_path = ContextPath.parse("deposit.invenio")
-    invenio_config = config.get("deposit").get("invenio", {})
+    invenio_path = ContextPath.parse("deposit.invenio_rdm")
+    invenio_config = config.get("deposit").get("invenio_rdm", {})
     rec_id, rec_meta = _resolve_latest_invenio_id(ctx)
 
     version = ctx["codemeta"].get("version")
@@ -59,7 +59,7 @@ def prepare(click_ctx: click.Context, ctx: CodeMetaContext):
 
     site_url = invenio_config.get("site_url")
     if site_url is None:
-        raise MisconfigurationError("deposit.invenio.site_url is not configured")
+        raise MisconfigurationError("deposit.invenio_rdm.site_url is not configured")
 
     licenses_api_path = invenio_config.get("api_paths", {}).get(
         "licenses", _DEFAULT_LICENSES_API_PATH
@@ -86,11 +86,11 @@ def map_metadata(click_ctx: click.Context, ctx: CodeMetaContext):
 
     deposition_metadata = _codemeta_to_invenio_deposition(ctx)
 
-    metadata_path = ContextPath.parse("deposit.invenio.depositionMetadata")
+    metadata_path = ContextPath.parse("deposit.invenio_rdm.depositionMetadata")
     ctx.update(metadata_path, deposition_metadata)
 
     # Store a snapshot of the mapped data within the cache, useful for analysis, debugging, etc
-    with open(ctx.get_cache("deposit", "invenio", create=True), 'w') as invenio_json:
+    with open(ctx.get_cache("deposit", "invenio_rdm", create=True), 'w') as invenio_json:
         json.dump(deposition_metadata, invenio_json, indent='  ')
 
 
@@ -101,7 +101,7 @@ def create_initial_version(click_ctx: click.Context, ctx: CodeMetaContext):
     :func:`create_new_version`.
     """
 
-    invenio_path = ContextPath.parse("deposit.invenio")
+    invenio_path = ContextPath.parse("deposit.invenio_rdm")
     invenio_ctx = ctx[invenio_path]
     latest_record_id = invenio_ctx.get("latestRecord", {}).get("id")
 
@@ -113,9 +113,9 @@ def create_initial_version(click_ctx: click.Context, ctx: CodeMetaContext):
     if not click_ctx.params['initial']:
         raise RuntimeError("Please use `--initial` to make an initial deposition.")
 
-    _log = logging.getLogger("cli.deposit.invenio")
+    _log = logging.getLogger("cli.deposit.invenio_rdm")
 
-    invenio_config = config.get("deposit").get("invenio", {})
+    invenio_config = config.get("deposit").get("invenio_rdm", {})
     site_url = invenio_config["site_url"]
     depositions_api_path = invenio_config.get("api_paths", {}).get(
         "depositions", _DEFAULT_DEPOSITIONS_API_PATH
@@ -134,6 +134,7 @@ def create_initial_version(click_ctx: click.Context, ctx: CodeMetaContext):
     )
 
     if not response.ok:
+        print(response.text)
         raise RuntimeError(f"Could not create initial deposit {deposit_url!r}")
 
     deposit = response.json()
@@ -152,7 +153,7 @@ def create_new_version(click_ctx: click.Context, ctx: CodeMetaContext):
     :func:`create_initial_version` will have done the work.
     """
 
-    invenio_path = ContextPath.parse("deposit.invenio")
+    invenio_path = ContextPath.parse("deposit.invenio_rdm")
     invenio_ctx = ctx[invenio_path]
     latest_record_id = invenio_ctx.get("latestRecord", {}).get("id")
 
@@ -167,7 +168,7 @@ def create_new_version(click_ctx: click.Context, ctx: CodeMetaContext):
         "Authorization": f"Bearer {click_ctx.params['auth_token']}",
     }
 
-    invenio_config = config.get("deposit").get("invenio", {})
+    invenio_config = config.get("deposit").get("invenio_rdm", {})
     site_url = invenio_config["site_url"]
     depositions_api_path = invenio_config.get("api_paths", {}).get(
         "depositions", _DEFAULT_DEPOSITIONS_API_PATH
@@ -198,14 +199,14 @@ def update_metadata(click_ctx: click.Context, ctx: CodeMetaContext):
     metadata).
     """
 
-    invenio_path = ContextPath.parse("deposit.invenio")
+    invenio_path = ContextPath.parse("deposit.invenio_rdm")
     invenio_ctx = ctx[invenio_path]
     draft_url = invenio_ctx.get("links", {}).get("latestDraft")
 
     if draft_url is None:
         return
 
-    _log = logging.getLogger("cli.deposit.invenio")
+    _log = logging.getLogger("cli.deposit.invenio_rdm")
 
     deposition_metadata = invenio_ctx["depositionMetadata"]
 
@@ -249,7 +250,7 @@ def upload_artifacts(click_ctx: click.Context, ctx: CodeMetaContext):
     ``deposit.invenio.links.bucket``.
     """
 
-    bucket_url_path = ContextPath.parse("deposit.invenio.links.bucket")
+    bucket_url_path = ContextPath.parse("deposit.invenio_rdm.links.bucket")
     bucket_url = ctx[bucket_url_path]
 
     session = requests.Session()
@@ -285,9 +286,9 @@ def publish(click_ctx: click.Context, ctx: CodeMetaContext):
     ``deposit.invenio.links.publish``.
     """
 
-    _log = logging.getLogger("cli.deposit.invenio")
+    _log = logging.getLogger("cli.deposit.invenio_rdm")
 
-    publish_url_path = ContextPath.parse("deposit.invenio.links.publish")
+    publish_url_path = ContextPath.parse("deposit.invenio_rdm.links.publish")
     publish_url = ctx[publish_url_path]
 
     response = requests.post(
@@ -322,10 +323,10 @@ def _resolve_latest_invenio_id(ctx: CodeMetaContext) -> t.Tuple[str, dict]:
     :return: The Invenio record id and the metadata of the record
     """
 
-    invenio_config = config.get('deposit').get('invenio', {})
+    invenio_config = config.get('deposit').get('invenio_rdm', {})
     site_url = invenio_config.get('site_url')
     if site_url is None:
-        raise MisconfigurationError("deposit.invenio.site_url is not configured")
+        raise MisconfigurationError("deposit.invenio_rdm.site_url is not configured")
 
     # Check if we configured an Invenio record ID (of the concept...)
     record_id = invenio_config.get('record_id')
@@ -424,11 +425,11 @@ def _codemeta_to_invenio_deposition(ctx: CodeMetaContext) -> dict:
     """
 
     metadata = ctx["codemeta"]
-    license = ctx["deposit"]["invenio"]["license"]
-    communities = ctx["deposit"]["invenio"]["communities"]
-    access_right = ctx["deposit"]["invenio"]["access_right"]
-    embargo_date = ctx["deposit"]["invenio"]["embargo_date"]
-    access_conditions = ctx["deposit"]["invenio"]["access_conditions"]
+    license = ctx["deposit"]["invenio_rdm"]["license"]
+    communities = ctx["deposit"]["invenio_rdm"]["communities"]
+    access_right = ctx["deposit"]["invenio_rdm"]["access_right"]
+    embargo_date = ctx["deposit"]["invenio_rdm"]["embargo_date"]
+    access_conditions = ctx["deposit"]["invenio_rdm"]["access_conditions"]
 
     creators = [
         # TODO: Distinguish between @type "Person" and others
@@ -533,7 +534,7 @@ def _get_license_identifier(ctx: CodeMetaContext, license_api_url: str):
     Typically, Invenio instances offer licenses from https://opendefinition.org and
     https://spdx.org. However, it is possible to mint PIDs for custom licenses.
 
-    An API endpoint (usually ``/api/licenses``) can be used to check whether a given
+    An API endpoint (usually ``/api/vocabularies/licenses``) can be used to check whether a given
     license is supported by the Invenio instance. This function tries to retrieve the
     license by the identifier at the end of the license URL path. If this identifier
     does not exist on the Invenio instance, a :class:`RuntimeError` is raised. If no
@@ -551,19 +552,71 @@ def _get_license_identifier(ctx: CodeMetaContext, license_api_url: str):
             "Licenses of type 'CreativeWork' are not supported."
         )
 
+    # First try: Look up license by assuming lower-case name is the correct identifier
     parsed_url = urlparse(license_url)
     url_path = parsed_url.path.rstrip("/")
-    license_id = url_path.split("/")[-1]
+    license_id = url_path.split("/")[-1].lower()
 
     response = requests.get(
         f"{license_api_url}/{license_id}", headers={"User-Agent": hermes_user_agent}
     )
-    if response.status_code == 404:
-        raise RuntimeError(f"Not a valid license identifier: {license_id}")
-    # Catch other problems
-    response.raise_for_status()
+    if response.ok:
+        license_info = response.json()
 
-    return response.json()["id"]
+    # Second try: Fetch full list of licenses available... maybe we should cache this.
+    else:
+        license_info = _look_up_license_info(license_api_url, license_url)
+
+    return license_info["id"]
+
+
+def _look_up_license_info(license_api_url, license_url):
+    """Deliberately try to resolve the license URL to a valid InvenioRDM license information record from the
+    vocabulary.
+
+    First, this method tries to find the license URL in the list of known license vocabulary (which is fetched each
+    time, ouch...).
+
+    If the URL is not found (what is pretty probable by now, as CFFConvert produces SPDX-URLs while InvenioRDM still
+    relies on the overhauled opensource.org URLs), the SPDX information record is fetched and all valid cross references
+    are sought for.
+
+    :param license_api_url: Base API endpoint for InvenioRDM license vocabulary queries.
+    :param license_url: The URL for the license we are search an identifier for.
+    :return: The vocabulary record that is provided by InvenioRDM.
+    """
+    response = requests.get(
+        f"{license_api_url}?size=1000", headers={"User-Agent": hermes_user_agent}
+    )
+    response.raise_for_status()
+    valid_licenses = response.json()
+
+    def _search_license_info(_url):
+        for license_info in valid_licenses['hits']['hits']:
+            try:
+                if license_info['props']['url'] == _url:
+                    return license_info
+            except KeyError:
+                continue
+        else:
+            return None
+
+    license_info = _search_license_info(license_url)
+    if license_info is None and license_url.startswith('https://spdx.org/licenses/'):
+        response = requests.get(f"{license_url}.json", headers={"User-Agent": hermes_user_agent})
+        response.raise_for_status()
+
+        for license_cross_ref in response.json()['crossRef']:
+            if not license_cross_ref['isValid']:
+                continue
+
+            license_info = _search_license_info(license_cross_ref["url"])
+            if license_info is not None:
+                break
+        else:
+            raise RuntimeError(f"Could not resolve license URL {license_url} to a valid identifier.")
+
+    return license_info
 
 
 def _get_community_identifiers(ctx: CodeMetaContext, communities_api_url: str):
@@ -575,7 +628,7 @@ def _get_community_identifiers(ctx: CodeMetaContext, communities_api_url: str):
     raised.
     """
 
-    communities = config.get("deposit").get("invenio", {}).get("communities")
+    communities = config.get("deposit").get("invenio_rdm", {}).get("communities")
     if communities is None:
         return None
 
@@ -612,16 +665,16 @@ def _get_access_modalities(license):
     This function also makes sure that the given embargo date can be parsed as an ISO
     8601 string representation and that the access rights are given as a string.
     """
-    invenio_config = config.get("deposit").get("invenio", {})
+    invenio_config = config.get("deposit").get("invenio_rdm", {})
 
     access_right = invenio_config.get("access_right")
     if access_right is None:
-        raise MisconfigurationError("deposit.invenio.access_right is not configured")
+        raise MisconfigurationError("deposit.invenio_rdm.access_right is not configured")
 
     access_right_options = ["open", "embargoed", "restricted", "closed"]
     if access_right not in access_right_options:
         raise MisconfigurationError(
-            "deposition.invenio.access_right must be one of: "
+            "deposition.invenio_rdm.access_right must be one of: "
             f"{', '.join(access_right_options)}"
         )
 
@@ -629,7 +682,7 @@ def _get_access_modalities(license):
     if access_right == "embargoed" and embargo_date is None:
         raise MisconfigurationError(
             f"With access_right {access_right}, "
-            "deposit.invenio.embargo_date must be configured"
+            "deposit.invenio_rdm.embargo_date must be configured"
         )
 
     if embargo_date is not None:
@@ -637,7 +690,7 @@ def _get_access_modalities(license):
             datetime.fromisoformat(embargo_date)
         except ValueError:
             raise MisconfigurationError(
-                f"Could not parse deposit.invenio.embargo_date {embargo_date!r}. "
+                f"Could not parse deposit.invenio_rdm.embargo_date {embargo_date!r}. "
                 "Must be in ISO 8601 format."
             )
 
@@ -645,12 +698,12 @@ def _get_access_modalities(license):
     if access_right == "restricted" and access_conditions is None:
         raise MisconfigurationError(
             f"With access_right {access_right}, "
-            "deposit.invenio.access_conditions must be configured"
+            "deposit.invenio_rdm.access_conditions must be configured"
         )
 
     if access_conditions is not None and not isinstance(access_conditions, str):
         raise MisconfigurationError(
-            "deposit.invenio.access_conditions must be a string (HTML is allowed)."
+            "deposit.invenio_rdm.access_conditions must be a string (HTML is allowed)."
         )
 
     if license is None and access_right in ["open", "embargoed"]:

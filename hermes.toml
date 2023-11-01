@@ -9,15 +9,15 @@ from = [ "cff", "git" ]
 validate = false
 
 [deposit]
-mapping = "invenio"
-target = "invenio"
+mapping = "invenio_rdm"
+target = "invenio_rdm"
 
-[deposit.invenio]
+[deposit.invenio_rdm]
 site_url = "https://sandbox.zenodo.org"
 communities = ["zenodo"]
 access_right = "open"
 
-[deposit.invenio.api_paths]
+[deposit.invenio_rdm.api_paths]
 depositions = "api/deposit/depositions"
-licenses = "api/licenses"
+licenses = "api/vocabularies/licenses"
 communities = "api/communities"
