@@ -16,7 +16,8 @@ class BaseDepositPlugin:
         self.ctx = ctx
 
     def __call__(self) -> None:
-        # TODO: Decide here which of initial/new/... to run?
+        # TODO: Decide here which of initial/new/... to run. Contract for decision:
+        # Implement method is_new_publication() or similar
         self.prepare()
         self.map_metadata()
         self.create_initial_version()
