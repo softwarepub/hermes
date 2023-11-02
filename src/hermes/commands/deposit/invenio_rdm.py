@@ -536,9 +536,16 @@ def _get_license_identifier(ctx: CodeMetaContext, license_api_url: str):
 
     An API endpoint (usually ``/api/vocabularies/licenses``) can be used to check whether a given
     license is supported by the Invenio instance. This function tries to retrieve the
-    license by the identifier at the end of the license URL path. If this identifier
-    does not exist on the Invenio instance, a :class:`RuntimeError` is raised. If no
-    license is given in the CodeMeta, ``None`` is returned.
+    license by lower-casing the identifier at the end of the license URL path. If this identifier
+    does not exist on the Invenio instance, all available licenses are fetched and the URL is sought
+    for in the results. However, this might again not lead to success (as Invenio still provides
+    the obsolete https://opensource.org URLs) but harvesters might provide the SPDX style URLs.
+    Hence, the license URL is checked whether it is pointing to https://spdx.org/licenses/ and if
+    this is the case, the license record from SPDX is fetched and all `crossRef` URLs that are flagged
+    `isValid` are again sought for in the full set of licenses. Only if this still fails,
+    a :class:`RuntimeError` is raised.
+
+    If no license is given in the CodeMeta, ``None`` is returned.
     """
 
     license_url = ctx["codemeta"].get("license")
