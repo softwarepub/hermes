@@ -73,14 +73,14 @@ Configure HERMES to:
 from = [ "git", "cff" ]
 
 [deposit]
-target = "invenio"
+target = "invenio_rdm"
 
-[deposit.invenio]
+[deposit.invenio_rdm]
 site_url = "https://sandbox.zenodo.org"
 access_right = "open"
 
 [postprocess]
-execute = [ "config_record_id" ]
+execute = [ "config_invenio_rdm_record_id" ]
 ```
 
 Copy this file to the root directory of your repository and add it to version control:
@@ -93,7 +93,7 @@ git push
 
 ```{note}
 If you decide to start from an existing `hermes.toml` (e.g., the one found in this repository),
-be sure that there is no `record_id` value defined in the `deposit.invenio` section.
+be sure that there is no `record_id` value defined in the `deposit.invenio_rdm` section.
 Otherwise, your deposition will fail as *hermes* would try to deposit a new version for the given record.
 ```
 
