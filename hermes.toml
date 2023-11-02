@@ -9,7 +9,6 @@ from = [ "cff", "git" ]
 validate = false
 
 [deposit]
-mapping = "invenio_rdm"
 target = "invenio_rdm"
 
 [deposit.invenio_rdm]
