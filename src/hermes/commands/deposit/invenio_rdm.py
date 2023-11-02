@@ -134,7 +134,7 @@ def create_initial_version(click_ctx: click.Context, ctx: CodeMetaContext):
     )
 
     if not response.ok:
-        print(response.text)
+        _log.error("Webserver response: \n%s", response.text)
         raise RuntimeError(f"Could not create initial deposit {deposit_url!r}")
 
     deposit = response.json()
