@@ -132,7 +132,8 @@ invenio_rdm = "hermes.commands.deposit.invenio_rdm:publish"
 file = "hermes.commands.deposit.file:publish"
 
 [tool.poetry.plugins."hermes.postprocess"]
-config_record_id = "hermes.commands.postprocess.invenio:config_record_id"
+config_invenio_record_id = "hermes.commands.postprocess.invenio:config_record_id"
+config_invenio_rdm_record_id = "hermes.commands.postprocess.invenio_rdm:config_record_id"
 cff_doi = "hermes.commands.postprocess.invenio:cff_doi"
 
 [tool.taskipy.tasks]
