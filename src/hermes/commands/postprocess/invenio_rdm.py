@@ -9,7 +9,6 @@ import json
 import logging
 
 import toml
-from ruamel import yaml
 
 from hermes import config
 
