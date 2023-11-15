@@ -3,7 +3,7 @@ SPDX-FileCopyrightText: 2022 German Aerospace Center (DLR), Forschungszentrum JÃ
 
 SPDX-License-Identifier: CC-BY-SA-4.0
 -->
-# ~~Overall data model design~~
+# <strike>Overall data model design</strike>
 
 * Status: superseded
 * Date: 2022-07-06
