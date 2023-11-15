@@ -32,7 +32,7 @@ def config_record_id(
     conf = config.get("hermes")
     try:
         conf["deposit"]["invenio"]["record_id"] = deposition["record_id"]
-        toml.dump(conf, open("hermes.toml", "w"))
+        toml.dump(conf, open(config_path, "w"))
     except KeyError:
         raise RuntimeError(
             "No deposit.invenio configuration available to store record id in"
