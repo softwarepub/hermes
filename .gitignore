@@ -21,4 +21,4 @@ docs/build/
 dist/
 
 # HERMES workflow specifics
-.hermes
+.hermes/
