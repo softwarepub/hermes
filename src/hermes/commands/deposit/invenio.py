@@ -1,10 +1,11 @@
-# SPDX-FileCopyrightText: 2023 Helmholtz-Zentrum Dresden-Rossendorf (HZDR)
+# SPDX-FileCopyrightText: 2023 German Aerospace Center (DLR), Helmholtz-Zentrum Dresden-Rossendorf (HZDR)
 #
 # SPDX-License-Identifier: Apache-2.0
 
 # SPDX-FileContributor: David Pape
 # SPDX-FileContributor: Oliver Bertuch
 # SPDX-FileContributor: Michael Meinel
+# SPDX-FileContributor: Stephan Druskat
 
 import json
 import logging
@@ -29,7 +30,12 @@ _DEFAULT_DEPOSITIONS_API_PATH = "api/deposit/depositions"
 
 
 def prepare(
-    initial: bool, auth_token: str, files: list[pathlib.Path], ctx: CodeMetaContext
+    path: Path,
+    config_path: Path,
+    initial: bool,
+    auth_token: str,
+    files: list[pathlib.Path],
+    ctx: CodeMetaContext,
 ):
     """Prepare the deposition on an Invenio-based platform.
 

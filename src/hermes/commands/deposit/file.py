@@ -7,13 +7,21 @@
 # SPDX-FileContributor: Stephan Druskat
 
 import json
+import pathlib
 
 from hermes import config
 from hermes.model.context import CodeMetaContext
 from hermes.model.path import ContextPath
 
 
-def dummy_noop(ctx: CodeMetaContext):
+def dummy_noop(
+    path: pathlib.Path,
+    config_path: pathlib.Path,
+    initial: bool,
+    auth_token: str,
+    files: list[pathlib.Path],
+    ctx: CodeMetaContext,
+):
     pass
 
 
