@@ -107,7 +107,7 @@ jobs:
 
     environment:
       name: testpypi
-      url: https://test.pypi.org/p/hermes
+      url: https://test.pypi.org/p/hermes-test
 
     permissions:
       id-token: write  # IMPORTANT: mandatory for trusted publishing
