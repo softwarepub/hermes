@@ -11,6 +11,8 @@ import sys
 import toml
 
 from hermes.model.context import HermesContext
+from hermes.settings import HermesSettings
+from pydantic import ValidationError
 
 # This is the default logging configuration, required to see log output at all.
 #  - Maybe it could possibly somehow be a somewhat good idea to move this into an own module ... later perhaps
@@ -80,9 +82,13 @@ def configure(config_path: pathlib.Path, working_path: pathlib.Path):
     try:
         with open(config_path, 'r') as config_file:
             hermes_config = toml.load(config_file)
+            HermesSettings().model_validate(hermes_config)
+
             _config['hermes'] = hermes_config
             _config['logging'] = hermes_config.get('logging', _config['logging'])
-
+    except ValidationError as e:
+        print(e)
+        sys.exit(1)
     except FileNotFoundError:
         if config_path.name != 'hermes.toml':
             # An explicit filename (different from default) was given, so the file should be available...
