@@ -19,6 +19,9 @@ We need a data model that's
 
 to exchange data between modules.
 
+The chosen option determines the serialization of the data model, too.
+See also [ADR 11](./0011-record-provenance-of-metadata.md) about provenance records in the data model.
+
 ## Considered Options
 
 * CodeMeta + schema.org via RO-Crate
