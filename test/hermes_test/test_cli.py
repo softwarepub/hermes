@@ -13,11 +13,10 @@ from hermes.commands.deposit.error import DepositionUnauthorizedError
 from hermes_test.mocks import mock_command
 
 
-def test_hermes_full():
-    runner = CliRunner()
-    result = runner.invoke(cli.main)
-
-    assert not result.exception
+def test_hermes_full(capsys):
+    with pytest.raises(SystemExit) as se:
+        cli.main()
+        assert "choose from" in se
 
 
 def test_hermes_harvest():
