@@ -22,11 +22,7 @@ from hermes.model.errors import HermesValidationError
 
 _log = logging.getLogger(__name__)
 
-
-ContextPath.init_merge_strategies()
-
-
-class HermesContext:
+class HermesData:
     """
     The HermesContext stores the metadata for a certain project.
 
@@ -56,6 +52,22 @@ class HermesContext:
         self._data = {}
         self._errors = []
         self.contexts = {self.hermes_lod_context}
+
+    def __getitem__(self, key: ContextPath | str) -> t.Any:
+        """
+        Access a single entry from the context.
+
+        :param key: The path to the item that should be retrieved.
+                    Can be in dotted syntax or as a :class:`ContextPath` instance.
+        :return: The value stored under the given key.
+        """
+        raise NotImplementedError()
+
+    def keys(self) -> t.List[ContextPath]:
+        """
+        Get all the keys for the data stored in this context.
+        """
+        return [ContextPath.parse(k) for k in self._data.keys()]
 
     def init_cache(self, *path: str) -> Path:
         """
@@ -108,6 +120,19 @@ class HermesContext:
 
         pass
 
+    def get_data(self,
+                 data: t.Optional[dict] = None,
+                 path: t.Optional['ContextPath'] = None,
+                 tags: t.Optional[dict] = None) -> dict:
+        if data is None:
+            data = {}
+        if path is not None:
+            data.update({str(path): path.get_from(self._data)})
+        else:
+            for key in self.keys():
+                data.update({str(key): key.get_from(self._data)})
+        return data
+
     def error(self, ep: EntryPoint, error: Exception):
         """
         Add an error that occurred during processing to the error log.
@@ -135,7 +160,7 @@ class HermesContext:
         self.contexts.add(new_context)
 
 
-class HermesHarvestContext(HermesContext):
+class HermesHarvestData(HermesData):
     """
     A specialized context for use in *harvest* stage.
 
@@ -146,7 +171,7 @@ class HermesHarvestContext(HermesContext):
     parent context.
     """
 
-    def __init__(self, base: HermesContext, ep: EntryPoint, config: dict = None):
+    def __init__(self, ep: EntryPoint, config: dict = None):
         """
         Initialize a new harvesting context.
 
@@ -157,7 +182,6 @@ class HermesHarvestContext(HermesContext):
 
         super().__init__()
 
-        self._base = base
         self._ep = ep
         self._log = logging.getLogger(f'harvest.{self._ep.name}')
         self.config = config or {}
@@ -167,12 +191,12 @@ class HermesHarvestContext(HermesContext):
         Load the cached data from the :py:attr:`HermesContext.hermes_dir`.
         """
 
-        data_file = self._base.get_cache('harvest', self._ep.name)
+        data_file = self.get_cache('harvest', self._ep.name)
         if data_file.is_file():
             self._log.debug("Loading cache from %s...", data_file)
             self._data = json.load(data_file.open('r'))
 
-        contexts_file = self._base.get_cache('harvest', self._ep.name + '_contexts')
+        contexts_file = self.get_cache('harvest', self._ep.name + '_contexts')
         if contexts_file.is_file():
             self._log.debug("Loading contexts from %s...", contexts_file)
             contexts = json.load(contexts_file.open('r'))
@@ -192,20 +216,6 @@ class HermesHarvestContext(HermesContext):
             contexts_file = self.get_cache('harvest', self._ep.name + '_contexts', create=True)
             self._log.debug("Writing contexts to %s...", contexts_file)
             json.dump(list(self.contexts), contexts_file.open('w'), indent=2)
-
-    def __enter__(self):
-        self.load_cache()
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.store_cache()
-        if exc_type is not None and issubclass(exc_type, HermesValidationError):
-            exc = traceback.TracebackException(exc_type, exc_val, exc_tb)
-            self._base.error(self._ep, exc)
-            self._log.warning("%s: %s",
-                              exc_type,
-                              ' '.join(map(str, exc_val.args)))
-            return True
 
     def update(self, _key: str, _value: t.Any, **kwargs: t.Any):
         """
@@ -348,7 +358,7 @@ class HermesHarvestContext(HermesContext):
         self._data.clear()
 
 
-class CodeMetaContext(HermesContext):
+class CodeMetaData(HermesData):
     _PRIMARY_ATTR = {
         'author': ('@id', 'email', 'name'),
     }
@@ -359,10 +369,10 @@ class CodeMetaContext(HermesContext):
         super().__init__(project_dir)
         self.tags = {}
 
-    def merge_from(self, other: HermesHarvestContext):
+    def merge_from(self, other: HermesHarvestData):
         other.get_data(self._data, tags=self.tags)
 
-    def merge_contexts_from(self, other: HermesHarvestContext):
+    def merge_contexts_from(self, other: HermesHarvestData):
         """
         Merges any linked data contexts from a harvesting context into the instance's set of contexts.
 
