@@ -7,8 +7,6 @@
 
 import json
 
-import click
-
 from hermes import config
 from hermes.model.context import CodeMetaContext
 from hermes.model.path import ContextPath

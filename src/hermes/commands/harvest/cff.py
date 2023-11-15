@@ -14,7 +14,6 @@ import typing as t
 
 from ruamel.yaml import YAML
 import jsonschema
-import click
 from cffconvert import Citation
 
 from hermes.model.context import HermesHarvestContext, ContextPath

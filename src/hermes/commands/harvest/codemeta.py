@@ -10,8 +10,6 @@ import json
 import pathlib
 import typing as t
 
-import click
-
 from hermes.commands.harvest import util
 from hermes.commands.harvest.util.validate_codemeta import validate_codemeta
 from hermes.model.context import HermesHarvestContext

@@ -13,8 +13,6 @@ import os
 import shutil
 from importlib import metadata
 
-import click
-
 from hermes import config
 from hermes.error import MisconfigurationError
 from hermes.model.context import HermesContext, HermesHarvestContext, CodeMetaContext

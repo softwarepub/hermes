@@ -13,7 +13,6 @@ from datetime import date, datetime
 from pathlib import Path
 from urllib.parse import urlparse
 
-import click
 import requests
 
 from hermes import config

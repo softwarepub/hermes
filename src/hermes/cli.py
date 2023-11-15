@@ -13,8 +13,6 @@ import typing as t
 import pathlib
 from importlib import metadata
 
-import click
-
 from hermes import config
 from hermes.commands import workflow
 from hermes.config import configure, init_logging

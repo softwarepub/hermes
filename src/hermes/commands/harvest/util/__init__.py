@@ -8,8 +8,6 @@
 
 from pathlib import Path
 
-import click
-
 
 def get_project_path(click_ctx: click.Context) -> Path:
     """Returns the 'path' parameter of the passed click.Context's parent context.
