@@ -13,6 +13,8 @@ import argparse
 import sys
 import os
 from os import access, R_OK
+from importlib import metadata
+import logging
 
 from hermes.commands.workflow import (
     clean,
@@ -22,6 +24,32 @@ from hermes.commands.workflow import (
     deposit,
     postprocess,
 )
+from hermes import config
+from hermes.config import configure, init_logging
+
+
+def log_header(header, summary=None):
+    _log = config.getLogger("cli")
+
+    dist = metadata.distribution("hermes")
+    meta = dist.metadata
+
+    if header is None:
+        title = f"{dist.name} workflow ({dist.version})"
+
+        _log.info(title)
+        _log.info("=" * len(title))
+        _log.info("")
+
+        if "Summary" in meta:
+            _log.info("%s", meta["Summary"])
+            _log.info("")
+
+    else:
+        _log.info("%s", header)
+        if summary:
+            _log.info("%s", summary)
+            _log.info("")
 
 
 def _is_valid_file(parser, f):
@@ -33,6 +61,20 @@ def _is_valid_file(parser, f):
     if not access(f, R_OK):
         parser.error(f"The file {f} is not readable!")
     return pathlib.Path(f)
+
+
+def init(config_path: pathlib.Path, working_path: pathlib.Path, subcommand: str):
+    # Get the user provided working dir from the --path option or default to current working directory.
+
+    configure(config_path.absolute(), working_path)
+    init_logging()
+    log_header(None)
+
+    audit_log = logging.getLogger("audit")
+    audit_log.info("# Running Hermes")
+    audit_log.info("Running Hermes command line in: %s", working_path)
+    audit_log.debug("")
+    audit_log.debug("Invoked `%s`", subcommand)
 
 
 def main(*args, **kwargs) -> None:
@@ -126,6 +168,9 @@ def main(*args, **kwargs) -> None:
         sys.exit(1)
 
     args = parser.parse_args()
+
+    # Initialize workflow
+    init(args.config, args.path, args.subcommand)
 
     # Call the configured function of the argument
     if args.subcommand == "deposit":
