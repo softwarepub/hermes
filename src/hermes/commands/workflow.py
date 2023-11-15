@@ -307,7 +307,7 @@ def postprocess(path: pathlib.Path, config_path: pathlib.Path) -> None:
         postprocessor_ep, *_ = postprocessors
         audit_log.info("## Post-process data with %s", postprocessor_ep.name)
         postprocessor = postprocessor_ep.load()
-        postprocessor(ctx)
+        postprocessor(path, config_path, ctx)
 
     audit_log.info("")
     logging.shutdown()
