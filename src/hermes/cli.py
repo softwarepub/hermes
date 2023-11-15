@@ -11,6 +11,8 @@ This module provides the main entry point for the HERMES command line applicatio
 import pathlib
 import argparse
 import sys
+import os
+from os import access, R_OK
 
 from hermes.commands.workflow import (
     clean,
@@ -20,6 +22,17 @@ from hermes.commands.workflow import (
     deposit,
     postprocess,
 )
+
+
+def _is_valid_file(parser, f):
+    p = pathlib.Path(f)
+    if not p.exists():
+        parser.error(f"The file {f} does not exist!")
+    if p.is_dir():
+        parser.error(f"{f} is a directory, not a file!")
+    if not access(f, R_OK):
+        parser.error(f"The file {f} is not readable!")
+    return pathlib.Path(f)
 
 
 def main(*args, **kwargs) -> None:
@@ -70,13 +83,46 @@ def main(*args, **kwargs) -> None:
     )
     parser_curate.set_defaults(func=curate)
 
+    # Subcommand deposit
+    parser_deposit = subparsers.add_parser(
+        "deposit",
+        help="Deposit the curated metadata and any artifacts in the configured target(s)",
+    )
+    parser_deposit.set_defaults(func=deposit)
+    parser_deposit.add_argument(
+        "--initial",
+        action="store_false",
+        default=False,
+        help="Allow initial deposition if no previous version exists in target repository. "
+        "Otherwise only an existing, configured upstream record may be updated.",
+    )
+    parser_deposit.add_argument(
+        "--auth-token",
+        default=os.environ.get("HERMES_DEPOSITION_AUTH_TOKEN"),
+        help="Token used to authenticate the user with the target deposition platform; "
+        "can be passed on the command line or set in an environment variable 'HERMES_DEPOSITION_AUTH_TOKEN'",
+    )
+    parser_deposit.add_argument(
+        "--files",
+        "-f",
+        required=True,
+        type=lambda f: _is_valid_file(parser, f),
+        nargs="+",
+        help="Files to be uploaded on the target deposition platform",
+    )
+
+    # Subcommand curate
+    parser_postprocess = subparsers.add_parser(
+        "postprocess",
+        help="Postprocess the deposited metadata",
+    )
+    parser_postprocess.set_defaults(func=postprocess)
+
+    # Show the help string if no arguments are given
     if len(sys.argv) == 1:
         parser.print_help(sys.stderr)
         sys.exit(1)
 
     args = parser.parse_args()
+    # Call the configured function of the argument
     args.func(args)
-
-    # main.add_command(workflow.curate)
-    # main.add_command(workflow.deposit)
-    # main.add_command(workflow.postprocess)
