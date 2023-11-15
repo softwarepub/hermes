@@ -167,7 +167,14 @@ def create_initial_version(
     ctx.update(invenio_path["links"]["publish"], deposit["links"]["publish"])
 
 
-def create_new_version(click_ctx: click.Context, ctx: CodeMetaContext):
+def create_new_version(
+    path: pathlib.Path,
+    config_path: pathlib.Path,
+    initial: bool,
+    auth_token: str,
+    files: list[pathlib.Path],
+    ctx: CodeMetaContext,
+):
     """Create a new version of an existing publication.
 
     If no previous publication exists, this function does nothing because
@@ -186,7 +193,7 @@ def create_new_version(click_ctx: click.Context, ctx: CodeMetaContext):
     session = requests.Session()
     session.headers = {
         "User-Agent": hermes_user_agent,
-        "Authorization": f"Bearer {click_ctx.params['auth_token']}",
+        "Authorization": f"Bearer {auth_token}",
     }
 
     invenio_config = config.get("deposit").get("invenio", {})
@@ -214,7 +221,14 @@ def create_new_version(click_ctx: click.Context, ctx: CodeMetaContext):
     )
 
 
-def update_metadata(click_ctx: click.Context, ctx: CodeMetaContext):
+def update_metadata(
+    path: pathlib.Path,
+    config_path: pathlib.Path,
+    initial: bool,
+    auth_token: str,
+    files: list[pathlib.Path],
+    ctx: CodeMetaContext,
+):
     """Update the metadata of a draft.
 
     If no draft is found in the context, it is assumed that no metadata has to be
@@ -238,7 +252,7 @@ def update_metadata(click_ctx: click.Context, ctx: CodeMetaContext):
         json={"metadata": deposition_metadata},
         headers={
             "User-Agent": hermes_user_agent,
-            "Authorization": f"Bearer {click_ctx.params['auth_token']}",
+            "Authorization": f"Bearer {auth_token}",
         },
     )
 
