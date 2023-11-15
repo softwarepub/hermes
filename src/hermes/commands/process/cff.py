@@ -5,28 +5,39 @@
 # SPDX-FileContributor: Michael Meinel
 
 import logging
+import pathlib
 
 from hermes.model.context import HermesHarvestContext, ContextPath, CodeMetaContext
 
 
-def add_name(ctx: CodeMetaContext, harvest_ctx: HermesHarvestContext):
+def add_name(
+    path: pathlib.Path,
+    config: pathlib.Path,
+    ctx: CodeMetaContext,
+    harvest_ctx: HermesHarvestContext,
+):
     """
     Augment each author with a `name` attribute (if not present).
 
     This will allow better matching against the git authors and can be removed in a post-processing step.
 
+    :param path: The working path
+    :param config: The path of the config TOML file
     :param ctx: The resulting context that should contain the harmonized data.
     :param harvest_ctx: The harvest context containing all raw harvested data.
     """
-    audit_log = logging.getLogger('audit.cff')
-    audit_log.info('')
-    audit_log.info('### Add author names')
+    audit_log = logging.getLogger("audit.cff")
+    audit_log.info("")
+    audit_log.info("### Add author names")
 
     data = harvest_ctx.get_data()
-    author_path = ContextPath('author')
+    author_path = ContextPath("author")
 
-    for i, author in enumerate(data.get('author', [])):
-        if 'name' not in author:
-            harvest_ctx.update(str(author_path[i]["name"]), f"{author['givenName']} {author['familyName']}",
-                               stage='preprocess')
+    for i, author in enumerate(data.get("author", [])):
+        if "name" not in author:
+            harvest_ctx.update(
+                str(author_path[i]["name"]),
+                f"{author['givenName']} {author['familyName']}",
+                stage="preprocess",
+            )
             audit_log.debug(f"- {author['givenName']} {author['familyName']}")

@@ -121,7 +121,7 @@ def process(path: pathlib.Path, config_path: pathlib.Path) -> None:
             preprocess = preprocessor.load()
 
             _log.debug(". Apply preprocessor %s", preprocessor.value)
-            preprocess(ctx, harvest_context)
+            preprocess(path, config_path, ctx, harvest_context)
 
         ctx.merge_from(harvest_context)
         ctx.merge_contexts_from(harvest_context)
@@ -266,10 +266,7 @@ def deposit(
 
     for entry_point in loaded_entry_points:
         try:
-            entry_point(
-                # click_ctx,
-                ctx
-            )
+            entry_point(initial, auth_token, files, ctx)
         except (RuntimeError, MisconfigurationError) as e:
             _log.error(f"Error in {group!r} entry point {name!r}: {e}")
             sys.exit(1)
