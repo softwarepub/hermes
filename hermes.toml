@@ -3,10 +3,10 @@
 # SPDX-License-Identifier: CC0-1.0
 
 [harvest]
-from = [ "cff", "git" ]
+sources = [ "cff", "git" ]
 
 [harvest.cff]
-validate = false
+enable_validation = false
 
 [deposit]
 target = "invenio_rdm"
