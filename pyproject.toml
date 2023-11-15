@@ -32,7 +32,6 @@ include = [
 
 [tool.poetry.dependencies]
 python = "^3.10"
-click = "^8.1"
 "ruamel.yaml" = "^0.17.21"
 jsonschema = "^3.0.0"
 pyld = "^2.0.3"
