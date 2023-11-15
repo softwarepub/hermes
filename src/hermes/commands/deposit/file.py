@@ -36,7 +36,14 @@ def map_metadata(
     ctx.update(ContextPath.parse("deposit.file"), ctx["codemeta"])
 
 
-def publish(ctx: CodeMetaContext):
+def publish(
+    path: pathlib.Path,
+    config_path: pathlib.Path,
+    initial: bool,
+    auth_token: str,
+    files: list[pathlib.Path],
+    ctx: CodeMetaContext,
+):
     file_config = config.get("deposit").get("file", {})
     output_data = ctx["deposit.file"]
 
