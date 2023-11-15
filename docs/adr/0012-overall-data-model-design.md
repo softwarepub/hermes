@@ -3,10 +3,11 @@ SPDX-FileCopyrightText: 2022 German Aerospace Center (DLR), Forschungszentrum JÃ
 
 SPDX-License-Identifier: CC-BY-SA-4.0
 -->
-# Overall data model design
+# ~~Overall data model design~~
 
-* Status: proposed
+* Status: superseded
 * Date: 2022-07-06
+* Deciders: led02, poikilotherm, sdruskat, skernchen
 
 ## Context and Problem Statement
 
@@ -15,6 +16,8 @@ E.g., during harvesting it is important to keep all different possible values fo
 It is also curcial to add information about the source of the data.
 In contrast in the deposit state only curated, well defined, and unambiguous data should be stored.
 The source for single attributes is not required anymore.
+
+Superseded: we no longer need to serialize additional information like provenance (see ADR 11) at the different stages in separate files.
 
 ## Considered Options
 
