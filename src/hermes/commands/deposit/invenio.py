@@ -268,7 +268,14 @@ def update_metadata(
     ctx.update(invenio_path["links"]["publish"], deposit["links"]["publish"])
 
 
-def delete_artifacts(click_ctx: click.Context, ctx: CodeMetaContext):
+def delete_artifacts(
+    path: Path,
+    config_path: Path,
+    initial: bool,
+    auth_token: str,
+    files: list[Path],
+    ctx: CodeMetaContext,
+):
     """Delete existing file artifacts.
 
     This is done so that files which existed in an earlier publication but don't exist
@@ -279,7 +286,14 @@ def delete_artifacts(click_ctx: click.Context, ctx: CodeMetaContext):
     pass
 
 
-def upload_artifacts(click_ctx: click.Context, ctx: CodeMetaContext):
+def upload_artifacts(
+    path: Path,
+    config_path: Path,
+    initial: bool,
+    auth_token: str,
+    files: list[Path],
+    ctx: CodeMetaContext,
+):
     """Upload file artifacts to the deposit.
 
     We'll use the bucket API rather than the files API as it supports file sizes above
@@ -293,13 +307,10 @@ def upload_artifacts(click_ctx: click.Context, ctx: CodeMetaContext):
     session = requests.Session()
     session.headers = {
         "User-Agent": hermes_user_agent,
-        "Authorization": f"Bearer {click_ctx.params['auth_token']}",
+        "Authorization": f"Bearer {auth_token}",
     }
 
-    files: list[click.Path] = click_ctx.params["file"]
-    for path_arg in files:
-        path = Path(path_arg)
-
+    for path in files:
         # This should not happen, as Click shall not accept dirs as arguments already. Zero trust anyway.
         if not path.is_file():
             raise ValueError(
@@ -317,7 +328,14 @@ def upload_artifacts(click_ctx: click.Context, ctx: CodeMetaContext):
         # file_resource = response.json()
 
 
-def publish(click_ctx: click.Context, ctx: CodeMetaContext):
+def publish(
+    path: Path,
+    config_path: Path,
+    initial: bool,
+    auth_token: str,
+    files: list[Path],
+    ctx: CodeMetaContext,
+):
     """Publish the deposited record.
 
     This is done by doing a POST request to the publication URL stored in the context at
@@ -333,7 +351,7 @@ def publish(click_ctx: click.Context, ctx: CodeMetaContext):
         publish_url,
         headers={
             "User-Agent": hermes_user_agent,
-            "Authorization": f"Bearer {click_ctx.params['auth_token']}",
+            "Authorization": f"Bearer {auth_token}",
         },
     )
 
