@@ -49,11 +49,18 @@ def add_contributors(
     ctx.tags.update(tags)
 
 
-def add_branch(ctx: CodeMetaContext, harvest_ctx: HermesHarvestContext):
+def add_branch(
+    path: pathlib.Path,
+    config_path: pathlib.Path,
+    ctx: CodeMetaContext,
+    harvest_ctx: HermesHarvestContext,
+):
     """
     Add the git branch.
 
-    :param ctx: The target context containting harmonized data.
+    :param path: The working path
+    :param config_path: The path of the config TOML file
+    :param ctx: The target context containing harmonized data.
     :param harvest_ctx: Data as it was harvested.
     """
     audit_log.info("")
@@ -75,7 +82,20 @@ def add_branch(ctx: CodeMetaContext, harvest_ctx: HermesHarvestContext):
     ctx.tags.update(tags)
 
 
-def process(ctx: CodeMetaContext, harvest_ctx: HermesHarvestContext):
+def process(
+    path: pathlib.Path,
+    config_path: pathlib.Path,
+    ctx: CodeMetaContext,
+    harvest_ctx: HermesHarvestContext,
+):
+    """
+    Process harvested Git metadata
+
+    :param path: The working path
+    :param config_path: The path of the config TOML file
+    :param ctx: The target context containing harmonized data.
+    :param harvest_ctx: Data as it was harvested.
+    """
     add_contributors(ctx, harvest_ctx)
     add_branch(ctx, harvest_ctx)
     harvest_ctx.finish()

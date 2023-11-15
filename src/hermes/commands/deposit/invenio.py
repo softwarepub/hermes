@@ -12,6 +12,7 @@ import typing as t
 from datetime import date, datetime
 from pathlib import Path
 from urllib.parse import urlparse
+import pathlib
 
 import requests
 
@@ -27,7 +28,9 @@ _DEFAULT_COMMUNITIES_API_PATH = "api/communities"
 _DEFAULT_DEPOSITIONS_API_PATH = "api/deposit/depositions"
 
 
-def prepare(click_ctx: click.Context, ctx: CodeMetaContext):
+def prepare(
+    initial: bool, auth_token: str, files: list[pathlib.Path], ctx: CodeMetaContext
+):
     """Prepare the deposition on an Invenio-based platform.
 
     In this function we do the following:
@@ -43,7 +46,7 @@ def prepare(click_ctx: click.Context, ctx: CodeMetaContext):
     - update ``ctx`` with metadata collected during the checks
     """
 
-    if not click_ctx.params["auth_token"]:
+    if not auth_token:
         raise DepositionUnauthorizedError("No auth token given for deposition platform")
 
     invenio_path = ContextPath.parse("deposit.invenio")
@@ -54,7 +57,7 @@ def prepare(click_ctx: click.Context, ctx: CodeMetaContext):
     if rec_meta and (version == rec_meta.get("version")):
         raise ValueError(f"Version {version} already deposited.")
 
-    ctx.update(invenio_path['latestRecord'], {'id': rec_id, 'metadata': rec_meta})
+    ctx.update(invenio_path["latestRecord"], {"id": rec_id, "metadata": rec_meta})
 
     site_url = invenio_config.get("site_url")
     if site_url is None:
@@ -80,7 +83,7 @@ def prepare(click_ctx: click.Context, ctx: CodeMetaContext):
     ctx.update(invenio_path["access_conditions"], access_conditions)
 
 
-def map_metadata(click_ctx: click.Context, ctx: CodeMetaContext):
+def map_metadata(ctx: CodeMetaContext):
     """Map the harvested metadata onto the Invenio schema."""
 
     deposition_metadata = _codemeta_to_invenio_deposition(ctx)
@@ -89,11 +92,11 @@ def map_metadata(click_ctx: click.Context, ctx: CodeMetaContext):
     ctx.update(metadata_path, deposition_metadata)
 
     # Store a snapshot of the mapped data within the cache, useful for analysis, debugging, etc
-    with open(ctx.get_cache("deposit", "invenio", create=True), 'w') as invenio_json:
-        json.dump(deposition_metadata, invenio_json, indent='  ')
+    with open(ctx.get_cache("deposit", "invenio", create=True), "w") as invenio_json:
+        json.dump(deposition_metadata, invenio_json, indent="  ")
 
 
-def create_initial_version(click_ctx: click.Context, ctx: CodeMetaContext):
+def create_initial_version(ctx: CodeMetaContext):
     """Create an initial version of a publication.
 
     If a previous publication exists, this function does nothing, leaving the work for
@@ -109,7 +112,7 @@ def create_initial_version(click_ctx: click.Context, ctx: CodeMetaContext):
         # the next step. Thus, there is nothing to do here.
         return
 
-    if not click_ctx.params['initial']:
+    if not click_ctx.params["initial"]:
         raise RuntimeError("Please use `--initial` to make an initial deposition.")
 
     _log = logging.getLogger("cli.deposit.invenio")
@@ -129,7 +132,7 @@ def create_initial_version(click_ctx: click.Context, ctx: CodeMetaContext):
         headers={
             "User-Agent": hermes_user_agent,
             "Authorization": f"Bearer {click_ctx.params['auth_token']}",
-        }
+        },
     )
 
     if not response.ok:
@@ -137,7 +140,7 @@ def create_initial_version(click_ctx: click.Context, ctx: CodeMetaContext):
 
     deposit = response.json()
     _log.debug("Created initial version deposit: %s", deposit["links"]["html"])
-    with open(ctx.get_cache('deposit', 'deposit', create=True), 'w') as deposit_file:
+    with open(ctx.get_cache("deposit", "deposit", create=True), "w") as deposit_file:
         json.dump(deposit, deposit_file, indent=4)
 
     ctx.update(invenio_path["links"]["bucket"], deposit["links"]["bucket"])
@@ -186,7 +189,9 @@ def create_new_version(click_ctx: click.Context, ctx: CodeMetaContext):
 
     # Store link to latest draft to be used in :func:`update_metadata`.
     old_deposit = response.json()
-    ctx.update(invenio_path["links"]["latestDraft"], old_deposit['links']['latest_draft'])
+    ctx.update(
+        invenio_path["links"]["latestDraft"], old_deposit["links"]["latest_draft"]
+    )
 
 
 def update_metadata(click_ctx: click.Context, ctx: CodeMetaContext):
@@ -214,7 +219,7 @@ def update_metadata(click_ctx: click.Context, ctx: CodeMetaContext):
         headers={
             "User-Agent": hermes_user_agent,
             "Authorization": f"Bearer {click_ctx.params['auth_token']}",
-        }
+        },
     )
 
     if not response.ok:
@@ -222,7 +227,7 @@ def update_metadata(click_ctx: click.Context, ctx: CodeMetaContext):
 
     deposit = response.json()
     _log.debug("Created new version deposit: %s", deposit["links"]["html"])
-    with open(ctx.get_cache('deposit', 'deposit', create=True), 'w') as deposit_file:
+    with open(ctx.get_cache("deposit", "deposit", create=True), "w") as deposit_file:
         json.dump(deposit, deposit_file, indent=4)
 
     ctx.update(invenio_path["links"]["bucket"], deposit["links"]["bucket"])
@@ -263,15 +268,16 @@ def upload_artifacts(click_ctx: click.Context, ctx: CodeMetaContext):
 
         # This should not happen, as Click shall not accept dirs as arguments already. Zero trust anyway.
         if not path.is_file():
-            raise ValueError("Any given argument to be included in the deposit must be a file.")
+            raise ValueError(
+                "Any given argument to be included in the deposit must be a file."
+            )
 
         with open(path, "rb") as file_content:
-            response = session.put(
-                f"{bucket_url}/{path.name}",
-                data=file_content
-            )
+            response = session.put(f"{bucket_url}/{path.name}", data=file_content)
             if not response.ok:
-                raise RuntimeError(f"Could not upload file {path.name!r} into bucket {bucket_url!r}")
+                raise RuntimeError(
+                    f"Could not upload file {path.name!r} into bucket {bucket_url!r}"
+                )
 
         # This can potentially be used to verify the checksum
         # file_resource = response.json()
@@ -293,8 +299,8 @@ def publish(click_ctx: click.Context, ctx: CodeMetaContext):
         publish_url,
         headers={
             "User-Agent": hermes_user_agent,
-            "Authorization": f"Bearer {click_ctx.params['auth_token']}"
-        }
+            "Authorization": f"Bearer {click_ctx.params['auth_token']}",
+        },
     )
 
     if not response.ok:
@@ -321,22 +327,22 @@ def _resolve_latest_invenio_id(ctx: CodeMetaContext) -> t.Tuple[str, dict]:
     :return: The Invenio record id and the metadata of the record
     """
 
-    invenio_config = config.get('deposit').get('invenio', {})
-    site_url = invenio_config.get('site_url')
+    invenio_config = config.get("deposit").get("invenio", {})
+    site_url = invenio_config.get("site_url")
     if site_url is None:
         raise MisconfigurationError("deposit.invenio.site_url is not configured")
 
     # Check if we configured an Invenio record ID (of the concept...)
-    record_id = invenio_config.get('record_id')
+    record_id = invenio_config.get("record_id")
     if record_id is None:
-        doi = invenio_config.get('doi')
+        doi = invenio_config.get("doi")
         if doi is None:
             try:
                 # TODO: There might be more semantic in the codemeta.identifier... (also see schema.org)
-                identifier = ctx['codemeta.identifier']
-                if identifier.startswith('https://doi.org/'):
+                identifier = ctx["codemeta.identifier"]
+                if identifier.startswith("https://doi.org/"):
                     doi = identifier[16:]
-                elif identifier.startswith('http://dx.doi.org/'):
+                elif identifier.startswith("http://dx.doi.org/"):
                     doi = identifier[18:]
             except KeyError:
                 pass
@@ -361,10 +367,10 @@ def _invenio_resolve_doi(site_url, doi) -> str:
     :return: The record ID on the respective instance.
     """
 
-    res = requests.get(f'https://doi.org/{doi}')
+    res = requests.get(f"https://doi.org/{doi}")
 
     # This is a mean hack due to DataCite answering a 404 with a 200 status
-    if res.url == 'https://datacite.org/404.html':
+    if res.url == "https://datacite.org/404.html":
         raise ValueError(f"Invalid DOI: {doi}")
 
     # Ensure the resolved record is on the correct instance
@@ -373,7 +379,7 @@ def _invenio_resolve_doi(site_url, doi) -> str:
 
     # Extract the record id as last part of the URL path
     page_url = urlparse(res.url)
-    *_, record_id = page_url.path.split('/')
+    *_, record_id = page_url.path.split("/")
     return record_id
 
 
@@ -390,12 +396,12 @@ def _invenio_resolve_record_id(site_url: str, record_id: str) -> t.Tuple[str, di
         raise ValueError(f"Could not retrieve record from {res.url}: {res.text}")
 
     res_json = res.json()
-    res = requests.get(res_json['links']['latest'])
+    res = requests.get(res_json["links"]["latest"])
     if res.status_code != 200:
         raise ValueError(f"Could not retrieve record from {res.url}: {res.text}")
 
     res_json = res.json()
-    return res_json['id'], res_json['metadata']
+    return res_json["id"], res_json["metadata"]
 
 
 def _codemeta_to_invenio_deposition(ctx: CodeMetaContext) -> dict:
@@ -432,16 +438,21 @@ def _codemeta_to_invenio_deposition(ctx: CodeMetaContext) -> dict:
     creators = [
         # TODO: Distinguish between @type "Person" and others
         {
-            k: v for k, v in {
+            k: v
+            for k, v in {
                 # TODO: This is ugly
-                "affiliation": author.get("affiliation", {"legalName": None}).get("legalName"),
+                "affiliation": author.get("affiliation", {"legalName": None}).get(
+                    "legalName"
+                ),
                 # Invenio wants "family, given". author.get("name") might not have this format.
                 "name": f"{author.get('familyName')}, {author.get('givenName')}"
                 if author.get("familyName") and author.get("givenName")
                 else author.get("name"),
                 # Invenio expects the ORCID without the URL part
-                "orcid": author.get("@id", "").replace("https://orcid.org/", "") or None,
-            }.items() if v is not None
+                "orcid": author.get("@id", "").replace("https://orcid.org/", "")
+                or None,
+            }.items()
+            if v is not None
         }
         for author in metadata["author"]
     ]
@@ -450,69 +461,79 @@ def _codemeta_to_invenio_deposition(ctx: CodeMetaContext) -> dict:
     contributors = [  # noqa: F841
         # TODO: Distinguish between @type "Person" and others
         {
-            k: v for k, v in {
+            k: v
+            for k, v in {
                 # TODO: This is ugly
-                "affiliation": contributor.get("affiliation", {"legalName": None}).get("legalName"),
+                "affiliation": contributor.get("affiliation", {"legalName": None}).get(
+                    "legalName"
+                ),
                 # Invenio wants "family, given". contributor.get("name") might not have this format.
                 "name": f"{contributor.get('familyName')}, {contributor.get('givenName')}"
                 if contributor.get("familyName") and contributor.get("givenName")
                 else contributor.get("name"),
                 # Invenio expects the ORCID without the URL part
-                "orcid": contributor.get("@id", "").replace("https://orcid.org/", "") or None,
+                "orcid": contributor.get("@id", "").replace("https://orcid.org/", "")
+                or None,
                 # TODO: Many possibilities here. Get from config
                 "type": "ProjectMember",
-            }.items() if v is not None
+            }.items()
+            if v is not None
         }
         # TODO: Filtering out "GitHub" should be done elsewhere
-        for contributor in metadata["contributor"] if contributor.get("name") != "GitHub"
+        for contributor in metadata["contributor"]
+        if contributor.get("name") != "GitHub"
     ]
 
     # TODO: Use the fields currently set to `None`.
     # Some more fields are available but they most likely don't relate to software
     # publications targeted by hermes.
-    deposition_metadata = {k: v for k, v in {
-        # If upload_type is "publication"/"image", a publication_type/image_type must be
-        # specified. Since hermes targets software publications, this can be ignored and
-        # upload_type can be hard-coded to "software".
-        # TODO: Make this a constant maybe.
-        "upload_type": "software",
-        # IS0 8601-formatted date
-        # TODO: Maybe we want a different date? Then make this configurable. If not,
-        # this can be removed as it defaults to today.
-        "publication_date": date.today().isoformat(),
-        "title": metadata["name"],
-        "creators": creators,
-        # TODO: Use a real description here. Possible sources could be
-        # `tool.poetry.description` from pyproject.toml or `abstract` from
-        # CITATION.cff. This should then be stored in codemeta description field.
-        "description": metadata["name"],
-        "access_right": access_right,
-        "license": license,
-        "embargo_date": embargo_date,
-        "access_conditions": access_conditions,
-        # TODO: If a publisher already has assigned a DOI to the files we want to
-        # upload, it should be used here. In this case, Invenio will not give us a new
-        # one. Set "prereserve_doi" accordingly.
-        "doi": None,
-        # This prereserves a DOI that can then be added to the files before publishing
-        # them.
-        # TODO: Use the DOI we get back from this.
-        "prereserve_doi": True,
-        # TODO: A good source for this could be `tool.poetry.keywords` in pyproject.toml.
-        "keywords": None,
-        "notes": None,
-        "related_identifiers": None,
-        # TODO: Use `contributors`. In the case of the hermes workflow itself, the
-        # contributors are currently all in `creators` already. So for now, we set this
-        # to `None`. Change this when relationship between authors and contributors can
-        # be specified in the processing step.
-        "contributors": None,
-        "references": None,
-        "communities": communities,
-        "grants": None,
-        "subjects": None,
-        "version": metadata.get('version'),
-    }.items() if v is not None}
+    deposition_metadata = {
+        k: v
+        for k, v in {
+            # If upload_type is "publication"/"image", a publication_type/image_type must be
+            # specified. Since hermes targets software publications, this can be ignored and
+            # upload_type can be hard-coded to "software".
+            # TODO: Make this a constant maybe.
+            "upload_type": "software",
+            # IS0 8601-formatted date
+            # TODO: Maybe we want a different date? Then make this configurable. If not,
+            # this can be removed as it defaults to today.
+            "publication_date": date.today().isoformat(),
+            "title": metadata["name"],
+            "creators": creators,
+            # TODO: Use a real description here. Possible sources could be
+            # `tool.poetry.description` from pyproject.toml or `abstract` from
+            # CITATION.cff. This should then be stored in codemeta description field.
+            "description": metadata["name"],
+            "access_right": access_right,
+            "license": license,
+            "embargo_date": embargo_date,
+            "access_conditions": access_conditions,
+            # TODO: If a publisher already has assigned a DOI to the files we want to
+            # upload, it should be used here. In this case, Invenio will not give us a new
+            # one. Set "prereserve_doi" accordingly.
+            "doi": None,
+            # This prereserves a DOI that can then be added to the files before publishing
+            # them.
+            # TODO: Use the DOI we get back from this.
+            "prereserve_doi": True,
+            # TODO: A good source for this could be `tool.poetry.keywords` in pyproject.toml.
+            "keywords": None,
+            "notes": None,
+            "related_identifiers": None,
+            # TODO: Use `contributors`. In the case of the hermes workflow itself, the
+            # contributors are currently all in `creators` already. So for now, we set this
+            # to `None`. Change this when relationship between authors and contributors can
+            # be specified in the processing step.
+            "contributors": None,
+            "references": None,
+            "communities": communities,
+            "grants": None,
+            "subjects": None,
+            "version": metadata.get("version"),
+        }.items()
+        if v is not None
+    }
 
     return deposition_metadata
 
