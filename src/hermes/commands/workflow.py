@@ -14,6 +14,7 @@ import os
 import shutil
 from importlib import metadata
 import sys
+import pathlib
 
 from hermes import config
 from hermes.error import MisconfigurationError
@@ -22,14 +23,12 @@ from hermes.model.errors import MergeError
 from hermes.model.path import ContextPath
 
 
-def harvest(
-    # click_ctx: click.Context,
-    args: argparse.Namespace,
-) -> None:
+def harvest(path: pathlib.Path, config_path: pathlib.Path) -> None:
     """
     Harvests metadata from the configured sources via the available plugins.
 
-    :param args: The argparse arguments collected by the CLI
+    :param path: The working path
+    :param config_path: The path to the config TOML file
     """
     _log = logging.getLogger("cli.harvest")
     audit_log = logging.getLogger("audit")
@@ -62,10 +61,7 @@ def harvest(
         with HermesHarvestContext(
             ctx, harvester, harvest_config.get(harvester.name, {})
         ) as harvest_ctx:
-            harvest(
-                # click_ctx,
-                harvest_ctx
-            )
+            harvest(path, config_path, harvest_ctx)
             for _key, ((_value, _tag), *_trace) in harvest_ctx._data.items():
                 if any(v != _value and t == _tag for v, t in _trace):
                     raise MergeError(_key, None, _value)
@@ -74,14 +70,12 @@ def harvest(
     audit_log.info("")
 
 
-def process(
-    # click_ctx: click.Context,
-    args: argparse.Namespace,
-) -> None:
+def process(path: pathlib.Path, config_path: pathlib.Path) -> None:
     """
     Process metadata and prepare it for deposition
 
-    :param args: The argparse arguments collected by the CLI
+    :param path: The working path
+    :param config_path: The path to the config TOML file
     """
     _log = logging.getLogger("cli.process")
 
@@ -154,14 +148,12 @@ def process(
     logging.shutdown()
 
 
-def curate(
-    # click_ctx: click.Context,
-    args: argparse.Namespace,
-):
+def curate(path: pathlib.Path, config_path: pathlib.Path) -> None:
     """
     Resolve issues and conflicts in the processed metadata to create a curated set of metadata.
 
-    :param args: The argparse arguments collected by the CLI
+    :param path: The working path
+    :param config_path: The path to the config TOML file
     """
     _log = logging.getLogger("cli.curate")
 
@@ -182,13 +174,20 @@ def curate(
 
 
 def deposit(
-    # click_ctx: click.Context,
-    args: argparse.Namespace,
-):
+    path: pathlib.Path,
+    config_path: pathlib.Path,
+    initial: bool,
+    auth_token: str,
+    files: list[pathlib.Path],
+) -> None:
     """
     Deposit curated metadata and any artifacts in the configured target(s).
 
-    :param args: The argparse arguments collected by the CLI
+    :param path: The working path
+    :param config_path: The path of the config TOML file
+    :param initial: Whether an initial deposition should be allowed
+    :param auth_token: An authentication token for the target platform
+    :param files: The files to deposit alongside the metadata
     """
     _log = logging.getLogger("cli.deposit")
 
@@ -196,10 +195,6 @@ def deposit(
     audit_log.info("Metadata deposition")
 
     ctx = CodeMetaContext()
-
-    initial = args.initial
-    auth_token = args.auth_token
-    files = args.files
 
     codemeta_file = ctx.get_cache("curate", ctx.hermes_name)
     if not codemeta_file.exists():
@@ -280,14 +275,12 @@ def deposit(
             sys.exit(1)
 
 
-def postprocess(
-    # click_ctx: click.Context,
-    args: argparse.Namespace,
-):
+def postprocess(path: pathlib.Path, config_path: pathlib.Path) -> None:
     """
     Postprocesses metadata after deposition.
 
-    :param args: The argparse arguments collected by the CLI
+    :param path: The working path
+    :param config_path: The path of the config TOML file
     """
     _log = logging.getLogger("cli.postprocess")
 
@@ -323,11 +316,12 @@ def postprocess(
     logging.shutdown()
 
 
-def clean(args: argparse.Namespace) -> None:
+def clean(path: pathlib.Path, config_path: pathlib.Path) -> None:
     """
     Removes cached data.
 
-    :param args: The argparse arguments collected by the CLI
+    :param path: The working path
+    :param config_path: The path of the config TOML file
     """
     audit_log = logging.getLogger("cli")
     audit_log.info("# Cleanup")

@@ -58,7 +58,9 @@ def main(*args, **kwargs) -> None:
         type=pathlib.Path,
     )
 
-    subparsers = parser.add_subparsers(help="Available subcommands", required=True)
+    subparsers = parser.add_subparsers(
+        help="Available subcommands", required=True, dest="subcommand"
+    )
 
     # Subcommand clean
     parser_clean = subparsers.add_parser("clean", help="Removes cached data")
@@ -124,5 +126,9 @@ def main(*args, **kwargs) -> None:
         sys.exit(1)
 
     args = parser.parse_args()
+
     # Call the configured function of the argument
-    args.func(args)
+    if args.subcommand == "deposit":
+        args.func(args.path, args.config, args.initial, args.auth_token, args.files)
+    else:
+        args.func(args.path, args.config)
