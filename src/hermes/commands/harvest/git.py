@@ -18,14 +18,14 @@ from hermes.model.context import HermesHarvestContext
 from hermes.model.errors import HermesValidationError
 
 
-_log = logging.getLogger('harvest.git')
+_log = logging.getLogger("harvest.git")
 
 
 # TODO: can and should we get this somehow?
-SHELL_ENCODING = 'utf-8'
+SHELL_ENCODING = "utf-8"
 
-_GIT_SEP = '|'
-_GIT_FORMAT = ['%aN', '%aE', '%aI', '%cN', '%cE', '%cI']
+_GIT_SEP = "|"
+_GIT_FORMAT = ["%aN", "%aE", "%aI", "%cN", "%cE", "%cI"]
 _GIT_ARGS = ["--no-show-signature"]
 
 
@@ -33,13 +33,19 @@ _GIT_ARGS = ["--no-show-signature"]
 #      (In fact, it was kind of the prototype for lots of stuff there.)
 #      Clean up and refactor to use hermes.model instead
 
+
 class ContributorData:
     """
     Stores contributor data information from Git history.
     """
 
-    def __init__(self, name: str | t.List[str], email: str | t.List[str], timestamp: str | t.List[str],
-                 role: str | t.List[str]):
+    def __init__(
+        self,
+        name: str | t.List[str],
+        email: str | t.List[str],
+        timestamp: str | t.List[str],
+        role: str | t.List[str],
+    ):
         """
         Initialize a new contributor dataset.
 
@@ -60,7 +66,7 @@ class ContributorData:
         if self.name:
             parts.append(self.name[0])
         if self.email:
-            parts.append(f'<{self.email[0]}>')
+            parts.append(f"<{self.email[0]}>")
         return f'"{" ".join(parts)}"'
 
     def _update_attr(self, target, value, unique=True):
@@ -83,7 +89,7 @@ class ContributorData:
         self._update_attr(self.timestamp, timestamp, unique=False)
         self._update_attr(self.role, role)
 
-    def merge(self, other: 'ContributorData'):
+    def merge(self, other: "ContributorData"):
         """
         Merge another :py:class:`ContributorData` instance into this one.
 
@@ -105,27 +111,39 @@ class ContributorData:
         # Person as type is fine even for bots, as they need to have emails,
         # and the Person type can be a fictional person in schema.org.
         res = {
-            '@type': 'Person',
+            "@type": "Person",
         }
 
         if self.name:
-            res['name'] = self.name.pop()
+            res["name"] = self.name.pop()
         if self.name:
-            res['alternateName'] = list(self.name)
+            res["alternateName"] = list(self.name)
 
         if self.email:
-            res['email'] = self.email.pop(0)
+            res["email"] = self.email.pop(0)
         if self.email:
-            res['contactPoint'] = [{'@type': 'ContactPoint', 'email': email} for email in self.email]
+            res["contactPoint"] = [
+                {"@type": "ContactPoint", "email": email} for email in self.email
+            ]
 
         if self.role:
             if self.timestamp:
-                timestamp_start, *_, timestamp_end = sorted(self.timestamp + [self.timestamp[0]])
-                res['hermes:contributionRole'] = [
-                    {'@type': 'Role', 'roleName': role, 'startTime': timestamp_start, 'endTime': timestamp_end}
-                    for role in self.role]
+                timestamp_start, *_, timestamp_end = sorted(
+                    self.timestamp + [self.timestamp[0]]
+                )
+                res["hermes:contributionRole"] = [
+                    {
+                        "@type": "Role",
+                        "roleName": role,
+                        "startTime": timestamp_start,
+                        "endTime": timestamp_end,
+                    }
+                    for role in self.role
+                ]
             else:
-                res['hermes:contributionRole'] = [{'@type': 'Role', 'roleName': role} for role in self.role]
+                res["hermes:contributionRole"] = [
+                    {"@type": "Role", "roleName": role} for role in self.role
+                ]
 
         return res
 
@@ -216,110 +234,145 @@ class NodeRegister:
 
 def _audit_contributors(contributors, audit_log: logging.Logger):
     # Collect all authors that have ambiguous data
-    unmapped_contributors = [a for a in contributors._all if len(a.email) > 1 or len(a.name) > 1]
+    unmapped_contributors = [
+        a for a in contributors._all if len(a.email) > 1 or len(a.name) > 1
+    ]
 
     if unmapped_contributors:
         # Report to the audit about our findings
-        audit_log.warning('!!! warning "You have unmapped contributors in your Git history."')
+        audit_log.warning(
+            '!!! warning "You have unmapped contributors in your Git history."'
+        )
         for contributor in unmapped_contributors:
             if len(contributor.email) > 1:
-                audit_log.info("    - %s has alternate email: %s", str(contributor), ', '.join(contributor.email[1:]))
+                audit_log.info(
+                    "    - %s has alternate email: %s",
+                    str(contributor),
+                    ", ".join(contributor.email[1:]),
+                )
             if len(contributor.name) > 1:
-                audit_log.info("    - %s has alternate names: %s", str(contributor), ', '.join(contributor.name[1:]))
-        audit_log.warning('')
+                audit_log.info(
+                    "    - %s has alternate names: %s",
+                    str(contributor),
+                    ", ".join(contributor.name[1:]),
+                )
+        audit_log.warning("")
 
         audit_log.info(
-            "Please consider adding a `.maillog` file to your repository to disambiguate these contributors.")
-        audit_log.info('')
-        audit_log.info('``` .mailmap')
+            "Please consider adding a `.maillog` file to your repository to disambiguate these contributors."
+        )
+        audit_log.info("")
+        audit_log.info("``` .mailmap")
 
-        audit_log.info('```')
+        audit_log.info("```")
 
 
-def _merge_contributors(git_authors: NodeRegister, git_committers: NodeRegister) -> NodeRegister:
+def _merge_contributors(
+    git_authors: NodeRegister, git_committers: NodeRegister
+) -> NodeRegister:
     """
     Merges the git authors and git committers :py:class:`NodeRegister` and assign the respective roles for each node.
     """
-    git_contributors = NodeRegister(ContributorData, 'email', 'name', email=str.upper)
+    git_contributors = NodeRegister(ContributorData, "email", "name", email=str.upper)
     for author in git_authors._all:
-        git_contributors.update(email=author.email[0], name=author.name[0], timestamp=author.timestamp,
-                                role='git author')
+        git_contributors.update(
+            email=author.email[0],
+            name=author.name[0],
+            timestamp=author.timestamp,
+            role="git author",
+        )
 
     for committer in git_committers._all:
-        git_contributors.update(email=committer.email[0], name=committer.name[0], timestamp=committer.timestamp,
-                                role='git committer')
+        git_contributors.update(
+            email=committer.email[0],
+            name=committer.name[0],
+            timestamp=committer.timestamp,
+            role="git committer",
+        )
 
     return git_contributors
 
 
-def harvest_git(click_ctx: click.Context, ctx: HermesHarvestContext):
+def harvest_git(
+    path: pathlib.Path, config_path: pathlib.Path, ctx: HermesHarvestContext
+):
     """
     Implementation of a harvester that provides autor data from Git.
 
-    :param click_ctx: Click context that this command was run inside (might be used to extract command line arguments).
+    :param path: The working path
+    :param config_path: The path to the config TOML file
     :param ctx: The harvesting context that should contain the provided metadata.
     """
-    _log = logging.getLogger('cli.harvest.git')
-    audit_log = logging.getLogger('audit.cff')
-    audit_log.info('')
+    _log = logging.getLogger("cli.harvest.git")
+    audit_log = logging.getLogger("audit.cff")
+    audit_log.info("")
     audit_log.info("## Git History")
-
-    # Get the parent context (every subcommand has its own context with the main click context as parent)
-    parent_ctx = click_ctx.parent
-    if parent_ctx is None:
-        raise RuntimeError('No parent context!')
 
     _log.debug(". Get history of currently checked-out branch")
 
-    git_authors = NodeRegister(ContributorData, 'email', 'name', email=str.upper)
-    git_committers = NodeRegister(ContributorData, 'email', 'name', email=str.upper)
+    git_authors = NodeRegister(ContributorData, "email", "name", email=str.upper)
+    git_committers = NodeRegister(ContributorData, "email", "name", email=str.upper)
 
-    git_exe = shutil.which('git')
+    git_exe = shutil.which("git")
     if not git_exe:
-        raise RuntimeError('Git not available!')
+        raise RuntimeError("Git not available!")
 
-    path = parent_ctx.params['path']
     old_path = pathlib.Path.cwd()
     if path != old_path:
         os.chdir(path)
 
-    p = subprocess.run([git_exe, "rev-parse", "--abbrev-ref", "HEAD"], capture_output=True)
+    p = subprocess.run(
+        [git_exe, "rev-parse", "--abbrev-ref", "HEAD"], capture_output=True
+    )
     if p.returncode:
-        raise HermesValidationError(f"`git branch` command failed with code {p.returncode}: "
-                                    f"'{p.stderr.decode(SHELL_ENCODING).rstrip()}'!")
+        raise HermesValidationError(
+            f"`git branch` command failed with code {p.returncode}: "
+            f"'{p.stderr.decode(SHELL_ENCODING).rstrip()}'!"
+        )
 
     git_branch = p.stdout.decode(SHELL_ENCODING).strip()
     # TODO: should we warn or error if the HEAD is detached?
 
-    p = subprocess.run([git_exe, "log", f"--pretty={_GIT_SEP.join(_GIT_FORMAT)}"] + _GIT_ARGS, capture_output=True)
+    p = subprocess.run(
+        [git_exe, "log", f"--pretty={_GIT_SEP.join(_GIT_FORMAT)}"] + _GIT_ARGS,
+        capture_output=True,
+    )
     if p.returncode:
-        raise HermesValidationError(f"`git log` command failed with code {p.returncode}: "
-                                    f"'{p.stderr.decode(SHELL_ENCODING).rstrip()}'!")
+        raise HermesValidationError(
+            f"`git log` command failed with code {p.returncode}: "
+            f"'{p.stderr.decode(SHELL_ENCODING).rstrip()}'!"
+        )
 
-    log = p.stdout.decode(SHELL_ENCODING).split('\n')
+    log = p.stdout.decode(SHELL_ENCODING).split("\n")
     for line in log:
         try:
             # a = author, c = committer
-            a_name, a_email, a_timestamp, c_name, c_email, c_timestamp = line.split(_GIT_SEP)
+            a_name, a_email, a_timestamp, c_name, c_email, c_timestamp = line.split(
+                _GIT_SEP
+            )
         except ValueError:
             continue
 
         git_authors.update(email=a_email, name=a_name, timestamp=a_timestamp, role=None)
-        git_committers.update(email=c_email, name=c_name, timestamp=c_timestamp, role=None)
+        git_committers.update(
+            email=c_email, name=c_name, timestamp=c_timestamp, role=None
+        )
 
     git_contributors = _merge_contributors(git_authors, git_committers)
 
-    _audit_contributors(git_contributors, logging.getLogger('audit.git'))
+    _audit_contributors(git_contributors, logging.getLogger("audit.git"))
 
-    ctx.update('contributor',
-               [contributor.to_codemeta() for contributor in git_contributors._all],
-               git_branch=git_branch)
-    ctx.update('hermes:gitBranch', git_branch)
+    ctx.update(
+        "contributor",
+        [contributor.to_codemeta() for contributor in git_contributors._all],
+        git_branch=git_branch,
+    )
+    ctx.update("hermes:gitBranch", git_branch)
 
     try:
         ctx.get_data()
     except ValueError:
         audit_log.error('!!! warning "Inconsistent data"')
-        audit_log.info('     The data collected from git is ambiguous.')
-        audit_log.info('     Consider deleting `%s` to avoid problems.', ctx.hermes_dir)
-        audit_log.error('')
+        audit_log.info("     The data collected from git is ambiguous.")
+        audit_log.info("     Consider deleting `%s` to avoid problems.", ctx.hermes_dir)
+        audit_log.error("")
