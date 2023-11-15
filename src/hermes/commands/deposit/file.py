@@ -25,7 +25,14 @@ def dummy_noop(
     pass
 
 
-def map_metadata(ctx: CodeMetaContext):
+def map_metadata(
+    path: pathlib.Path,
+    config_path: pathlib.Path,
+    initial: bool,
+    auth_token: str,
+    files: list[pathlib.Path],
+    ctx: CodeMetaContext,
+):
     ctx.update(ContextPath.parse("deposit.file"), ctx["codemeta"])
 
 

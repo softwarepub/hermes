@@ -89,7 +89,14 @@ def prepare(
     ctx.update(invenio_path["access_conditions"], access_conditions)
 
 
-def map_metadata(ctx: CodeMetaContext):
+def map_metadata(
+    path: pathlib.Path,
+    config_path: pathlib.Path,
+    initial: bool,
+    auth_token: str,
+    files: list[pathlib.Path],
+    ctx: CodeMetaContext,
+):
     """Map the harvested metadata onto the Invenio schema."""
 
     deposition_metadata = _codemeta_to_invenio_deposition(ctx)
@@ -102,7 +109,14 @@ def map_metadata(ctx: CodeMetaContext):
         json.dump(deposition_metadata, invenio_json, indent="  ")
 
 
-def create_initial_version(ctx: CodeMetaContext):
+def create_initial_version(
+    path: pathlib.Path,
+    config_path: pathlib.Path,
+    initial: bool,
+    auth_token: str,
+    files: list[pathlib.Path],
+    ctx: CodeMetaContext,
+):
     """Create an initial version of a publication.
 
     If a previous publication exists, this function does nothing, leaving the work for
@@ -118,7 +132,7 @@ def create_initial_version(ctx: CodeMetaContext):
         # the next step. Thus, there is nothing to do here.
         return
 
-    if not click_ctx.params["initial"]:
+    if not initial:
         raise RuntimeError("Please use `--initial` to make an initial deposition.")
 
     _log = logging.getLogger("cli.deposit.invenio")
@@ -137,7 +151,7 @@ def create_initial_version(ctx: CodeMetaContext):
         json={"metadata": deposition_metadata},
         headers={
             "User-Agent": hermes_user_agent,
-            "Authorization": f"Bearer {click_ctx.params['auth_token']}",
+            "Authorization": f"Bearer {auth_token}",
         },
     )
 

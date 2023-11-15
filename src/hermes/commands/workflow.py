@@ -266,7 +266,7 @@ def deposit(
 
     for entry_point in loaded_entry_points:
         try:
-            entry_point(initial, auth_token, files, ctx)
+            entry_point(path, config_path, initial, auth_token, files, ctx)
         except (RuntimeError, MisconfigurationError) as e:
             _log.error(f"Error in {group!r} entry point {name!r}: {e}")
             sys.exit(1)
