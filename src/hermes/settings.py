@@ -1,3 +1,9 @@
+# SPDX-FileCopyrightText: 2023 German Aerospace Center (DLR)
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# SPDX-FileContributor: Sophie Kernchen
+
 from pydantic import BaseModel
 
 from pydantic_settings import (
