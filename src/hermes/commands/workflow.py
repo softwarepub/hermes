@@ -18,7 +18,7 @@ import click
 from hermes import config
 from hermes.commands.deposit.base import BaseDepositPlugin
 from hermes.error import MisconfigurationError
-from hermes.model.context import HermesContext, HermesHarvestContext, CodeMetaContext
+from hermes.model.linked_data import HermesData, HermesHarvestData, CodeMetaData
 from hermes.model.errors import MergeError
 from hermes.model.path import ContextPath
 
@@ -34,7 +34,7 @@ def harvest(click_ctx: click.Context):
     audit_log.info("# Metadata harvesting")
 
     # Create Hermes context (i.e., all collected metadata for all stages...)
-    ctx = HermesContext()
+    ctx = HermesData()
 
     # Initialize the harvest cache directory here to indicate the step ran
     ctx.init_cache("harvest")
@@ -55,11 +55,8 @@ def harvest(click_ctx: click.Context):
         _log.debug(". Loading harvester from %s", harvester.value)
         harvest = harvester.load()
 
-        with HermesHarvestContext(ctx, harvester, harvest_config.get(harvester.name, {})) as harvest_ctx:
+        with HermesHarvestData(harvester, harvest_config.get(harvester.name, {})) as harvest_ctx:
             harvest(click_ctx, harvest_ctx)
-            for _key, ((_value, _tag), *_trace) in harvest_ctx._data.items():
-                if any(v != _value and t == _tag for v, t in _trace):
-                    raise MergeError(_key, None, _value)
 
         _log.info('')
     audit_log.info('')
@@ -76,7 +73,7 @@ def process(click_ctx: click.Context):
     audit_log = logging.getLogger('audit')
     audit_log.info("# Metadata processing")
 
-    ctx = CodeMetaContext()
+    ctx = CodeMetaData()
 
     if not (ctx.hermes_dir / "harvest").exists():
         _log.error("You must run the harvest command before process")
@@ -95,7 +92,7 @@ def process(click_ctx: click.Context):
         harvester, *_ = harvesters
         audit_log.info("## Process data from %s", harvester.name)
 
-        harvest_context = HermesHarvestContext(ctx, harvester, {})
+        harvest_context = HermesHarvestData(harvester, {})
         try:
             harvest_context.load_cache()
         # when the harvest step ran, but there is no cache file, this is a serious flaw
@@ -129,7 +126,7 @@ def process(click_ctx: click.Context):
     ctx.prepare_codemeta()
 
     with open(ctx.get_cache("process", ctx.hermes_name, create=True), 'w') as codemeta_file:
-        json.dump(ctx._data, codemeta_file, indent=2)
+        json.dump(ctx.data, codemeta_file, indent=2)
 
     logging.shutdown()
 
@@ -137,7 +134,7 @@ def process(click_ctx: click.Context):
 @click.group(invoke_without_command=True)
 @click.pass_context
 def curate(click_ctx: click.Context):
-    ctx = CodeMetaContext()
+    ctx = CodeMetaData()
     process_output = ctx.hermes_dir / 'process' / (ctx.hermes_name + ".json")
 
     if not process_output.is_file():
@@ -173,7 +170,7 @@ def deposit(click_ctx: click.Context, initial, auth_token, file):
     click.echo("Metadata deposition")
     _log = logging.getLogger("cli.deposit")
 
-    ctx = CodeMetaContext()
+    ctx = CodeMetaData()
 
     codemeta_file = ctx.get_cache("curate", ctx.hermes_name)
     if not codemeta_file.exists():
@@ -231,7 +228,7 @@ def postprocess(click_ctx: click.Context):
     audit_log = logging.getLogger('audit')
     audit_log.info("# Post-processing")
 
-    ctx = CodeMetaContext()
+    ctx = CodeMetaData()
 
     if not (ctx.hermes_dir / "deposit").exists():
         _log.error("You must run the deposit command before post-process")
@@ -267,5 +264,5 @@ def clean():
     logging.shutdown()
 
     # Create Hermes context (i.e., all collected metadata for all stages...)
-    ctx = HermesContext()
+    ctx = HermesData()
     ctx.purge_caches()

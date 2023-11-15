@@ -37,6 +37,10 @@ class HermesData:
     hermes_cache_name = "." + hermes_name
     hermes_lod_context = (hermes_name, "https://software-metadata.pub/ns/hermes/")
 
+    _METADATA_TERMS = [
+        'timestamp', 'harvester', 'local_path', 'uri',
+    ]
+
     def __init__(self, project_dir: t.Optional[Path] = None):
         """
         Create a new context for the given project dir.
@@ -49,7 +53,7 @@ class HermesData:
         self.hermes_dir = Path(project_dir or '.') / self.hermes_cache_name
 
         self._caches = {}
-        self._data = {}
+        self.data = {}
         self._errors = []
         self.contexts = {self.hermes_lod_context}
 
@@ -61,13 +65,16 @@ class HermesData:
                     Can be in dotted syntax or as a :class:`ContextPath` instance.
         :return: The value stored under the given key.
         """
-        raise NotImplementedError()
+        if not key is ContextPath:
+            key = ContextPath.parse(key)
+        data = key.get_from(self.data)
+        return data
 
     def keys(self) -> t.List[ContextPath]:
         """
         Get all the keys for the data stored in this context.
         """
-        return [ContextPath.parse(k) for k in self._data.keys()]
+        yield from (k for k in self.data.keys() if k not in ('@metadata', '@alternatives'))
 
     def init_cache(self, *path: str) -> Path:
         """
@@ -117,21 +124,41 @@ class HermesData:
                        This can be used to trace back the original value.
                        If `_ep` is given, it is treated as an entry point name that triggered the update.
         """
+        path = ContextPath.parse(_key)
+        metadata = {
+            k: kwargs.pop(k)
+            for k in self._METADATA_TERMS
+            if k in kwargs
+        }
+        if kwargs:
+            metadata['custom'] = kwargs.copy()
 
-        pass
-
-    def get_data(self,
-                 data: t.Optional[dict] = None,
-                 path: t.Optional['ContextPath'] = None,
-                 tags: t.Optional[dict] = None) -> dict:
-        if data is None:
-            data = {}
-        if path is not None:
-            data.update({str(path): path.get_from(self._data)})
+        if path.parent is None:
+            target = self.data
         else:
-            for key in self.keys():
-                data.update({str(key): key.get_from(self._data)})
-        return data
+            target = path.parent.get_from(self.data)
+
+        def _set_value(t, k, v):
+            if isinstance(v, dict):
+                if isinstance(t, list):
+                    t.append({})
+                else:
+                    t[k] = {}
+                t = t[k]
+                for k, v in v.items():
+                    _set_value(t, k, v)
+            elif isinstance(v, (list, tuple)):
+                t[k] = []
+                t = t[k]
+                for i, v in enumerate(v):
+                    _set_value(t, i, v)
+            else:
+                t[k] = {
+                    '@value': v,
+                    '@metadata': metadata
+                }
+
+        _set_value(target, path._item, _value)
 
     def error(self, ep: EntryPoint, error: Exception):
         """
@@ -194,7 +221,7 @@ class HermesHarvestData(HermesData):
         data_file = self.get_cache('harvest', self._ep.name)
         if data_file.is_file():
             self._log.debug("Loading cache from %s...", data_file)
-            self._data = json.load(data_file.open('r'))
+            self.data = json.load(data_file.open('r'))
 
         contexts_file = self.get_cache('harvest', self._ep.name + '_contexts')
         if contexts_file.is_file():
@@ -210,7 +237,7 @@ class HermesHarvestData(HermesData):
 
         data_file = self.get_cache('harvest', self._ep.name, create=True)
         self._log.debug("Writing cache to %s...", data_file)
-        json.dump(self._data, data_file.open('w'), indent=2)
+        json.dump(self.data, data_file.open('w'), indent=2)
 
         if self.contexts:
             contexts_file = self.get_cache('harvest', self._ep.name + '_contexts', create=True)
@@ -239,43 +266,15 @@ class HermesHarvestData(HermesData):
         See :py:meth:`HermesContext.update` for more information.
         """
 
-        timestamp = kwargs.pop('timestamp', self.default_timestamp)
-        harvester = kwargs.pop('harvester', self._ep.name)
+        metadata = {
+            'timestamp': kwargs.pop('timestamp', self.default_timestamp),
+            'harvester': kwargs.pop('harvester', self._ep.name),
+        }
 
-        if _key not in self._data:
-            self._data[_key] = []
+        if kwargs:
+            metadata.update(kwargs)
 
-        for entry in self._data[_key]:
-            value, tag = entry
-            tag_timestamp = tag.pop('timestamp')
-            tag_harvester = tag.pop('harvester')
-
-            if tag == kwargs:
-                self._log.debug("Update %s: %s -> %s (%s)", _key, str(value), _value, str(tag))
-                entry[0] = _value
-                tag['timestamp'] = timestamp
-                tag['harvester'] = harvester
-                break
-
-            tag['timestamp'] = tag_timestamp
-            tag['harvester'] = tag_harvester
-
-        else:
-            kwargs['timestamp'] = timestamp
-            kwargs['harvester'] = harvester
-            self._data[_key].append([_value, kwargs])
-
-    def _update_key_from(self, _key: ContextPath, _value: t.Any, **kwargs):
-        if isinstance(_value, dict):
-            for key, value in _value.items():
-                self._update_key_from(_key[key], value, **kwargs)
-
-        elif isinstance(_value, (list, tuple)):
-            for index, value in enumerate(_value):
-                self._update_key_from(_key[index], value, **kwargs)
-
-        else:
-            self.update(str(_key), _value, **kwargs)
+        super().update(_key, _value, **metadata)
 
     def update_from(self, data: t.Dict[str, t.Any], **kwargs: t.Any):
         """
@@ -301,7 +300,7 @@ class HermesHarvestData(HermesData):
         """
 
         for key, value in data.items():
-            self._update_key_from(ContextPath(key), value, **kwargs)
+            self.update(key, value, **kwargs)
 
     def error(self, ep: EntryPoint, error: Exception):
         """
@@ -309,14 +308,14 @@ class HermesHarvestData(HermesData):
         """
 
         ep = ep or self._ep
-        self._base.error(ep, error)
+        super().error(ep, error)
 
     def _check_values(self, path, values):
-        (value, tag), *values = values
-        for alt_value, alt_tag in values:
-            if value != alt_value:
-                raise ValueError(f'{path}')
-        return value, tag
+        if isinstance(values, dict) and '@value' in values:
+            return values['@value'], values.get('@metadata', {})
+        else:
+            return values, {}
+        raise ValueError(f'{path}')
 
     def get_data(self,
                  data: t.Optional[dict] = None,
@@ -336,7 +335,7 @@ class HermesHarvestData(HermesData):
         """
         if data is None:
             data = {}
-        for key, values in self._data.items():
+        for key, values in self.data.items():
             key = ContextPath.parse(key)
             if path is None or key in path:
                 value, tag = self._check_values(key, values)
@@ -351,11 +350,25 @@ class HermesHarvestData(HermesData):
                     self.error(self._ep, e)
         return data
 
+    def __enter__(self):
+        self.load_cache()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.store_cache()
+        if exc_type is not None and issubclass(exc_type, HermesValidationError):
+            exc = traceback.TracebackException(exc_type, exc_val, exc_tb)
+            self._base.error(self._ep, exc)
+            self._log.warning("%s: %s",
+                              exc_type,
+                              ' '.join(map(str, exc_val.args)))
+            return True
+
     def finish(self):
         """
         Calling this method will lead to further processors not handling the context anymore.
         """
-        self._data.clear()
+        self.data.clear()
 
 
 class CodeMetaData(HermesData):
@@ -370,7 +383,7 @@ class CodeMetaData(HermesData):
         self.tags = {}
 
     def merge_from(self, other: HermesHarvestData):
-        other.get_data(self._data, tags=self.tags)
+        other.get_data(self.data, tags=self.tags)
 
     def merge_contexts_from(self, other: HermesHarvestData):
         """
@@ -384,7 +397,7 @@ class CodeMetaData(HermesData):
 
     def update(self, _key: ContextPath, _value: t.Any, tags: t.Dict[str, t.Dict] | None = None):
         if _key._item == '*':
-            _item_path, _item, _path = _key.resolve(self._data, query=_value, create=True)
+            _item_path, _item, _path = _key.resolve(self.data, query=_value, create=True)
             if tags:
                 _tags = {k[len(str(_key) + '.'):]: t for k, t in tags.items() if ContextPath.parse(k) in _key}
             else:
@@ -401,10 +414,10 @@ class CodeMetaData(HermesData):
                         tag_key = k
                     tags[tag_key] = v
         else:
-            _key.update(self._data, _value, tags)
+            _key.update(self.data, _value, tags)
 
     def find_key(self, item, other):
-        data = item.get_from(self._data)
+        data = item.get_from(self.data)
 
         for i, node in enumerate(data):
             match = [(k, node[k]) for k in self._PRIMARY_ATTR.get(str(item), ('@id',)) if k in node]

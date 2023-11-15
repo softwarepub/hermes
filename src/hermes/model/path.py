@@ -151,6 +151,9 @@ class ContextPath:
         This match includes semantics for wildcards.
         Items that access `'*'` will automatically match everything (except for None).
         """
+        if isinstance(other, str):
+            other = ContextPath.parse(other)
+
         return (
             other is not None
             and (self._item == other._item or self._item == '*' or other._item == '*')
@@ -344,7 +347,7 @@ class ContextPath:
         :return: The value stored at path.
         """
         prefix, target, path = self.resolve(target)
-        return self._get_item(target, path)
+        return self._get_item(target, prefix)
 
     def update(self, target: t.Dict[str, t.Any] | t.List, value: t.Any, tags: t.Optional[dict] = None, **kwargs):
         """
