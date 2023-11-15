@@ -96,6 +96,6 @@ def process(
     :param ctx: The target context containing harmonized data.
     :param harvest_ctx: Data as it was harvested.
     """
-    add_contributors(ctx, harvest_ctx)
-    add_branch(ctx, harvest_ctx)
+    add_contributors(path, config_path, ctx, harvest_ctx)
+    add_branch(path, config_path, ctx, harvest_ctx)
     harvest_ctx.finish()
