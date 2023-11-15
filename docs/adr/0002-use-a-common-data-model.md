@@ -35,6 +35,7 @@ Chosen option: "CodeMeta + schema-based, extended JSON-LD for internal data mode
 
 * Compatibility with RO-Crate
 * Compatibility with CodeMeta
+* Compatibility with custom metadata to be deposited along standardized metadata
 
 ### Negative Consequences
 
