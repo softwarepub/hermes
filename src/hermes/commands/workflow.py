@@ -19,7 +19,6 @@ from hermes import config
 from hermes.commands.deposit.base import BaseDepositPlugin
 from hermes.error import MisconfigurationError
 from hermes.model.linked_data import HermesData, HermesHarvestData, CodeMetaData
-from hermes.model.errors import MergeError
 from hermes.model.path import ContextPath
 
 

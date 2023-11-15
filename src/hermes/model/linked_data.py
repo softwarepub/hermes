@@ -22,6 +22,7 @@ from hermes.model.errors import HermesValidationError
 
 _log = logging.getLogger(__name__)
 
+
 class HermesData:
     """
     The HermesContext stores the metadata for a certain project.
@@ -65,7 +66,7 @@ class HermesData:
                     Can be in dotted syntax or as a :class:`ContextPath` instance.
         :return: The value stored under the given key.
         """
-        if not key is ContextPath:
+        if not isinstance(key, ContextPath):
             key = ContextPath.parse(key)
         data = key.get_from(self.data)
         return data
