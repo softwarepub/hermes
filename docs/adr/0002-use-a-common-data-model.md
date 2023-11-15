@@ -14,7 +14,7 @@ SPDX-License-Identifier: CC-BY-SA-4.0
 
 We need a data model that's
 
-- extensible, to take up metaedata that cannot yet be included in CodeMeta.json
+- extensible, to take up metadata that cannot yet be included in CodeMeta.json
 - compatible with RO-Crate
 
 to exchange data between modules.
