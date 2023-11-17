@@ -9,10 +9,10 @@ import pathlib
 import sys
 
 import toml
+from pydantic import ValidationError
 
 from hermes.model.context import HermesContext
 from hermes.settings import HermesSettings
-from pydantic import ValidationError
 
 # This is the default logging configuration, required to see log output at all.
 #  - Maybe it could possibly somehow be a somewhat good idea to move this into an own module ... later perhaps
