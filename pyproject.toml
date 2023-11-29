@@ -40,8 +40,6 @@ cffconvert = { git = "https://github.com/citation-file-format/cff-converter-pyth
 toml = "^0.10.2"
 pyparsing = "^3.0.9"
 requests = "^2.28.1"
-
-# Packages for developers
 pydantic-settings = "^2.1.0"
 
 [tool.poetry.group.dev.dependencies]

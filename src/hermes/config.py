@@ -87,7 +87,7 @@ def configure(config_path: pathlib.Path, working_path: pathlib.Path):
             _config['hermes'] = hermes_config
             _config['logging'] = hermes_config.get('logging', _config['logging'])
     except ValidationError as e:
-        print(e)
+        print(e, file=sys.stderr)
         sys.exit(1)
     except FileNotFoundError:
         if config_path.name != 'hermes.toml':
