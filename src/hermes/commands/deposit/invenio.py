@@ -251,25 +251,20 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         with open(self.ctx.get_cache("deposit", "invenio", create=True), 'w') as invenio_json:
             json.dump(deposition_metadata, invenio_json, indent='  ')
 
-    def create_initial_version(self) -> None:
-        """Create an initial version of a publication.
-
-        If a previous publication exists, this function does nothing, leaving the work for
-        :meth:`create_new_version`.
-        """
-
+    def is_initial_publication(self) -> bool:
         invenio_path = ContextPath.parse("deposit.invenio")
         invenio_ctx = self.ctx[invenio_path]
         latest_record_id = invenio_ctx.get("latestRecord", {}).get("id")
+        return latest_record_id is None
 
-        if latest_record_id is not None:
-            # A previous version exists. This means that we need to create a new version in
-            # the next step. Thus, there is nothing to do here.
-            return
+    def create_initial_version(self) -> None:
+        """Create an initial version of a publication."""
 
         if not self.click_ctx.params['initial']:
             raise RuntimeError("Please use `--initial` to make an initial deposition.")
 
+        invenio_path = ContextPath.parse("deposit.invenio")
+        invenio_ctx = self.ctx[invenio_path]
         deposition_metadata = invenio_ctx["depositionMetadata"]
 
         response = self.client.new_deposit(deposition_metadata)
@@ -286,20 +281,11 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         self.ctx.update(invenio_path["links"]["publish"], deposit["links"]["publish"])
 
     def create_new_version(self) -> None:
-        """Create a new version of an existing publication.
-
-        If no previous publication exists, this function does nothing because
-        :meth:`create_initial_version` will have done the work.
-        """
+        """Create a new version of an existing publication."""
 
         invenio_path = ContextPath.parse("deposit.invenio")
         invenio_ctx = self.ctx[invenio_path]
         latest_record_id = invenio_ctx.get("latestRecord", {}).get("id")
-
-        if latest_record_id is None:
-            # No previous version exists. This means that an initial version was created in
-            # the previous step. Thus, there is nothing to do here.
-            return
 
         # Get current deposit
         response = self.client.get_deposit(latest_record_id)

@@ -16,12 +16,14 @@ class BaseDepositPlugin:
         self.ctx = ctx
 
     def __call__(self) -> None:
-        # TODO: Decide here which of initial/new/... to run. Contract for decision:
-        # Implement method is_new_publication() or similar
         self.prepare()
         self.map_metadata()
-        self.create_initial_version()
-        self.create_new_version()
+
+        if self.is_initial_publication():
+            self.create_initial_version()
+        else:
+            self.create_new_version()
+
         self.update_metadata()
         self.delete_artifacts()
         self.upload_artifacts()
@@ -32,6 +34,9 @@ class BaseDepositPlugin:
 
     def map_metadata(self) -> None:
         pass
+
+    def is_initial_publication(self) -> bool:
+        return True
 
     def create_initial_version(self) -> None:
         pass
