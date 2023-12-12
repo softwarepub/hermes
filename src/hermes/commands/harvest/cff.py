@@ -74,8 +74,19 @@ def _load_cff_from_file(cff_data: str) -> t.Any:
     return yaml.load(cff_data)
 
 
+def _patch_author_emails(cff_data, codemeta_str):
+    cff_authors = _load_cff_from_file(cff_data)["authors"]
+    codemeta = json.loads(codemeta_str)
+    for i, author in enumerate(cff_authors):
+        if "email" in author:
+            codemeta["author"][i]["email"] = author["email"]
+    return json.dumps(codemeta)
+
+
 def _convert_cff_to_codemeta(cff_data: str) -> t.Any:
     codemeta_str = Citation(cff_data).as_codemeta()
+    codemeta_str = _patch_author_emails(cff_data, codemeta_str)
+
     return json.loads(codemeta_str)
 
 
