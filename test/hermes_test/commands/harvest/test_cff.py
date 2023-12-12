@@ -78,6 +78,16 @@ def codemeta_with_email():
           "@type": "Person",
           "email": "email@example.com",
           "familyName": "Author"
+        },
+        {
+          "@type": "Person",
+          "email": "email2@example.com",
+          "familyName": "Second"
+        },
+        {
+          "@type": "Person",
+          "email": "email3@example.com",
+          "familyName": "Third"
         }
       ],
       "name": "Title"
@@ -91,6 +101,10 @@ def valid_minimal_cff_with_email(tmp_path):
     authors:
       - family-names: Author
         email: email@example.com
+      - family-names: Second
+        email: email2@example.com
+      - family-names: Third
+        email: email3@example.com
     message: Message
     title: Title
     """
