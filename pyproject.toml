@@ -36,7 +36,7 @@ click = "^8.1"
 "ruamel.yaml" = "^0.17.21"
 jsonschema = "^3.0.0"
 pyld = "^2.0.3"
-cffconvert = { git = "https://github.com/citation-file-format/cff-converter-python.git" }
+cffconvert = "^2.0.0"
 toml = "^0.10.2"
 pyparsing = "^3.0.9"
 requests = "^2.28.1"
