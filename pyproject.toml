@@ -7,6 +7,7 @@
 # SPDX-FileContributor: David Pape
 
 [tool.poetry]
+# Reference at https://python-poetry.org/docs/pyproject/
 name = "hermes"
 version = "0.1.0"
 description = "Workflow to publish research software with rich metadata"
@@ -28,6 +29,13 @@ keywords = ["publishing", "metadata", "automation"]
 
 include = [
     "hermes/schema/*.json",
+]
+
+# Stating our package explicitely here to enable
+#     a) including contrib packages in the future and
+#     b) rename the package for development snapshot releases to TestPyPI
+packages = [
+    { include = "hermes", from = "src" }
 ]
 
 [tool.poetry.dependencies]
