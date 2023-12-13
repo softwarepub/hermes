@@ -1,3 +1,9 @@
+# SPDX-FileCopyrightText: 2023 Forschungszentrum Jülich GmbH (FZJ)
+#
+# SPDX-License-Identifier: CC0-1.0
+
+# SPDX-FileContributor: Oliver Bertuch
+
 name: Publish Python 🐍 distribution 📦 to PyPI and TestPyPI
 
 on:
