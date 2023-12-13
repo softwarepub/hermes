@@ -187,8 +187,8 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
         self.client = client or InvenioClient(auth_token=auth_token)
         self.resolver = resolver or InvenioResolver(self.client)
-
         self.config = config.get("deposit").get("invenio", {})
+        self.links = {}
 
     # TODO: Populate some data structure here? Or move more of this into __init__?
     def prepare(self) -> None:
@@ -266,10 +266,8 @@ class InvenioDepositPlugin(BaseDepositPlugin):
             raise RuntimeError(f"Could not create initial deposit {response.url!r}")
 
         deposit = response.json()
-        _log.debug("Created initial version deposit: %s", deposit["links"]["html"])
-
-        invenio_path = ContextPath.parse("deposit.invenio")
-        self.ctx.update(invenio_path["links"]["latestDraft"], deposit["links"]["latest_draft"])
+        self.links.update(deposit["links"])
+        _log.debug("Created initial version deposit: %s", self.links["html"])
 
     def create_new_version(self) -> None:
         """Create a new version of an existing publication."""
@@ -283,23 +281,25 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         if not response.ok:
             raise RuntimeError(f"Failed to get current deposit {response.url!r}")
 
+        self.links.update(response.json()["links"])
+
         # Create a new version using the newversion action
-        deposit_url = response.json()["links"]["newversion"]
+        deposit_url = self.links["newversion"]
         response = self.client.post(deposit_url)
         if not response.ok:
             raise RuntimeError(f"Could not create new version deposit {deposit_url!r}")
 
         # Store link to latest draft to be used in :func:`update_metadata`.
         old_deposit = response.json()
-        self.ctx.update(invenio_path["links"]["latestDraft"], old_deposit['links']['latest_draft'])
+        self.links.update(old_deposit["links"])
 
     def update_metadata(self) -> None:
         """Update the metadata of a draft."""
 
+        draft_url = self.links["latest_draft"]
+
         invenio_path = ContextPath.parse("deposit.invenio")
         invenio_ctx = self.ctx[invenio_path]
-        draft_url = invenio_ctx["links"]["latestDraft"]
-
         deposition_metadata = invenio_ctx["depositionMetadata"]
 
         response = self.client.put(
@@ -311,12 +311,11 @@ class InvenioDepositPlugin(BaseDepositPlugin):
             raise RuntimeError(f"Could not update metadata of draft {draft_url!r}")
 
         deposit = response.json()
-        _log.debug("Created new version deposit: %s", deposit["links"]["html"])
+        self.links.update(deposit["links"])
+
+        _log.debug("Created new version deposit: %s", self.links["html"])
         with open(self.ctx.get_cache('deposit', 'deposit', create=True), 'w') as deposit_file:
             json.dump(deposit, deposit_file, indent=4)
-
-        self.ctx.update(invenio_path["links"]["bucket"], deposit["links"]["bucket"])
-        self.ctx.update(invenio_path["links"]["publish"], deposit["links"]["publish"])
 
     def delete_artifacts(self) -> None:
         """Delete existing file artifacts.
@@ -332,12 +331,10 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         """Upload file artifacts to the deposit.
 
         We'll use the bucket API rather than the files API as it supports file sizes above
-        100MB. The URL to the bucket of the deposit is taken from the context at
-        ``deposit.invenio.links.bucket``.
+        100MB.
         """
 
-        bucket_url_path = ContextPath.parse("deposit.invenio.links.bucket")
-        bucket_url = self.ctx[bucket_url_path]
+        bucket_url = self.links["bucket"]
 
         files: list[click.Path] = self.click_ctx.params["file"]
         for path_arg in files:
@@ -358,22 +355,18 @@ class InvenioDepositPlugin(BaseDepositPlugin):
             # file_resource = response.json()
 
     def publish(self) -> None:
-        """Publish the deposited record.
+        """Publish the deposited record."""
 
-        This is done by doing a POST request to the publication URL stored in the context at
-        ``deposit.invenio.links.publish``.
-        """
-
-        publish_url_path = ContextPath.parse("deposit.invenio.links.publish")
-        publish_url = self.ctx[publish_url_path]
-
+        publish_url = self.links["publish"]
         response = self.client.post(publish_url)
         if not response.ok:
             _log.debug(response.text)
             raise RuntimeError(f"Could not publish deposit via {publish_url!r}")
 
         record = response.json()
-        _log.info("Published record: %s", record["links"]["record_html"])
+        self.links.update(record["links"])
+
+        _log.info("Published record: %s", self.links["record_html"])
 
     def _codemeta_to_invenio_deposition(self) -> dict:
         """The mapping logic.
