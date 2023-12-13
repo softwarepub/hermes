@@ -90,9 +90,10 @@ def codemeta_without_email():
       "name": "Title"
     }
 
+
 @pytest.fixture
 def codemeta_with_email(codemeta_without_email):
-    author_emails = {"Author": "email@example.com", "Second": "email2@example.com", "Third": "email3@example.com",}
+    author_emails = {"Author": "email@example.com", "Second": "email2@example.com", "Third": "email3@example.com"}
     for author in codemeta_without_email["author"]:
         author["email"] = author_emails[author["familyName"]]
     return codemeta_without_email
