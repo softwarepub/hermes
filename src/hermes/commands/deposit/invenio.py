@@ -67,10 +67,8 @@ class InvenioClient(requests.Session):
     def get_community(self, community_id):
         return self.get(f"{self.site_url}/{self.communities_api_path}/{community_id}")
 
-    def new_deposit(self, metadata):
-        return self.post(
-            f"{self.site_url}/{self.depositions_api_path}", json={"metadata": metadata},
-        )
+    def new_deposit(self):
+        return self.post(f"{self.site_url}/{self.depositions_api_path}", json={})
 
     @property
     def api_paths(self):
@@ -263,22 +261,15 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         if not self.click_ctx.params['initial']:
             raise RuntimeError("Please use `--initial` to make an initial deposition.")
 
-        invenio_path = ContextPath.parse("deposit.invenio")
-        invenio_ctx = self.ctx[invenio_path]
-        deposition_metadata = invenio_ctx["depositionMetadata"]
-
-        response = self.client.new_deposit(deposition_metadata)
-
+        response = self.client.new_deposit()
         if not response.ok:
             raise RuntimeError(f"Could not create initial deposit {response.url!r}")
 
         deposit = response.json()
         _log.debug("Created initial version deposit: %s", deposit["links"]["html"])
-        with open(self.ctx.get_cache('deposit', 'deposit', create=True), 'w') as deposit_file:
-            json.dump(deposit, deposit_file, indent=4)
 
-        self.ctx.update(invenio_path["links"]["bucket"], deposit["links"]["bucket"])
-        self.ctx.update(invenio_path["links"]["publish"], deposit["links"]["publish"])
+        invenio_path = ContextPath.parse("deposit.invenio")
+        self.ctx.update(invenio_path["links"]["latestDraft"], deposit["links"]["latest_draft"])
 
     def create_new_version(self) -> None:
         """Create a new version of an existing publication."""
@@ -303,19 +294,11 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         self.ctx.update(invenio_path["links"]["latestDraft"], old_deposit['links']['latest_draft'])
 
     def update_metadata(self) -> None:
-        """Update the metadata of a draft.
-
-        If no draft is found in the context, it is assumed that no metadata has to be
-        updated (e.g. because an initial version was created already containing the
-        metadata).
-        """
+        """Update the metadata of a draft."""
 
         invenio_path = ContextPath.parse("deposit.invenio")
         invenio_ctx = self.ctx[invenio_path]
-        draft_url = invenio_ctx.get("links", {}).get("latestDraft")
-
-        if draft_url is None:
-            return
+        draft_url = invenio_ctx["links"]["latestDraft"]
 
         deposition_metadata = invenio_ctx["depositionMetadata"]
 
