@@ -63,8 +63,10 @@ def harvest_cff(click_ctx: click.Context, ctx: HermesHarvestContext):
         raise HermesValidationError(cff_file)
 
     # Convert to CodeMeta using cffconvert
-    codemeta = _convert_cff_to_codemeta(cff_data)
-    ctx.update_from(codemeta, local_path=str(cff_file))
+    codemeta_dict = _convert_cff_to_codemeta(cff_data)
+    # TODO Replace the following temp patch for #112 once there is a new cffconvert version with cffconvert#309
+    codemeta_dict = _patch_author_emails(cff_dict, codemeta_dict)
+    ctx.update_from(codemeta_dict, local_path=str(cff_file))
 
 
 def _load_cff_from_file(cff_data: str) -> t.Any:
@@ -74,18 +76,16 @@ def _load_cff_from_file(cff_data: str) -> t.Any:
     return yaml.load(cff_data)
 
 
-def _patch_author_emails(cff_data, codemeta_str):
-    cff_authors = _load_cff_from_file(cff_data)["authors"]
-    codemeta = json.loads(codemeta_str)
+def _patch_author_emails(cff: dict, codemeta: dict) -> dict:
+    cff_authors = cff["authors"]
     for i, author in enumerate(cff_authors):
         if "email" in author:
             codemeta["author"][i]["email"] = author["email"]
-    return json.dumps(codemeta)
+    return codemeta
 
 
 def _convert_cff_to_codemeta(cff_data: str) -> t.Any:
     codemeta_str = Citation(cff_data).as_codemeta()
-    codemeta_str = _patch_author_emails(cff_data, codemeta_str)
 
     return json.loads(codemeta_str)
 
