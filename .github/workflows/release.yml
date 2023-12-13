@@ -5,7 +5,6 @@ on:
     branches:
       - main
       - develop
-      - "feature/186-pypi-release"
     tags:
       - 'v**'
 
@@ -27,7 +26,7 @@ jobs:
         build toml-cli
         --user
     - name: Reset package name and version for dev snaps
-      if: github.ref_name == 'develop' || github.ref_name == 'feature/186-pypi-release'
+      if: github.ref_name == 'develop'
       run: |
         toml set --toml-path pyproject.toml tool.poetry.name hermes-test
         VERSION=$(toml get --toml-path pyproject.toml tool.poetry.version)
