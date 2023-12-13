@@ -24,8 +24,14 @@ jobs:
       run: >-
         python3 -m
         pip install
-        build
+        build toml-cli
         --user
+    - name: Reset package name and version for dev snaps
+      if: github.ref_name == 'develop' || github.ref_name == 'feature/186-pypi-release'
+      run: |
+        toml set --toml-path pyproject.toml tool.poetry.name hermes-test
+        VERSION=$(toml get --toml-path pyproject.toml tool.poetry.version)
+        toml set --toml-path pyproject.toml tool.poetry.version "$VERSION.dev${{ github.run_number }}"
     - name: Build a binary wheel and a source tarball
       run: python3 -m build
     - name: Store the distribution packages
