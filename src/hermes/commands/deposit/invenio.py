@@ -194,7 +194,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         super().__init__(click_ctx, ctx)
 
         self.invenio_context_path = ContextPath.parse(f"deposit.{self.platform_name}")
-        self.invenio_ctx = self.ctx[self.invenio_context_path]
+        self.invenio_ctx = None
 
         auth_token = self.click_ctx.params.get("auth_token")
         if auth_token is None:
@@ -249,6 +249,8 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         self.ctx.update(self.invenio_context_path["access_right"], access_right)
         self.ctx.update(self.invenio_context_path["embargo_date"], embargo_date)
         self.ctx.update(self.invenio_context_path["access_conditions"], access_conditions)
+
+        self.invenio_ctx = self.ctx[self.invenio_context_path]
 
     def map_metadata(self) -> None:
         """Map the harvested metadata onto the Invenio schema."""
