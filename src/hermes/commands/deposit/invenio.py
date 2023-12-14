@@ -184,7 +184,6 @@ class InvenioResolver:
         return res_json['id'], res_json['metadata']
 
 
-# TODO: Save invenio context path as class member
 class InvenioDepositPlugin(BaseDepositPlugin):
 
     platform_name = "invenio"
@@ -193,6 +192,9 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
     def __init__(self, click_ctx: click.Context, ctx: CodeMetaContext, client=None, resolver=None) -> None:
         super().__init__(click_ctx, ctx)
+
+        self.invenio_context_path = ContextPath.parse(f"deposit.{self.platform_name}")
+        self.invenio_ctx = self.ctx[self.invenio_context_path]
 
         auth_token = self.click_ctx.params.get("auth_token")
         if auth_token is None:
@@ -219,8 +221,6 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         - update ``self.ctx`` with metadata collected during the checks
         """
 
-        invenio_path = ContextPath.parse(f"deposit.{self.platform_name}")
-
         rec_id = self.config.get('record_id')
         doi = self.config.get('doi')
 
@@ -237,35 +237,31 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         if rec_meta and (version == rec_meta.get("version")):
             raise ValueError(f"Version {version} already deposited.")
 
-        self.ctx.update(invenio_path['latestRecord'], {'id': rec_id, 'metadata': rec_meta})
+        self.ctx.update(self.invenio_context_path['latestRecord'], {'id': rec_id, 'metadata': rec_meta})
 
         license = self._get_license_identifier()
-        self.ctx.update(invenio_path["license"], license)
+        self.ctx.update(self.invenio_context_path["license"], license)
 
         communities = self._get_community_identifiers()
-        self.ctx.update(invenio_path["communities"], communities)
+        self.ctx.update(self.invenio_context_path["communities"], communities)
 
         access_right, embargo_date, access_conditions = self._get_access_modalities(license)
-        self.ctx.update(invenio_path["access_right"], access_right)
-        self.ctx.update(invenio_path["embargo_date"], embargo_date)
-        self.ctx.update(invenio_path["access_conditions"], access_conditions)
+        self.ctx.update(self.invenio_context_path["access_right"], access_right)
+        self.ctx.update(self.invenio_context_path["embargo_date"], embargo_date)
+        self.ctx.update(self.invenio_context_path["access_conditions"], access_conditions)
 
     def map_metadata(self) -> None:
         """Map the harvested metadata onto the Invenio schema."""
 
         deposition_metadata = self._codemeta_to_invenio_deposition()
-
-        metadata_path = ContextPath.parse(f"deposit.{self.platform_name}.depositionMetadata")
-        self.ctx.update(metadata_path, deposition_metadata)
+        self.ctx.update(self.invenio_context_path["depositionMetadata"], deposition_metadata)
 
         # Store a snapshot of the mapped data within the cache, useful for analysis, debugging, etc
         with open(self.ctx.get_cache("deposit", self.platform_name, create=True), 'w') as invenio_json:
             json.dump(deposition_metadata, invenio_json, indent='  ')
 
     def is_initial_publication(self) -> bool:
-        invenio_path = ContextPath.parse(f"deposit.{self.platform_name}")
-        invenio_ctx = self.ctx[invenio_path]
-        latest_record_id = invenio_ctx.get("latestRecord", {}).get("id")
+        latest_record_id = self.invenio_ctx.get("latestRecord", {}).get("id")
         return latest_record_id is None
 
     def create_initial_version(self) -> None:
@@ -285,9 +281,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
     def create_new_version(self) -> None:
         """Create a new version of an existing publication."""
 
-        invenio_path = ContextPath.parse(f"deposit.{self.platform_name}")
-        invenio_ctx = self.ctx[invenio_path]
-        latest_record_id = invenio_ctx.get("latestRecord", {}).get("id")
+        latest_record_id = self.invenio_ctx.get("latestRecord", {}).get("id")
 
         # Get current deposit
         response = self.client.get_deposit(latest_record_id)
@@ -311,9 +305,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
         draft_url = self.links["latest_draft"]
 
-        invenio_path = ContextPath.parse(f"deposit.{self.platform_name}")
-        invenio_ctx = self.ctx[invenio_path]
-        deposition_metadata = invenio_ctx["depositionMetadata"]
+        deposition_metadata = self.invenio_ctx["depositionMetadata"]
 
         response = self.client.put(
             draft_url,
@@ -406,11 +398,11 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         """
 
         metadata = self.ctx["codemeta"]
-        license = self.ctx["deposit"][self.platform_name]["license"]
-        communities = self.ctx["deposit"][self.platform_name]["communities"]
-        access_right = self.ctx["deposit"][self.platform_name]["access_right"]
-        embargo_date = self.ctx["deposit"][self.platform_name]["embargo_date"]
-        access_conditions = self.ctx["deposit"][self.platform_name]["access_conditions"]
+        license = self.invenio_ctx["license"]
+        communities = self.invenio_ctx["communities"]
+        access_right = self.invenio_ctx["access_right"]
+        embargo_date = self.invenio_ctx["embargo_date"]
+        access_conditions = self.invenio_ctx["access_conditions"]
 
         creators = [
             # TODO: Distinguish between @type "Person" and others
