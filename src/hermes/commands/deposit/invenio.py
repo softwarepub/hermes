@@ -34,16 +34,22 @@ class InvenioClient(requests.Session):
     DEFAULT_DEPOSITIONS_API_PATH = "api/deposit/depositions"
     DEFAULT_RECORDS_API_PATH = "api/records"
 
-    def __init__(self, auth_token=None) -> None:
+    # Used for context path and config
+    platform_name = "invenio"
+
+    def __init__(self, auth_token=None, platform_name=None) -> None:
         super().__init__()
 
-        self.config = config.get("deposit").get("invenio", {})
+        if platform_name is not None:
+            self.platform_name = platform_name
+
+        self.config = config.get("deposit").get(self.platform_name, {})
         self.headers.update({"User-Agent": hermes_user_agent})
 
         self.auth_token = auth_token
         self.site_url = self.config.get("site_url")
         if self.site_url is None:
-            raise MisconfigurationError("deposit.invenio.site_url is not configured")
+            raise MisconfigurationError(f"deposit.{self.platform_name}.site_url is not configured")
 
     # Override request method to automatically set Authorization header for all requests
     # to the configured site.
@@ -92,8 +98,11 @@ class InvenioClient(requests.Session):
 
 
 class InvenioResolver:
+
+    invenio_client_class = InvenioClient
+
     def __init__(self, client=None):
-        self.client = client or InvenioClient()
+        self.client = client or self.invenio_client_class()
 
     def resolve_latest_id(
         self, record_id=None, doi=None, codemeta_identifier=None
@@ -136,7 +145,6 @@ class InvenioResolver:
         """
         Resolve a DOI to an Invenio URL and extract the record id.
 
-        :param site_url: Root URL for the Invenio instance to use.
         :param doi: The DOI to be resolved (only the identifier *without* the ``https://doi.org/`` prefix).
         :return: The record ID on the respective instance.
         """
@@ -160,7 +168,6 @@ class InvenioResolver:
         """
         Find the latest version of a given record.
 
-        :param site_url: Root URL for the Invenio instance to use.
         :param record_id: The record that sould be resolved.
         :return: The record id of the latest version for the requested record.
         """
@@ -177,7 +184,13 @@ class InvenioResolver:
         return res_json['id'], res_json['metadata']
 
 
+# TODO: Save invenio context path as class member
 class InvenioDepositPlugin(BaseDepositPlugin):
+
+    platform_name = "invenio"
+    invenio_client_class = InvenioClient
+    invenio_resolver_class = InvenioResolver
+
     def __init__(self, click_ctx: click.Context, ctx: CodeMetaContext, client=None, resolver=None) -> None:
         super().__init__(click_ctx, ctx)
 
@@ -185,9 +198,9 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         if auth_token is None:
             raise DepositionUnauthorizedError("No auth token given for deposition platform")
 
-        self.client = client or InvenioClient(auth_token=auth_token)
-        self.resolver = resolver or InvenioResolver(self.client)
-        self.config = config.get("deposit").get("invenio", {})
+        self.client = client or self.invenio_client_class(auth_token=auth_token, platform_name=self.platform_name)
+        self.resolver = resolver or self.invenio_resolver_class(self.client)
+        self.config = config.get("deposit").get(self.platform_name, {})
         self.links = {}
 
     # TODO: Populate some data structure here? Or move more of this into __init__?
@@ -206,7 +219,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         - update ``self.ctx`` with metadata collected during the checks
         """
 
-        invenio_path = ContextPath.parse("deposit.invenio")
+        invenio_path = ContextPath.parse(f"deposit.{self.platform_name}")
 
         rec_id = self.config.get('record_id')
         doi = self.config.get('doi')
@@ -242,15 +255,15 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
         deposition_metadata = self._codemeta_to_invenio_deposition()
 
-        metadata_path = ContextPath.parse("deposit.invenio.depositionMetadata")
+        metadata_path = ContextPath.parse(f"deposit.{self.platform_name}.depositionMetadata")
         self.ctx.update(metadata_path, deposition_metadata)
 
         # Store a snapshot of the mapped data within the cache, useful for analysis, debugging, etc
-        with open(self.ctx.get_cache("deposit", "invenio", create=True), 'w') as invenio_json:
+        with open(self.ctx.get_cache("deposit", self.platform_name, create=True), 'w') as invenio_json:
             json.dump(deposition_metadata, invenio_json, indent='  ')
 
     def is_initial_publication(self) -> bool:
-        invenio_path = ContextPath.parse("deposit.invenio")
+        invenio_path = ContextPath.parse(f"deposit.{self.platform_name}")
         invenio_ctx = self.ctx[invenio_path]
         latest_record_id = invenio_ctx.get("latestRecord", {}).get("id")
         return latest_record_id is None
@@ -272,7 +285,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
     def create_new_version(self) -> None:
         """Create a new version of an existing publication."""
 
-        invenio_path = ContextPath.parse("deposit.invenio")
+        invenio_path = ContextPath.parse(f"deposit.{self.platform_name}")
         invenio_ctx = self.ctx[invenio_path]
         latest_record_id = invenio_ctx.get("latestRecord", {}).get("id")
 
@@ -298,7 +311,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
         draft_url = self.links["latest_draft"]
 
-        invenio_path = ContextPath.parse("deposit.invenio")
+        invenio_path = ContextPath.parse(f"deposit.{self.platform_name}")
         invenio_ctx = self.ctx[invenio_path]
         deposition_metadata = invenio_ctx["depositionMetadata"]
 
@@ -393,11 +406,11 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         """
 
         metadata = self.ctx["codemeta"]
-        license = self.ctx["deposit"]["invenio"]["license"]
-        communities = self.ctx["deposit"]["invenio"]["communities"]
-        access_right = self.ctx["deposit"]["invenio"]["access_right"]
-        embargo_date = self.ctx["deposit"]["invenio"]["embargo_date"]
-        access_conditions = self.ctx["deposit"]["invenio"]["access_conditions"]
+        license = self.ctx["deposit"][self.platform_name]["license"]
+        communities = self.ctx["deposit"][self.platform_name]["communities"]
+        access_right = self.ctx["deposit"][self.platform_name]["access_right"]
+        embargo_date = self.ctx["deposit"][self.platform_name]["embargo_date"]
+        access_conditions = self.ctx["deposit"][self.platform_name]["access_conditions"]
 
         creators = [
             # TODO: Distinguish between @type "Person" and others
@@ -574,12 +587,12 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         """
         access_right = self.config.get("access_right")
         if access_right is None:
-            raise MisconfigurationError("deposit.invenio.access_right is not configured")
+            raise MisconfigurationError(f"deposit.{self.platform_name}.access_right is not configured")
 
         access_right_options = ["open", "embargoed", "restricted", "closed"]
         if access_right not in access_right_options:
             raise MisconfigurationError(
-                "deposition.invenio.access_right must be one of: "
+                f"deposition.{self.platform_name}.access_right must be one of: "
                 f"{', '.join(access_right_options)}"
             )
 
@@ -587,7 +600,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         if access_right == "embargoed" and embargo_date is None:
             raise MisconfigurationError(
                 f"With access_right {access_right}, "
-                "deposit.invenio.embargo_date must be configured"
+                f"deposit.{self.platform_name}.embargo_date must be configured"
             )
 
         if embargo_date is not None:
@@ -595,7 +608,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
                 datetime.fromisoformat(embargo_date)
             except ValueError:
                 raise MisconfigurationError(
-                    f"Could not parse deposit.invenio.embargo_date {embargo_date!r}. "
+                    f"Could not parse deposit.{self.platform_name}.embargo_date {embargo_date!r}. "
                     "Must be in ISO 8601 format."
                 )
 
@@ -603,12 +616,12 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         if access_right == "restricted" and access_conditions is None:
             raise MisconfigurationError(
                 f"With access_right {access_right}, "
-                "deposit.invenio.access_conditions must be configured"
+                f"deposit.{self.platform_name}.access_conditions must be configured"
             )
 
         if access_conditions is not None and not isinstance(access_conditions, str):
             raise MisconfigurationError(
-                "deposit.invenio.access_conditions must be a string (HTML is allowed)."
+                f"deposit.{self.platform_name}.access_conditions must be a string (HTML is allowed)."
             )
 
         if license is None and access_right in ["open", "embargoed"]:
