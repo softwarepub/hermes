@@ -80,8 +80,8 @@ class IvenioRDMDepositPlugin(InvenioDepositPlugin):
         time, ouch...).
 
         If the URL is not found (what is pretty probable by now, as CFFConvert produces SPDX-URLs while InvenioRDM still
-        relies on the overhauled opensource.org URLs), the SPDX information record is fetched and all valid cross references
-        are sought for.
+        relies on the overhauled opensource.org URLs), the SPDX information record is fetched and all valid cross
+        references are sought for.
 
         :return: The vocabulary record that is provided by InvenioRDM.
         """
