@@ -9,7 +9,6 @@ import click
 from hermes.model.context import CodeMetaContext
 
 
-# TODO: Abstract base class?
 class BaseDepositPlugin:
     def __init__(self, click_ctx: click.Context, ctx: CodeMetaContext) -> None:
         self.click_ctx = click_ctx
