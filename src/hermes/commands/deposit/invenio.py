@@ -196,11 +196,14 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         self.invenio_context_path = ContextPath.parse(f"deposit.{self.platform_name}")
         self.invenio_ctx = None
 
-        auth_token = self.click_ctx.params.get("auth_token")
-        if auth_token is None:
-            raise DepositionUnauthorizedError("No auth token given for deposition platform")
+        if client is None:
+            auth_token = self.click_ctx.params.get("auth_token")
+            if auth_token is None:
+                raise DepositionUnauthorizedError("No auth token given for deposition platform")
+            self.client = self.invenio_client_class(auth_token=auth_token, platform_name=self.platform_name)
+        else:
+            self.client = client
 
-        self.client = client or self.invenio_client_class(auth_token=auth_token, platform_name=self.platform_name)
         self.resolver = resolver or self.invenio_resolver_class(self.client)
         self.config = config.get("deposit").get(self.platform_name, {})
         self.links = {}
