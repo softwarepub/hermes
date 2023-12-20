@@ -274,6 +274,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
         response = self.client.new_deposit()
         if not response.ok:
+            _log.error("Server answered with error code %d:\n%s", response.status_code, response.text)
             raise RuntimeError(f"Could not create initial deposit {response.url!r}")
 
         deposit = response.json()
@@ -288,6 +289,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         # Get current deposit
         response = self.client.get_deposit(latest_record_id)
         if not response.ok:
+            _log.error("Server answered with error code %d:\n%s", response.status_code, response.text)
             raise RuntimeError(f"Failed to get current deposit {response.url!r}")
 
         self.links.update(response.json()["links"])
@@ -296,6 +298,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         deposit_url = self.links["newversion"]
         response = self.client.post(deposit_url)
         if not response.ok:
+            _log.error("Server answered with error code %d:\n%s", response.status_code, response.text)
             raise RuntimeError(f"Could not create new version deposit {deposit_url!r}")
 
         # Store link to latest draft to be used in :func:`update_metadata`.
@@ -315,6 +318,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         )
 
         if not response.ok:
+            _log.error("Server answered with error code %d:\n%s", response.status_code, response.text)
             raise RuntimeError(f"Could not update metadata of draft {draft_url!r}")
 
         deposit = response.json()
@@ -356,6 +360,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
                     f"{bucket_url}/{path.name}", data=file_content,
                 )
                 if not response.ok:
+                    _log.error("Server answered with error code %d:\n%s", response.status_code, response.text)
                     raise RuntimeError(f"Could not upload file {path.name!r} into bucket {bucket_url!r}")
 
             # This can potentially be used to verify the checksum
@@ -367,7 +372,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         publish_url = self.links["publish"]
         response = self.client.post(publish_url)
         if not response.ok:
-            _log.debug(response.text)
+            _log.error("Server answered with error code %d:\n%s", response.status_code, response.text)
             raise RuntimeError(f"Could not publish deposit via {publish_url!r}")
 
         record = response.json()
