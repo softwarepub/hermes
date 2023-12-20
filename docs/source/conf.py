@@ -28,10 +28,9 @@ sys.path.insert(0, os.path.abspath('../../src'))
 
 project = 'HERMES Workflow'
 copyright = '2022, HERMES project'
-author = (
-    'Oliver Bertuch, Stephan Druskat, Guido Juckeland, Jeffrey Kelling, Oliver Knodel, '
-    'Michael Meinel, Tobias Schlauch'
-)
+author = 'Oliver Bertuch, Stephan Druskat, Guido Juckeland, Jeffrey Kelling, ' + \
+         'Oliver Knodel, Michael Meinel, Tobias Schlauch'
+
 
 # The full version, including alpha/beta/rc tags
 release = '2022-07-01'
