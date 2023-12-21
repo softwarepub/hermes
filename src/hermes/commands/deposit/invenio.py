@@ -183,6 +183,49 @@ class InvenioResolver:
         res_json = res.json()
         return res_json['id'], res_json['metadata']
 
+    def resolve_license_id(self, license_url: str) -> t.Optional[str]:
+        """Get Invenio license representation from CodeMeta.
+
+        The license to use is extracted from the ``license`` field in the
+        :class:`CodeMetaContext` and converted into an appropiate license identifier to be
+        passed to an Invenio instance.
+
+        A license according to CodeMeta may be a URL (text) or a CreativeWork. This function
+        only handles URLs. If a ``license`` field is present in the CodeMeta and it is not
+        of type :class:`str`, a :class:`RuntimeError` is raised.
+
+        Invenio instances take a license string which refers to a license identifier.
+        Typically, Invenio instances offer licenses from https://opendefinition.org and
+        https://spdx.org. However, it is possible to mint PIDs for custom licenses.
+
+        An API endpoint (usually ``/api/licenses``) can be used to check whether a given
+        license is supported by the Invenio instance. This function tries to retrieve the
+        license by the identifier at the end of the license URL path. If this identifier
+        does not exist on the Invenio instance, a :class:`RuntimeError` is raised. If no
+        license is given in the CodeMeta, ``None`` is returned.
+        """
+
+        if license_url is None:
+            return None
+
+        if not isinstance(license_url, str):
+            raise RuntimeError(
+                "The given license in CodeMeta must be of type str. "
+                "Licenses of type 'CreativeWork' are not supported."
+            )
+
+        parsed_url = urlparse(license_url)
+        url_path = parsed_url.path.rstrip("/")
+        license_id = url_path.split("/")[-1]
+
+        response = self.client.get_license(license_id)
+        if response.status_code == 404:
+            raise RuntimeError(f"Not a valid license identifier: {license_id}")
+        # Catch other problems
+        response.raise_for_status()
+
+        return response.json()["id"]
+
 
 class InvenioDepositPlugin(BaseDepositPlugin):
 
@@ -501,50 +544,13 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
         return deposition_metadata
 
-    def _get_license_identifier(self):
-        """Get Invenio license representation from CodeMeta.
+    def _get_license_identifier(self) -> t.Optional[str]:
+        """Get Invenio license identifier that matches the given license URL.
 
-        The license to use is extracted from the ``license`` field in the
-        :class:`CodeMetaContext` and converted into an appropiate license identifier to be
-        passed to an Invenio instance.
-
-        A license according to CodeMeta may be a URL (text) or a CreativeWork. This function
-        only handles URLs. If a ``license`` field is present in the CodeMeta and it is not
-        of type :class:`str`, a :class:`RuntimeError` is raised.
-
-        Invenio instances take a license string which refers to a license identifier.
-        Typically, Invenio instances offer licenses from https://opendefinition.org and
-        https://spdx.org. However, it is possible to mint PIDs for custom licenses.
-
-        An API endpoint (usually ``/api/licenses``) can be used to check whether a given
-        license is supported by the Invenio instance. This function tries to retrieve the
-        license by the identifier at the end of the license URL path. If this identifier
-        does not exist on the Invenio instance, a :class:`RuntimeError` is raised. If no
-        license is given in the CodeMeta, ``None`` is returned.
+        If no license is configured, ``None``  will be returned.
         """
-
         license_url = self.ctx["codemeta"].get("license")
-
-        if license_url is None:
-            return None
-
-        if not isinstance(license_url, str):
-            raise RuntimeError(
-                "The given license in CodeMeta must be of type str. "
-                "Licenses of type 'CreativeWork' are not supported."
-            )
-
-        parsed_url = urlparse(license_url)
-        url_path = parsed_url.path.rstrip("/")
-        license_id = url_path.split("/")[-1]
-
-        response = self.client.get_license(license_id)
-        if response.status_code == 404:
-            raise RuntimeError(f"Not a valid license identifier: {license_id}")
-        # Catch other problems
-        response.raise_for_status()
-
-        return response.json()["id"]
+        return self.resolver.resolve_license_id(license_url)
 
     def _get_community_identifiers(self):
         """Get Invenio community identifiers from config.
