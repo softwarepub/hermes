@@ -262,7 +262,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         - check whether we have a valid license identifier (if any)
         - check wether the communities are valid (if configured)
         - check access modalities (access right, access conditions, embargo data, existence
-        of license)
+          of license)
         - check whether required configuration options are present
         - update ``self.ctx`` with metadata collected during the checks
         """
@@ -434,9 +434,9 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
         .. code-block:: python
 
-        invenio_metadata = convert_codemeta.crosswalk(
-            metadata, "codemeta", "Zenodo"
-        )
+          invenio_metadata = convert_codemeta.crosswalk(
+              metadata, "codemeta", "Zenodo"
+          )
 
         Unfortunately, this doesn't work well with additional metadata in the same dict, so
         it is safer to provide our own implementation.
