@@ -106,7 +106,7 @@ class InvenioResolver:
 
     def resolve_latest_id(
         self, record_id=None, doi=None, codemeta_identifier=None
-    ) -> t.Tuple[str, dict]:
+    ) -> t.Tuple[t.Optional[str], dict]:
         """
         Using the given metadata parameters, figure out the latest record id.
 
