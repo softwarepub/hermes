@@ -86,45 +86,10 @@ git = "hermes.commands.process.git:process"
 git_add_contributors = "hermes.commands.process.git:add_contributors"
 git_add_branch = "hermes.commands.process.git:add_branch"
 
-[tool.poetry.plugins."hermes.deposit.prepare"]
-invenio = "hermes.commands.deposit.invenio:prepare"
-invenio_rdm = "hermes.commands.deposit.invenio_rdm:prepare"
-file = "hermes.commands.deposit.file:dummy_noop"
-
-[tool.poetry.plugins."hermes.deposit.map"]
-invenio = "hermes.commands.deposit.invenio:map_metadata"
-invenio_rdm = "hermes.commands.deposit.invenio_rdm:map_metadata"
-file = "hermes.commands.deposit.file:map_metadata"
-
-[tool.poetry.plugins."hermes.deposit.create_initial_version"]
-invenio = "hermes.commands.deposit.invenio:create_initial_version"
-invenio_rdm = "hermes.commands.deposit.invenio_rdm:create_initial_version"
-file = "hermes.commands.deposit.file:dummy_noop"
-
-[tool.poetry.plugins."hermes.deposit.create_new_version"]
-invenio = "hermes.commands.deposit.invenio:create_new_version"
-invenio_rdm = "hermes.commands.deposit.invenio_rdm:create_new_version"
-file = "hermes.commands.deposit.file:dummy_noop"
-
-[tool.poetry.plugins."hermes.deposit.update_metadata"]
-invenio = "hermes.commands.deposit.invenio:update_metadata"
-invenio_rdm = "hermes.commands.deposit.invenio_rdm:update_metadata"
-file = "hermes.commands.deposit.file:dummy_noop"
-
-[tool.poetry.plugins."hermes.deposit.delete_artifacts"]
-invenio = "hermes.commands.deposit.invenio:delete_artifacts"
-invenio_rdm = "hermes.commands.deposit.invenio_rdm:delete_artifacts"
-file = "hermes.commands.deposit.file:dummy_noop"
-
-[tool.poetry.plugins."hermes.deposit.upload_artifacts"]
-invenio = "hermes.commands.deposit.invenio:upload_artifacts"
-invenio_rdm = "hermes.commands.deposit.invenio_rdm:upload_artifacts"
-file = "hermes.commands.deposit.file:dummy_noop"
-
-[tool.poetry.plugins."hermes.deposit.publish"]
-invenio = "hermes.commands.deposit.invenio:publish"
-invenio_rdm = "hermes.commands.deposit.invenio_rdm:publish"
-file = "hermes.commands.deposit.file:publish"
+[tool.poetry.plugins."hermes.deposit"]
+file = "hermes.commands.deposit.file:FileDepositPlugin"
+invenio = "hermes.commands.deposit.invenio:InvenioDepositPlugin"
+invenio_rdm = "hermes.commands.deposit.invenio_rdm:IvenioRDMDepositPlugin"
 
 [tool.poetry.plugins."hermes.postprocess"]
 config_invenio_record_id = "hermes.commands.postprocess.invenio:config_record_id"

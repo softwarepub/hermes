@@ -13,7 +13,7 @@ target = "invenio_rdm"
 
 [deposit.invenio_rdm]
 site_url = "https://sandbox.zenodo.org"
-communities = ["zenodo"]
+communities = []
 access_right = "open"
 
 [deposit.invenio_rdm.api_paths]
