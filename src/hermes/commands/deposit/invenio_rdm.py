@@ -8,6 +8,8 @@
 
 import typing as t
 
+from requests import HTTPError
+
 from hermes.commands.deposit.invenio import (
     InvenioClient,
     InvenioDepositPlugin,
@@ -46,7 +48,7 @@ class InvenioRDMResolver(InvenioResolver):
         # First try to resolve using the simple way that worked well with Zenodo before InvenioRDM
         try:
             return super().resolve_license_id(license_url)
-        except:
+        except HTTPError:
             pass
 
         # If the easy "mapping" did not work, we really need to "search" for the correct license ID.
