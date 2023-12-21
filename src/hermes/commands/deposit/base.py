@@ -1,15 +1,15 @@
 # SPDX-FileCopyrightText: 2023 Helmholtz-Zentrum Dresden-Rossendorf (HZDR)
 #
 # SPDX-License-Identifier: Apache-2.0
-
 # SPDX-FileContributor: David Pape
+import abc
 
 import click
 
 from hermes.model.context import CodeMetaContext
 
 
-class BaseDepositPlugin:
+class BaseDepositPlugin(abc.ABC):
     def __init__(self, click_ctx: click.Context, ctx: CodeMetaContext) -> None:
         self.click_ctx = click_ctx
         self.ctx = ctx
@@ -41,6 +41,7 @@ class BaseDepositPlugin:
         """
         pass
 
+    @abc.abstractmethod
     def map_metadata(self) -> None:
         """Map the given metadata to the target schema of the deposition platform."""
         pass
@@ -56,14 +57,17 @@ class BaseDepositPlugin:
         """
         return True
 
+    @abc.abstractmethod
     def create_initial_version(self) -> None:
         """Create an initial version of the publication on the target platform."""
         pass
 
+    @abc.abstractmethod
     def create_new_version(self) -> None:
         """Create a new version of an existing publication on the target platform."""
         pass
 
+    @abc.abstractmethod
     def update_metadata(self) -> None:
         """Update the metadata of the newly created version."""
         pass
@@ -76,6 +80,7 @@ class BaseDepositPlugin:
         """Upload new artifacts to the target platform."""
         pass
 
+    @abc.abstractmethod
     def publish(self) -> None:
         """Publish the newly created deposit on the target platform."""
         pass
