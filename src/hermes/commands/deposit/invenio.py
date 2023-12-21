@@ -183,7 +183,7 @@ class InvenioResolver:
         res_json = res.json()
         return res_json['id'], res_json['metadata']
 
-    def resolve_license_id(self, license_url: str) -> t.Optional[str]:
+    def resolve_license_id(self, license_url: t.Optional[str]) -> t.Optional[str]:
         """Get Invenio license representation from CodeMeta.
 
         The license to use is extracted from the ``license`` field in the
