@@ -51,9 +51,12 @@ class InvenioClient(requests.Session):
         if self.site_url is None:
             raise MisconfigurationError(f"deposit.{self.platform_name}.site_url is not configured")
 
-    # Override request method to automatically set Authorization header for all requests
-    # to the configured site.
     def request(self, method, url, headers=None, **kwargs) -> requests.Response:
+        """Overridden request method to automatically set Authorization header for all requests to the configured site.
+
+        See [requests documentation](https://requests.readthedocs.io/en/latest/api.html#requests.request) for details.
+        """
+
         if self.auth_token:
             if urlparse(self.site_url).hostname == urlparse(url).hostname:
                 headers = (headers or {}) | {"Authorization": f"Bearer {self.auth_token}"}
