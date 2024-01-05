@@ -43,7 +43,7 @@ class InvenioClient(requests.Session):
         if platform_name is not None:
             self.platform_name = platform_name
 
-        self.config = config.get("deposit").get(self.platform_name, {})
+        self.config = config.deposit.get(self.platform_name, {})
         self.headers.update({"User-Agent": hermes_user_agent})
 
         self.auth_token = auth_token
@@ -251,7 +251,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
             self.client = client
 
         self.resolver = resolver or self.invenio_resolver_class(self.client)
-        self.config = config.get("deposit").get(self.platform_name, {})
+        self.config = config.deposit.get(self.platform_name, {})
         self.links = {}
 
     # TODO: Populate some data structure here? Or move more of this into __init__?

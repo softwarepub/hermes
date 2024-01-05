@@ -17,7 +17,7 @@ class FileDepositPlugin(BaseDepositPlugin):
         self.ctx.update(ContextPath.parse('deposit.file'), self.ctx['codemeta'])
 
     def publish(self) -> None:
-        file_config = config.get("deposit").get("file", {})
+        file_config = config.deposit.get("file", {})
         output_data = self.ctx['deposit.file']
 
         with open(file_config.get('filename', 'hermes.json'), 'w') as deposition_file:

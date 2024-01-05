@@ -61,11 +61,23 @@ class HermesSettings(BaseSettings):
             env_settings,
             file_secret_settings,
         )
+    def __call__(self) -> Dict[str, Any]:
+        d: Dict[str, Any] = {}
+        for field_name, field in self.settings_cls.model_fields.items():
+            field_value, field_key, value_is_complex = self.get_field_value(
+                field, field_name
+            )
+            field_value = self.prepare_field_value(
+                field_name, field, field_value, value_is_complex
+            )
+            if field_value is not None:
+                d[field_key] = field_value
 
-    def __getattr__(self, item):
+        return d
+    def __getattr__(self, item, *args):
         self.__pydantic_extra__ = {item: {}}
-        return item
-
+        print(args)
+        return {}
 
 class TomlConfigSettingsSource(PydanticBaseSettingsSource):
     """

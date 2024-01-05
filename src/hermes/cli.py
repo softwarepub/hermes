@@ -8,16 +8,19 @@
 """
 This module provides the main entry point for the HERMES command line application.
 """
+import sys
 import logging
 import typing as t
 import pathlib
 from importlib import metadata
+from pydantic import ValidationError
 
 import click
 
 from hermes import config
 from hermes.commands import workflow
 from hermes.config import configure, init_logging
+from hermes.settings import HermesSettings
 
 
 def log_header(header, summary=None):
@@ -86,8 +89,19 @@ class WorkflowCommand(click.Group):
 
         # Get the user provided working dir from the --path option or default to current working directory.
         working_path = ctx.params.get('path').absolute()
-
-        configure(ctx.params.get('config').absolute(), working_path)
+        config_path = ctx.params.get('config').absolute()
+        try:
+            with open(config_path, 'r') as config_file:
+                settings = HermesSettings(config_path)
+        except ValidationError as e:
+            print(e, file=sys.stderr)
+            sys.exit(1)
+        except FileNotFoundError:
+            if config_path.name != 'hermes.toml':
+                # An explicit filename (different from default) was given, so the file should be available...
+                print(f"Configuration not present at {config_path}.", file=sys.stderr)
+                sys.exit(1)
+        configure(settings, working_path)
         init_logging()
         log_header(None)
 
