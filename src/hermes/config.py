@@ -81,11 +81,10 @@ def configure(config_path: pathlib.Path, working_path: pathlib.Path):
     # Load configuration if not present
     try:
         with open(config_path, 'r') as config_file:
-            hermes_config = toml.load(config_file)
-            HermesSettings().model_validate(hermes_config)
+            settings = HermesSettings(config_path)
 
-            _config['hermes'] = hermes_config
-            _config['logging'] = hermes_config.get('logging', _config['logging'])
+            _config['hermes'] = settings
+            _config['logging'] = settings.get('logging', _config['logging'])
     except ValidationError as e:
         print(e, file=sys.stderr)
         sys.exit(1)
