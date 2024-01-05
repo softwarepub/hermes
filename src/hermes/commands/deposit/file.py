@@ -23,7 +23,7 @@ def map_metadata(click_ctx: click.Context, ctx: CodeMetaContext):
 
 
 def publish(click_ctx: click.Context, ctx: CodeMetaContext):
-    file_config = config.get("deposit").get("file", {})
+    file_config = config.deposit.get("file", {})
     output_data = ctx['deposit.file']
 
     with open(file_config.get('filename', 'hermes.json'), 'w') as deposition_file:

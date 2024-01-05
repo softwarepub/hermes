@@ -6,13 +6,9 @@
 
 import logging
 import pathlib
-import sys
 
-import toml
-from pydantic import ValidationError
-
+import hermes.settings
 from hermes.model.context import HermesContext
-from hermes.settings import HermesSettings
 
 # This is the default logging configuration, required to see log output at all.
 #  - Maybe it could possibly somehow be a somewhat good idea to move this into an own module ... later perhaps
@@ -63,7 +59,7 @@ _config = {
 }
 
 
-def configure(config_path: pathlib.Path, working_path: pathlib.Path):
+def configure(settings: hermes.settings.HermesSettings, working_path: pathlib.Path):
     """
     Load the configuration from the given path as global hermes configuration.
 
@@ -78,53 +74,8 @@ def configure(config_path: pathlib.Path, working_path: pathlib.Path):
     _config['logging']['handlers']['auditfile']['filename'] = \
         working_path / HermesContext.hermes_cache_name / "audit.log"
 
-    # Load configuration if not present
-    try:
-        with open(config_path, 'r') as config_file:
-            settings = HermesSettings(config_path)
-
-            _config['hermes'] = settings
-            _config['logging'] = settings.get('logging', _config['logging'])
-    except ValidationError as e:
-        print(e, file=sys.stderr)
-        sys.exit(1)
-    except FileNotFoundError:
-        if config_path.name != 'hermes.toml':
-            # An explicit filename (different from default) was given, so the file should be available...
-            print(f"Configuration not present at {config_path}.", file=sys.stderr)
-            sys.exit(1)
-
-
-def get(name: str) -> dict:
-    """
-    Retrieve the configuration dict for a certain sub-system (i.e., a section from the config file).
-
-    The returned dict comes directly from the cache.
-    I.e., it is possible to do the following *stunt* to inject default values:
-
-    .. code: python
-
-        my_config = config.get('my-config')
-        my_config.update({ 'default': 'values' })
-
-    :param name: The section to retrieve.
-    :return: The loaded configuration data or an empty dictionary.
-    """
-
-    if name not in _config:
-        # If configuration is not present, create it.
-        if 'hermes' not in _config:
-            _config['hermes'] = {}
-        if name not in _config['hermes']:
-            _config['hermes'][name] = {}
-        _config[name] = _config['hermes'][name]
-
-    elif name != 'hermes' and _config['hermes'][name] is not _config[name]:
-        # If a configuration was loaded, after the defaults were set, update it.
-        _config[name].update(_config['hermes'].get('name', {}))
-
-    return _config.get(name)
-
+    _config['hermes'] = settings
+    _config['logging'] = settings.get('logging', _config['logging'])  # TODO:  'dict' object is not callable
 
 # Might be a good idea to move somewhere else (see comment for _logging_config)?
 _loggers = {}

@@ -39,7 +39,7 @@ def harvest(click_ctx: click.Context):
     ctx.init_cache("harvest")
 
     # Get all harvesters
-    harvest_config = config.get("harvest")
+    harvest_config = config.harvest
     harvester_names = harvest_config.get('from', [ep.name for ep in metadata.entry_points(group='hermes.harvest')])
 
     for harvester_name in harvester_names:
@@ -82,7 +82,7 @@ def process(click_ctx: click.Context):
         click_ctx.exit(1)
 
     # Get all harvesters
-    harvest_config = config.get("harvest")
+    harvest_config = config.harvest
     harvester_names = harvest_config.get('from', [ep.name for ep in metadata.entry_points(group='hermes.harvest')])
 
     for harvester_name in harvester_names:
@@ -187,7 +187,7 @@ def deposit(click_ctx: click.Context, initial, auth_token, file):
     with open(codemeta_file) as codemeta_fh:
         ctx.update(codemeta_path, json.load(codemeta_fh))
 
-    deposit_config = config.get("deposit")
+    deposit_config = config.deposit
 
     # This is used as the default value for all entry point names for the deposit step
     target_platform = deposit_config.get("target", "invenio")
@@ -268,7 +268,7 @@ def postprocess(click_ctx: click.Context):
         click_ctx.exit(1)
 
     # Get all postprocessors
-    postprocess_config = config.get("postprocess")
+    postprocess_config = config.postprocess
     postprocess_names = postprocess_config.get('execute', [])
 
     for postprocess_name in postprocess_names:

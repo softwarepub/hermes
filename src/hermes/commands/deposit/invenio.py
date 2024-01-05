@@ -48,7 +48,7 @@ def prepare(click_ctx: click.Context, ctx: CodeMetaContext):
         raise DepositionUnauthorizedError("No auth token given for deposition platform")
 
     invenio_path = ContextPath.parse("deposit.invenio")
-    invenio_config = config.get("deposit").get("invenio", {})
+    invenio_config = config.deposit.get("invenio", {})
     rec_id, rec_meta = _resolve_latest_invenio_id(ctx)
 
     version = ctx["codemeta"].get("version")
@@ -115,7 +115,7 @@ def create_initial_version(click_ctx: click.Context, ctx: CodeMetaContext):
 
     _log = logging.getLogger("cli.deposit.invenio")
 
-    invenio_config = config.get("deposit").get("invenio", {})
+    invenio_config = config.deposit.get("invenio", {})
     site_url = invenio_config["site_url"]
     depositions_api_path = invenio_config.get("api_paths", {}).get(
         "depositions", _DEFAULT_DEPOSITIONS_API_PATH
@@ -167,7 +167,7 @@ def create_new_version(click_ctx: click.Context, ctx: CodeMetaContext):
         "Authorization": f"Bearer {click_ctx.params['auth_token']}",
     }
 
-    invenio_config = config.get("deposit").get("invenio", {})
+    invenio_config = config.deposit.get("invenio", {})
     site_url = invenio_config["site_url"]
     depositions_api_path = invenio_config.get("api_paths", {}).get(
         "depositions", _DEFAULT_DEPOSITIONS_API_PATH
@@ -322,7 +322,7 @@ def _resolve_latest_invenio_id(ctx: CodeMetaContext) -> t.Tuple[str, dict]:
     :return: The Invenio record id and the metadata of the record
     """
 
-    invenio_config = config.get('deposit').get('invenio', {})
+    invenio_config = config.deposit.get('invenio', {})
     site_url = invenio_config.get('site_url')
     if site_url is None:
         raise MisconfigurationError("deposit.invenio.site_url is not configured")
@@ -575,7 +575,7 @@ def _get_community_identifiers(ctx: CodeMetaContext, communities_api_url: str):
     raised.
     """
 
-    communities = config.get("deposit").get("invenio", {}).get("communities")
+    communities = config.deposit.get("invenio", {}).get("communities")
     if communities is None:
         return None
 
@@ -612,7 +612,7 @@ def _get_access_modalities(license):
     This function also makes sure that the given embargo date can be parsed as an ISO
     8601 string representation and that the access rights are given as a string.
     """
-    invenio_config = config.get("deposit").get("invenio", {})
+    invenio_config = config.deposit.get("invenio", {})
 
     access_right = invenio_config.get("access_right")
     if access_right is None:
