@@ -29,14 +29,8 @@ jobs:
       run: >-
         python3 -m
         pip install
-        build toml-cli
+        build
         --user
-    - name: Reset package name and version for dev snaps
-      if: github.ref_name == 'develop'
-      run: |
-        toml set --toml-path pyproject.toml tool.poetry.name hermes-test
-        VERSION=$(toml get --toml-path pyproject.toml tool.poetry.version)
-        toml set --toml-path pyproject.toml tool.poetry.version "$VERSION.dev${{ github.run_number }}"
     - name: Build a binary wheel and a source tarball
       run: python3 -m build
     - name: Store the distribution packages
@@ -109,27 +103,3 @@ jobs:
         gh release upload
         '${{ github.ref_name }}' dist/**
         --repo '${{ github.repository }}'
-
-  publish-to-testpypi:
-    name: Publish Python 🐍 distribution 📦 to TestPyPI
-    needs:
-      - build
-    runs-on: ubuntu-latest
-
-    environment:
-      name: testpypi
-      url: https://test.pypi.org/p/hermes-test
-
-    permissions:
-      id-token: write  # IMPORTANT: mandatory for trusted publishing
-
-    steps:
-    - name: Download all the dists
-      uses: actions/download-artifact@v3
-      with:
-        name: python-package-distributions
-        path: dist/
-    - name: Publish distribution 📦 to TestPyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        repository-url: https://test.pypi.org/legacy/
