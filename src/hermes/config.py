@@ -75,7 +75,8 @@ def configure(settings: hermes.settings.HermesSettings, working_path: pathlib.Pa
         working_path / HermesContext.hermes_cache_name / "audit.log"
 
     _config['hermes'] = settings
-    _config['logging'] = settings.get('logging', _config['logging'])  # TODO:  'dict' object is not callable
+    print(_config['logging'], settings.harvest.sources)
+    _config['logging'] = settings.logging if settings.logging != {} else _config['logging']  # TODO:  'dict' object is not callable
 
 # Might be a good idea to move somewhere else (see comment for _logging_config)?
 _loggers = {}

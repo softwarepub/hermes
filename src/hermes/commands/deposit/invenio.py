@@ -43,11 +43,11 @@ class InvenioClient(requests.Session):
         if platform_name is not None:
             self.platform_name = platform_name
 
-        self.config = config.deposit.get(self.platform_name, {})
+        self.config = getattr(config.deposit, self.platform_name)
         self.headers.update({"User-Agent": hermes_user_agent})
 
         self.auth_token = auth_token
-        self.site_url = self.config.get("site_url")
+        self.site_url = self.config.site_url
         if self.site_url is None:
             raise MisconfigurationError(f"deposit.{self.platform_name}.site_url is not configured")
 
@@ -81,7 +81,7 @@ class InvenioClient(requests.Session):
 
     @property
     def api_paths(self):
-        return self.config.get("api_paths", {})
+        return self.config.api_paths
 
     @property
     def licenses_api_path(self):
@@ -251,7 +251,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
             self.client = client
 
         self.resolver = resolver or self.invenio_resolver_class(self.client)
-        self.config = config.deposit.get(self.platform_name, {})
+        self.config = getattr(config.deposit, self.platform_name)
         self.links = {}
 
     # TODO: Populate some data structure here? Or move more of this into __init__?
@@ -270,8 +270,8 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         - update ``self.ctx`` with metadata collected during the checks
         """
 
-        rec_id = self.config.get('record_id')
-        doi = self.config.get('doi')
+        rec_id = self.config.record_id
+        doi = self.config.doi
 
         try:
             codemeta_identifier = self.ctx["codemeta.identifier"]
@@ -607,7 +607,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
                 f"{', '.join(access_right_options)}"
             )
 
-        embargo_date = self.config.get("embargo_date")
+        embargo_date = self.config.embargo_date
         if access_right == "embargoed" and embargo_date is None:
             raise MisconfigurationError(
                 f"With access_right {access_right}, "
@@ -623,7 +623,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
                     "Must be in ISO 8601 format."
                 )
 
-        access_conditions = self.config.get("access_conditions")
+        access_conditions = self.config.access_conditions
         if access_right == "restricted" and access_conditions is None:
             raise MisconfigurationError(
                 f"With access_right {access_right}, "

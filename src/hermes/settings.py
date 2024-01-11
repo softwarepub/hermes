@@ -21,17 +21,34 @@ class HarvestSettings(BaseModel):
     sources: list[str]
     cff: HarvestCff = HarvestCff
 
+    harvester: Dict = {}
+
 
 class DepositTargetSettings(BaseModel):
     site_url: str
     communities: list[str] = None
     access_right: str
+    embargo_date: str = None
+    access_conditions: str = None
+    api_paths: Dict = {}
+
+    record_id: int
+    doi: str
 
 
 class DepositSettings(BaseModel):
     target: str
     invenio: DepositTargetSettings = DepositTargetSettings
     invenio_rdm: DepositTargetSettings = DepositTargetSettings
+
+    file: Dict = {}
+
+    def __getattr__(self, item):
+        self.__pydantic_extra__ = {item: {}}
+
+
+class PostprocessSettings(BaseModel):
+    execute: list = []
 
 
 class HermesSettings(BaseSettings):
@@ -40,6 +57,14 @@ class HermesSettings(BaseSettings):
 
     harvest: HarvestSettings = HarvestSettings
     deposit: DepositSettings = DepositSettings
+    postprocess: PostprocessSettings = PostprocessSettings()
+
+    hermes: Dict = {}
+    file: Dict = {}
+    filename: pathlib.Path = "hermes.toml"
+    cff_validate: bool = True
+    logging: Dict = {}
+    site_url: str = None
     config_path: ClassVar[pathlib.Path] = "hermes.toml" #TODO : Set config Path in cli
 
     def __init__(self, conf_path):
