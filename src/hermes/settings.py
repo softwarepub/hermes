@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 import toml
 import pathlib
 from typing import Any, Dict, Tuple, Type, ClassVar
@@ -20,20 +20,22 @@ class HarvestCff(BaseModel):
 class HarvestSettings(BaseModel):
     sources: list[str]
     cff: HarvestCff = HarvestCff
+    cff_validate: bool = True
 
     harvester: Dict = {}
 
 
 class DepositTargetSettings(BaseModel):
-    site_url: str
+    site_url: str = ""
+
     communities: list[str] = None
     access_right: str
     embargo_date: str = None
     access_conditions: str = None
     api_paths: Dict = {}
 
-    record_id: int
-    doi: str
+    record_id: int = None
+    doi: str = None
 
 
 class DepositSettings(BaseModel):
@@ -62,9 +64,13 @@ class HermesSettings(BaseSettings):
     hermes: Dict = {}
     file: Dict = {}
     filename: pathlib.Path = "hermes.toml"
-    cff_validate: bool = True
     logging: Dict = {}
-    site_url: str = None
+    site_url: str = ""
+    @field_validator("site_url")
+    def none_to_empty(cls, v: object) -> object:
+        if v is None:
+            return ""
+        return v
     config_path: ClassVar[pathlib.Path] = "hermes.toml" #TODO : Set config Path in cli
 
     def __init__(self, conf_path):

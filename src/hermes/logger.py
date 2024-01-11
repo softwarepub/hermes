@@ -10,6 +10,7 @@ import pathlib
 import hermes.settings
 from hermes.model.context import HermesContext
 
+config = None
 # This is the default logging configuration, required to see log output at all.
 #  - Maybe it could possibly somehow be a somewhat good idea to move this into an own module ... later perhaps
 _logging_config = {
@@ -75,12 +76,13 @@ def configure(settings: hermes.settings.HermesSettings, working_path: pathlib.Pa
         working_path / HermesContext.hermes_cache_name / "audit.log"
 
     _config['hermes'] = settings
-    print(_config['logging'], settings.harvest.sources)
+    global config
+    config = settings
+    print(config)
     _config['logging'] = settings.logging if settings.logging != {} else _config['logging']  # TODO:  'dict' object is not callable
 
 # Might be a good idea to move somewhere else (see comment for _logging_config)?
 _loggers = {}
-
 
 def init_logging():
     if _loggers:

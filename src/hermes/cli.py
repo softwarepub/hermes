@@ -17,14 +17,15 @@ from pydantic import ValidationError
 
 import click
 
-from hermes import config
+import hermes.logger as logger
 from hermes.commands import workflow
-from hermes.config import configure, init_logging
+from hermes.logger import configure, init_logging
 from hermes.settings import HermesSettings
 
 
+
 def log_header(header, summary=None):
-    _log = config.getLogger('cli')
+    _log = logger.getLogger('cli')
 
     dist = metadata.distribution('hermes')
     meta = dist.metadata
@@ -92,7 +93,7 @@ class WorkflowCommand(click.Group):
         config_path = ctx.params.get('config').absolute()
         try:
             with open(config_path, 'r') as config_file:
-                settings = HermesSettings(config_path)
+                config = HermesSettings(config_path)
         except ValidationError as e:
             print(e, file=sys.stderr)
             sys.exit(1)
@@ -101,7 +102,7 @@ class WorkflowCommand(click.Group):
                 # An explicit filename (different from default) was given, so the file should be available...
                 print(f"Configuration not present at {config_path}.", file=sys.stderr)
                 sys.exit(1)
-        configure(settings, working_path)
+        configure(config, working_path)
         init_logging()
         log_header(None)
 

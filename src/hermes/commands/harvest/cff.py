@@ -59,6 +59,7 @@ def harvest_cff(click_ctx: click.Context, ctx: HermesHarvestContext):
 
     # Validate the content to be correct CFF
     cff_dict = _load_cff_from_file(cff_data)
+    print(ctx, "\n***\n",ctx.config)
     if ctx.config.cff_validate and not _validate(cff_file, cff_dict):
         raise HermesValidationError(cff_file)
 
