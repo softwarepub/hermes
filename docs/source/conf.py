@@ -130,7 +130,7 @@ html_context = {
 # -- Options for OpenGraph Tags ----------------------------------------------
 
 ogp_site_url = "https://docs.software-metadata.pub/"
-ogp_image = "https://docs.software-metadata.pub/_static/img/opengraph-workflow.png"
+ogp_image = "https://docs.software-metadata.pub/en/latest/_static/img/opengraph-workflow.png"
 ogp_image_alt = "The HERMES key visual on a blue background with pipelines and the Workflow subproject title"
 ogp_description_length = 200
 ogp_type = "website"
