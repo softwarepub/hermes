@@ -62,19 +62,18 @@ requests-mock = "^1.10.0"
 optional = true
 
 [tool.poetry.group.docs.dependencies]
-Sphinx = "^4.5.0"
+Sphinx = "^6.2.1"
 # Sphinx - Additional modules
-myst-parser = "^0.18.0"
-sphinx-book-theme = "^0.3.3"
+myst-parser = "^2.0.0"
+sphinx-book-theme = "^1.0.1"
 sphinx-favicon = "^0.2"
 sphinxcontrib-contentui = "^0.2.5"
 sphinxcontrib-images = "^0.9.4"
 sphinx-icon = "^0.1.2"
 sphinx-autobuild = "^2021.3.14"
-sphinx-autoapi = "^2.0.0"
+sphinx-autoapi = "^3.0.0"
 sphinxemoji = "^0.2.0"
 sphinxext-opengraph = "^0.6.3"
-sphinx-click = "^4.4.0"
 sphinxcontrib-mermaid="^0.8.1"
 sphinx-togglebutton="^0.3.2"
 reuse = "^1.1.2"
@@ -94,45 +93,10 @@ git = "hermes.commands.process.git:process"
 git_add_contributors = "hermes.commands.process.git:add_contributors"
 git_add_branch = "hermes.commands.process.git:add_branch"
 
-[tool.poetry.plugins."hermes.deposit.prepare"]
-invenio = "hermes.commands.deposit.invenio:prepare"
-invenio_rdm = "hermes.commands.deposit.invenio_rdm:prepare"
-file = "hermes.commands.deposit.file:dummy_noop"
-
-[tool.poetry.plugins."hermes.deposit.map"]
-invenio = "hermes.commands.deposit.invenio:map_metadata"
-invenio_rdm = "hermes.commands.deposit.invenio_rdm:map_metadata"
-file = "hermes.commands.deposit.file:map_metadata"
-
-[tool.poetry.plugins."hermes.deposit.create_initial_version"]
-invenio = "hermes.commands.deposit.invenio:create_initial_version"
-invenio_rdm = "hermes.commands.deposit.invenio_rdm:create_initial_version"
-file = "hermes.commands.deposit.file:dummy_noop"
-
-[tool.poetry.plugins."hermes.deposit.create_new_version"]
-invenio = "hermes.commands.deposit.invenio:create_new_version"
-invenio_rdm = "hermes.commands.deposit.invenio_rdm:create_new_version"
-file = "hermes.commands.deposit.file:dummy_noop"
-
-[tool.poetry.plugins."hermes.deposit.update_metadata"]
-invenio = "hermes.commands.deposit.invenio:update_metadata"
-invenio_rdm = "hermes.commands.deposit.invenio_rdm:update_metadata"
-file = "hermes.commands.deposit.file:dummy_noop"
-
-[tool.poetry.plugins."hermes.deposit.delete_artifacts"]
-invenio = "hermes.commands.deposit.invenio:delete_artifacts"
-invenio_rdm = "hermes.commands.deposit.invenio_rdm:delete_artifacts"
-file = "hermes.commands.deposit.file:dummy_noop"
-
-[tool.poetry.plugins."hermes.deposit.upload_artifacts"]
-invenio = "hermes.commands.deposit.invenio:upload_artifacts"
-invenio_rdm = "hermes.commands.deposit.invenio_rdm:upload_artifacts"
-file = "hermes.commands.deposit.file:dummy_noop"
-
-[tool.poetry.plugins."hermes.deposit.publish"]
-invenio = "hermes.commands.deposit.invenio:publish"
-invenio_rdm = "hermes.commands.deposit.invenio_rdm:publish"
-file = "hermes.commands.deposit.file:publish"
+[tool.poetry.plugins."hermes.deposit"]
+file = "hermes.commands.deposit.file:FileDepositPlugin"
+invenio = "hermes.commands.deposit.invenio:InvenioDepositPlugin"
+invenio_rdm = "hermes.commands.deposit.invenio_rdm:IvenioRDMDepositPlugin"
 
 [tool.poetry.plugins."hermes.postprocess"]
 config_invenio_record_id = "hermes.commands.postprocess.invenio:config_record_id"
