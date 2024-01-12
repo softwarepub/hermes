@@ -79,10 +79,13 @@ def configure(settings: hermes.settings.HermesSettings, working_path: pathlib.Pa
     global config
     config = settings
     print(config)
-    _config['logging'] = settings.logging if settings.logging != {} else _config['logging']  # TODO:  'dict' object is not callable
+    _config['logging'] = settings.logging if settings.logging != {} else _config['logging']
 
 # Might be a good idea to move somewhere else (see comment for _logging_config)?
+
+
 _loggers = {}
+
 
 def init_logging():
     if _loggers:

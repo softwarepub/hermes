@@ -16,7 +16,7 @@ from urllib.parse import urlparse
 import click
 import requests
 
-from hermes import logger
+import hermes.logger as logger
 from hermes.commands.deposit.base import BaseDepositPlugin
 from hermes.commands.deposit.error import DepositionUnauthorizedError
 from hermes.error import MisconfigurationError
@@ -43,7 +43,7 @@ class InvenioClient(requests.Session):
         if platform_name is not None:
             self.platform_name = platform_name
 
-        self.config = getattr(config.deposit, self.platform_name)
+        self.config = getattr(logger.config.deposit, self.platform_name)
         self.headers.update({"User-Agent": hermes_user_agent})
 
         self.auth_token = auth_token
@@ -251,7 +251,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
             self.client = client
 
         self.resolver = resolver or self.invenio_resolver_class(self.client)
-        self.config = getattr(config.deposit, self.platform_name)
+        self.config = getattr(logger.config.deposit, self.platform_name)
         self.links = {}
 
     # TODO: Populate some data structure here? Or move more of this into __init__?

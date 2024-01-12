@@ -23,7 +23,6 @@ from hermes.logger import configure, init_logging
 from hermes.settings import HermesSettings
 
 
-
 def log_header(header, summary=None):
     _log = logger.getLogger('cli')
 
@@ -92,7 +91,7 @@ class WorkflowCommand(click.Group):
         working_path = ctx.params.get('path').absolute()
         config_path = ctx.params.get('config').absolute()
         try:
-            with open(config_path, 'r') as config_file:
+            with open(config_path, 'r'):
                 config = HermesSettings(config_path)
         except ValidationError as e:
             print(e, file=sys.stderr)
