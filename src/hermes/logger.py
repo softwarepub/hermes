@@ -78,7 +78,6 @@ def configure(settings: hermes.settings.HermesSettings, working_path: pathlib.Pa
     _config['hermes'] = settings
     global config
     config = settings
-    print(config)
     _config['logging'] = settings.logging if settings.logging != {} else _config['logging']
 
 # Might be a good idea to move somewhere else (see comment for _logging_config)?

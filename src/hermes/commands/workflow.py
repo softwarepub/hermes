@@ -57,7 +57,7 @@ def harvest(click_ctx: click.Context):
         _log.debug(". Loading harvester from %s", harvester.value)
         harvest = harvester.load()
 
-        with HermesHarvestContext(ctx, harvester, harvest_config.harvester) as harvest_ctx:
+        with HermesHarvestContext(ctx, harvester, harvest_config) as harvest_ctx:
             harvest(click_ctx, harvest_ctx)
             for _key, ((_value, _tag), *_trace) in harvest_ctx._data.items():
                 if any(v != _value and t == _tag for v, t in _trace):

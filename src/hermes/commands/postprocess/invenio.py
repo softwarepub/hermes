@@ -23,7 +23,7 @@ def config_record_id(ctx):
         deposition = json.load(deposition_file)
     conf = logger.config.hermes
     try:
-        conf['deposit']['invenio']['record_id'] = deposition['record_id']
+        conf.deposit.invenio.record_id = deposition['record_id']
         toml.dump(conf, open('hermes.toml', 'w'))
     except KeyError:
         raise RuntimeError("No deposit.invenio configuration available to store record id in") from None

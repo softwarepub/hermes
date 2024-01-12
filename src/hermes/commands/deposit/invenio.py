@@ -564,7 +564,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         raised.
         """
 
-        communities = self.config.get("communities")
+        communities = self.config.communities
         if communities is None:
             return None
 
@@ -596,7 +596,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         This function also makes sure that the given embargo date can be parsed as an ISO
         8601 string representation and that the access rights are given as a string.
         """
-        access_right = self.config.get("access_right")
+        access_right = self.config.access_right
         if access_right is None:
             raise MisconfigurationError(f"deposit.{self.platform_name}.access_right is not configured")
 

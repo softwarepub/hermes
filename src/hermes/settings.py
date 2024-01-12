@@ -35,7 +35,7 @@ class DepositTargetSettings(BaseModel):
     site_url: str = ""
 
     communities: list[str] = None
-    access_right: str
+    access_right: str = None
     embargo_date: str = None
     access_conditions: str = None
     api_paths: Dict = {}
