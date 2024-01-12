@@ -1,3 +1,9 @@
+# SPDX-FileCopyrightText: 2024 German Aerospace Center (DLR)
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# SPDX-FileContributor: Sophie Kernchen
+
 from pydantic import BaseModel, field_validator
 import toml
 import pathlib
