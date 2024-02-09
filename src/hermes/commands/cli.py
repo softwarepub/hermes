@@ -91,7 +91,7 @@ def main(*args, **kwargs) -> None:
 
     # Arguments
     parser.add_argument(
-        "--path", default=pathlib.Path("./"), help="Working path", type=pathlib.Path
+        "--path", default=pathlib.Path("../"), help="Working path", type=pathlib.Path
     )
     parser.add_argument(
         "--config",

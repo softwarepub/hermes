@@ -4,13 +4,10 @@
 
 # SPDX-FileContributor: Michael Meinel
 
-import pathlib
-from unittest import mock
 import pytest
 
-from hermes import cli
+from hermes.commands import cli
 from hermes.commands.deposit.error import DepositionUnauthorizedError
-from hermes_test.mocks import mock_command
 
 
 def test_hermes_full(capsys):
