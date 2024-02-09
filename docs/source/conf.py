@@ -27,13 +27,13 @@ sys.path.insert(0, os.path.abspath('../../src'))
 # -- Project information -----------------------------------------------------
 
 project = 'HERMES Workflow'
-copyright = '2022, HERMES project'
+copyright = '2024, HERMES project'
 author = 'Oliver Bertuch, Stephan Druskat, Guido Juckeland, Jeffrey Kelling, ' + \
          'Oliver Knodel, Michael Meinel, Tobias Schlauch, Sophie Kernchen'
 
 
 # The full version, including alpha/beta/rc tags
-release = '2022-07-01'
+release = '2024-01-11'
 
 
 # -- General configuration ---------------------------------------------------
@@ -58,7 +58,6 @@ extensions = [
     "sphinxext.opengraph",
     'myst_parser',
     'autoapi.extension',
-    'sphinx_click',
     'sphinxcontrib.mermaid',
     'sphinx_togglebutton',
 ]
@@ -103,11 +102,11 @@ html_theme = 'sphinx_book_theme'
 html_static_path = ['_static']
 
 html_logo = '_static/img/hermes-visual-blue.svg'
-html_title = 'Workflow Docs'
+html_title = 'HERMES Documentation'
 
 # Custom sidebar templates, maps document names to template names.
 html_sidebars = {
-    "**": ["sidebar-logo.html", "sbt-sidebar-nav.html"]
+    "**": ["navbar-logo.html", "sbt-sidebar-nav.html", "funding.html"]
 }
 
 # Enable and customize the permanent headerlinks with a nice icon (chain symbol from FontAwesome)
@@ -116,23 +115,23 @@ html_permalinks_icon = "<i class=\"fas fa-link\"></i>"
 
 html_theme_options = {
     "home_page_in_toc": True,
-    "extra_navbar": "<div>Funded by the <i>Initiative and Networking Fund</i> of the <a \
-                     href='https://www.helmholtz.de/en/about-us/structure-and-governance/initiating-and-networking/' \
-                    target='_blank'>Helmholtz Association</a> in the framework of the \
-                    <a href='https://helmholtz-metadaten.de' targe='_blank'>Helmholtz Metadata \
-                    Collaboration</a></div>",
-    "repository_url": "https://github.com/hermes-hmc/workflow",
+    "repository_url": "https://github.com/hermes-hmc/hermes",
     "use_repository_button": True,
+    "navigation_with_keys": False,
 }
 
 html_css_files = [
     'custom.css',
 ]
 
+html_context = {
+    "default_mode": "light",
+}
+
 # -- Options for OpenGraph Tags ----------------------------------------------
 
 ogp_site_url = "https://docs.software-metadata.pub/"
-ogp_image = "https://docs.software-metadata.pub/_static/img/opengraph-workflow.png"
+ogp_image = "https://docs.software-metadata.pub/en/latest/_static/img/opengraph-workflow.png"
 ogp_image_alt = "The HERMES key visual on a blue background with pipelines and the Workflow subproject title"
 ogp_description_length = 200
 ogp_type = "website"
