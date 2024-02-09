@@ -7,7 +7,6 @@
 
 import json
 
-import hermes.logger as logger
 from hermes.commands.deposit.base import BaseDepositPlugin
 from hermes.model.path import ContextPath
 
@@ -17,7 +16,7 @@ class FileDepositPlugin(BaseDepositPlugin):
         self.ctx.update(ContextPath.parse('deposit.file'), self.ctx['codemeta'])
 
     def publish(self) -> None:
-        file_config = logger.config.deposit.file
+        file_config = self.ctx.config.deposit.file
         output_data = self.ctx['deposit.file']
 
         with open(file_config.get('filename', 'hermes.json'), 'w') as deposition_file:

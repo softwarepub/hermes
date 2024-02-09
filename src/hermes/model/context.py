@@ -57,6 +57,10 @@ class HermesContext:
         self._errors = []
         self.contexts = {self.hermes_lod_context}
 
+        # HACK this needs to be done differently
+        from hermes import logger
+        self.config = logger.config
+
     def __getitem__(self, key: ContextPath | str) -> t.Any:
         """
         Access a single entry from the context.

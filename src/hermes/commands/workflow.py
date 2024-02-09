@@ -15,7 +15,6 @@ from importlib import metadata
 
 import click
 
-import hermes.logger as logger
 from hermes.commands.deposit.base import BaseDepositPlugin
 from hermes.error import MisconfigurationError
 from hermes.model.context import HermesContext, HermesHarvestContext, CodeMetaContext
@@ -40,7 +39,7 @@ def harvest(click_ctx: click.Context):
     ctx.init_cache("harvest")
 
     # Get all harvesters
-    harvest_config = logger.config.harvest
+    harvest_config = ctx.config.harvest
     harvester_names = harvest_config.sources if type(harvest_config.sources) else [ep.name for ep in
                                                                                    metadata.entry_points(
                                                                                        group='hermes.harvest')]
@@ -85,7 +84,7 @@ def process(click_ctx: click.Context):
         click_ctx.exit(1)
 
     # Get all harvesters
-    harvest_config = logger.config.harvest
+    harvest_config = ctx.config.harvest
     harvester_names = harvest_config.sources if type(harvest_config.sources) else [ep.name for ep in
                                                                                    metadata.entry_points(
                                                                                        group='hermes.harvest')]
@@ -192,7 +191,7 @@ def deposit(click_ctx: click.Context, initial, auth_token, file):
     with open(codemeta_file) as codemeta_fh:
         ctx.update(codemeta_path, json.load(codemeta_fh))
 
-    deposit_config = logger.config.deposit
+    deposit_config = ctx.config.deposit
 
     plugin_group = "hermes.deposit"
     # TODO: Is having a default a good idea?
@@ -242,7 +241,7 @@ def postprocess(click_ctx: click.Context):
         click_ctx.exit(1)
 
     # Get all postprocessors
-    postprocess_config = logger.config.postprocess
+    postprocess_config = ctx.config.postprocess
     postprocess_names = postprocess_config.execute
 
     for postprocess_name in postprocess_names:
