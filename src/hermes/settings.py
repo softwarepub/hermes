@@ -7,7 +7,7 @@
 from pydantic import BaseModel
 import toml
 import pathlib
-from typing import Any, Dict, Tuple, Type, ClassVar
+from typing import Any, Dict, Tuple, Type
 
 from pydantic.fields import FieldInfo
 
