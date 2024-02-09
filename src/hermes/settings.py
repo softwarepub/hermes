@@ -73,11 +73,6 @@ class HermesSettings(BaseSettings):
     logging: Dict = {}
     site_url: str = ""
 
-    @field_validator("site_url")
-    def none_to_empty(cls, v: object) -> object:
-        if v is None:
-            return ""
-        return v
     config_path: ClassVar[pathlib.Path] = "hermes.toml"   # TODO : Set config Path in cli
 
     def __init__(self, conf_path):
