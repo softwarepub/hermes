@@ -103,7 +103,7 @@ class WorkflowCommand(click.Group):
                 print(f"Configuration not present at {config_path}.", file=sys.stderr)
                 sys.exit(1)
             else:
-                print("No hermes.toml found, falling back to default configuration (which is most probably not what you want).")
+                print("No 'hermes.toml' found, falling back to default configuration (might not be what you want).")
                 config = HermesSettings()
         configure(config, working_path)
         init_logging()
