@@ -16,7 +16,6 @@ from urllib.parse import urlparse
 import click
 import requests
 
-import hermes.logger as logger
 from hermes.commands.deposit.base import BaseDepositPlugin
 from hermes.commands.deposit.error import DepositionUnauthorizedError
 from hermes.error import MisconfigurationError
