@@ -92,7 +92,7 @@ class WorkflowCommand(click.Group):
         config_path = ctx.params.get('config').absolute()
         try:
             with open(config_path, 'r'):
-                config = HermesSettings(config_path)
+                config = HermesSettings()
         except ValidationError as e:
             print(e, file=sys.stderr)
             sys.exit(1)
@@ -101,6 +101,8 @@ class WorkflowCommand(click.Group):
                 # An explicit filename (different from default) was given, so the file should be available...
                 print(f"Configuration not present at {config_path}.", file=sys.stderr)
                 sys.exit(1)
+            else:
+                config = HermesSettings()
         configure(config, working_path)
         init_logging()
         log_header(None)

@@ -20,12 +20,12 @@ from pydantic_settings import (
 
 
 class HarvestCff(BaseModel):
-    enable_validation: bool
+    enable_validation: bool = True
 
 
 class HarvestSettings(BaseModel):
-    sources: list[str]
-    cff: HarvestCff = HarvestCff
+    sources: list[str] = []
+    cff: HarvestCff = HarvestCff()
     cff_validate: bool = True
 
     harvester: Dict = {}
@@ -45,9 +45,9 @@ class DepositTargetSettings(BaseModel):
 
 
 class DepositSettings(BaseModel):
-    target: str
-    invenio: DepositTargetSettings = DepositTargetSettings
-    invenio_rdm: DepositTargetSettings = DepositTargetSettings
+    target: str = ""
+    invenio: DepositTargetSettings = DepositTargetSettings()
+    invenio_rdm: DepositTargetSettings = DepositTargetSettings()
 
     file: Dict = {}
 
@@ -63,8 +63,8 @@ class HermesSettings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file_encoding='utf-8', extra='allow')
 
-    harvest: HarvestSettings = HarvestSettings
-    deposit: DepositSettings = DepositSettings
+    harvest: HarvestSettings = HarvestSettings()
+    deposit: DepositSettings = DepositSettings()
     postprocess: PostprocessSettings = PostprocessSettings()
 
     hermes: Dict = {}
@@ -72,12 +72,6 @@ class HermesSettings(BaseSettings):
     filename: pathlib.Path = "hermes.toml"
     logging: Dict = {}
     site_url: str = ""
-
-    config_path: ClassVar[pathlib.Path] = "hermes.toml"   # TODO : Set config Path in cli
-
-    def __init__(self, conf_path):
-        super().__init__()
-        self.__class__.config_path = conf_path
 
     @classmethod
     def settings_customise_sources(
@@ -90,7 +84,7 @@ class HermesSettings(BaseSettings):
     ) -> Tuple[PydanticBaseSettingsSource, ...]:
         return (
             init_settings,
-            TomlConfigSettingsSource(settings_cls, cls.config_path),
+            TomlConfigSettingsSource(settings_cls, "hermes.toml"),
             env_settings,
             file_secret_settings,
         )
