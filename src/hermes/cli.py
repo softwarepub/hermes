@@ -13,9 +13,10 @@ import logging
 import typing as t
 import pathlib
 from importlib import metadata
-from pydantic import ValidationError
 
 import click
+import toml
+from pydantic import ValidationError
 
 import hermes.logger as logger
 from hermes.commands import workflow
@@ -91,8 +92,8 @@ class WorkflowCommand(click.Group):
         working_path = ctx.params.get('path').absolute()
         config_path = ctx.params.get('config').absolute()
         try:
-            with open(config_path, 'r'):
-                config = HermesSettings()
+            with open(config_path, 'r') as config_file:
+                config = HermesSettings.model_validate(toml.load(config_file))
         except ValidationError as e:
             print(e, file=sys.stderr)
             sys.exit(1)
