@@ -8,20 +8,24 @@
 """
 This module provides the main entry point for the HERMES command line application.
 """
+import sys
 import logging
 import typing as t
 import pathlib
 from importlib import metadata
 
 import click
+import toml
+from pydantic import ValidationError
 
-from hermes import config
+import hermes.logger as logger
 from hermes.commands import workflow
-from hermes.config import configure, init_logging
+from hermes.logger import configure, init_logging
+from hermes.settings import HermesSettings
 
 
 def log_header(header, summary=None):
-    _log = config.getLogger('cli')
+    _log = logger.getLogger('cli')
 
     dist = metadata.distribution('hermes')
     meta = dist.metadata
@@ -86,8 +90,22 @@ class WorkflowCommand(click.Group):
 
         # Get the user provided working dir from the --path option or default to current working directory.
         working_path = ctx.params.get('path').absolute()
-
-        configure(ctx.params.get('config').absolute(), working_path)
+        config_path = ctx.params.get('config').absolute()
+        try:
+            with open(config_path, 'r') as config_file:
+                config = HermesSettings.model_validate(toml.load(config_file))
+        except ValidationError as e:
+            print(e, file=sys.stderr)
+            sys.exit(1)
+        except FileNotFoundError:
+            if config_path.name != 'hermes.toml':
+                # An explicit filename (different from default) was given, so the file should be available...
+                print(f"Configuration not present at {config_path}.", file=sys.stderr)
+                sys.exit(1)
+            else:
+                print("No 'hermes.toml' found, falling back to default configuration (might not be what you want).")
+                config = HermesSettings()
+        configure(config, working_path)
         init_logging()
         log_header(None)
 

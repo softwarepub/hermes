@@ -49,6 +49,7 @@ extensions = [
     'sphinx.ext.ifconfig',
     'sphinx.ext.githubpages',
     'sphinx.ext.autodoc',
+    'sphinx.ext.napoleon',
     'sphinx-favicon',
     'sphinxcontrib.contentui',
     'sphinxcontrib.images',

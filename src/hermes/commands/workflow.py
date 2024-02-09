@@ -15,7 +15,6 @@ from importlib import metadata
 
 import click
 
-from hermes import config
 from hermes.commands.deposit.base import BaseDepositPlugin
 from hermes.error import MisconfigurationError
 from hermes.model.context import HermesContext, HermesHarvestContext, CodeMetaContext
@@ -40,8 +39,10 @@ def harvest(click_ctx: click.Context):
     ctx.init_cache("harvest")
 
     # Get all harvesters
-    harvest_config = config.get("harvest")
-    harvester_names = harvest_config.get('from', [ep.name for ep in metadata.entry_points(group='hermes.harvest')])
+    harvest_config = ctx.config.harvest
+    harvester_names = harvest_config.sources if type(harvest_config.sources) else [ep.name for ep in
+                                                                                   metadata.entry_points(
+                                                                                       group='hermes.harvest')]
 
     for harvester_name in harvester_names:
         harvesters = metadata.entry_points(group='hermes.harvest', name=harvester_name)
@@ -55,7 +56,7 @@ def harvest(click_ctx: click.Context):
         _log.debug(". Loading harvester from %s", harvester.value)
         harvest = harvester.load()
 
-        with HermesHarvestContext(ctx, harvester, harvest_config.get(harvester.name, {})) as harvest_ctx:
+        with HermesHarvestContext(ctx, harvester, harvest_config) as harvest_ctx:
             harvest(click_ctx, harvest_ctx)
             for _key, ((_value, _tag), *_trace) in harvest_ctx._data.items():
                 if any(v != _value and t == _tag for v, t in _trace):
@@ -83,8 +84,10 @@ def process(click_ctx: click.Context):
         click_ctx.exit(1)
 
     # Get all harvesters
-    harvest_config = config.get("harvest")
-    harvester_names = harvest_config.get('from', [ep.name for ep in metadata.entry_points(group='hermes.harvest')])
+    harvest_config = ctx.config.harvest
+    harvester_names = harvest_config.sources if type(harvest_config.sources) else [ep.name for ep in
+                                                                                   metadata.entry_points(
+                                                                                       group='hermes.harvest')]
 
     for harvester_name in harvester_names:
         harvesters = metadata.entry_points(group='hermes.harvest', name=harvester_name)
@@ -188,12 +191,12 @@ def deposit(click_ctx: click.Context, initial, auth_token, file):
     with open(codemeta_file) as codemeta_fh:
         ctx.update(codemeta_path, json.load(codemeta_fh))
 
-    deposit_config = config.get("deposit")
+    deposit_config = ctx.config.deposit
 
     plugin_group = "hermes.deposit"
     # TODO: Is having a default a good idea?
     # TODO: Should we allow a list here so that multiple plugins are run?
-    plugin_name = deposit_config.get("target", "invenio")
+    plugin_name = deposit_config.target
 
     try:
         ep, *eps = metadata.entry_points(group=plugin_group, name=plugin_name)
@@ -238,8 +241,8 @@ def postprocess(click_ctx: click.Context):
         click_ctx.exit(1)
 
     # Get all postprocessors
-    postprocess_config = config.get("postprocess")
-    postprocess_names = postprocess_config.get('execute', [])
+    postprocess_config = ctx.config.postprocess
+    postprocess_names = postprocess_config.execute
 
     for postprocess_name in postprocess_names:
         postprocessors = metadata.entry_points(group='hermes.postprocess', name=postprocess_name)
