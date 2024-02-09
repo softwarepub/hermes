@@ -4,7 +4,7 @@
 
 # SPDX-FileContributor: Michael Meinel
 
-from hermes.cli import main
+from hermes.commands.cli import main
 
 
 if __name__ == '__main__':
