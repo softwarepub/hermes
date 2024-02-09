@@ -4,7 +4,7 @@
 
 # SPDX-FileContributor: Sophie Kernchen
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel
 import toml
 import pathlib
 from typing import Any, Dict, Tuple, Type, ClassVar
