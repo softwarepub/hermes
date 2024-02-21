@@ -18,12 +18,13 @@ from cffconvert import Citation
 
 from hermes.model.context import HermesHarvestContext, ContextPath
 from hermes.model.errors import HermesValidationError
+from hermes.commands.harvest import util
 
 # TODO: should this be configurable via a CLI option?
-_CFF_VERSION = "1.2.0"
+_CFF_VERSION = '1.2.0'
 
 
-_log = logging.getLogger("cli.harvest.cff")
+_log = logging.getLogger('cli.harvest.cff')
 
 
 def harvest_cff(
@@ -38,37 +39,44 @@ def harvest_cff(
     """
 
     # Get the parent context (every subcommand has its own context with the main click context as parent)
-    audit_log = logging.getLogger("audit.cff")
-    audit_log.info("")
+    audit_log = logging.getLogger('audit.cff')
+    audit_log.info('')
     audit_log.info("## Citation File Format")
 
     # Get source files
     cff_file = _get_single_cff(path)
     if not cff_file:
-        raise HermesValidationError(
-            f"{path} contains either no or more than 1 CITATION.cff file. Aborting harvesting "
-            f"for this metadata source."
-        )
+        raise HermesValidationError(f'{path} contains either no or more than 1 CITATION.cff file. Aborting harvesting '
+                                    f'for this metadata source.')
 
     # Read the content
     cff_data = cff_file.read_text()
 
     # Validate the content to be correct CFF
     cff_dict = _load_cff_from_file(cff_data)
-    if ctx.config.get("validate", True) and not _validate(cff_file, cff_dict):
+    if ctx.config.cff_validate and not _validate(cff_file, cff_dict):
         raise HermesValidationError(cff_file)
 
     # Convert to CodeMeta using cffconvert
-    codemeta = _convert_cff_to_codemeta(cff_data)
-    ctx.update_from(codemeta, local_path=str(cff_file))
+    codemeta_dict = _convert_cff_to_codemeta(cff_data)
+    # TODO Replace the following temp patch for #112 once there is a new cffconvert version with cffconvert#309
+    codemeta_dict = _patch_author_emails(cff_dict, codemeta_dict)
+    ctx.update_from(codemeta_dict, local_path=str(cff_file))
 
 
 def _load_cff_from_file(cff_data: str) -> t.Any:
-    yaml = YAML(typ="safe")
-    yaml.constructor.yaml_constructors[
-        "tag:yaml.org,2002:timestamp"
-    ] = yaml.constructor.yaml_constructors["tag:yaml.org,2002:str"]
+    yaml = YAML(typ='safe')
+    yaml.constructor.yaml_constructors[u'tag:yaml.org,2002:timestamp'] = yaml.constructor.yaml_constructors[
+        u'tag:yaml.org,2002:str']
     return yaml.load(cff_data)
+
+
+def _patch_author_emails(cff: dict, codemeta: dict) -> dict:
+    cff_authors = cff["authors"]
+    for i, author in enumerate(cff_authors):
+        if "email" in author:
+            codemeta["author"][i]["email"] = author["email"]
+    return codemeta
 
 
 def _convert_cff_to_codemeta(cff_data: str) -> t.Any:
@@ -77,11 +85,9 @@ def _convert_cff_to_codemeta(cff_data: str) -> t.Any:
 
 
 def _validate(cff_file: pathlib.Path, cff_dict: t.Dict) -> bool:
-    audit_log = logging.getLogger("audit.cff")
+    audit_log = logging.getLogger('audit.cff')
 
-    cff_schema_url = (
-        f"https://citation-file-format.github.io/{_CFF_VERSION}/schema.json"
-    )
+    cff_schema_url = f'https://citation-file-format.github.io/{_CFF_VERSION}/schema.json'
 
     # TODO: we should ship the schema we reference to by default to avoid unnecessary network traffic.
     #       If the requested version is not already downloaded, go ahead and download it.
@@ -91,38 +97,35 @@ def _validate(cff_file: pathlib.Path, cff_dict: t.Dict) -> bool:
     validator = jsonschema.Draft7Validator(schema_data)
     errors = sorted(validator.iter_errors(cff_dict), key=lambda e: e.path)
     if len(errors) > 0:
-        audit_log.warning(
-            '!!! warning "%s is not valid according to <%s>"', cff_file, cff_schema_url
-        )
+        audit_log.warning('!!! warning "%s is not valid according to <%s>"', cff_file, cff_schema_url)
 
         for error in errors:
-            path = ContextPath.make(error.absolute_path or ["root"])
-            audit_log.info("    Invalid input for `%s`.", str(path))
+            path = ContextPath.make(error.absolute_path or ['root'])
+            audit_log.info('    Invalid input for `%s`.', str(path))
             audit_log.info('    !!! message "%s"', error.message)
             audit_log.debug('    !!! value "%s"', error.instance)
 
-        audit_log.info("")
-        audit_log.info("See the Citation File Format schema guide for further details:")
+        audit_log.info('')
+        audit_log.info('See the Citation File Format schema guide for further details:')
         audit_log.info(
-            f"<https://github.com/citation-file-format/citation-file-format/blob/{_CFF_VERSION}/schema-guide.md>."
-        )
+            f'<https://github.com/citation-file-format/citation-file-format/blob/{_CFF_VERSION}/schema-guide.md>.')
         return False
 
     elif len(errors) == 0:
-        audit_log.info("- Found valid Citation File Format file at: %s", cff_file)
+        audit_log.info('- Found valid Citation File Format file at: %s', cff_file)
         return True
 
 
 def _get_single_cff(path: pathlib.Path) -> t.Optional[pathlib.Path]:
     # Find CFF files in directories and subdirectories
-    cff_file = path / "CITATION.cff"
+    cff_file = path / 'CITATION.cff'
     if cff_file.exists():
         return cff_file
 
     # TODO: Do we really want to search recursive? CFF convention is the file should be at the topmost dir,
     #       which is given via the --path arg. Maybe add another option to enable pointing to a single file?
     #       (So this stays "convention over configuration")
-    files = list(path.rglob("**/CITATION.cff"))
+    files = list(path.rglob('**/CITATION.cff'))
     if len(files) == 1:
         return pathlib.Path(files[0])
     # TODO: Shouldn't we log/echo the found CFF files so a user can debug/cleanup?

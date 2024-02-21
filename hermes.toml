@@ -3,17 +3,17 @@
 # SPDX-License-Identifier: CC0-1.0
 
 [harvest]
-from = [ "cff", "git" ]
+sources = [ "cff", "git" ]
 
 [harvest.cff]
-validate = false
+enable_validation = false
 
 [deposit]
 target = "invenio_rdm"
 
 [deposit.invenio_rdm]
 site_url = "https://sandbox.zenodo.org"
-communities = ["zenodo"]
+communities = []
 access_right = "open"
 
 [deposit.invenio_rdm.api_paths]

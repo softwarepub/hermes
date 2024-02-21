@@ -1,13 +1,13 @@
 # SPDX-FileCopyrightText: 2022 German Aerospace Center (DLR)
 #
 # SPDX-License-Identifier: Apache-2.0
-import argparse
 
 # SPDX-FileContributor: Stephan Druskat
 # SPDX-FileContributor: Michael Meinel
 # SPDX-FileContributor: David Pape
 # SPDX-FileContributor: Oliver Bertuch
 
+import argparse
 import json
 import logging
 import os
@@ -16,7 +16,7 @@ from importlib import metadata
 import sys
 import pathlib
 
-from hermes import config
+from hermes.commands.deposit.base import BaseDepositPlugin
 from hermes.error import MisconfigurationError
 from hermes.model.context import HermesContext, HermesHarvestContext, CodeMetaContext
 from hermes.model.errors import MergeError
@@ -30,8 +30,8 @@ def harvest(path: pathlib.Path, config_path: pathlib.Path) -> None:
     :param path: The working path
     :param config_path: The path to the config TOML file
     """
-    _log = logging.getLogger("cli.harvest")
-    audit_log = logging.getLogger("audit")
+    _log = logging.getLogger('cli.harvest')
+    audit_log = logging.getLogger('audit')
     audit_log.info("# Metadata harvesting")
 
     # Create Hermes context (i.e., all collected metadata for all stages...)
@@ -41,13 +41,13 @@ def harvest(path: pathlib.Path, config_path: pathlib.Path) -> None:
     ctx.init_cache("harvest")
 
     # Get all harvesters
-    harvest_config = config.get("harvest")
-    harvester_names = harvest_config.get(
-        "from", [ep.name for ep in metadata.entry_points(group="hermes.harvest")]
-    )
+    harvest_config = ctx.config.harvest
+    harvester_names = harvest_config.sources if type(harvest_config.sources) else [ep.name for ep in
+                                                                                   metadata.entry_points(
+                                                                                       group='hermes.harvest')]
 
     for harvester_name in harvester_names:
-        harvesters = metadata.entry_points(group="hermes.harvest", name=harvester_name)
+        harvesters = metadata.entry_points(group='hermes.harvest', name=harvester_name)
         if not harvesters:
             _log.warning("- Harvester %s selected but not found.", harvester_name)
             continue
@@ -66,8 +66,8 @@ def harvest(path: pathlib.Path, config_path: pathlib.Path) -> None:
                 if any(v != _value and t == _tag for v, t in _trace):
                     raise MergeError(_key, None, _value)
 
-        _log.info("")
-    audit_log.info("")
+        _log.info('')
+    audit_log.info('')
 
 
 def process(path: pathlib.Path, config_path: pathlib.Path) -> None:
@@ -77,9 +77,9 @@ def process(path: pathlib.Path, config_path: pathlib.Path) -> None:
     :param path: The working path
     :param config_path: The path to the config TOML file
     """
-    _log = logging.getLogger("cli.process")
+    _log = logging.getLogger('cli.process')
 
-    audit_log = logging.getLogger("audit")
+    audit_log = logging.getLogger('audit')
     audit_log.info("# Metadata processing")
 
     ctx = CodeMetaContext()
@@ -89,13 +89,13 @@ def process(path: pathlib.Path, config_path: pathlib.Path) -> None:
         sys.exit(1)
 
     # Get all harvesters
-    harvest_config = config.get("harvest")
-    harvester_names = harvest_config.get(
-        "from", [ep.name for ep in metadata.entry_points(group="hermes.harvest")]
-    )
+    harvest_config = ctx.config.harvest
+    harvester_names = harvest_config.sources if type(harvest_config.sources) else [ep.name for ep in
+                                                                                   metadata.entry_points(
+                                                                                       group='hermes.harvest')]
 
     for harvester_name in harvester_names:
-        harvesters = metadata.entry_points(group="hermes.harvest", name=harvester_name)
+        harvesters = metadata.entry_points(group='hermes.harvest', name=harvester_name)
         if not harvesters:
             _log.warning("- Harvester %s selected but not found.", harvester_name)
             continue
@@ -108,14 +108,10 @@ def process(path: pathlib.Path, config_path: pathlib.Path) -> None:
             harvest_context.load_cache()
         # when the harvest step ran, but there is no cache file, this is a serious flaw
         except FileNotFoundError:
-            _log.warning(
-                "No output data from harvester %s found, skipping", harvester.name
-            )
+            _log.warning("No output data from harvester %s found, skipping", harvester.name)
             continue
 
-        preprocessors = metadata.entry_points(
-            group="hermes.preprocess", name=harvester.name
-        )
+        preprocessors = metadata.entry_points(group='hermes.preprocess', name=harvester.name)
         for preprocessor in preprocessors:
             _log.debug(". Loading context preprocessor %s", preprocessor.value)
             preprocess = preprocessor.load()
@@ -125,8 +121,8 @@ def process(path: pathlib.Path, config_path: pathlib.Path) -> None:
 
         ctx.merge_from(harvest_context)
         ctx.merge_contexts_from(harvest_context)
-        _log.info("")
-    audit_log.info("")
+        _log.info('')
+    audit_log.info('')
 
     if ctx._errors:
         audit_log.error('!!! warning "Errors during merge"')
@@ -134,15 +130,13 @@ def process(path: pathlib.Path, config_path: pathlib.Path) -> None:
         for ep, error in ctx._errors:
             audit_log.info("    - %s: %s", ep.name, error)
 
-    tags_path = ctx.get_cache("process", "tags", create=True)
-    with tags_path.open("w") as tags_file:
+    tags_path = ctx.get_cache('process', 'tags', create=True)
+    with tags_path.open('w') as tags_file:
         json.dump(ctx.tags, tags_file, indent=2)
 
     ctx.prepare_codemeta()
 
-    with open(
-        ctx.get_cache("process", ctx.hermes_name, create=True), "w"
-    ) as codemeta_file:
+    with open(ctx.get_cache("process", ctx.hermes_name, create=True), 'w') as codemeta_file:
         json.dump(ctx._data, codemeta_file, indent=2)
 
     logging.shutdown()
@@ -161,7 +155,7 @@ def curate(path: pathlib.Path, config_path: pathlib.Path) -> None:
     audit_log.info("# Metadata curation")
 
     ctx = CodeMetaContext()
-    process_output = ctx.hermes_dir / "process" / (ctx.hermes_name + ".json")
+    process_output = ctx.hermes_dir / 'process' / (ctx.hermes_name + ".json")
 
     if not process_output.is_file():
         _log.error(
@@ -169,8 +163,8 @@ def curate(path: pathlib.Path, config_path: pathlib.Path) -> None:
         )
         sys.exit(1)
 
-    os.makedirs(ctx.hermes_dir / "curate", exist_ok=True)
-    shutil.copy(process_output, ctx.hermes_dir / "curate" / (ctx.hermes_name + ".json"))
+    os.makedirs(ctx.hermes_dir / 'curate', exist_ok=True)
+    shutil.copy(process_output, ctx.hermes_dir / 'curate' / (ctx.hermes_name + '.json'))
 
 
 def deposit(
@@ -209,64 +203,35 @@ def deposit(
     with open(codemeta_file) as codemeta_fh:
         ctx.update(codemeta_path, json.load(codemeta_fh))
 
-    deposit_config = config.get("deposit")
+    deposit_config = ctx.config.deposit
 
-    # This is used as the default value for all entry point names for the deposit step
-    target_platform = deposit_config.get("target", "invenio")
+    plugin_group = "hermes.deposit"
+    # TODO: Is having a default a good idea?
+    # TODO: Should we allow a list here so that multiple plugins are run?
+    plugin_name = deposit_config.target
 
-    entry_point_groups = [
-        "hermes.deposit.prepare",
-        "hermes.deposit.map",
-        "hermes.deposit.create_initial_version",
-        "hermes.deposit.create_new_version",
-        "hermes.deposit.update_metadata",
-        "hermes.deposit.delete_artifacts",
-        "hermes.deposit.upload_artifacts",
-        "hermes.deposit.publish",
-    ]
-
-    # For each group, an entry point can be configured via ``deposit_config`` using the
-    # the part after the last dot as the config key. If no such key is found, the target
-    # platform value is used to search for an entry point in the respective group.
-    selected_entry_points = {
-        group: deposit_config.get(group.split(".")[-1], target_platform)
-        for group in entry_point_groups
-    }
-
-    # Try to load all entrypoints first, so we don't fail because of misconfigured
-    # entry points while some tasks of the deposition step were already started. (E.g.
-    # new version was already created on the deposition platform but artifact upload
-    # fails due to the entry point not being found.)
-    loaded_entry_points = []
-    for group, name in selected_entry_points.items():
-        try:
-            ep, *eps = metadata.entry_points(group=group, name=name)
-        except ValueError:  # not enough values to unpack
-            if name != target_platform:
-                _log.error(
-                    f"Explicitly configured entry point name {name!r} "
-                    f"not found in group {group!r}"
-                )
-                sys.exit(1)
-            _log.debug(
-                f"Group {group!r} has no entry point with name {name!r}; skipping"
-            )
-            continue
-
+    try:
+        # NOTE: This was once implemented that multiple EPs could
+        #       be selected. Maybe, we want to do it that way again...
+        ep, *eps = metadata.entry_points(group=plugin_group, name=plugin_name)
         if eps:
             # Entry point names in these groups refer to the deposition platforms. For
             # each platform, only a single implementation should exist. Otherwise we
             # would not be able to decide which implementation to choose.
             _log.error(
-                f"Entry point name {name!r} is not unique within group {group!r}"
+                f"Plugin name {plugin_name!r} is not unique within group {plugin_group!r}"
             )
-            sys.exit(1)
+    except ValueError:  # not enough values to unpack
+        _log.error(f"Plugin name {plugin_name!r} was not found in group {plugin_group!r}")
+        sys.exit(1)
 
-        loaded_entry_points.append(ep.load())
+    # TODO: Could this raise an exception?
+    deposit_plugin_class: BaseDepositPlugin = ep.load()
+    deposit_plugin = deposit_plugin_class(click_ctx, ctx)
 
     for entry_point in loaded_entry_points:
         try:
-            entry_point(path, config_path, initial, auth_token, files, ctx)
+            deposit_plugin(path, config_path, initial, auth_token, files, ctx)
         except (RuntimeError, MisconfigurationError) as e:
             _log.error(f"Error in {group!r} entry point {name!r}: {e}")
             sys.exit(1)
@@ -279,9 +244,9 @@ def postprocess(path: pathlib.Path, config_path: pathlib.Path) -> None:
     :param path: The working path
     :param config_path: The path of the config TOML file
     """
-    _log = logging.getLogger("cli.postprocess")
+    _log = logging.getLogger('cli.postprocess')
 
-    audit_log = logging.getLogger("audit")
+    audit_log = logging.getLogger('audit')
     audit_log.info("# Post-processing")
 
     ctx = CodeMetaContext()
@@ -291,17 +256,13 @@ def postprocess(path: pathlib.Path, config_path: pathlib.Path) -> None:
         sys.exit(1)
 
     # Get all postprocessors
-    postprocess_config = config.get("postprocess")
-    postprocess_names = postprocess_config.get("execute", [])
+    postprocess_config = ctx.config.postprocess
+    postprocess_names = postprocess_config.execute
 
     for postprocess_name in postprocess_names:
-        postprocessors = metadata.entry_points(
-            group="hermes.postprocess", name=postprocess_name
-        )
+        postprocessors = metadata.entry_points(group='hermes.postprocess', name=postprocess_name)
         if not postprocessors:
-            _log.warning(
-                "- Post-processor %s selected but not found.", postprocess_name
-            )
+            _log.warning("- Post-processor %s selected but not found.", postprocess_name)
             continue
 
         postprocessor_ep, *_ = postprocessors
@@ -309,7 +270,7 @@ def postprocess(path: pathlib.Path, config_path: pathlib.Path) -> None:
         postprocessor = postprocessor_ep.load()
         postprocessor(path, config_path, ctx)
 
-    audit_log.info("")
+    audit_log.info('')
     logging.shutdown()
 
 
@@ -320,7 +281,7 @@ def clean(path: pathlib.Path, config_path: pathlib.Path) -> None:
     :param path: The working path
     :param config_path: The path of the config TOML file
     """
-    audit_log = logging.getLogger("cli")
+    audit_log = logging.getLogger('cli')
     audit_log.info("# Cleanup")
     # shut down logging so that .hermes/ can safely be removed
     logging.shutdown()

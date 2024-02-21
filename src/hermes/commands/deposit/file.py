@@ -9,43 +9,19 @@
 import json
 import pathlib
 
-from hermes import config
 from hermes.model.context import CodeMetaContext
+
+from hermes.commands.deposit.base import BaseDepositPlugin
 from hermes.model.path import ContextPath
 
 
-def dummy_noop(
-    path: pathlib.Path,
-    config_path: pathlib.Path,
-    initial: bool,
-    auth_token: str,
-    files: list[pathlib.Path],
-    ctx: CodeMetaContext,
-):
-    pass
+class FileDepositPlugin(BaseDepositPlugin):
+    def map_metadata(self) -> None:
+        self.ctx.update(ContextPath.parse('deposit.file'), self.ctx['codemeta'])
 
+    def publish(self) -> None:
+        file_config = self.ctx.config.deposit.file
+        output_data = self.ctx['deposit.file']
 
-def map_metadata(
-    path: pathlib.Path,
-    config_path: pathlib.Path,
-    initial: bool,
-    auth_token: str,
-    files: list[pathlib.Path],
-    ctx: CodeMetaContext,
-):
-    ctx.update(ContextPath.parse("deposit.file"), ctx["codemeta"])
-
-
-def publish(
-    path: pathlib.Path,
-    config_path: pathlib.Path,
-    initial: bool,
-    auth_token: str,
-    files: list[pathlib.Path],
-    ctx: CodeMetaContext,
-):
-    file_config = config.get("deposit").get("file", {})
-    output_data = ctx["deposit.file"]
-
-    with open(file_config.get("filename", "hermes.json"), "w") as deposition_file:
-        json.dump(output_data, deposition_file)
+        with open(file_config.get('filename', 'hermes.json'), 'w') as deposition_file:
+            json.dump(output_data, deposition_file, indent=2)
