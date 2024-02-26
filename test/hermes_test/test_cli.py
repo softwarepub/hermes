@@ -16,18 +16,18 @@ def test_hermes_full(capsys):
         assert "choose from" in se
 
 
-def test_hermes_harvest():
-    runner = CliRunner()
-    result = runner.invoke(cli.main, args=("harvest",))
+def test_hermes_harvest(hermes_env):
+    with hermes_env:
+        result = hermes_env.run("harvest")
 
-    assert not result.exception
+    assert result.returncode == 0
 
 
-def test_hermes_process():
-    runner = CliRunner()
-    result = runner.invoke(cli.main, args=("process",))
+def test_hermes_process(hermes_env):
+    with hermes_env:
+        result = hermes_env.run("process")
 
-    assert not result.exception
+    assert result.returncode == 0
 
 
 @pytest.mark.skip(
