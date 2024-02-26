@@ -15,6 +15,7 @@ from hermes.commands.deposit.invenio import (
     InvenioDepositPlugin,
     InvenioResolver,
 )
+from hermes.settings import DepositTargetSettings
 
 
 class InvenioRDMClient(InvenioClient):
@@ -88,3 +89,5 @@ class IvenioRDMDepositPlugin(InvenioDepositPlugin):
     platform_name = "invenio_rdm"
     invenio_client_class = InvenioRDMClient
     invenio_resolver_class = InvenioRDMResolver
+
+    settings_class = DepositTargetSettings

@@ -12,6 +12,10 @@ import argparse
 import pathlib
 from importlib import metadata
 
+from pydantic import BaseModel
+
+from hermes.settings import DepositSettings, HarvestSettings, PostprocessSettings
+
 
 class HermesCommand:
     """ Base class for a HERMES workflow command.
@@ -20,6 +24,7 @@ class HermesCommand:
     """
 
     NAME: str = None
+    settings_class: type = BaseModel
 
     def __init__(self, parser: argparse.ArgumentParser):
         """ Initialize a new instance of any HERMES command.
@@ -30,11 +35,29 @@ class HermesCommand:
         self.plugins = self.init_plugins()
 
     def init_plugins(self):
+        # Collect all entry points for this group (i.e., all valid plug-ins for the step)
         entry_point_group = f"hermes.{self.NAME}"
         group_plugins = [
             (entry_point.name, entry_point.load())
             for entry_point in metadata.entry_points(group=entry_point_group)
         ]
+
+        # Collect the plug-in specific configurations
+        plugin_settings = {
+            plugin_name: getattr(plugin_class, 'settings_class', None)
+            for plugin_name, plugin_class in group_plugins
+        }
+
+        # Derive a new settings model class that contains all the plug-in extensions
+        self.settings_class = type(f'{self.__class__.__name__}Settings', (self.settings_class, ), {
+            '__annotations__': plugin_settings,
+            **{
+                plugin_name: plugin_settings()
+                for plugin_name, plugin_settings in plugin_settings.items()
+                if plugin_settings is not None
+            }
+        })
+
         return group_plugins
 
     def init_common_parser(self, parser: argparse.ArgumentParser) -> None:
@@ -103,6 +126,7 @@ class HermesHarvestCommand(HermesCommand):
     """ Harvest metadata from configured sources. """
 
     NAME = "harvest"
+    settings_class = HarvestSettings
 
 
 class HermesProcessCommand(HermesCommand):
@@ -121,12 +145,14 @@ class HermesDepositCommand(HermesCommand):
     """ Deposit the curated metadata to repositories. """
 
     NAME = "deposit"
+    settings_class = DepositSettings
 
 
 class HermesPostprocessCommand(HermesCommand):
     """ Post-process the published metadata after deposition. """
 
     NAME = "postprocess"
+    settings_class = PostprocessSettings
 
 
 def main() -> None:
