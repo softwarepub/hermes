@@ -10,6 +10,7 @@ This module provides the main entry point for the HERMES command line applicatio
 """
 import argparse
 import pathlib
+from importlib import metadata
 
 
 class HermesCommand:
@@ -25,20 +26,33 @@ class HermesCommand:
 
         :param parser: The command line parser used for reading command line arguments.
         """
-
         self.parser = parser
+        self.plugins = self.init_plugins()
 
-    @classmethod
-    def init_common_parser(cls, parser: argparse.ArgumentParser) -> None:
+    def init_plugins(self):
+        entry_point_group = f"hermes.{self.NAME}"
+        group_plugins = [
+            (entry_point.name, entry_point.load())
+            for entry_point in metadata.entry_points(group=entry_point_group)
+        ]
+        return group_plugins
+
+    def init_common_parser(self, parser: argparse.ArgumentParser) -> None:
         """ Initialize the common command line arguments available for all HERMES sub-commands.
 
         :param parser: The base command line parser used as entry point when reading command line arguments.
         """
 
-        parser.add_argument("--path", default=pathlib.Path("../"), type=pathlib.Path,
+        parser.add_argument("--path", default=pathlib.Path(), type=pathlib.Path,
                             help="Working path")
         parser.add_argument("--config", default=pathlib.Path("hermes.toml"), type=pathlib.Path,
                             help="Configuration file in TOML format")
+
+        plugin_args = parser.add_argument_group("Extra plug-in options")
+        plugin_args.add_argument("-O", nargs=2, action='append', metavar=("NAME", "VALUE"),
+                                 help="Configuration values to override hermes.toml options. "
+                                      "NAME is the dotted name / path to the option in the TOML file."
+                                      "VALUE the actual value.")
 
     def init_command_parser(self, command_parser: argparse.ArgumentParser) -> None:
         """ Initialize the command line arguments available for this specific HERMES sub-commands.
@@ -126,7 +140,6 @@ def main() -> None:
         description="This command runs HERMES workflow steps.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    HermesCommand.init_common_parser(parser)
 
     # Register all sub-commands to a new sub-parser each.
     subparsers = parser.add_subparsers(dest="subcommand", required=True,
@@ -141,6 +154,7 @@ def main() -> None:
         HermesPostprocessCommand(parser),
     ):
         command_parser = subparsers.add_parser(command.NAME, help=command.__doc__)
+        command.init_common_parser(command_parser)
         command.init_command_parser(command_parser)
         command_parser.set_defaults(command=command)
 
