@@ -23,7 +23,7 @@ class HermesCommand:
     :cvar NAME: The name of the sub-command that is defined here.
     """
 
-    NAME: str = None
+    command_name: str = ""
     settings_class: type = BaseModel
 
     def __init__(self, parser: argparse.ArgumentParser):
@@ -36,7 +36,7 @@ class HermesCommand:
 
     def init_plugins(self):
         # Collect all entry points for this group (i.e., all valid plug-ins for the step)
-        entry_point_group = f"hermes.{self.NAME}"
+        entry_point_group = f"hermes.{self.command_name}"
         group_plugins = [
             (entry_point.name, entry_point.load())
             for entry_point in metadata.entry_points(group=entry_point_group)
@@ -100,7 +100,7 @@ class HermesCommand:
 class HermesHelpCommand(HermesCommand):
     """ Show help page and exit. """
 
-    NAME = "help"
+    command_name = "help"
 
     def init_command_parser(self, command_parser: argparse.ArgumentParser) -> None:
         command_parser.add_argument('subcommand', nargs='?', metavar="COMMAND",
@@ -119,39 +119,39 @@ class HermesHelpCommand(HermesCommand):
 class HermesCleanCommand(HermesCommand):
     """ Clean up caches from previous HERMES runs. """
 
-    NAME = "clean"
+    command_name = "clean"
 
 
 class HermesHarvestCommand(HermesCommand):
     """ Harvest metadata from configured sources. """
 
-    NAME = "harvest"
+    command_name = "harvest"
     settings_class = HarvestSettings
 
 
 class HermesProcessCommand(HermesCommand):
     """ Process the collected metadata into a common dataset. """
 
-    NAME = "process"
+    command_name = "process"
 
 
 class HermesCurateCommand(HermesCommand):
     """ Curate the unified metadata before deposition. """
 
-    NAME = "curate"
+    command_name = "curate"
 
 
 class HermesDepositCommand(HermesCommand):
     """ Deposit the curated metadata to repositories. """
 
-    NAME = "deposit"
+    command_name = "deposit"
     settings_class = DepositSettings
 
 
 class HermesPostprocessCommand(HermesCommand):
     """ Post-process the published metadata after deposition. """
 
-    NAME = "postprocess"
+    command_name = "postprocess"
     settings_class = PostprocessSettings
 
 
@@ -179,7 +179,7 @@ def main() -> None:
         HermesDepositCommand(parser),
         HermesPostprocessCommand(parser),
     ):
-        command_parser = subparsers.add_parser(command.NAME, help=command.__doc__)
+        command_parser = subparsers.add_parser(command.command_name, help=command.__doc__)
         command.init_common_parser(command_parser)
         command.init_command_parser(command_parser)
         command_parser.set_defaults(command=command)
