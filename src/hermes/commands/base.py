@@ -3,6 +3,7 @@ import argparse
 import logging
 import pathlib
 from importlib import metadata
+from typing import Type
 
 from pydantic import BaseModel
 
@@ -14,7 +15,7 @@ class HermesCommand(abc.ABC):
     """
 
     command_name: str = ""
-    settings_class: type = BaseModel
+    settings_class: Type = BaseModel
 
     def __init__(self, parser: argparse.ArgumentParser):
         """ Initialize a new instance of any HERMES command.
@@ -82,6 +83,7 @@ class HermesCommand(abc.ABC):
 
         pass
 
+    @abc.abstractmethod
     def __call__(self, args: argparse.Namespace):
         """ Execute the HERMES sub-command.
 

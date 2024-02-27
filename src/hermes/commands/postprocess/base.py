@@ -4,6 +4,8 @@
 
 # SPDX-FileContributor: Michael Meinel
 
+import argparse
+
 from hermes.commands.base import HermesCommand
 from hermes.settings import PostprocessSettings
 
@@ -13,3 +15,6 @@ class HermesPostprocessCommand(HermesCommand):
 
     command_name = "postprocess"
     settings_class = PostprocessSettings
+
+    def __call__(self, args: argparse.Namespace) -> None:
+        pass

@@ -6,6 +6,7 @@
 # SPDX-FileContributor: Michael Meinel
 
 import abc
+import argparse
 
 import click
 
@@ -96,3 +97,6 @@ class HermesDepositCommand(HermesCommand):
 
     command_name = "deposit"
     settings_class = DepositSettings
+
+    def __call__(self, args: argparse.Namespace) -> None:
+        pass

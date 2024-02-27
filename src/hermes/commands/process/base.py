@@ -4,6 +4,8 @@
 
 # SPDX-FileContributor: Michael Meinel
 
+import argparse
+
 from hermes.commands.base import HermesCommand
 
 
@@ -11,3 +13,6 @@ class HermesProcessCommand(HermesCommand):
     """ Process the collected metadata into a common dataset. """
 
     command_name = "process"
+
+    def __call__(self, args: argparse.Namespace) -> None:
+        pass

@@ -4,6 +4,8 @@
 
 # SPDX-FileContributor: Michael Meinel
 
+import argparse
+
 from hermes.commands.base import HermesCommand
 from hermes.settings import HarvestSettings
 
@@ -13,3 +15,6 @@ class HermesHarvestCommand(HermesCommand):
 
     command_name = "harvest"
     settings_class = HarvestSettings
+
+    def __call__(self, args: argparse.Namespace) -> None:
+        pass
