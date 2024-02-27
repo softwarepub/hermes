@@ -1,3 +1,9 @@
+# SPDX-FileCopyrightText: 2022 German Aerospace Center (DLR)
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# SPDX-FileContributor: Michael Meinel
+
 import os
 import shutil
 import subprocess
@@ -7,9 +13,9 @@ import pytest
 
 class HermesEnvMock:
     def __init__(self, tmp_path):
-        self.hermes_exe = 'hermes'
+        self.hermes_exe = "hermes"
         self.old_path = os.getcwd()
-        self.test_path = tmp_path / 'hermes_test'
+        self.test_path = tmp_path / "hermes_test"
         self.test_files = {}
 
     def __setitem__(self, path, data):
@@ -24,7 +30,9 @@ class HermesEnvMock:
         os.chdir(self.test_path)
 
     def run(self, *args):
-        proc = subprocess.Popen([self.hermes_exe, *args], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = subprocess.Popen(
+            [self.hermes_exe, *args], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
         proc.wait()
         return proc
 
