@@ -9,7 +9,9 @@ import abc
 
 import click
 
+from hermes.commands.base import HermesCommand
 from hermes.model.context import CodeMetaContext
+from hermes.settings import DepositSettings
 
 
 class BaseDepositPlugin(abc.ABC):
@@ -87,3 +89,10 @@ class BaseDepositPlugin(abc.ABC):
     def publish(self) -> None:
         """Publish the newly created deposit on the target platform."""
         pass
+
+
+class HermesDepositCommand(HermesCommand):
+    """ Deposit the curated metadata to repositories. """
+
+    command_name = "deposit"
+    settings_class = DepositSettings
