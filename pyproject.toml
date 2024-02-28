@@ -76,14 +76,9 @@ hermes = "hermes.commands.cli:main"
 [tool.poetry.plugins."hermes.harvest"]
 cff = "hermes.commands.harvest.cff:harvest_cff"
 codemeta = "hermes.commands.harvest.codemeta:harvest_codemeta"
-git = "hermes.commands.harvest.git:harvest_git"
 
 [tool.poetry.plugins."hermes.preprocess"]
 cff_add_name = "hermes.commands.process.cff:add_name"
-
-git = "hermes.commands.process.git:process"
-git_add_contributors = "hermes.commands.process.git:add_contributors"
-git_add_branch = "hermes.commands.process.git:add_branch"
 
 [tool.poetry.plugins."hermes.deposit"]
 file = "hermes.commands.deposit.file:FileDepositPlugin"
