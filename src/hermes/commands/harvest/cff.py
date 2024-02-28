@@ -56,13 +56,11 @@ class CffHarvestPlugin(HermesHarvestPlugin):
 
         return codemeta_dict
 
-
     def _load_cff_from_file(self, cff_data: str) -> t.Any:
         yaml = YAML(typ='safe')
         yaml.constructor.yaml_constructors[u'tag:yaml.org,2002:timestamp'] = yaml.constructor.yaml_constructors[
             u'tag:yaml.org,2002:str']
         return yaml.load(cff_data)
-
 
     def _patch_author_emails(self, cff: dict, codemeta: dict) -> dict:
         cff_authors = cff["authors"]
@@ -71,11 +69,9 @@ class CffHarvestPlugin(HermesHarvestPlugin):
                 codemeta["author"][i]["email"] = author["email"]
         return codemeta
 
-
     def _convert_cff_to_codemeta(self, cff_data: str) -> t.Any:
         codemeta_str = Citation(cff_data).as_codemeta()
         return json.loads(codemeta_str)
-
 
     def _validate(self, cff_file: pathlib.Path, cff_dict: t.Dict) -> bool:
         audit_log = logging.getLogger('audit.cff')
@@ -107,7 +103,6 @@ class CffHarvestPlugin(HermesHarvestPlugin):
         elif len(errors) == 0:
             audit_log.info('- Found valid Citation File Format file at: %s', cff_file)
             return True
-
 
     def _get_single_cff(self, path: pathlib.Path) -> t.Optional[pathlib.Path]:
         # Find CFF files in directories and subdirectories

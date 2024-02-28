@@ -74,11 +74,8 @@ reuse = "^1.1.2"
 hermes = "hermes.commands.cli:main"
 
 [tool.poetry.plugins."hermes.harvest"]
-cff = "hermes.commands.harvest.cff:harvest_cff"
-codemeta = "hermes.commands.harvest.codemeta:harvest_codemeta"
-
-[tool.poetry.plugins."hermes.preprocess"]
-cff_add_name = "hermes.commands.process.cff:add_name"
+cff = "hermes.commands.harvest.cff:CffHarvestPlugin"
+codemeta = "hermes.commands.harvest.codemeta:CodeMetaHarvestPlugin"
 
 [tool.poetry.plugins."hermes.deposit"]
 file = "hermes.commands.deposit.file:FileDepositPlugin"
