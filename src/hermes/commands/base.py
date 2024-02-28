@@ -57,6 +57,11 @@ class HermesCommand(abc.ABC):
 
     @classmethod
     def derive_settings_class(cls, setting_types: Dict[str, Type]) -> None:
+        """Build a new Pydantic data model class for configuration.
+
+        This will create a new class that includes all settings from the plugins available.
+        """
+
         # Derive a new settings model class that contains all the plug-in extensions
         cls.settings_class = type(
             f"{cls.__name__}Settings",
@@ -112,16 +117,22 @@ class HermesCommand(abc.ABC):
         pass
 
     def load_settings(self, args: argparse.Namespace):
+        """Load settings from the configuration file (passed in from command line)."""
+
         toml_data = toml.load(args.path / args.config)
         root_settings = HermesCommand.settings_class.model_validate(toml_data)
         self.settings = getattr(root_settings, self.command_name)
 
     def patch_settings(self, args: argparse.Namespace):
+        """Process command line options for the settings."""
+
         for key, value in args.options:
             target = self.settings
-            sub_keys = key.split()
+            sub_keys = key.split('.')
             for sub_key in sub_keys[:-1]:
                 target = getattr(target, sub_key)
+
+            # TODO: Transform the value accordingly before setting it
             setattr(target, sub_keys[-1], value)
 
     @abc.abstractmethod
