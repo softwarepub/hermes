@@ -26,4 +26,13 @@ class HermesHarvestCommand(HermesCommand):
     settings_class = HarvestSettings
 
     def __call__(self, args: argparse.Namespace) -> None:
-        pass
+        for plugin_name in self.settings.sources:
+            try:
+                plugin_func = self.plugins[plugin_name]
+                plugin_func(self)
+
+            except KeyError:
+                self.log.error("Plugin %s not found.", plugin_name)
+
+            except TypeError as e:
+                self.log.error("Error while executing %s: %s", plugin_name, e)
