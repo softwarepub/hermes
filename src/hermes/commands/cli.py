@@ -12,6 +12,7 @@ import argparse
 
 from hermes.commands import HermesHelpCommand, HermesCleanCommand, HermesHarvestCommand, HermesProcessCommand, \
                             HermesCurateCommand, HermesDepositCommand, HermesPostprocessCommand
+from hermes.commands.base import HermesCommand
 
 
 def main() -> None:
@@ -39,9 +40,10 @@ def main() -> None:
             HermesPostprocessCommand(parser),
     ):
         command_parser = subparsers.add_parser(command.command_name, help=command.__doc__)
+        command_parser.set_defaults(command=command)
+
         command.init_common_parser(command_parser)
         command.init_command_parser(command_parser)
-        command_parser.set_defaults(command=command)
 
     # Actually parse the commands and execute the selected sub-command.
     args = parser.parse_args()

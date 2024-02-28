@@ -114,6 +114,21 @@ class HermesCommand(abc.ABC):
         pass
 
 
+class HermesPlugin(abc.ABC):
+    """Base class for all HERMES plugins."""
+
+    settings_class: Optional[Type] = None
+
+    @abc.abstractmethod
+    def __call__(self, command: HermesCommand) -> None:
+        """Execute the plugin.
+
+        :param command: The command that triggered this plugin to run.
+        """
+
+        pass
+
+
 class HermesHelpCommand(HermesCommand):
     """Show help page and exit."""
 

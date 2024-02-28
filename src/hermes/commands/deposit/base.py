@@ -10,17 +10,17 @@ import argparse
 
 import click
 
-from hermes.commands.base import HermesCommand
+from hermes.commands.base import HermesCommand, HermesPlugin
 from hermes.model.context import CodeMetaContext
 from hermes.settings import DepositSettings
 
 
-class BaseDepositPlugin(abc.ABC):
+class BaseDepositPlugin(HermesPlugin):
     def __init__(self, click_ctx: click.Context, ctx: CodeMetaContext) -> None:
         self.click_ctx = click_ctx
         self.ctx = ctx
 
-    def __call__(self) -> None:
+    def __call__(self, command: HermesCommand) -> None:
         """Initiate the deposition process.
 
         This calls a list of additional methods on the class, none of which need to be implemented.
