@@ -16,9 +16,10 @@ from ruamel.yaml import YAML
 import jsonschema
 from cffconvert import Citation
 
-from hermes.model.context import HermesHarvestContext, ContextPath
+from hermes.model.context import ContextPath
 from hermes.model.errors import HermesValidationError
 from hermes.commands.harvest import HermesHarvestPlugin, HermesHarvestCommand
+
 
 # TODO: should this be configurable via a CLI option?
 _CFF_VERSION = '1.2.0'

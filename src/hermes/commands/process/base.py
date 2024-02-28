@@ -6,7 +6,11 @@
 
 import argparse
 
-from hermes.commands.base import HermesCommand
+from hermes.commands.base import HermesCommand, HermesPlugin
+
+
+class HermesProcessPlugin(HermesPlugin):
+    pass
 
 
 class HermesProcessCommand(HermesCommand):

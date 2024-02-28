@@ -9,6 +9,7 @@ import argparse
 from pydantic import BaseModel
 
 from hermes.commands.base import HermesCommand, HermesPlugin
+from hermes.model.errors import HermesValidationError
 
 
 class HermesHarvestPlugin(HermesPlugin):
@@ -39,10 +40,12 @@ class HermesHarvestCommand(HermesCommand):
         for plugin_name in self.settings.sources:
             try:
                 plugin_func = self.plugins[plugin_name]()
-                plugin_func(self)
+                harvested_data = plugin_func(self)
+                print(harvested_data)
+                # TODO: store harvested data for later use
 
             except KeyError:
-                self.log.error("Plugin %s not found.", plugin_name)
+                self.log.error("Plugin '%s' not found.", plugin_name)
 
-            except TypeError as e:
+            except HermesValidationError as e:
                 self.log.error("Error while executing %s: %s", plugin_name, e)

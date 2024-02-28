@@ -7,9 +7,6 @@
 # SPDX-FileContributor: Stephan Druskat
 
 import json
-import pathlib
-
-from hermes.model.context import CodeMetaContext
 
 from hermes.commands.deposit.base import BaseDepositPlugin
 from hermes.model.path import ContextPath

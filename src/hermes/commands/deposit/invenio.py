@@ -245,7 +245,6 @@ class InvenioDepositSettings(BaseModel):
     doi: str = None
 
 
-
 class InvenioDepositPlugin(BaseDepositPlugin):
 
     platform_name = "invenio"

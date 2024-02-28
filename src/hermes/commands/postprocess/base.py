@@ -8,16 +8,21 @@ import argparse
 
 from pydantic import BaseModel
 
-from hermes.commands.base import HermesCommand
+from hermes.commands.base import HermesCommand, HermesPlugin
+
+
+class HermesPostprocessPlugin(HermesPlugin):
+    pass
 
 
 class PostprocessSettings(BaseModel):
     """Generic post-processing settings."""
+
     execute: list = []
 
 
 class HermesPostprocessCommand(HermesCommand):
-    """ Post-process the published metadata after deposition. """
+    """Post-process the published metadata after deposition."""
 
     command_name = "postprocess"
     settings_class = PostprocessSettings
