@@ -9,9 +9,11 @@ import argparse
 import logging
 import pathlib
 from importlib import metadata
-from typing import Type
+from typing import Dict, Optional, Type
 
-from pydantic import BaseModel
+import toml
+
+from hermes.settings import HermesSettings
 
 
 class HermesCommand(abc.ABC):
@@ -21,7 +23,7 @@ class HermesCommand(abc.ABC):
     """
 
     command_name: str = ""
-    settings_class: Type = BaseModel
+    settings_class: Type = HermesSettings
 
     def __init__(self, parser: argparse.ArgumentParser):
         """Initialize a new instance of any HERMES command.
@@ -30,6 +32,7 @@ class HermesCommand(abc.ABC):
         """
         self.parser = parser
         self.plugins = self.init_plugins()
+        self.settings = None
 
         self.log = logging.getLogger(f"hermes.{self.command_name}")
 
@@ -44,27 +47,29 @@ class HermesCommand(abc.ABC):
         }
 
         # Collect the plug-in specific configurations
-        plugin_settings = {
-            plugin_name: getattr(plugin_class, "settings_class", None)
+        self.derive_settings_class({
+            plugin_name: plugin_class.settings_class
             for plugin_name, plugin_class in group_plugins.items()
-        }
+            if hasattr(plugin_class, "settings_class") and plugin_class.settings_class is not None
+        })
 
+        return group_plugins
+
+    @classmethod
+    def derive_settings_class(cls, setting_types: Dict[str, Type]) -> None:
         # Derive a new settings model class that contains all the plug-in extensions
-        self.settings_class = type(
-            f"{self.__class__.__name__}Settings",
-            (self.settings_class,),
+        cls.settings_class = type(
+            f"{cls.__name__}Settings",
+            (cls.settings_class, ),
             {
                 **{
                     plugin_name: plugin_settings()
-                    for plugin_name, plugin_settings in plugin_settings.items()
+                    for plugin_name, plugin_settings in setting_types.items()
                     if plugin_settings is not None
                 },
-
-                "__annotations__": plugin_settings,
+                "__annotations__": setting_types,
             },
         )
-
-        return group_plugins
 
     def init_common_parser(self, parser: argparse.ArgumentParser) -> None:
         """Initialize the common command line arguments available for all HERMES sub-commands.
@@ -82,15 +87,17 @@ class HermesCommand(abc.ABC):
             help="Configuration file in TOML format",
         )
 
-        plugin_args = parser.add_argument_group("Extra plug-in options")
+        plugin_args = parser.add_argument_group("Extra options")
         plugin_args.add_argument(
             "-O",
             nargs=2,
             action="append",
+            default=[],
             metavar=("NAME", "VALUE"),
+            dest="options",
             help="Configuration values to override hermes.toml options. "
-            "NAME is the dotted name / path to the option in the TOML file."
-            "VALUE the actual value.",
+            "NAME is the dotted name / path to the option in the TOML file, "
+            "VALUE is the actual value.",
         )
 
     def init_command_parser(self, command_parser: argparse.ArgumentParser) -> None:
@@ -103,6 +110,19 @@ class HermesCommand(abc.ABC):
         """
 
         pass
+
+    def load_settings(self, args: argparse.Namespace):
+        toml_data = toml.load(args.path / args.config)
+        root_settings = HermesCommand.settings_class.model_validate(toml_data)
+        self.settings = getattr(root_settings, self.command_name)
+
+    def patch_settings(self, args: argparse.Namespace):
+        for key, value in args.options:
+            target = self.settings
+            sub_keys = key.split()
+            for sub_key in sub_keys[:-1]:
+                target = getattr(target, sub_key)
+            setattr(target, sub_keys[-1], value)
 
     @abc.abstractmethod
     def __call__(self, args: argparse.Namespace):

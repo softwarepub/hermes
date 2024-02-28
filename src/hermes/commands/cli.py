@@ -45,6 +45,9 @@ def main() -> None:
         command.init_common_parser(command_parser)
         command.init_command_parser(command_parser)
 
-    # Actually parse the commands and execute the selected sub-command.
+    # Construct the Pydantic Settings root model
+    HermesCommand.derive_settings_class(setting_types)
+
+    # Actually parse the command line, configure it and execute the selected sub-command.
     args = parser.parse_args()
     args.command(args)
