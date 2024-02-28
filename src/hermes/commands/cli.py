@@ -30,6 +30,8 @@ def main() -> None:
     # Register all sub-commands to a new sub-parser each.
     subparsers = parser.add_subparsers(dest="subcommand", required=True,
                                        help="Available subcommands")
+    setting_types = {}
+
     for command in (
             HermesHelpCommand(parser),
             HermesCleanCommand(parser),
@@ -39,6 +41,8 @@ def main() -> None:
             HermesDepositCommand(parser),
             HermesPostprocessCommand(parser),
     ):
+        setting_types[command.command_name] = command.settings_class
+
         command_parser = subparsers.add_parser(command.command_name, help=command.__doc__)
         command_parser.set_defaults(command=command)
 
@@ -50,4 +54,7 @@ def main() -> None:
 
     # Actually parse the command line, configure it and execute the selected sub-command.
     args = parser.parse_args()
+
+    args.command.load_settings(args)
+    args.command.patch_settings(args)
     args.command(args)
