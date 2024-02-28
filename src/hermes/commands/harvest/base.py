@@ -6,8 +6,9 @@ import abc
 
 import argparse
 
+from pydantic import BaseModel
+
 from hermes.commands.base import HermesCommand, HermesPlugin
-from hermes.settings import HarvestSettings
 
 
 class HermesHarvestPlugin(HermesPlugin):
@@ -15,8 +16,15 @@ class HermesHarvestPlugin(HermesPlugin):
 
     TODO: describe the harvesting process and how this is mapped to this plugin.
     """
+
     def __call__(self, command: HermesCommand) -> None:
         pass
+
+
+class HarvestSettings(BaseModel):
+    """Generic harvesting settings."""
+
+    sources: list[str] = []
 
 
 class HermesHarvestCommand(HermesCommand):

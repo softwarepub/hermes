@@ -6,8 +6,14 @@
 
 import argparse
 
+from pydantic import BaseModel
+
 from hermes.commands.base import HermesCommand
-from hermes.settings import PostprocessSettings
+
+
+class PostprocessSettings(BaseModel):
+    """Generic post-processing settings."""
+    execute: list = []
 
 
 class HermesPostprocessCommand(HermesCommand):

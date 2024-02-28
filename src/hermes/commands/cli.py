@@ -41,7 +41,8 @@ def main() -> None:
             HermesDepositCommand(parser),
             HermesPostprocessCommand(parser),
     ):
-        setting_types[command.command_name] = command.settings_class
+        if command.settings_class is not None:
+            setting_types[command.command_name] = command.settings_class
 
         command_parser = subparsers.add_parser(command.command_name, help=command.__doc__)
         command_parser.set_defaults(command=command)

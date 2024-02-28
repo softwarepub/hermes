@@ -15,6 +15,7 @@ from urllib.parse import urlparse
 
 import click
 import requests
+from pydantic import BaseModel
 
 from hermes.commands.deposit.base import BaseDepositPlugin
 from hermes.commands.deposit.error import DepositionUnauthorizedError
@@ -229,11 +230,28 @@ class InvenioResolver:
         return response.json()["id"]
 
 
+class InvenioDepositSettings(BaseModel):
+    """Settings required to deposit into Invenio(RDM)."""
+
+    site_url: str = ""
+
+    communities: list[str] = None
+    access_right: str = None
+    embargo_date: str = None
+    access_conditions: str = None
+    api_paths: t.Dict = {}
+
+    record_id: int = None
+    doi: str = None
+
+
+
 class InvenioDepositPlugin(BaseDepositPlugin):
 
     platform_name = "invenio"
     invenio_client_class = InvenioClient
     invenio_resolver_class = InvenioResolver
+    settings_class = InvenioDepositSettings
 
     def __init__(self, click_ctx: click.Context, ctx: CodeMetaContext, client=None, resolver=None) -> None:
         super().__init__(click_ctx, ctx)

@@ -12,8 +12,15 @@ from importlib import metadata
 from typing import Dict, Optional, Type
 
 import toml
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from hermes.settings import HermesSettings
+
+class HermesSettings(BaseSettings):
+    """Root class for HERMES configuration model."""
+
+    model_config = SettingsConfigDict(env_file_encoding='utf-8')
+
+    logging: Dict = {}
 
 
 class HermesCommand(abc.ABC):
@@ -62,19 +69,22 @@ class HermesCommand(abc.ABC):
         This will create a new class that includes all settings from the plugins available.
         """
 
-        # Derive a new settings model class that contains all the plug-in extensions
-        cls.settings_class = type(
-            f"{cls.__name__}Settings",
-            (cls.settings_class, ),
-            {
-                **{
-                    plugin_name: plugin_settings()
-                    for plugin_name, plugin_settings in setting_types.items()
-                    if plugin_settings is not None
+        if cls.settings_class is not None:
+            # Derive a new settings model class that contains all the plug-in extensions
+            cls.settings_class = type(
+                f"{cls.__name__}Settings",
+                (cls.settings_class, ),
+                {
+                    **{
+                        plugin_name: plugin_settings()
+                        for plugin_name, plugin_settings in setting_types.items()
+                        if plugin_settings is not None
+                    },
+                    "__annotations__": setting_types,
                 },
-                "__annotations__": setting_types,
-            },
-        )
+            )
+        elif setting_types:
+            raise ValueError(f"Command {cls.command_name} has no settings, hence plugin must not have settings, too.")
 
     def init_common_parser(self, parser: argparse.ArgumentParser) -> None:
         """Initialize the common command line arguments available for all HERMES sub-commands.
@@ -164,6 +174,7 @@ class HermesHelpCommand(HermesCommand):
     """Show help page and exit."""
 
     command_name = "help"
+    settings_class = None
 
     def init_command_parser(self, command_parser: argparse.ArgumentParser) -> None:
         command_parser.add_argument(

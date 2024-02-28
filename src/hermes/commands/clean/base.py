@@ -14,6 +14,7 @@ class HermesCleanCommand(HermesCommand):
     """ Clean up caches from previous HERMES runs. """
 
     command_name = "clean"
+    settings_class = None
 
     def __call__(self, args: argparse.Namespace) -> None:
         self.log.info("Removing HERMES caches...")

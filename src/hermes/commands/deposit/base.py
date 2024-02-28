@@ -9,13 +9,18 @@ import abc
 import argparse
 
 import click
+from pydantic import BaseModel
 
 from hermes.commands.base import HermesCommand, HermesPlugin
 from hermes.model.context import CodeMetaContext
-from hermes.settings import DepositSettings
 
 
 class BaseDepositPlugin(HermesPlugin):
+    """Base class that implements the generic deposition workflow.
+
+    TODO: describe workflow... needs refactoring to be less stateful!
+    """
+
     def __init__(self, click_ctx: click.Context, ctx: CodeMetaContext) -> None:
         self.click_ctx = click_ctx
         self.ctx = ctx
@@ -90,6 +95,12 @@ class BaseDepositPlugin(HermesPlugin):
     def publish(self) -> None:
         """Publish the newly created deposit on the target platform."""
         pass
+
+
+class DepositSettings(BaseModel):
+    """Generic deposition settings."""
+
+    target: str = ""
 
 
 class HermesDepositCommand(HermesCommand):
