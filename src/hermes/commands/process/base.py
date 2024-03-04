@@ -9,7 +9,6 @@ import argparse, sys, json
 from pydantic import BaseModel
 
 from hermes.commands.base import HermesCommand, HermesPlugin
-from hermes.commands.harvest.base import HarvestSettings
 from hermes.model.context import HermesHarvestContext, CodeMetaContext
 
 

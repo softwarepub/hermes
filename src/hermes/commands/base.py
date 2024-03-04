@@ -12,6 +12,7 @@ from importlib import metadata
 from typing import Dict, Optional, Type
 
 import toml
+from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -170,11 +171,15 @@ class HermesPlugin(abc.ABC):
         pass
 
 
+class HermesHelpSettings(BaseModel):
+    pass
+
+
 class HermesHelpCommand(HermesCommand):
     """Show help page and exit."""
 
     command_name = "help"
-    settings_class = None
+    settings_class = HermesHelpSettings
 
     def init_command_parser(self, command_parser: argparse.ArgumentParser) -> None:
         command_parser.add_argument(
