@@ -252,14 +252,14 @@ class InvenioDepositPlugin(BaseDepositPlugin):
     invenio_resolver_class = InvenioResolver
     settings_class = InvenioDepositSettings
 
-    def __init__(self, click_ctx: click.Context, ctx: CodeMetaContext, client=None, resolver=None) -> None:
-        super().__init__(click_ctx, ctx)
+    def __init__(self, ctx: CodeMetaContext, client=None, resolver=None) -> None:
+        super().__init__(ctx)
 
         self.invenio_context_path = ContextPath.parse(f"deposit.{self.platform_name}")
         self.invenio_ctx = None
 
         if client is None:
-            auth_token = self.click_ctx.params.get("auth_token")
+            auth_token = self.ctx.params.get("auth_token")
             if auth_token is None:
                 raise DepositionUnauthorizedError("No auth token given for deposition platform")
             self.client = self.invenio_client_class(auth_token=auth_token, platform_name=self.platform_name)
@@ -334,7 +334,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
     def create_initial_version(self) -> None:
         """Create an initial version of a publication."""
 
-        if not self.click_ctx.params['initial']:
+        if not self.ctx.params['initial']:
             raise RuntimeError("Please use `--initial` to make an initial deposition.")
 
         response = self.client.new_deposit()
@@ -412,7 +412,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
         bucket_url = self.links["bucket"]
 
-        files: list[click.Path] = self.click_ctx.params["file"]
+        files: list[click.Path] = self.ctx.params["file"]
         for path_arg in files:
             path = Path(path_arg)
 

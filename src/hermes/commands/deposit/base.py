@@ -8,11 +8,9 @@
 import abc
 import argparse
 
-import click
 from pydantic import BaseModel
 
 from hermes.commands.base import HermesCommand, HermesPlugin
-from hermes.model.context import CodeMetaContext
 
 
 class BaseDepositPlugin(HermesPlugin):
@@ -21,8 +19,7 @@ class BaseDepositPlugin(HermesPlugin):
     TODO: describe workflow... needs refactoring to be less stateful!
     """
 
-    def __init__(self, click_ctx: click.Context, ctx: CodeMetaContext) -> None:
-        self.click_ctx = click_ctx
+    def __init__(self, ctx):
         self.ctx = ctx
 
     def __call__(self, command: HermesCommand) -> None:
@@ -110,4 +107,15 @@ class HermesDepositCommand(HermesCommand):
     settings_class = DepositSettings
 
     def __call__(self, args: argparse.Namespace) -> None:
-        pass
+        self.args = args
+        plugin_name = self.settings.target
+        '''try:
+            plugin_func = self.plugins[plugin_name](ctx)
+            deposited_data = plugin_func(self)
+
+
+        except KeyError:
+            self.log.error("Plugin '%s' not found.", plugin_name)
+
+        except HermesValidationError as e:
+            self.log.error("Error while executing %s: %s", plugin_name, e)'''
