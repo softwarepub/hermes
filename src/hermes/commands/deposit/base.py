@@ -71,17 +71,14 @@ class BaseDepositPlugin(HermesPlugin):
         """
         return True
 
-    @abc.abstractmethod
     def create_initial_version(self) -> None:
         """Create an initial version of the publication on the target platform."""
         pass
 
-    @abc.abstractmethod
     def create_new_version(self) -> None:
         """Create a new version of an existing publication on the target platform."""
         pass
 
-    @abc.abstractmethod
     def update_metadata(self) -> None:
         """Update the metadata of the newly created version."""
         pass
