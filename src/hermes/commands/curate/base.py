@@ -4,11 +4,12 @@
 
 # SPDX-FileContributor: Michael Meinel
 
-import argparse
+import argparse, sys, os, shutil
 
 from pydantic import BaseModel
 
 from hermes.commands.base import HermesCommand
+from hermes.model.context import CodeMetaContext
 
 
 class CurateSettings(BaseModel):
@@ -27,4 +28,17 @@ class HermesCurateCommand(HermesCommand):
         pass
 
     def __call__(self, args: argparse.Namespace) -> None:
-        pass
+
+        self.log.info("# Metadata curation")
+
+        ctx = CodeMetaContext()
+        process_output = ctx.hermes_dir / 'process' / (ctx.hermes_name + ".json")
+
+        if not process_output.is_file():
+            self.log.error(
+                "No processed metadata found. Please run `hermes process` before curation."
+            )
+            sys.exit(1)
+
+        os.makedirs(ctx.hermes_dir / 'curate', exist_ok=True)
+        shutil.copy(process_output, ctx.hermes_dir / 'curate' / (ctx.hermes_name + '.json'))

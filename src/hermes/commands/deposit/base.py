@@ -5,12 +5,15 @@
 # SPDX-FileContributor: David Pape
 # SPDX-FileContributor: Michael Meinel
 
-import abc
+import abc, sys, json
 import argparse
 
 from pydantic import BaseModel
 
 from hermes.commands.base import HermesCommand, HermesPlugin
+from hermes.model.context import CodeMetaContext
+from hermes.model.path import ContextPath
+from hermes.model.errors import HermesValidationError
 
 
 class BaseDepositPlugin(HermesPlugin):
@@ -106,16 +109,30 @@ class HermesDepositCommand(HermesCommand):
     command_name = "deposit"
     settings_class = DepositSettings
 
+
     def __call__(self, args: argparse.Namespace) -> None:
         self.args = args
         plugin_name = self.settings.target
-        '''try:
+        print(self.args)
+
+        ctx = CodeMetaContext()
+        try:
+            codemeta_file = ctx.get_cache("curate", ctx.hermes_name)
+            if not codemeta_file.exists():
+                self.log.error("You must run the 'curate' command before deposit")
+                sys.exit(1)
+
+            codemeta_path = ContextPath("codemeta")
+            with open(codemeta_file) as codemeta_fh:
+                ctx.update(codemeta_path, json.load(codemeta_fh))
+
             plugin_func = self.plugins[plugin_name](ctx)
             deposited_data = plugin_func(self)
+
 
 
         except KeyError:
             self.log.error("Plugin '%s' not found.", plugin_name)
 
         except HermesValidationError as e:
-            self.log.error("Error while executing %s: %s", plugin_name, e)'''
+            self.log.error("Error while executing %s: %s", plugin_name, e)

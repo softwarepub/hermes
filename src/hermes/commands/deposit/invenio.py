@@ -240,6 +240,7 @@ class InvenioDepositSettings(BaseModel):
     embargo_date: str = None
     access_conditions: str = None
     api_paths: t.Dict = {}
+    auth_token: str = None
 
     record_id: int = None
     doi: str = None
