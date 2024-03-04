@@ -9,7 +9,8 @@ import argparse
 from pydantic import BaseModel
 
 from hermes.commands.base import HermesCommand, HermesPlugin
-from hermes.model.errors import HermesValidationError
+from hermes.model.context import HermesContext, HermesHarvestContext
+from hermes.model.errors import HermesValidationError, MergeError
 
 
 class HermesHarvestPlugin(HermesPlugin):
@@ -36,13 +37,23 @@ class HermesHarvestCommand(HermesCommand):
 
     def __call__(self, args: argparse.Namespace) -> None:
         self.args = args
+        ctx = HermesContext()
+
+        # Initialize the harvest cache directory here to indicate the step ran
+        ctx.init_cache("harvest")
 
         for plugin_name in self.settings.sources:
             try:
                 plugin_func = self.plugins[plugin_name]()
-                harvested_data = plugin_func(self)
+                harvested_data, local_path = plugin_func(self)
                 print(harvested_data)
-                # TODO: store harvested data for later use
+                with HermesHarvestContext(
+                        ctx, plugin_name
+                ) as harvest_ctx:
+                    harvest_ctx.update_from(harvested_data, local_path=local_path)
+                    for _key, ((_value, _tag), *_trace) in harvest_ctx._data.items():
+                        if any(v != _value and t == _tag for v, t in _trace):
+                            raise MergeError(_key, None, _value)
 
             except KeyError:
                 self.log.error("Plugin '%s' not found.", plugin_name)

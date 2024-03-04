@@ -55,7 +55,7 @@ class CffHarvestPlugin(HermesHarvestPlugin):
         # TODO Replace the following temp patch for #112 once there is a new cffconvert version with cffconvert#309
         codemeta_dict = self._patch_author_emails(cff_dict, codemeta_dict)
 
-        return codemeta_dict
+        return codemeta_dict,  str(cff_file)
 
     def _load_cff_from_file(self, cff_data: str) -> t.Any:
         yaml = YAML(typ='safe')

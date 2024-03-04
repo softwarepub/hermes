@@ -130,8 +130,8 @@ class HermesCommand(abc.ABC):
         """Load settings from the configuration file (passed in from command line)."""
 
         toml_data = toml.load(args.path / args.config)
-        root_settings = HermesCommand.settings_class.model_validate(toml_data)
-        self.settings = getattr(root_settings, self.command_name)
+        self.root_settings = HermesCommand.settings_class.model_validate(toml_data)
+        self.settings = getattr(self.root_settings, self.command_name)
 
     def patch_settings(self, args: argparse.Namespace):
         """Process command line options for the settings."""
