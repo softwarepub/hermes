@@ -16,7 +16,7 @@ from hermes.model.errors import HermesValidationError
 
 
 class CodeMetaHarvestPlugin(HermesHarvestPlugin):
-    def __call__(self, command: HermesHarvestCommand):
+    def __call__(self, command: HermesHarvestCommand) -> t.Tuple[t.Dict, t.Dict]:
         """
         Implementation of a harvester that provides data from a codemeta.json file format.
 
@@ -39,7 +39,7 @@ class CodeMetaHarvestPlugin(HermesHarvestPlugin):
             raise HermesValidationError(codemeta_file)
 
         codemeta = json.loads(codemeta_str)
-        return codemeta,  str(codemeta_file)
+        return codemeta, {'local_path': str(codemeta_file)}
 
     def _validate(self, codemeta_file: pathlib.Path) -> bool:
         with open(codemeta_file, "r") as fi:

@@ -5,6 +5,8 @@ import abc
 # SPDX-FileContributor: Michael Meinel
 
 import argparse
+import typing as t
+from datetime import datetime
 
 from pydantic import BaseModel
 
@@ -19,7 +21,7 @@ class HermesHarvestPlugin(HermesPlugin):
     TODO: describe the harvesting process and how this is mapped to this plugin.
     """
 
-    def __call__(self, command: HermesCommand) -> None:
+    def __call__(self, command: HermesCommand) -> t.Tuple[t.Dict, t.Dict]:
         pass
 
 
@@ -45,12 +47,12 @@ class HermesHarvestCommand(HermesCommand):
         for plugin_name in self.settings.sources:
             try:
                 plugin_func = self.plugins[plugin_name]()
-                harvested_data, local_path = plugin_func(self)
+                harvested_data, tags = plugin_func(self)
                 print(harvested_data)
                 with HermesHarvestContext(
                         ctx, plugin_name
                 ) as harvest_ctx:
-                    harvest_ctx.update_from(harvested_data, local_path=local_path)
+                    harvest_ctx.update_from(harvested_data, plugin=plugin_name, timestamp=datetime.now(), **tags)
                     for _key, ((_value, _tag), *_trace) in harvest_ctx._data.items():
                         if any(v != _value and t == _tag for v, t in _trace):
                             raise MergeError(_key, None, _value)

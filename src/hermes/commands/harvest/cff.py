@@ -35,7 +35,7 @@ class CffHarvestSettings(BaseModel):
 class CffHarvestPlugin(HermesHarvestPlugin):
     settings_class = CffHarvestSettings
 
-    def __call__(self, command: HermesHarvestCommand) -> None:
+    def __call__(self, command: HermesHarvestCommand) -> t.Tuple[t.Dict, t.Dict]:
         # Get source files
         cff_file = self._get_single_cff(command.args.path)
         if not cff_file:
@@ -55,7 +55,7 @@ class CffHarvestPlugin(HermesHarvestPlugin):
         # TODO Replace the following temp patch for #112 once there is a new cffconvert version with cffconvert#309
         codemeta_dict = self._patch_author_emails(cff_dict, codemeta_dict)
 
-        return codemeta_dict,  str(cff_file)
+        return codemeta_dict, {'local_path': str(cff_file)}
 
     def _load_cff_from_file(self, cff_data: str) -> t.Any:
         yaml = YAML(typ='safe')
