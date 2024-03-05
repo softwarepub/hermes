@@ -52,7 +52,9 @@ class HermesHarvestCommand(HermesCommand):
                 with HermesHarvestContext(
                         ctx, plugin_name
                 ) as harvest_ctx:
-                    harvest_ctx.update_from(harvested_data, plugin=plugin_name, timestamp=datetime.now(), **tags)
+                    harvest_ctx.update_from(harvested_data,
+                                            plugin=plugin_name,
+                                            timestamp=datetime.now().isoformat(), **tags)
                     for _key, ((_value, _tag), *_trace) in harvest_ctx._data.items():
                         if any(v != _value and t == _tag for v, t in _trace):
                             raise MergeError(_key, None, _value)
