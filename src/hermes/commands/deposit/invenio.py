@@ -8,6 +8,7 @@
 
 import json
 import logging
+import pathlib
 import typing as t
 from datetime import date, datetime
 from pathlib import Path
@@ -241,6 +242,7 @@ class InvenioDepositSettings(BaseModel):
     access_conditions: str = None
     api_paths: t.Dict = {}
     auth_token: str = None
+    files: list[pathlib.Path] = None
 
     record_id: int = None
     doi: str = None
@@ -413,7 +415,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
         bucket_url = self.links["bucket"]
 
-        files: list[click.Path] = self.ctx.params["file"]
+        files: list[click.Path] = self.config.files
         for path_arg in files:
             path = Path(path_arg)
 
