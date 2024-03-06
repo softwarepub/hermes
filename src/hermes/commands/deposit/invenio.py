@@ -241,8 +241,8 @@ class InvenioDepositSettings(BaseModel):
     embargo_date: str = None
     access_conditions: str = None
     api_paths: t.Dict = {}
-    auth_token: str = None
-    files: list[pathlib.Path] = None
+    auth_token: str = ''
+    files: list[pathlib.Path] = []
 
     record_id: int = None
     doi: str = None
@@ -415,13 +415,13 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
         bucket_url = self.links["bucket"]
 
-        files: list[click.Path] = self.config.files
+        files = *self.config.files, *[f[0] for f in self.command.args.file]
         for path_arg in files:
             path = Path(path_arg)
 
             # This should not happen, as Click shall not accept dirs as arguments already. Zero trust anyway.
             if not path.is_file():
-                raise ValueError("Any given argument to be included in the deposit must be a file.")
+                raise ValueError(f"{path}: Any given argument to be included in the deposit must be a file.")
 
             with open(path, "rb") as file_content:
                 response = self.client.put(
