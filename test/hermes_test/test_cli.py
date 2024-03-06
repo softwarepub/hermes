@@ -7,7 +7,6 @@
 import pytest
 
 from hermes.commands import cli
-from hermes.commands.deposit.error import DepositionUnauthorizedError
 
 
 def test_hermes_full(capsys):

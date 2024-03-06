@@ -6,7 +6,7 @@
 # SPDX-FileContributor: Michael Meinel
 
 import pathlib
-from typing import Any, Dict, Tuple, Type
+from typing import Any, Dict, Tuple
 
 import toml
 from pydantic.fields import FieldInfo
