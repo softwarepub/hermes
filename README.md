@@ -26,10 +26,13 @@ Implementation of the HERMES workflow. For more extensive documentation, see the
 
 `hermes`' primary use case is to [use it in a continuous integration environment](https://docs.software-metadata.pub/en/latest/tutorials/automated-publication-with-ci.html).
 
-In case you still want to install on your machine, you can (for example) use `pip`. 
+In case you still want to install on your machine, you can (for example) use `pip`:
 
-- Note: you must have Python 3.10 or newer installed.
-- Note: please use the development installation method for now - releases coming to PyPI soon!
+```shell
+pip install hermes
+```
+
+**Note:** you must have Python 3.10 or newer installed.
 
 ### Development Snapshot
 
