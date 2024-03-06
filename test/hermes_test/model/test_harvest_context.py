@@ -4,8 +4,6 @@
 
 # SPDX-FileContributor: Michael Meinel
 
-from importlib.metadata import EntryPoint
-
 import pytest
 
 from hermes.model.context import HermesContext, HermesHarvestContext
@@ -14,10 +12,7 @@ from hermes.model.context import HermesContext, HermesHarvestContext
 @pytest.fixture
 def harvest_ctx(request: pytest.FixtureRequest):
     ctx = HermesContext()
-    return HermesHarvestContext(
-        ctx,
-        EntryPoint(name=request.function.__name__, group='hermes.harvest', value='hermes_test:ctx')
-    )
+    return HermesHarvestContext(ctx, request.function.__name__)
 
 
 def test_context_default(harvest_ctx):

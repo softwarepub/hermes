@@ -10,11 +10,7 @@ import typing as t
 
 from requests import HTTPError
 
-from hermes.commands.deposit.invenio import (
-    InvenioClient,
-    InvenioDepositPlugin,
-    InvenioResolver,
-)
+from hermes.commands.deposit.invenio import InvenioClient, InvenioDepositPlugin, InvenioResolver
 
 
 class InvenioRDMClient(InvenioClient):
