@@ -14,7 +14,6 @@ from datetime import date, datetime
 from pathlib import Path
 from urllib.parse import urlparse
 
-import click
 import requests
 from pydantic import BaseModel
 
@@ -266,7 +265,8 @@ class InvenioDepositPlugin(BaseDepositPlugin):
             auth_token = self.config.auth_token
             if not auth_token:
                 raise DepositionUnauthorizedError("No valid auth token given for deposition platform")
-            self.client = self.invenio_client_class(self.config, auth_token=auth_token, platform_name=self.platform_name)
+            self.client = self.invenio_client_class(self.config,
+                                                    auth_token=auth_token, platform_name=self.platform_name)
         else:
             self.client = client
 

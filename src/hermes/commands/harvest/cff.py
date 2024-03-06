@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2022 German Aerospace Center (DLR)
 #
 # SPDX-License-Identifier: Apache-2.0
-import argparse
+
 # SPDX-FileContributor: Stephan Druskat
 # SPDX-FileContributor: Michael Meinel
 
@@ -18,7 +18,7 @@ from cffconvert import Citation
 
 from hermes.model.context import ContextPath
 from hermes.model.errors import HermesValidationError
-from hermes.commands.harvest import HermesHarvestPlugin, HermesHarvestCommand
+from hermes.commands.harvest.base import HermesHarvestPlugin, HermesHarvestCommand
 
 
 # TODO: should this be configurable via a CLI option?

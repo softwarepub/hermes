@@ -7,10 +7,7 @@
 import logging
 import pathlib
 
-import hermes.settings
-from hermes.model.context import HermesContext
 
-config = None
 # This is the default logging configuration, required to see log output at all.
 #  - Maybe it could possibly somehow be a somewhat good idea to move this into an own module ... later perhaps
 _logging_config = {

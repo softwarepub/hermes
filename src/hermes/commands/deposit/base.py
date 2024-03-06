@@ -5,8 +5,10 @@
 # SPDX-FileContributor: David Pape
 # SPDX-FileContributor: Michael Meinel
 
-import abc, sys, json
+import abc
 import argparse
+import json
+import sys
 
 from pydantic import BaseModel
 
@@ -133,11 +135,11 @@ class HermesDepositCommand(HermesCommand):
         try:
             plugin_func = self.plugins[plugin_name](self, ctx)
 
-        except KeyError as e:
+        except KeyError:
             self.log.error("Plugin '%s' not found.", plugin_name)
 
         try:
-            deposited_data = plugin_func(self)
+            plugin_func(self)
 
         except HermesValidationError as e:
             self.log.error("Error while executing %s: %s", plugin_name, e)

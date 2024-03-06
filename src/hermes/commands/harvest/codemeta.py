@@ -10,7 +10,7 @@ import json
 import pathlib
 import typing as t
 
-from hermes.commands.harvest import HermesHarvestCommand, HermesHarvestPlugin
+from hermes.commands.harvest.base import HermesHarvestCommand, HermesHarvestPlugin
 from hermes.commands.harvest.util.validate_codemeta import validate_codemeta
 from hermes.model.errors import HermesValidationError
 

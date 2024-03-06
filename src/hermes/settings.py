@@ -9,9 +9,8 @@ import pathlib
 from typing import Any, Dict, Tuple, Type
 
 import toml
-from pydantic import BaseModel
 from pydantic.fields import FieldInfo
-from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
+from pydantic_settings import PydanticBaseSettingsSource
 
 
 class TomlConfigSettingsSource(PydanticBaseSettingsSource):

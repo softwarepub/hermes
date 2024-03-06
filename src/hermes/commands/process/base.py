@@ -4,7 +4,9 @@
 
 # SPDX-FileContributor: Michael Meinel
 
-import argparse, sys, json
+import argparse
+import json
+import sys
 
 from pydantic import BaseModel
 
