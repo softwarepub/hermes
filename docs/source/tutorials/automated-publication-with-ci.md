@@ -70,7 +70,7 @@ Configure HERMES to:
 :name: hermes.toml
 
 [harvest]
-from = [ "git", "cff" ]
+sources = [ "cff" ]
 
 [deposit]
 target = "invenio_rdm"
@@ -79,8 +79,6 @@ target = "invenio_rdm"
 site_url = "https://sandbox.zenodo.org"
 access_right = "open"
 
-[postprocess]
-execute = [ "config_invenio_rdm_record_id" ]
 ```
 
 Copy this file to the root directory of your repository and add it to version control:
