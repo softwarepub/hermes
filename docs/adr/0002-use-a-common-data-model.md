@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2022 German Aerospace Center (DLR), Forschungszentrum Jülich, Helmholtz-Zentrum Dresden-Rossendorf
+
+SPDX-License-Identifier: CC-BY-SA-4.0
+-->
+
 # Use a common data model
 
 * Status: accepted
@@ -8,10 +14,13 @@
 
 We need a data model that's
 
-- extensible, to take up metaedata that cannot yet be included in CodeMeta.json
+- extensible, to take up metadata that cannot yet be included in CodeMeta.json
 - compatible with RO-Crate
 
 to exchange data between modules.
+
+The chosen option determines the serialization of the data model, too.
+See also [ADR 11](./0011-record-provenance-of-metadata.md) about provenance records in the data model.
 
 ## Considered Options
 
@@ -26,6 +35,7 @@ Chosen option: "CodeMeta + schema-based, extended JSON-LD for internal data mode
 
 * Compatibility with RO-Crate
 * Compatibility with CodeMeta
+* Compatibility with custom metadata to be deposited along standardized metadata
 
 ### Negative Consequences
 

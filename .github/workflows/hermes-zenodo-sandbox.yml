@@ -1,0 +1,31 @@
+# SPDX-FileCopyrightText: 2023 German Aerospace Center (DLR), Helmholtz-Zentrum Drseden-Rossendorf, Forschungszentrum Jülich
+#
+# SPDX-License-Identifier: CC0-1.0
+
+# SPDX-FileContributor: Stephan Druskat
+
+name: Software publication on Zenodo Sandbox
+
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  hermes:
+    name: HERMES
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # We will only read content from the repo
+      # pull-requests: write # Postprocessing should be able to create a pull request with changes
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - run: pip install git+https://github.com/sdruskat/workflow.git@deRSE23
+      - run: git archive --format zip HEAD src > hermes.zip
+      - run: hermes
+      - run: hermes deposit -O invenio_rdm.auth-token ${{ secrets.ZENODO }} --file hermes.zip --file README.md
+      # - run: hermes postprocess # (Not implemented yet)
+      # - uses: peter-evans/create-pull-request@v4 (TODO once postprocessing has it)

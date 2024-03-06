@@ -1,15 +1,106 @@
+# SPDX-FileCopyrightText: 2022 German Aerospace Center (DLR)
+#
+# SPDX-License-Identifier: CC0-1.0
+
+# SPDX-FileContributor: Stephan Druskat
+# SPDX-FileContributor: Michael Meinel
+# SPDX-FileContributor: David Pape
+
 [tool.poetry]
+# Reference at https://python-poetry.org/docs/pyproject/
 name = "hermes"
-version = "0.1.0"
+version = "0.8.0"
 description = "Workflow to publish research software with rich metadata"
-authors = ["Stephan Druskat <stephan.druskat@dlr.de>", "Michael Meinel <michael.meinel@dlr.de"]
+homepage = "https://software-metadata.pub"
+license = "Apache-2.0"
+authors = [
+    "Stephan Druskat <stephan.druskat@dlr.de>",
+    "Michael Meinel <michael.meinel@dlr.de>",
+    "Oliver Bertuch <o.bertuch@fz-juelich.de>",
+    "Jeffrey Kelling <j.kelling@hzdr.de>",
+    "Oliver Knodel <o.knodel@hzdr.de>",
+    "David Pape <d.pape@hzdr.de>",
+]
+
+readme = "README.md"
+repository = "https://github.com/hermes-hmc/workflow"
+documentation = "https://docs.software-metadata.pub"
+keywords = ["publishing", "metadata", "automation"]
+
+include = [
+    "hermes/schema/*.json",
+]
+
+# Stating our package explicitely here to enable
+#     a) including contrib packages in the future and
+#     b) rename the package for development snapshot releases to TestPyPI
+packages = [
+    { include = "hermes", from = "src" }
+]
 
 [tool.poetry.dependencies]
 python = "^3.10"
+"ruamel.yaml" = "^0.17.21"
+jsonschema = "^3.0.0"
+pyld = "^2.0.3"
+cffconvert = "^2.0.0"
+toml = "^0.10.2"
+pyparsing = "^3.0.9"
+requests = "^2.28.1"
+pydantic = "^2.5.1"
+pydantic-settings = "^2.1.0"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 pytest = "^7.1.1"
+pytest-cov = "^3.0.0"
+taskipy = "^1.10.3"
+flake8 = "^5.0.4"
+requests-mock = "^1.10.0"
+
+# Packages for developers for creating documentation
+[tool.poetry.group.docs]
+optional = true
+
+[tool.poetry.group.docs.dependencies]
+Sphinx = "^6.2.1"
+# Sphinx - Additional modules
+myst-parser = "^2.0.0"
+sphinx-book-theme = "^1.0.1"
+sphinx-favicon = "^0.2"
+sphinxcontrib-contentui = "^0.2.5"
+sphinxcontrib-images = "^0.9.4"
+sphinx-icon = "^0.1.2"
+sphinx-autobuild = "^2021.3.14"
+sphinx-autoapi = "^3.0.0"
+sphinxemoji = "^0.2.0"
+sphinxext-opengraph = "^0.6.3"
+sphinxcontrib-mermaid="^0.8.1"
+sphinx-togglebutton="^0.3.2"
+reuse = "^1.1.2"
+
+[tool.poetry.plugins.console_scripts]
+hermes = "hermes.commands.cli:main"
+
+[tool.poetry.plugins."hermes.harvest"]
+cff = "hermes.commands.harvest.cff:CffHarvestPlugin"
+codemeta = "hermes.commands.harvest.codemeta:CodeMetaHarvestPlugin"
+
+[tool.poetry.plugins."hermes.deposit"]
+file = "hermes.commands.deposit.file:FileDepositPlugin"
+invenio = "hermes.commands.deposit.invenio:InvenioDepositPlugin"
+invenio_rdm = "hermes.commands.deposit.invenio_rdm:IvenioRDMDepositPlugin"
+
+[tool.poetry.plugins."hermes.postprocess"]
+config_invenio_record_id = "hermes.commands.postprocess.invenio:config_record_id"
+config_invenio_rdm_record_id = "hermes.commands.postprocess.invenio_rdm:config_record_id"
+cff_doi = "hermes.commands.postprocess.invenio:cff_doi"
+
+[tool.taskipy.tasks]
+docs-build = "poetry run sphinx-build -M html docs/source docs/build -W"
+docs-clean = "poetry run sphinx-build -M clean docs/source docs/build"
+docs-live = "poetry run sphinx-autobuild docs/source docs/build"
+flake8 = "poetry run flake8 ./test/ ./src/ --count --select=E9,F63,F7,F82 --statistics"
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core>=1.2.0"]
 build-backend = "poetry.core.masonry.api"
