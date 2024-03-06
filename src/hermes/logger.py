@@ -7,10 +7,7 @@
 import logging
 import pathlib
 
-import hermes.settings
-from hermes.model.context import HermesContext
 
-config = None
 # This is the default logging configuration, required to see log output at all.
 #  - Maybe it could possibly somehow be a somewhat good idea to move this into an own module ... later perhaps
 _logging_config = {
@@ -58,30 +55,6 @@ _config = {
     # We need some basic logging configuration to get logging up and running at all
     'logging': _logging_config,
 }
-
-
-def configure(settings: hermes.settings.HermesSettings, working_path: pathlib.Path):
-    """
-    Load the configuration from the given path as global hermes configuration.
-
-    :param config_path: The path to a TOML file containing HERMES configuration.
-    """
-    if 'hermes' in _config and _config['hermes']:
-        return
-
-    # Load sane default paths for log files before potentially overwritting via configuration
-    _config['logging']['handlers']['logfile']['filename'] = \
-        working_path / HermesContext.hermes_cache_name / "hermes.log"
-    _config['logging']['handlers']['auditfile']['filename'] = \
-        working_path / HermesContext.hermes_cache_name / "audit.log"
-
-    _config['hermes'] = settings
-    global config
-    config = settings
-    _config['logging'] = settings.logging if settings.logging != {} else _config['logging']
-
-# Might be a good idea to move somewhere else (see comment for _logging_config)?
-
 
 _loggers = {}
 

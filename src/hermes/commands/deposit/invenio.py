@@ -8,15 +8,16 @@
 
 import json
 import logging
+import pathlib
 import typing as t
 from datetime import date, datetime
 from pathlib import Path
 from urllib.parse import urlparse
 
-import click
 import requests
+from pydantic import BaseModel
 
-from hermes.commands.deposit.base import BaseDepositPlugin
+from hermes.commands.deposit.base import BaseDepositPlugin, HermesDepositCommand
 from hermes.commands.deposit.error import DepositionUnauthorizedError
 from hermes.error import MisconfigurationError
 from hermes.model.context import CodeMetaContext
@@ -36,18 +37,18 @@ class InvenioClient(requests.Session):
     # Used for context path and config
     platform_name = "invenio"
 
-    def __init__(self, auth_token=None, platform_name=None) -> None:
+    def __init__(self, config, auth_token=None, platform_name=None) -> None:
         super().__init__()
 
         if platform_name is not None:
             self.platform_name = platform_name
 
-        self.config = getattr(self.ctx.config.deposit, self.platform_name)
+        self.config = config
         self.headers.update({"User-Agent": hermes_user_agent})
 
         self.auth_token = auth_token
         self.site_url = self.config.site_url
-        if self.site_url is None:
+        if not self.site_url:
             raise MisconfigurationError(f"deposit.{self.platform_name}.site_url is not configured")
 
     def request(self, method, url, headers=None, **kwargs) -> requests.Response:
@@ -229,28 +230,47 @@ class InvenioResolver:
         return response.json()["id"]
 
 
+class InvenioDepositSettings(BaseModel):
+    """Settings required to deposit into Invenio(RDM)."""
+
+    site_url: str = ""
+
+    communities: list[str] = None
+    access_right: str = None
+    embargo_date: str = None
+    access_conditions: str = None
+    api_paths: t.Dict = {}
+    auth_token: str = ''
+    files: list[pathlib.Path] = []
+
+    record_id: int = None
+    doi: str = None
+
+
 class InvenioDepositPlugin(BaseDepositPlugin):
 
     platform_name = "invenio"
     invenio_client_class = InvenioClient
     invenio_resolver_class = InvenioResolver
+    settings_class = InvenioDepositSettings
 
-    def __init__(self, click_ctx: click.Context, ctx: CodeMetaContext, client=None, resolver=None) -> None:
-        super().__init__(click_ctx, ctx)
+    def __init__(self, command: HermesDepositCommand, ctx: CodeMetaContext, client=None, resolver=None) -> None:
+        super().__init__(command, ctx)
 
         self.invenio_context_path = ContextPath.parse(f"deposit.{self.platform_name}")
         self.invenio_ctx = None
+        self.config = getattr(self.command.settings, self.platform_name)
 
         if client is None:
-            auth_token = self.click_ctx.params.get("auth_token")
-            if auth_token is None:
-                raise DepositionUnauthorizedError("No auth token given for deposition platform")
-            self.client = self.invenio_client_class(auth_token=auth_token, platform_name=self.platform_name)
+            auth_token = self.config.auth_token
+            if not auth_token:
+                raise DepositionUnauthorizedError("No valid auth token given for deposition platform")
+            self.client = self.invenio_client_class(self.config,
+                                                    auth_token=auth_token, platform_name=self.platform_name)
         else:
             self.client = client
 
         self.resolver = resolver or self.invenio_resolver_class(self.client)
-        self.config = getattr(self.ctx.config.deposit, self.platform_name)
         self.links = {}
 
     # TODO: Populate some data structure here? Or move more of this into __init__?
@@ -317,7 +337,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
     def create_initial_version(self) -> None:
         """Create an initial version of a publication."""
 
-        if not self.click_ctx.params['initial']:
+        if not self.command.args.initial:
             raise RuntimeError("Please use `--initial` to make an initial deposition.")
 
         response = self.client.new_deposit()
@@ -395,13 +415,13 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
         bucket_url = self.links["bucket"]
 
-        files: list[click.Path] = self.click_ctx.params["file"]
+        files = *self.config.files, *[f[0] for f in self.command.args.file]
         for path_arg in files:
             path = Path(path_arg)
 
             # This should not happen, as Click shall not accept dirs as arguments already. Zero trust anyway.
             if not path.is_file():
-                raise ValueError("Any given argument to be included in the deposit must be a file.")
+                raise ValueError(f"{path}: Any given argument to be included in the deposit must be a file.")
 
             with open(path, "rb") as file_content:
                 response = self.client.put(
@@ -494,7 +514,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
                 }.items() if v is not None
             }
             # TODO: Filtering out "GitHub" should be done elsewhere
-            for contributor in metadata["contributor"] if contributor.get("name") != "GitHub"
+            for contributor in metadata.get("contributor", []) if contributor.get("name") != "GitHub"
         ]
 
         # TODO: Use the fields currently set to `None`.

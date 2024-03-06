@@ -57,10 +57,6 @@ class HermesContext:
         self._errors = []
         self.contexts = {self.hermes_lod_context}
 
-        # HACK this needs to be done differently
-        from hermes import logger
-        self.config = logger.config
-
     def __getitem__(self, key: ContextPath | str) -> t.Any:
         """
         Access a single entry from the context.
@@ -194,20 +190,19 @@ class HermesHarvestContext(HermesContext):
 
         self._base = base
         self._ep = ep
-        self._log = logging.getLogger(f'harvest.{self._ep.name}')
-        self.config = config or {}
+        self._log = logging.getLogger(f'harvest.{self._ep}')
 
     def load_cache(self):
         """
         Load the cached data from the :py:attr:`HermesContext.hermes_dir`.
         """
 
-        data_file = self._base.get_cache('harvest', self._ep.name)
+        data_file = self._base.get_cache('harvest', self._ep)
         if data_file.is_file():
             self._log.debug("Loading cache from %s...", data_file)
             self._data = json.load(data_file.open('r'))
 
-        contexts_file = self._base.get_cache('harvest', self._ep.name + '_contexts')
+        contexts_file = self._base.get_cache('harvest', self._ep + '_contexts')
         if contexts_file.is_file():
             self._log.debug("Loading contexts from %s...", contexts_file)
             contexts = json.load(contexts_file.open('r'))
@@ -219,12 +214,12 @@ class HermesHarvestContext(HermesContext):
         Store the collected data to the :py:attr:`HermesContext.hermes_dir`.
         """
 
-        data_file = self.get_cache('harvest', self._ep.name, create=True)
+        data_file = self.get_cache('harvest', self._ep, create=True)
         self._log.debug("Writing cache to %s...", data_file)
         json.dump(self._data, data_file.open('w'), indent=2)
 
         if self.contexts:
-            contexts_file = self.get_cache('harvest', self._ep.name + '_contexts', create=True)
+            contexts_file = self.get_cache('harvest', self._ep + '_contexts', create=True)
             self._log.debug("Writing contexts to %s...", contexts_file)
             json.dump(list(self.contexts), contexts_file.open('w'), indent=2)
 
@@ -265,7 +260,7 @@ class HermesHarvestContext(HermesContext):
         """
 
         timestamp = kwargs.pop('timestamp', self.default_timestamp)
-        harvester = kwargs.pop('harvester', self._ep.name)
+        harvester = kwargs.pop('harvester', self._ep)
 
         if _key not in self._data:
             self._data[_key] = []

@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: CC0-1.0
 
 [harvest]
-sources = [ "cff", "git" ]
+sources = [ "cff", "git" ] # ordered priority (first one is most important)
 
 [harvest.cff]
 enable_validation = false
@@ -15,6 +15,9 @@ target = "invenio_rdm"
 site_url = "https://sandbox.zenodo.org"
 communities = []
 access_right = "open"
+auth_token = "vvgPav3ZvQ89Fs1WFt3T9OSiIEsetzdKMwy0cK8UaP1SR5uL005O3bdbejiE"
+files = ["hermes.zip", "README.md"]
+
 
 [deposit.invenio_rdm.api_paths]
 depositions = "api/deposit/depositions"
