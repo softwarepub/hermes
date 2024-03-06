@@ -22,18 +22,24 @@ Implementation of the HERMES workflow. For more extensive documentation, see the
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=hermes-hmc_workflow&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=hermes-hmc_workflow)
 
 
-## Installation and Usage
+## Installation
 
 `hermes`' primary use case is to [use it in a continuous integration environment](https://docs.software-metadata.pub/en/latest/tutorials/automated-publication-with-ci.html).
 
-In case you still want to install on your machine, you can (for example) use `pip`:
-
-```commandline
-pip install git+https://github.com/hermes-hmc/workflow.git
-```
+In case you still want to install on your machine, you can (for example) use `pip`. 
 
 - Note: you must have Python 3.10 or newer installed.
-- Note: we plan to release stable versions to PyPI (and potentially Github Packages) in the future.
+- Note: please use the development installation method for now - releases coming to PyPI soon!
+
+### Development Snapshot
+
+To install the most recent version that has not been released yet, please install from our sources on GitHub:
+
+```commandline
+pip install git+https://github.com/hermes-hmc/hermes.git
+```
+
+## Usage
 
 The `hermes` application provides the entry point for the HERMES workflow.
 After installation, you can run it from your command line environment:
