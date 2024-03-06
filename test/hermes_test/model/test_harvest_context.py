@@ -4,8 +4,6 @@
 
 # SPDX-FileContributor: Michael Meinel
 
-from importlib.metadata import EntryPoint
-
 import pytest
 
 from hermes.model.context import HermesContext, HermesHarvestContext
