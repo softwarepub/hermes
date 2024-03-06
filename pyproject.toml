@@ -8,7 +8,7 @@
 
 [tool.poetry]
 name = "hermes"
-version = "0.9.0"
+version = "0.8.0"
 description = "Workflow to publish research software with rich metadata"
 homepage = "https://software-metadata.pub"
 license = "Apache-2.0"

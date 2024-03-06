@@ -14,9 +14,9 @@ title: hermes
 message: >-
   If you use this software, please cite it using the
   metadata from this file.
-version: "proof-of-concept"
+version: "0.8.0"
 license: "Apache-2.0"
-abstract: "Proof-of-concept implementation of the HERMES workflow."
+abstract: "Implementation of the HERMES workflow for FAIR software publication."
 type: software
 authors:
   - given-names: Michael
