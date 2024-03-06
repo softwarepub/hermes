@@ -71,5 +71,3 @@ class HermesProcessCommand(HermesCommand):
 
         with open(ctx.get_cache("process", ctx.hermes_name, create=True), 'w') as codemeta_file:
             json.dump(ctx._data, codemeta_file, indent=2)
-
-
