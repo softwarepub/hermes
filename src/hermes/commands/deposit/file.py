@@ -1,30 +1,32 @@
-# SPDX-FileCopyrightText: 2023 Helmholtz-Zentrum Dresden-Rossendorf (HZDR)
+# SPDX-FileCopyrightText: 2023 German Aerospace Center (DLR), Helmholtz-Zentrum Dresden-Rossendorf (HZDR)
 #
 # SPDX-License-Identifier: Apache-2.0
 
 # SPDX-FileContributor: David Pape
 # SPDX-FileContributor: Michael Meinel
+# SPDX-FileContributor: Stephan Druskat
 
 import json
 
-import click
+from pydantic import BaseModel
 
-from hermes import config
-from hermes.model.context import CodeMetaContext
+from hermes.commands.deposit.base import BaseDepositPlugin
 from hermes.model.path import ContextPath
 
 
-def dummy_noop(click_ctx: click.Context, ctx: CodeMetaContext):
-    pass
+class FileDepositSettings(BaseModel):
+    filename: str = 'hermes.json'
 
 
-def map_metadata(click_ctx: click.Context, ctx: CodeMetaContext):
-    ctx.update(ContextPath.parse('deposit.file'), ctx['codemeta'])
+class FileDepositPlugin(BaseDepositPlugin):
+    settings_class = FileDepositSettings
 
+    def map_metadata(self) -> None:
+        self.ctx.update(ContextPath.parse('deposit.file'), self.ctx['codemeta'])
 
-def publish(click_ctx: click.Context, ctx: CodeMetaContext):
-    file_config = config.get("deposit").get("file", {})
-    output_data = ctx['deposit.file']
+    def publish(self) -> None:
+        file_config = self.command.settings.file
+        output_data = self.ctx['deposit.file']
 
-    with open(file_config.get('filename', 'hermes.json'), 'w') as deposition_file:
-        json.dump(output_data, deposition_file)
+        with open(file_config.filename, 'w') as deposition_file:
+            json.dump(output_data, deposition_file, indent=2)
