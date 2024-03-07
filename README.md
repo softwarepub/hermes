@@ -10,17 +10,20 @@ SPDX-FileContributor: Michael Meinel
 SPDX-FileContributor: Oliver Bertuch
 -->
 
-![HERMES Key Visual](docs/source/_static/img/header.png)
+![HERMES Key Visual](https://docs.software-metadata.pub/en/latest/_static/img/header.png)
+
+[![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
+![PyPI - Version](https://img.shields.io/pypi/v/hermes)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/hermes)
 
 # hermes
 
-Implementation of the HERMES workflow. For more extensive documentation, see the [HERMES workflow documentation](https://docs.software-metadata.pub/en/latest).
+Implementation of the HERMES workflow to automatize software publication with rich metadata.
+For more extensive documentation, see our [HERMES workflow documentation](https://docs.software-metadata.pub/en/latest).
 
 (For more information about the HERMES [HMC](https://helmholtz-metadata.de) *project*, see the [HERMES project website](https://software-metadata.pub).)
 
-[![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=hermes-hmc_workflow&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=hermes-hmc_workflow)
-
+![HERMES Workflow Visualization](https://docs.software-metadata.pub/en/latest/_static/img/workflow-horizontal.png)
 
 ## Installation
 
@@ -32,7 +35,8 @@ In case you still want to install on your machine, you can (for example) use `pi
 pip install hermes
 ```
 
-**Note:** you must have Python 3.10 or newer installed.
+**Note: you must have Python 3.10 or newer installed.**
+Older installations of Python will receive a non-related package because of PyPI limitations!
 
 ### Development Snapshot
 
