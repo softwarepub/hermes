@@ -120,7 +120,6 @@ class HermesDepositCommand(HermesCommand):
     def __call__(self, args: argparse.Namespace) -> None:
         self.args = args
         plugin_name = self.settings.target
-        print(self.args)
 
         ctx = CodeMetaContext()
         codemeta_file = ctx.get_cache("curate", ctx.hermes_name)

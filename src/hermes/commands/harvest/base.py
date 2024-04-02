@@ -48,10 +48,8 @@ class HermesHarvestCommand(HermesCommand):
             try:
                 plugin_func = self.plugins[plugin_name]()
                 harvested_data, tags = plugin_func(self)
-                print(harvested_data)
-                with HermesHarvestContext(
-                        ctx, plugin_name
-                ) as harvest_ctx:
+
+                with HermesHarvestContext(ctx, plugin_name) as harvest_ctx:
                     harvest_ctx.update_from(harvested_data,
                                             plugin=plugin_name,
                                             timestamp=datetime.now().isoformat(), **tags)
