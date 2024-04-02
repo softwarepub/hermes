@@ -10,6 +10,7 @@ This module provides the main entry point for the HERMES command line applicatio
 """
 import argparse
 
+from hermes import logger
 from hermes.commands import HermesHelpCommand, HermesCleanCommand, HermesHarvestCommand, HermesProcessCommand, \
                             HermesCurateCommand, HermesDepositCommand, HermesPostprocessCommand
 from hermes.commands.base import HermesCommand
@@ -55,6 +56,8 @@ def main() -> None:
 
     # Actually parse the command line, configure it and execute the selected sub-command.
     args = parser.parse_args()
+
+    logger.init_logging()
 
     args.command.load_settings(args)
     args.command.patch_settings(args)
