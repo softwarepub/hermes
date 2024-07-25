@@ -11,7 +11,7 @@ This module provides the main entry point for the HERMES command line applicatio
 import argparse
 
 from hermes.commands import HermesHelpCommand, HermesCleanCommand, HermesHarvestCommand, HermesProcessCommand, \
-                            HermesCurateCommand, HermesDepositCommand, HermesPostprocessCommand
+                            HermesCurateCommand, HermesDepositCommand, HermesPostprocessCommand, HermesInitCommand
 from hermes.commands.base import HermesCommand
 
 
@@ -34,6 +34,7 @@ def main() -> None:
 
     for command in (
             HermesHelpCommand(parser),
+            HermesInitCommand(parser),
             HermesCleanCommand(parser),
             HermesHarvestCommand(parser),
             HermesProcessCommand(parser),
