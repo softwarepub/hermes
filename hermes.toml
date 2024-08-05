@@ -15,6 +15,7 @@ target = "invenio_rdm"
 site_url = "https://zenodo.org"
 communities = []
 access_right = "open"
+record_id = 13221384
 
 [deposit.invenio_rdm.api_paths]
 depositions = "api/deposit/depositions"

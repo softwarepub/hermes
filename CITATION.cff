@@ -54,3 +54,7 @@ authors:
     email: sophie.kernchen@dlr.de
     affiliation: German Aerospace Center (DLR)
     orcid: 'https://orcid.org/0009-0005-4430-6743'
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.13221384
+    description: Version 0.8.1b1
