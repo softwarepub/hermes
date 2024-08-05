@@ -14,9 +14,9 @@ title: hermes
 message: >-
   If you use this software, please cite it using the
   metadata from this file.
-version: "proof-of-concept"
+version: 0.8.0b1
 license: "Apache-2.0"
-abstract: "Proof-of-concept implementation of the HERMES workflow."
+abstract: "Tool to automate software publication. Not stable yet."
 type: software
 authors:
   - given-names: Michael
@@ -49,3 +49,8 @@ authors:
     email: d.pape@hzdr.de
     affiliation: Helmholtz-Zentrum Dresden-Rossendorf (HZDR)
     orcid: 'https://orcid.org/0000-0002-3145-9880'
+  - given-names: Kernchen
+    family-names: Sophie
+    email: sophie.kernchen@dlr.de
+    affiliation: German Aerospace Center (DLR)
+    orcid: 'https://orcid.org/0009-0005-4430-6743'
