@@ -56,7 +56,7 @@ jobs:
           echo "SHORT_SHA=$SHORT_SHA" >> "$GITHUB_ENV"
 
           # Create a curation branch
-          git branch -c "hermes/curate-$SHORT_SHA"
+          git switch -c "hermes/curate-$SHORT_SHA"
           git push origin "hermes/curate-$SHORT_SHA"
 
           # Explicitly add to-be-curated metadata (which is ignored via .gitignore!)
