@@ -4,7 +4,7 @@
 
 # SPDX-FileContributor: Stephan Druskat
 
-name: Software publication on Zenodo Sandbox
+name: Software publication on Zenodo
 
 on:
   push:
