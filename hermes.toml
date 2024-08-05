@@ -12,7 +12,7 @@ enable_validation = false
 target = "invenio_rdm"
 
 [deposit.invenio_rdm]
-site_url = "https://sandbox.zenodo.org"
+site_url = "https://zenodo.org"
 communities = []
 access_right = "open"
 
