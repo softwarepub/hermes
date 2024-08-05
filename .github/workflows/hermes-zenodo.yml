@@ -8,10 +8,8 @@ name: Software publication on Zenodo Sandbox
 
 on:
   push:
-    branches:
-      - feature/261-put-hermes-on-zenodo
-    #tags:
-    #  - "*"
+    tags:
+      - "*"
 
   # NOTE: Do not delete the trigger on closed pull requests, the HERMES workflow needs this.
   pull_request:
