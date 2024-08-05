@@ -1,0 +1,92 @@
+{
+  "@context": [
+    "https://doi.org/10.5063/schema/codemeta-2.0",
+    {
+      "hermes": "https://software-metadata.pub/ns/hermes/"
+    }
+  ],
+  "@type": "SoftwareSourceCode",
+  "author": [
+    {
+      "@id": "https://orcid.org/0000-0001-6372-3853",
+      "@type": "Person",
+      "affiliation": {
+        "@type": "Organization",
+        "legalName": "German Aerospace Center (DLR)"
+      },
+      "familyName": "Meinel",
+      "givenName": "Michael",
+      "email": "michael.meinel@dlr.de"
+    },
+    {
+      "@id": "https://orcid.org/0000-0003-4925-7248",
+      "@type": "Person",
+      "affiliation": {
+        "@type": "Organization",
+        "legalName": "German Aerospace Center (DLR)"
+      },
+      "familyName": "Druskat",
+      "givenName": "Stephan",
+      "email": "stephan.druskat@dlr.de"
+    },
+    {
+      "@id": "https://orcid.org/0000-0003-1761-2591",
+      "@type": "Person",
+      "affiliation": {
+        "@type": "Organization",
+        "legalName": "Helmholtz-Zentrum Dresden-Rossendorf (HZDR)"
+      },
+      "familyName": "Kelling",
+      "givenName": "Jeffrey",
+      "email": "j.kelling@hzdr.de"
+    },
+    {
+      "@id": "https://orcid.org/0000-0002-2702-3419",
+      "@type": "Person",
+      "affiliation": {
+        "@type": "Organization",
+        "legalName": "Forschungszentrum J\u00fclich GmbH (FZJ)"
+      },
+      "familyName": "Bertuch",
+      "givenName": "Oliver",
+      "email": "o.bertuch@fz-juelich.de"
+    },
+    {
+      "@id": "https://orcid.org/0000-0001-8174-7795",
+      "@type": "Person",
+      "affiliation": {
+        "@type": "Organization",
+        "legalName": "Helmholtz-Zentrum Dresden-Rossendorf (HZDR)"
+      },
+      "familyName": "Knodel",
+      "givenName": "Oliver",
+      "email": "o.knodel@hzdr.de"
+    },
+    {
+      "@id": "https://orcid.org/0000-0002-3145-9880",
+      "@type": "Person",
+      "affiliation": {
+        "@type": "Organization",
+        "legalName": "Helmholtz-Zentrum Dresden-Rossendorf (HZDR)"
+      },
+      "familyName": "Pape",
+      "givenName": "David",
+      "email": "d.pape@hzdr.de"
+    },
+    {
+      "@id": "https://orcid.org/0009-0005-4430-6743",
+      "@type": "Person",
+      "affiliation": {
+        "@type": "Organization",
+        "legalName": "German Aerospace Center (DLR)"
+      },
+      "familyName": "Sophie",
+      "givenName": "Kernchen",
+      "email": "sophie.kernchen@dlr.de"
+    }
+  ],
+  "description": "Tool to automate software publication. Not stable yet.",
+  "license": "https://spdx.org/licenses/Apache-2.0",
+  "name": "hermes",
+  "version": "0.8.0b1"
+}
