@@ -5,9 +5,6 @@
 [harvest]
 sources = [ "cff" ] # ordered priority (first one is most important)
 
-[harvest.cff]
-enable_validation = false
-
 [deposit]
 target = "invenio_rdm"
 
