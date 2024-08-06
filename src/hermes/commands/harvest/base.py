@@ -57,8 +57,10 @@ class HermesHarvestCommand(HermesCommand):
                         if any(v != _value and t == _tag for v, t in _trace):
                             raise MergeError(_key, None, _value)
 
-            except KeyError:
+            except KeyError as e:
                 self.log.error("Plugin '%s' not found.", plugin_name)
+                self.errors.append(e)
 
             except HermesValidationError as e:
                 self.log.error("Error while executing %s: %s", plugin_name, e)
+                self.errors.append(e)

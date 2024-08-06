@@ -134,11 +134,13 @@ class HermesDepositCommand(HermesCommand):
         try:
             plugin_func = self.plugins[plugin_name](self, ctx)
 
-        except KeyError:
+        except KeyError as e:
             self.log.error("Plugin '%s' not found.", plugin_name)
+            self.errors.append(e)
 
         try:
             plugin_func(self)
 
         except HermesValidationError as e:
             self.log.error("Error while executing %s: %s", plugin_name, e)
+            self.errors.append(e)

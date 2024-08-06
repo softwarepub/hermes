@@ -71,10 +71,15 @@ def main() -> None:
 
         log.info("Run subcommand %s", args.command.command_name)
         args.command(args)
-    except BaseException as e:
+    except Exception as e:
         log.error("An error occurred during execution of %s", args.command.command_name)
         log.debug("Original exception was: %s", e)
 
+        sys.exit(2)
+
+    if args.command.errors:
+        for e in args.command.errors:
+            log.error(e)
         sys.exit(1)
 
     sys.exit(0)
