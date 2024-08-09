@@ -89,10 +89,10 @@ hermes = "^0.8.0"
 ...
 ...
 [tool.poetry.plugins."hermes.harvest"]
-git = "hermes_git.harvest:GitHarvestPlugin"
+git = "hermes_plugin_git.harvest:GitHarvestPlugin"
 ...
 ```
-As you can see the plugin class from `hermes_git` is declared as `git` for the `hermes.harvest` entrypoint.
+As you can see the plugin class from `hermes_plugin_git` is declared as `git` for the `hermes.harvest` entrypoint.
 To use the plugin you have to adapt the harvest settings in the `hermes.toml`.
 We will discuss the exact step after showing the other `pyproject.toml` configuration.
 ```{note}
@@ -109,13 +109,13 @@ In the code below you see the parts with the important lines.
 [tool.poetry.dependencies]
 ...
 pydantic-settings = "^2.1.0"
-hermes-git = { git = "https://github.com/hermes-hmc/hermes-git.git", branch = "main" }
+hermes-plugin-git = { git = "https://github.com/softwarepub/hermes-plugin-git.git", branch = "main" }
 ...
 ...
 [tool.poetry.plugins."hermes.harvest"]
 cff = "hermes.commands.harvest.cff:CffHarvestPlugin"
 codemeta = "hermes.commands.harvest.codemeta:CodeMetaHarvestPlugin"
-git = "hermes_git.harvest:GitHarvestPlugin"
+git = "hermes_plugin_git.harvest:GitHarvestPlugin"
 ...
 ```
 In the dependencies you have to install your plugin. If your Plugin is pip installable than you can just give the name and the version.
@@ -123,8 +123,8 @@ If your plugin is in a buildable git repository, you can install it with the giv
 Note that this differs with the accessibility and your wishes, check [Explicit Package Sources](https://python-poetry.org/docs/repositories/#explicit-package-sources).
 
 The second thing to adapt is to declare the access point for the plugin.
-You can do that with `git = "hermes_git.harvest:GitHarvestPlugin"`.
-This expression makes the GitHarvestPlugin from the hermes_git package, a hermes.harvest plugin named git.
+You can do that with `git = "hermes_plugin_git.harvest:GitHarvestPlugin"`.
+This expression makes the GitHarvestPlugin from the hermes_plugin_git package, a hermes.harvest plugin named git.
 So you need to configure this line with your plugin properties.
 
 Now you just need to add the plugin to the hermes.toml and reinstall the adapted poetry package.
