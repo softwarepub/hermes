@@ -68,7 +68,7 @@ The code uses the `HermesHarvestPlugin` as base class and pydantics Basemodel fo
 can see that an additional parameter is defined. The Parameter `from_branch` is specific for this plugin and can be accessed inside the plugin using `self.settings.harvest.git.git_branch` as long as our plugin will be named git.
 In the `hermes.toml` this would be achieved by [harvest.{plugin_name}].
 The `GitHarvestSettings` are associated with the `GitHarvestPlugin`. In the plugin you need to overwrite the `__ call __` method.
-For now a simple Hello World will do. The method return two dictionaries. These will later depict the harvested data in codemeta (json-ld) and information for generating hermes metadata.
+For now a simple Hello World will do. The method returns two dictionaries. These will contain the harvested data in CodeMeta (JSON-LD) and additional information, e.g., to provide provenance information.
 That is the basic structure for the plugins source code.
 
 To integrate this code, you have to register it as a plugin in the `pyproject.toml`. To learn more about the `pyproject.toml` check https://python-poetry.org/docs/pyproject/ or refer to [PEP621](https://peps.python.org/pep-0621/).
