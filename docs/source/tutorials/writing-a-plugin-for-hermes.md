@@ -13,10 +13,10 @@ SPDX-FileContributor: Sophie Kernchen
  
 
 This tutorial will present the basic steps for writing an additional harvester.
-At the moment only the harvest architecture is stable.
-The full code and structure is available at  [harvest-git](https://github.com/hermes-hmc/hermes-git).
+At the moment only the architecture for harvester plugins is stable.
+The full code and structure is available at  [hermes-plugin-git](https://github.com/softwarepub/hermes-plugin-git).
 This plugin extracts information from the local git history.
-The harvest-git plugin will help to gather contributing and branch metadata.
+The hermes-plugin-git will help to gather contributing and branch metadata.
 ```{note}
 For this tutorial you should be familiar with HERMES. 
 If you never used HERMES before, you might want to check the tutorial: [Automated Publication with HERMES](https://docs.software-metadata.pub/en/latest/tutorials/automated-publication-with-ci.html).
@@ -26,15 +26,18 @@ If you never used HERMES before, you might want to check the tutorial: [Automate
 
 HERMES uses a plugin architecture. Therefore, users are invited to contribute own features.
 The structure for every plugin follows the same schema.
-There is a base class for every plugin. In this HermesPlugin class there is one abstract method __ call __ which needs to be overwritten.
-Furthermore, the HermesCommand class provides all needs for writing a plugin used in a HERMES command.
-So the HermesPlugins call method uses an Instance of the HermesCommand that triggered this plugin to run.
-In our case this will be the HermesHarvestCommand which calls all harvest plugins.
-The Plugin class also uses a derivative of HermesSettings to add parameters.
-HermesSettings are the base class for command specific settings.
-It uses pydantic settings to specify and validate the parameters.
-The user can either set the parameters in the hermes.toml or overwrite them in the command line.
-To overwrite the configuration, you use the -O operator with the dotted parameter name and the value.
+There is a top-level base class for every plugin. In this `HermesPlugin` class there is one abstract method `__ call __` which needs to be overwritten.
+Furthermore, the `HermesCommand` class provides all needs for writing a plugin used in a HERMES command.
+So the `HermesPlugin`s call method gets an instance of the `HermesCommand` that triggered this plugin to run.
+In our case this will be the `HermesHarvestCommand` which calls all harvest plugins.
+The plugin class also uses a derivative of `HermesSettings` to add parameters that can be adapted by the configuration file.
+`HermesSettings` are the base class for command specific settings.
+It uses [pydantic](https://docs.pydantic.dev/latest/) [settings](https://docs.pydantic.dev/latest/api/pydantic_settings/) to specify and validate the parameters.
+The user can either set the parameters in the `hermes.toml` or overwrite them in the command line.
+To overwrite a parameter from command line, use the `-O` command line option followed by the dotted parameter name and the value.
+E.g., you can set your authentication token for InvenioRDM by adding the following options to your call to `hermes deposit`:
+```shell
+hermes deposit -O invenio_rdm.auth_token YourSecretAuthToken
 
 ## Set Up Plugin
 To write a new plugin, it is important to follow the given structure.
@@ -61,23 +64,23 @@ class GitHarvestPlugin(HermesHarvestPlugin):
         return {}, {}
 ```
  
-The Code uses the HermesHarvestPlugin as base class and pydantics Basemodel for the Settings. In the GitHarvestSettings you
-can see that one setting is made. The Parameter from_branch is specific for this plugin and can be reached through self.settings.harvest.git.git_branch as long as our plugin will be named git.
-In the hermes.toml this would be achieved by [harvest.{plugin_name}].
-The GitHarvestSettings are assigned to the GitHarvestPlugin. In the plugin you need to overwrite the __ call __ method.
+The code uses the `HermesHarvestPlugin` as base class and pydantics Basemodel for the settings. In the `GitHarvestSettings` you
+can see that an additional parameter is defined. The Parameter `from_branch` is specific for this plugin and can be accessed inside the plugin using `self.settings.harvest.git.git_branch` as long as our plugin will be named git.
+In the `hermes.toml` this would be achieved by [harvest.{plugin_name}].
+The `GitHarvestSettings` are associated with the `GitHarvestPlugin`. In the plugin you need to overwrite the `__ call __` method.
 For now a simple Hello World will do. The method return two dictionaries. These will later depict the harvested data in codemeta (json-ld) and information for generating hermes metadata.
 That is the basic structure for the plugins source code.
 
-To integrate this code, you have to register it as a plugin in the pyproject.toml. To learn more about the pyproject.toml check https://python-poetry.org/docs/pyproject/.
+To integrate this code, you have to register it as a plugin in the `pyproject.toml`. To learn more about the `pyproject.toml` check https://python-poetry.org/docs/pyproject/ or refer to [PEP621](https://peps.python.org/pep-0621/).
 We will just look at the important places for this plugin. There are two ways to integrate this plugin. First we will show how to use the plugin environment as the running base with HERMES as a dependency.
 Then we say how to integrate this plugin in HERMES itself.
 
 ### Include HERMES as Dependency
 This is probably the more common way, where you can see HERMES as a framework.
-The idea is that your project is the main part. You create the pyproject.toml as usual.
-In the dependencies block you need to include hermes. Then you just have to declare your plugin.
-The HERMES software will look for plugins and install these.
-In the code below you can see the parts of the pyproject.toml that are important.
+The idea is that your project is the main part. You create the `pyproject.toml` as usual.
+In the dependencies block you need to include `hermes`. Then you just have to declare your plugin.
+The HERMES software will look for installed plugins and use them.
+In the code below you can see the parts of the `pyproject.toml` that are important.
 ```{code-block} toml
 ...
 [tool.poetry.dependencies]
@@ -89,9 +92,9 @@ hermes = "^0.8.0"
 git = "hermes_git.harvest:GitHarvestPlugin"
 ...
 ```
-As you can see the plugin class from hermes_git is declared as git for hermes.harvest.
-To use the plugin you have to adapt the harvest Settings in the hermes.toml.
-We will discuss the exact step after showing the other pyproject.toml configuration.
+As you can see the plugin class from `hermes_git` is declared as `git` for the `hermes.harvest` entrypoint.
+To use the plugin you have to adapt the harvest settings in the `hermes.toml`.
+We will discuss the exact step after showing the other `pyproject.toml` configuration.
 ```{note}
 You have to run poetry install to add and install all entrypoints declared in the pyproject.toml.
 ```
@@ -127,9 +130,9 @@ So you need to configure this line with your plugin properties.
 Now you just need to add the plugin to the hermes.toml and reinstall the adapted poetry package.
 
 ### Configure hermes.toml
-To use the plugin, you have to set it in the hermes.toml.
+To use the plugin, you have to activate it in the `hermes.toml`.
 The settings for the plugins are also set there.
-For the harvest plugin the hermes.toml could look like this:
+For the harvest plugin the `hermes.toml` could look like this:
 ```{code-block} toml
 [harvest]
 sources = [ "cff", "git" ] # ordered priority (first one is most important)
@@ -141,16 +144,15 @@ enable_validation = false
 from_branch = "develop"
 ...
 ```
-In [harvest] you define that this plugin is used with less priority than the built-in cff plugin.
-in [harvest.git] you set the configuration for the plugin. 
-In the Beginning of this tutorial we set the parameter `from_branch` in the git settings. Now we change the default from_branch to develop.
-With this Configuration the plugin will be used. If you run hermes harvest, you should see the "Hello World" message.
-Of course the hermes.toml is always changeable as you desire.
+In the `[harvest]` section you define that this plugin is used with less priority than the built-in `cff` plugin.
+in the `[harvest.git]` section you set the configuration for the plugin. 
+In the beginning of this tutorial we set the parameter `from_branch` in the git settings. Now we change the default `from_branch` to `develop`.
+With this configuration the plugin will be used. If you run `hermes harvest`, you should see the "Hello World" message.
 
 ```{admonition} Congratulations!
 You can now write plugins for HERMES.
 ```
-To fill the plugin with code, you can check our [harvest_git](https://github.com/hermes-hmc/hermes-git) repository.
+To fill the plugin with code, you can check our [hermes-plugin-git](https://github.com/softwarepub/hermes-plugin-git) repository.
 There is the code to check the local git history and extract contributors of the given branch.
 
 If you have any questions, wishes or requests, feel free to contact us.
