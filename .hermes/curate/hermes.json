@@ -4,7 +4,7 @@
   "description": "Tool to automate software publication. Not stable yet.",
   "author": [
     {
-      "name": "Stephan Druskat",
+      "name": "Michael Meinel",
       "email": "michael.meinel@dlr.de",
       "@type": "Person",
       "@id": "https://orcid.org/0000-0001-6372-3853",
@@ -16,7 +16,7 @@
       "givenName": "Michael"
     },
     {
-      "name": "Michael Meinel",
+      "name": "Stephan Druskat",
       "email": "stephan.druskat@dlr.de",
       "@type": "Person",
       "@id": "https://orcid.org/0000-0003-4925-7248",
@@ -28,7 +28,7 @@
       "givenName": "Stephan"
     },
     {
-      "name": "Oliver Bertuch",
+      "name": "Jeffrey Kelling",
       "email": "j.kelling@hzdr.de",
       "@type": "Person",
       "@id": "https://orcid.org/0000-0003-1761-2591",
@@ -40,7 +40,7 @@
       "givenName": "Jeffrey"
     },
     {
-      "name": "Jeffrey Kelling",
+      "name": "Oliver Bertuch",
       "email": "o.bertuch@fz-juelich.de",
       "@type": "Person",
       "@id": "https://orcid.org/0000-0002-2702-3419",
@@ -84,8 +84,8 @@
         "@type": "Organization",
         "legalName": "German Aerospace Center (DLR)"
       },
-      "familyName": "Sophie",
-      "givenName": "Kernchen"
+      "familyName": "Kernchen",
+      "givenName": "Sophie"
     }
   ],
   "url": "https://software-metadata.pub",
