@@ -1,0 +1,107 @@
+{
+  "name": "hermes",
+  "version": "0.8.1",
+  "description": "Tool to automate software publication. Not stable yet.",
+  "author": [
+    {
+      "name": "Stephan Druskat",
+      "email": "michael.meinel@dlr.de",
+      "@type": "Person",
+      "@id": "https://orcid.org/0000-0001-6372-3853",
+      "affiliation": {
+        "@type": "Organization",
+        "legalName": "German Aerospace Center (DLR)"
+      },
+      "familyName": "Meinel",
+      "givenName": "Michael"
+    },
+    {
+      "name": "Michael Meinel",
+      "email": "stephan.druskat@dlr.de",
+      "@type": "Person",
+      "@id": "https://orcid.org/0000-0003-4925-7248",
+      "affiliation": {
+        "@type": "Organization",
+        "legalName": "German Aerospace Center (DLR)"
+      },
+      "familyName": "Druskat",
+      "givenName": "Stephan"
+    },
+    {
+      "name": "Oliver Bertuch",
+      "email": "j.kelling@hzdr.de",
+      "@type": "Person",
+      "@id": "https://orcid.org/0000-0003-1761-2591",
+      "affiliation": {
+        "@type": "Organization",
+        "legalName": "Helmholtz-Zentrum Dresden-Rossendorf (HZDR)"
+      },
+      "familyName": "Kelling",
+      "givenName": "Jeffrey"
+    },
+    {
+      "name": "Jeffrey Kelling",
+      "email": "o.bertuch@fz-juelich.de",
+      "@type": "Person",
+      "@id": "https://orcid.org/0000-0002-2702-3419",
+      "affiliation": {
+        "@type": "Organization",
+        "legalName": "Forschungszentrum J\u00fclich GmbH (FZJ)"
+      },
+      "familyName": "Bertuch",
+      "givenName": "Oliver"
+    },
+    {
+      "name": "Oliver Knodel",
+      "email": "o.knodel@hzdr.de",
+      "@type": "Person",
+      "@id": "https://orcid.org/0000-0001-8174-7795",
+      "affiliation": {
+        "@type": "Organization",
+        "legalName": "Helmholtz-Zentrum Dresden-Rossendorf (HZDR)"
+      },
+      "familyName": "Knodel",
+      "givenName": "Oliver"
+    },
+    {
+      "name": "David Pape",
+      "email": "d.pape@hzdr.de",
+      "@type": "Person",
+      "@id": "https://orcid.org/0000-0002-3145-9880",
+      "affiliation": {
+        "@type": "Organization",
+        "legalName": "Helmholtz-Zentrum Dresden-Rossendorf (HZDR)"
+      },
+      "familyName": "Pape",
+      "givenName": "David"
+    },
+    {
+      "name": "Sophie Kernchen",
+      "email": "sophie.kernchen@dlr.de",
+      "@type": "Person",
+      "@id": "https://orcid.org/0009-0005-4430-6743",
+      "affiliation": {
+        "@type": "Organization",
+        "legalName": "German Aerospace Center (DLR)"
+      },
+      "familyName": "Sophie",
+      "givenName": "Kernchen"
+    }
+  ],
+  "url": "https://software-metadata.pub",
+  "codeRepository": "https://github.com/hermes-hmc/workflow",
+  "keywords": [
+    "publishing",
+    "metadata",
+    "automation"
+  ],
+  "@context": [
+    "https://doi.org/10.5063/schema/codemeta-2.0",
+    {
+      "hermes": "https://software-metadata.pub/ns/hermes/"
+    }
+  ],
+  "@type": "SoftwareSourceCode",
+  "identifier": "https://doi.org/10.5281/zenodo.13221384",
+  "license": "https://spdx.org/licenses/Apache-2.0"
+}
