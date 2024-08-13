@@ -120,7 +120,6 @@ class HermesDepositCommand(HermesCommand):
     def __call__(self, args: argparse.Namespace) -> None:
         self.args = args
         plugin_name = self.settings.target
-        print(self.args)
 
         ctx = CodeMetaContext()
         codemeta_file = ctx.get_cache("curate", ctx.hermes_name)
@@ -135,11 +134,13 @@ class HermesDepositCommand(HermesCommand):
         try:
             plugin_func = self.plugins[plugin_name](self, ctx)
 
-        except KeyError:
+        except KeyError as e:
             self.log.error("Plugin '%s' not found.", plugin_name)
+            self.errors.append(e)
 
         try:
             plugin_func(self)
 
         except HermesValidationError as e:
             self.log.error("Error while executing %s: %s", plugin_name, e)
+            self.errors.append(e)

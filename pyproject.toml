@@ -9,7 +9,7 @@
 [tool.poetry]
 # Reference at https://python-poetry.org/docs/pyproject/
 name = "hermes"
-version = "0.1.0"
+version = "0.8.1"
 description = "Workflow to publish research software with rich metadata"
 homepage = "https://software-metadata.pub"
 license = "Apache-2.0"
@@ -20,6 +20,7 @@ authors = [
     "Jeffrey Kelling <j.kelling@hzdr.de>",
     "Oliver Knodel <o.knodel@hzdr.de>",
     "David Pape <d.pape@hzdr.de>",
+    "Sophie Kernchen <sohpie.kernchen@dlr.de>",
 ]
 
 readme = "README.md"

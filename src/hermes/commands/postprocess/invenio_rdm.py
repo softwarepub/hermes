@@ -23,4 +23,4 @@ def config_record_id(ctx):
         conf['deposit']['invenio_rdm']['record_id'] = deposition['record_id']
         toml.dump(conf, open('hermes.toml', 'w'))
     except KeyError:
-        raise RuntimeError("No deposit.invenio configuration available to store record id in") from None
+        raise RuntimeError("No deposit.invenio_rdm configuration available to store record id in")

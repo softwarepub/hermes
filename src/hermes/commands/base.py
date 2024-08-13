@@ -43,6 +43,7 @@ class HermesCommand(abc.ABC):
         self.settings = None
 
         self.log = logging.getLogger(f"hermes.{self.command_name}")
+        self.errors = []
 
     def init_plugins(self):
         """Collect and initialize the plugins available for the HERMES command."""

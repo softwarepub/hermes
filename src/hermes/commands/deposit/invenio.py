@@ -105,7 +105,7 @@ class InvenioResolver:
     invenio_client_class = InvenioClient
 
     def __init__(self, client=None):
-        self.client = client or self.invenio_client_class()
+        self.client = client or self.invenio_client_class(InvenioDepositSettings())
 
     def resolve_latest_id(
         self, record_id=None, doi=None, codemeta_identifier=None
