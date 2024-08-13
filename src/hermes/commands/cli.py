@@ -63,7 +63,7 @@ def main() -> None:
     log.debug("Running hermes with the following command line arguments: %s", args)
 
     try:
-        log.info("Loading settings...")
+        log.debug("Loading settings...")
         args.command.load_settings(args)
 
         log.debug("Update settings from command line...")
