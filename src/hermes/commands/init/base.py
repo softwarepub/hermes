@@ -5,14 +5,19 @@
 # SPDX-FileContributor: Michael Meinel
 
 import argparse
-import shutil
 import os
 import subprocess
+import sys
+from email.policy import default
+
 import requests
-import click
 from pydantic import BaseModel
 
 from hermes.commands.base import HermesCommand
+import hermes.commands.init.oauth_github as oauth_github
+import hermes.commands.init.oauth_zenodo as oauth_zenodo
+import hermes.commands.init.github_secrets as github_secrets
+import hermes.commands.init.slim_click as sc
 
 
 class HermesInitFolderInfo:
@@ -55,13 +60,14 @@ def scout_current_folder() -> HermesInitFolderInfo:
 
 
 def wait_until_the_user_is_done():
-    if not click.confirm("Are you done?", default=False):
-        while not click.confirm("Are you done now?", default=True):
+    if not sc.confirm("Are you done?", default=False):
+        while not sc.confirm("Are you done now?", default=True):
             pass
 
 
+USE_FANCY_HYPERLINKS = False
 def create_console_hyperlink(url: str, word: str) -> str:
-    return f"\033]8;;{url}\033\\{word}\033]8;;\033\\"
+    return f"\033]8;;{url}\033\\{word}\033]8;;\033\\" if USE_FANCY_HYPERLINKS else f"{word} ({url})"
 
 
 def download_file_from_url(url, filepath):
@@ -94,72 +100,74 @@ class HermesInitCommand(HermesCommand):
         self.folder_info = scout_current_folder()
 
     def __call__(self, args: argparse.Namespace) -> None:
+        #oauth_zenodo.start_oauth()
+        #return
         self.refresh_folder_info()
-        click.echo(f"Starting to initialize HERMES in {self.folder_info.absolute_path}")
+        sc.echo(f"Starting to initialize HERMES in {self.folder_info.absolute_path}")
 
         # Abort if there is already a hermes.toml
-        if self.folder_info.has_hermes_toml:
-            click.echo("The current directory already has a `hermes.toml`. "
+        if self.folder_info.has_hermes_toml and False:
+            sc.echo("The current directory already has a `hermes.toml`. "
                        "It seems like HERMES was already initialized for this project.")
             return
 
         # Abort if there is no git
         if not self.folder_info.has_git:
-            click.echo("The current directory already has no `.git` subdirectory. "
+            sc.echo("The current directory already has no `.git` subdirectory. "
                        "Please execute `hermes init` in the root directory of your git project.")
             return
 
         # Abort if neither GitHub nor gitlab is used
         if not (self.folder_info.uses_github or self.folder_info.uses_gitlab):
-            click.echo("Your git project ({}) is not connected to github or gitlab. It is mandatory for HERMES to "
+            sc.echo("Your git project ({}) is not connected to github or gitlab. It is mandatory for HERMES to "
                        "use one of those hosting services.".format(self.folder_info.git_remote_url))
             return
 
         # Creating the citation File
         if not self.folder_info.has_citation_cff:
             citation_cff_url = "https://citation-file-format.github.io/cff-initializer-javascript/#/"
-            click.echo("Your project does not contain a `CITATION.cff` file (yet). It would be very helpful for "
+            sc.echo("Your project does not contain a `CITATION.cff` file (yet). It would be very helpful for "
                        "saving important metadata which is necessary for publishing.")
-            create_cff_now = click.confirm("Do you want to create a `CITATION.cff` file now?", default=True)
+            create_cff_now = sc.confirm("Do you want to create a `CITATION.cff` file now?", default=True)
             if create_cff_now:
-                click.echo("{} to create the file. Then move it into the project folder before you continue.".format(
+                sc.echo("{} to create the file. Then move it into the project folder before you continue.".format(
                     create_console_hyperlink(citation_cff_url, "Click here")))
-                done_creating_cff = click.confirm("Are you done?", default=False)
+                done_creating_cff = sc.confirm("Are you done?", default=False)
                 while not done_creating_cff:
-                    done_creating_cff = click.confirm("Are you done now?", default=True)
+                    done_creating_cff = sc.confirm("Are you done now?", default=True)
                 self.refresh_folder_info()
                 if self.folder_info.has_citation_cff:
-                    click.echo("Good job!")
+                    sc.echo("Good job!")
                 else:
-                    click.echo("Hey you lied to me :( Don't forget to add the `CITATION.cff` file later!")
+                    sc.echo("Hey you lied to me :( Don't forget to add the `CITATION.cff` file later!")
             else:
-                click.echo("You better do it later or HERMES won't work properly.")
-                click.echo("You can {} to create the file. Then move it into the project folder.".format(
+                sc.echo("You better do it later or HERMES won't work properly.")
+                sc.echo("You can {} to create the file. Then move it into the project folder.".format(
                     create_console_hyperlink(citation_cff_url, "click here")))
         else:
-            click.echo("Your project already contains a `CITATION.cff` file. Nice!")
+            sc.echo("Your project already contains a `CITATION.cff` file. Nice!")
 
         # Creating the hermes.toml file
         hermes_toml_raw_url = "https://raw.githubusercontent.com/nheeb/zenodo-test/main/hermes.toml"
         download_file_from_url(hermes_toml_raw_url, os.path.join(os.getcwd(), "hermes.toml"))
-        click.echo("hermes.toml was created.")
+        sc.echo("hermes.toml was created.")
 
         # Adding .hermes to the .gitignore
         if not self.folder_info.has_gitignore:
             with open(".gitignore", 'w') as file:
                 pass
-            click.echo("A new `.gitignore` file was created.")
+            sc.echo("A new `.gitignore` file was created.")
         self.refresh_folder_info()
         if self.folder_info.has_gitignore:
             with open(".gitignore", "r") as file:
                 gitignore_lines = file.readlines()
             if any([line.startswith(".hermes") for line in gitignore_lines]):
-                click.echo("The `.gitignore` file already contains `.hermes/`")
+                sc.echo("The `.gitignore` file already contains `.hermes/`")
             else:
                 with open(".gitignore", "a") as file:
                     file.write("# Ignoring all HERMES cache files")
                     file.write(".hermes/")
-                click.echo("Added `.hermes/` to the `.gitignore` file.")
+                sc.echo("Added `.hermes/` to the `.gitignore` file.")
 
         # Creating the ci file
         if self.folder_info.uses_github:
@@ -173,29 +181,47 @@ class HermesInitCommand(HermesCommand):
                 os.mkdir(workflows_folder_path)
             ci_file_path = os.path.join(workflows_folder_path, "hermes_github_to_zenodo.yml")
             download_file_from_url(github_ci_template_raw_url, ci_file_path)
-            click.echo(f"GitHub CI yml file was created at {ci_file_path}")
+            sc.echo(f"GitHub CI yml file was created at {ci_file_path}")
 
-        # Zenodo access token -> Github Secrets
-        zenodo_token_url = "https://sandbox.zenodo.org/account/settings/applications/tokens/new/"
-        click.echo("If you haven't already, {}. You might have to create an account first.".format(
-            create_console_hyperlink(zenodo_token_url, "create a access token for zenodo")
-        ))
-        wait_until_the_user_is_done()
+        # Getting Zenodo token
+        setup_method = sc.choose("How do you want to connect your project to your Zenodo account?",
+                           [("o", "using OAuth (recommended)"), ("m", "doing it manually")], default="o")
+        if setup_method == "o":
+            oauth_zenodo.start_oauth()
+            zenodo_refresh_token = os.environ.get('ZENODO_TOKEN_REFRESH')
+            if zenodo_refresh_token:
+                sc.echo("Oauth was successful.")
+        else:
+            zenodo_token_url = "https://sandbox.zenodo.org/account/settings/applications/tokens/new/"
+            sc.echo("If you haven't already, {}. You might have to create an account first.".format(
+                create_console_hyperlink(zenodo_token_url, "create a access token for zenodo")
+            ))
+            wait_until_the_user_is_done()
+
+        # Adding the token to the git secrets
         if self.folder_info.uses_github:
-            click.echo("Now add this token to your {} under the name ZENODO_SANDBOX.".format(
-                create_console_hyperlink(self.folder_info.git_remote_url.replace(".git", "/settings/secrets/actions"),
-                                         "project's GitHub secrets")
-            ))
-            wait_until_the_user_is_done()
-            click.echo("Next go to your {} and check the checkbox which reads:".format(
-                create_console_hyperlink(self.folder_info.git_remote_url.replace(".git", "/settings/actions"),
-                                         "project settings")
-            ))
-            click.echo(click.style("Allow GitHub Actions to create and approve pull requests", bold=True))
-            wait_until_the_user_is_done()
-            click.echo("Good job!")
+            if setup_method == "o":
+                oauth_github.start_oauth()
+                token = os.environ.get('GITHUB_TOKEN')
+                if token:
+                    sc.echo("Oauth was successful.")
+                zenodo_refresh_token = os.environ.get('ZENODO_TOKEN_REFRESH')
+                github_secrets.create_secret(self.folder_info.git_remote_url, "ZENODO_REFRESH", zenodo_refresh_token)
+            else:
+                sc.echo("Now add this token to your {} under the name ZENODO_SANDBOX.".format(
+                    create_console_hyperlink(self.folder_info.git_remote_url.replace(".git", "/settings/secrets/actions"),
+                                             "project's GitHub secrets")
+                ))
+                wait_until_the_user_is_done()
+                sc.echo("Next go to your {} and check the checkbox which reads:".format(
+                    create_console_hyperlink(self.folder_info.git_remote_url.replace(".git", "/settings/actions"),
+                                             "project settings")
+                ))
+                sc.echo("Allow GitHub Actions to create and approve pull requests")
+                wait_until_the_user_is_done()
+                sc.echo("Good job!")
         elif self.folder_info.uses_gitlab:
             print("GITLAB INIT NOT IMPLEMENTED YET")
 
-        click.echo("HERMES was initialized.")
+        sc.echo("HERMES was initialized.")
 
