@@ -12,9 +12,10 @@ def encrypt_secret(public_key: str, secret_value: str) -> str:
     return b64encode(encrypted).decode("utf-8")
 
 
-def create_secret(project_url: str, secret_name: str, secret_value):
+def create_secret(project_url: str, secret_name: str, secret_value, token = ""):
     # Access token obtained from GitHub OAuth process
-    token = os.environ.get('GITHUB_TOKEN')
+    if token == "":
+        token = os.environ.get('GITHUB_TOKEN')
 
     # Repository details
     url_split = project_url.split('/')

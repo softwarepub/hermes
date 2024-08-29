@@ -13,6 +13,7 @@ import typing as t
 from datetime import date, datetime
 from pathlib import Path
 from urllib.parse import urlparse
+import os
 
 import requests
 from pydantic import BaseModel
@@ -23,6 +24,7 @@ from hermes.error import MisconfigurationError
 from hermes.model.context import CodeMetaContext
 from hermes.model.path import ContextPath
 from hermes.utils import hermes_user_agent
+from hermes.commands.init.oauth_zenodo import get_token_from_refresh_token
 
 
 _log = logging.getLogger("cli.deposit.invenio")
@@ -263,6 +265,11 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
         if client is None:
             auth_token = self.config.auth_token
+
+            # If auth_token is a refresh-token, get the auth-token from that.
+            if str(auth_token).startswith("REFRESH_TOKEN:"):
+                get_token_from_refresh_token(auth_token.split("REFRESH_TOKEN:")[1])
+                auth_token = os.environ.get('ZENODO_TOKEN')
             if not auth_token:
                 raise DepositionUnauthorizedError("No valid auth token given for deposition platform")
             self.client = self.invenio_client_class(self.config,

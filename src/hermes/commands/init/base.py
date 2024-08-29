@@ -93,6 +93,12 @@ class HermesInitCommand(HermesCommand):
         super().__init__(parser)
         self.folder_info: HermesInitFolderInfo = HermesInitFolderInfo()
 
+    def init_command_parser(self, command_parser: argparse.ArgumentParser) -> None:
+        command_parser.add_argument('--only-set-refresh-token', action='store_true', default=False, dest="only_refresh_token",
+                                    help="Instead of doing the whole setup, this just stores a new refresh token as secret.")
+        command_parser.add_argument("--github-token", action='store', default="", dest="github_token",
+                                    help="Use this together with --only-set-refresh-token")
+
     def load_settings(self, args: argparse.Namespace):
         pass
 
@@ -100,9 +106,16 @@ class HermesInitCommand(HermesCommand):
         self.folder_info = scout_current_folder()
 
     def __call__(self, args: argparse.Namespace) -> None:
-        #oauth_zenodo.start_oauth()
-        #return
         self.refresh_folder_info()
+
+        # Only set the refresh-token (this is being used after the deposit)
+        if args.only_refresh_token:
+            if self.folder_info.uses_github:
+                zenodo_refresh_token = "REFRESH_TOKEN:" + os.environ.get('ZENODO_TOKEN_REFRESH')
+                github_secrets.create_secret(self.folder_info.git_remote_url, "ZENODO_SANDBOX",
+                                             zenodo_refresh_token, args.github_token)
+            return
+
         sc.echo(f"Starting to initialize HERMES in {self.folder_info.absolute_path}")
 
         # Abort if there is already a hermes.toml
@@ -205,8 +218,8 @@ class HermesInitCommand(HermesCommand):
                 token = os.environ.get('GITHUB_TOKEN')
                 if token:
                     sc.echo("Oauth was successful.")
-                zenodo_refresh_token = os.environ.get('ZENODO_TOKEN_REFRESH')
-                github_secrets.create_secret(self.folder_info.git_remote_url, "ZENODO_REFRESH", zenodo_refresh_token)
+                zenodo_refresh_token = "REFRESH_TOKEN:" + os.environ.get('ZENODO_TOKEN_REFRESH')
+                github_secrets.create_secret(self.folder_info.git_remote_url, "ZENODO_SANDBOX", zenodo_refresh_token)
             else:
                 sc.echo("Now add this token to your {} under the name ZENODO_SANDBOX.".format(
                     create_console_hyperlink(self.folder_info.git_remote_url.replace(".git", "/settings/secrets/actions"),
