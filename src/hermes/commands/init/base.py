@@ -17,6 +17,7 @@ from hermes.commands.base import HermesCommand
 import hermes.commands.init.oauth_github as oauth_github
 import hermes.commands.init.oauth_zenodo as oauth_zenodo
 import hermes.commands.init.github_secrets as github_secrets
+import hermes.commands.init.github_permissions as github_permissions
 import hermes.commands.init.slim_click as sc
 
 
@@ -118,12 +119,6 @@ class HermesInitCommand(HermesCommand):
 
         sc.echo(f"Starting to initialize HERMES in {self.folder_info.absolute_path}")
 
-        # Abort if there is already a hermes.toml
-        if self.folder_info.has_hermes_toml and False:
-            sc.echo("The current directory already has a `hermes.toml`. "
-                       "It seems like HERMES was already initialized for this project.")
-            return
-
         # Abort if there is no git
         if not self.folder_info.has_git:
             sc.echo("The current directory already has no `.git` subdirectory. "
@@ -135,6 +130,13 @@ class HermesInitCommand(HermesCommand):
             sc.echo("Your git project ({}) is not connected to github or gitlab. It is mandatory for HERMES to "
                        "use one of those hosting services.".format(self.folder_info.git_remote_url))
             return
+
+        # Abort if there is already a hermes.toml
+        if self.folder_info.has_hermes_toml:
+            sc.echo("The current directory already has a `hermes.toml`. "
+                    "It seems like HERMES was already initialized for this project.")
+            if sc.confirm("Do you want to initialize Hermes anyway? (files will be overwritten)"):
+                return
 
         # Creating the citation File
         if not self.folder_info.has_citation_cff:
@@ -184,8 +186,11 @@ class HermesInitCommand(HermesCommand):
 
         # Creating the ci file
         if self.folder_info.uses_github:
-            github_ci_template_raw_url = ("https://raw.githubusercontent.com/softwarepub/ci-templates/main"
-                                          "/TEMPLATE_hermes_github_to_zenodo.yml")
+            # TODO Replace this later with the link to the real templates
+            # github_ci_template_raw_url = ("https://raw.githubusercontent.com/softwarepub/ci-templates/main"
+            #                               "/TEMPLATE_hermes_github_to_zenodo.yml")
+            github_ci_template_raw_url = ("https://raw.githubusercontent.com/softwarepub/hermes/feature/init-command"
+                                          "/src/hermes/commands/init/tmp_hermes_github_to_zenodo.yml")
             github_folder_path = os.path.join(os.getcwd(), ".github")
             if not os.path.isdir(github_folder_path):
                 os.mkdir(github_folder_path)
@@ -211,7 +216,7 @@ class HermesInitCommand(HermesCommand):
             ))
             wait_until_the_user_is_done()
 
-        # Adding the token to the git secrets
+        # Adding the token to the git secrets & changing action workflow settings
         if self.folder_info.uses_github:
             if setup_method == "o":
                 oauth_github.start_oauth()
@@ -220,6 +225,7 @@ class HermesInitCommand(HermesCommand):
                     sc.echo("Oauth was successful.")
                 zenodo_refresh_token = "REFRESH_TOKEN:" + os.environ.get('ZENODO_TOKEN_REFRESH')
                 github_secrets.create_secret(self.folder_info.git_remote_url, "ZENODO_SANDBOX", zenodo_refresh_token)
+                github_permissions.allow_actions(self.folder_info.git_remote_url)
             else:
                 sc.echo("Now add this token to your {} under the name ZENODO_SANDBOX.".format(
                     create_console_hyperlink(self.folder_info.git_remote_url.replace(".git", "/settings/secrets/actions"),
