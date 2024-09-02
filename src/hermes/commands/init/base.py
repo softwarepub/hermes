@@ -135,7 +135,7 @@ class HermesInitCommand(HermesCommand):
         if self.folder_info.has_hermes_toml:
             sc.echo("The current directory already has a `hermes.toml`. "
                     "It seems like HERMES was already initialized for this project.")
-            if sc.confirm("Do you want to initialize Hermes anyway? (files will be overwritten)"):
+            if not sc.confirm("Do you want to initialize Hermes anyway? (files will be overwritten)"):
                 return
 
         # Creating the citation File
@@ -180,8 +180,8 @@ class HermesInitCommand(HermesCommand):
                 sc.echo("The `.gitignore` file already contains `.hermes/`")
             else:
                 with open(".gitignore", "a") as file:
-                    file.write("# Ignoring all HERMES cache files")
-                    file.write(".hermes/")
+                    file.write("# Ignoring all HERMES cache files\n")
+                    file.write(".hermes/\n")
                 sc.echo("Added `.hermes/` to the `.gitignore` file.")
 
         # Creating the ci file

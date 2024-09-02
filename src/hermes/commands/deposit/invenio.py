@@ -268,7 +268,10 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
             # If auth_token is a refresh-token, get the auth-token from that.
             if str(auth_token).startswith("REFRESH_TOKEN:"):
+                _log.debug(f"Getting token from refresh_token {auth_token}")
                 get_token_from_refresh_token(auth_token.split("REFRESH_TOKEN:")[1])
+                _log.debug(f"Token: {os.environ.get('ZENODO_TOKEN')}")
+                _log.debug(f"Refresh Token: {os.environ.get('ZENODO_TOKEN_REFRESH')}")
                 auth_token = os.environ.get('ZENODO_TOKEN')
             if not auth_token:
                 raise DepositionUnauthorizedError("No valid auth token given for deposition platform")
