@@ -48,10 +48,8 @@ class HermesHarvestCommand(HermesCommand):
             try:
                 plugin_func = self.plugins[plugin_name]()
                 harvested_data, tags = plugin_func(self)
-                print(harvested_data)
-                with HermesHarvestContext(
-                        ctx, plugin_name
-                ) as harvest_ctx:
+
+                with HermesHarvestContext(ctx, plugin_name) as harvest_ctx:
                     harvest_ctx.update_from(harvested_data,
                                             plugin=plugin_name,
                                             timestamp=datetime.now().isoformat(), **tags)
@@ -59,8 +57,10 @@ class HermesHarvestCommand(HermesCommand):
                         if any(v != _value and t == _tag for v, t in _trace):
                             raise MergeError(_key, None, _value)
 
-            except KeyError:
+            except KeyError as e:
                 self.log.error("Plugin '%s' not found.", plugin_name)
+                self.errors.append(e)
 
             except HermesValidationError as e:
                 self.log.error("Error while executing %s: %s", plugin_name, e)
+                self.errors.append(e)

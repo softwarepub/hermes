@@ -31,7 +31,7 @@ _logging_config = {
             'class': "logging.FileHandler",
             'formatter': "logfile",
             'level': "DEBUG",
-            'filename': "./.hermes/hermes.log",
+            'filename': "./hermes.log",
         },
 
         'auditfile': {
@@ -50,12 +50,6 @@ _logging_config = {
     },
 }
 
-# This dict caches all the different configuration sections already loaded
-_config = {
-    # We need some basic logging configuration to get logging up and running at all
-    'logging': _logging_config,
-}
-
 _loggers = {}
 
 
@@ -64,14 +58,14 @@ def init_logging():
         return
 
     # Make sure the directories to hold the log files exists (or else create)
-    pathlib.Path(_config['logging']['handlers']['logfile']['filename']).parent.mkdir(exist_ok=True, parents=True)
-    pathlib.Path(_config['logging']['handlers']['auditfile']['filename']).parent.mkdir(exist_ok=True, parents=True)
+    pathlib.Path(_logging_config['handlers']['logfile']['filename']).parent.mkdir(exist_ok=True, parents=True)
+    pathlib.Path(_logging_config['handlers']['auditfile']['filename']).parent.mkdir(exist_ok=True, parents=True)
 
     # Inintialize logging system
     import logging.config
 
-    logging.config.dictConfig(_config['logging'])
-    for log_name in _config['logging']['loggers']:
+    logging.config.dictConfig(_logging_config)
+    for log_name in _logging_config['loggers']:
         _loggers[log_name] = logging.getLogger(log_name)
 
 

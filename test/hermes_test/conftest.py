@@ -23,8 +23,10 @@ class HermesEnvMock:
 
     def __enter__(self):
         self.test_path.mkdir(parents=True, exist_ok=True)
+
         for file_name, data in self.test_files.items():
             file_path = self.test_path / file_name
+            file_path.parent.mkdir(parents=True, exist_ok=True)
             file_path.write_text(data)
 
         os.chdir(self.test_path)

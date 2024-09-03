@@ -58,7 +58,8 @@ class HermesProcessCommand(HermesCommand):
             ctx.merge_contexts_from(harvest_context)
 
         if ctx._errors:
-            self.log.error('!!! warning "Errors during merge"')
+            self.log.error('Errors during merge')
+            self.errors.extend(ctx._errors)
 
             for ep, error in ctx._errors:
                 self.log.info("    - %s: %s", ep.name, error)

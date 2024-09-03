@@ -9,7 +9,9 @@
 This module provides the main entry point for the HERMES command line application.
 """
 import argparse
+import sys
 
+from hermes import logger
 from hermes.commands import HermesHelpCommand, HermesCleanCommand, HermesHarvestCommand, HermesProcessCommand, \
                             HermesCurateCommand, HermesDepositCommand, HermesPostprocessCommand, HermesInitCommand
 from hermes.commands.base import HermesCommand
@@ -57,6 +59,28 @@ def main() -> None:
     # Actually parse the command line, configure it and execute the selected sub-command.
     args = parser.parse_args()
 
-    args.command.load_settings(args)
-    args.command.patch_settings(args)
-    args.command(args)
+    logger.init_logging()
+    log = logger.getLogger("hermes.cli")
+    log.debug("Running hermes with the following command line arguments: %s", args)
+
+    try:
+        log.debug("Loading settings...")
+        args.command.load_settings(args)
+
+        log.debug("Update settings from command line...")
+        args.command.patch_settings(args)
+
+        log.info("Run subcommand %s", args.command.command_name)
+        args.command(args)
+    except Exception as e:
+        log.error("An error occurred during execution of %s", args.command.command_name)
+        log.debug("Original exception was: %s", e)
+
+        sys.exit(2)
+
+    if args.command.errors:
+        for e in args.command.errors:
+            log.error(e)
+        sys.exit(1)
+
+    sys.exit(0)
