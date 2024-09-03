@@ -27,10 +27,6 @@ def create_secret(project_url: str, secret_name: str, secret_value, token = ""):
     public_key_url = f"{repo_url}/actions/secrets/public-key"
     secrets_url = f"{repo_url}/actions/secrets/{secret_name}"
 
-    print(repo_url)
-    print(public_key_url)
-    print(secrets_url)
-
     # Headers for GitHub API requests
     headers = {
         'Authorization': f'token {token}',
@@ -43,7 +39,6 @@ def create_secret(project_url: str, secret_name: str, secret_value, token = ""):
         public_key_data = response.json()
         key_id = public_key_data['key_id']
         public_key = public_key_data['key']
-        print(f"Public Key Data {public_key_data}")
     else:
         raise Exception(f"Failed to retrieve public key: {response.status_code} {response.text}")
 
