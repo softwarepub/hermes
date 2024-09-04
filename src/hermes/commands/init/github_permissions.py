@@ -29,7 +29,7 @@ def allow_actions(project_url: str, token = ""):
         'can_approve_pull_request_reviews': True
     }
 
-    response = requests.put(action_permissions_url, headers=headers, data=json.dumps(data))
+    response = requests.put(action_permissions_url, headers=headers, json=data)
 
     if response.status_code in [204]:
         print(f"Project settings updated successfully.")
