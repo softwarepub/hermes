@@ -51,7 +51,7 @@ def create_secret(project_url: str, secret_name: str, secret_value, token = ""):
         "key_id": key_id
     }
 
-    response = requests.put(secrets_url, headers=headers, data=json.dumps(data))
+    response = requests.put(secrets_url, headers=headers, json=data)
 
     if response.status_code in [201, 204]:
         print(f"Secret '{secret_name}' created/updated successfully.")
