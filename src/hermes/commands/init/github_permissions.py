@@ -32,6 +32,6 @@ def allow_actions(project_url: str, token = ""):
     response = requests.put(action_permissions_url, headers=headers, json=data)
 
     if response.status_code in [204]:
-        print(f"Project settings updated successfully.")
+        print("Project settings updated successfully.")
     else:
         print(f"Failed to update project settings: {response.status_code} {response.text}")
