@@ -7,8 +7,6 @@
 import argparse
 import os
 import subprocess
-import sys
-from email.policy import default
 
 import requests
 from pydantic import BaseModel
