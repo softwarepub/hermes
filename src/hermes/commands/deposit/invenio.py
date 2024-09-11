@@ -24,7 +24,7 @@ from hermes.error import MisconfigurationError
 from hermes.model.context import CodeMetaContext
 from hermes.model.path import ContextPath
 from hermes.utils import hermes_user_agent
-from hermes.commands.init.oauth_zenodo import get_token_from_refresh_token
+from hermes.commands.init.oauth_zenodo import oauth_process
 
 
 _log = logging.getLogger("cli.deposit.invenio")
@@ -269,10 +269,10 @@ class InvenioDepositPlugin(BaseDepositPlugin):
             # If auth_token is a refresh-token, get the auth-token from that.
             if str(auth_token).startswith("REFRESH_TOKEN:"):
                 _log.debug(f"Getting token from refresh_token {auth_token}")
-                get_token_from_refresh_token(auth_token.split("REFRESH_TOKEN:")[1])
-                _log.debug(f"Token: {os.environ.get('ZENODO_TOKEN')}")
-                _log.debug(f"Refresh Token: {os.environ.get('ZENODO_TOKEN_REFRESH')}")
-                auth_token = os.environ.get('ZENODO_TOKEN')
+                tokens = oauth_process().get_tokens_from_refresh_token(auth_token.split("REFRESH_TOKEN:")[1])
+                _log.debug(f"Tokens: {str(tokens)}")
+                auth_token = tokens.get("access_token", "")
+                _log.debug(f"Auth Token: {auth_token}")
             if not auth_token:
                 raise DepositionUnauthorizedError("No valid auth token given for deposition platform")
             self.client = self.invenio_client_class(self.config,

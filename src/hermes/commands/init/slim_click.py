@@ -1,9 +1,16 @@
+# SPDX-FileCopyrightText: 2024 Forschungszentrum Jülich
+# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileContributor: Nitai Heeb
+
 """
 Slim, self-made version of click so we don't need to use it for simple console questions.
 """
 
-def echo(text: str):
-    print(text)
+PRINT_DEBUG = False
+
+def echo(text: str, debug: bool = False):
+    if (not debug) or PRINT_DEBUG:
+        print(text)
 
 def confirm(text: str, default : bool = True) -> bool:
     while True:
@@ -17,15 +24,17 @@ def confirm(text: str, default : bool = True) -> bool:
         else:
             print("Error: invalid input")
 
+def press_enter_to_continue(text : str = "Press ENTER to continue"):
+    input(text)
+
 def choose(text: str, options: list[tuple[str, str]], default: str = "") -> str:
     default = default.lower()
     print(text)
     for o in options:
-        char = o[0]
-        if char == default:
-            char = char.upper()
-        else:
-            char = char.lower()
+        char = o[0].lower()
+        description = o[1]
+        if char == default.lower():
+            description += " [default]"
         description = o[1]
         print(f"[{char}] {description}")
     while True:
