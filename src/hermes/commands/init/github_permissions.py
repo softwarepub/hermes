@@ -4,9 +4,9 @@
 
 import os
 import requests
-import json
 
-def allow_actions(project_url: str, token = ""):
+
+def allow_actions(project_url: str, token=""):
     # Access token obtained from GitHub OAuth process
     if token == "":
         token = os.environ.get('GITHUB_TOKEN')

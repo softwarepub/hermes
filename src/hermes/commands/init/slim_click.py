@@ -8,11 +8,13 @@ Slim, self-made version of click so we don't need to use it for simple console q
 
 PRINT_DEBUG = False
 
+
 def echo(text: str, debug: bool = False):
     if (not debug) or PRINT_DEBUG:
         print(text)
 
-def confirm(text: str, default : bool = True) -> bool:
+
+def confirm(text: str, default: bool = True) -> bool:
     while True:
         answer = input(text + (" [Y/n]" if default else " [y/N]") + ": ").lower()
         if answer == "y":
@@ -24,8 +26,10 @@ def confirm(text: str, default : bool = True) -> bool:
         else:
             print("Error: invalid input")
 
-def press_enter_to_continue(text : str = "Press ENTER to continue"):
+
+def press_enter_to_continue(text: str = "Press ENTER to continue"):
     input(text)
+
 
 def choose(text: str, options: list[tuple[str, str]], default: str = "") -> str:
     default = default.lower()

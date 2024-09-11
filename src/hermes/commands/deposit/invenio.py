@@ -13,7 +13,6 @@ import typing as t
 from datetime import date, datetime
 from pathlib import Path
 from urllib.parse import urlparse
-import os
 
 import requests
 from pydantic import BaseModel

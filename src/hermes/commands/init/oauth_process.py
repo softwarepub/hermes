@@ -1,18 +1,17 @@
 # SPDX-FileCopyrightText: 2024 Forschungszentrum Jülich
 # SPDX-License-Identifier: Apache-2.0
-# SPDX-FileContributor: Nitai Heeb & David Papel
+# SPDX-FileContributor: Nitai Heeb
+# SPDX-FileContributor: David Pape
 
 import os
-import re
 import threading
 import time
 import webbrowser
 from threading import Event
-
-from lxml.html.diff import token
 from requests_oauthlib import OAuth2Session
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, urlparse
+
 
 class OauthProcess:
     def __init__(self, client_id: str, client_secret: str, authorize_url: str, token_url: str, scope: str,
@@ -32,7 +31,7 @@ class OauthProcess:
             return Handler(*args, oauth_process=self, **kwargs)
         return handler
 
-    def start_server(self, port : int = None):
+    def start_server(self, port: int = None):
         port = port or self.local_port
         with HTTPServer(("127.0.0.1", port), self.create_handler_constructor()) as server:
             server.serve_forever()
@@ -40,21 +39,21 @@ class OauthProcess:
     def kill_server(self):
         pass
 
-    def open_browser(self, port : int = None) -> bool:
+    def open_browser(self, port: int = None) -> bool:
         port = port or self.local_port
-        return webbrowser.open(f"http://localhost:{port}")
+        return webbrowser.open(f'http://localhost:{port}')
 
     def get_tokens_from_refresh_token(self, refresh_token: str) -> dict[str: str]:
         """Returns access and refresh token as dict using a refresh token"""
         oa_session = OAuth2Session(self.client_id, redirect_uri=self.redirect_uri, scope=self.scope)
         return oa_session.refresh_token(self.token_url, refresh_token=refresh_token, client_secret=self.client_secret,
-                                     include_client_id=True, client_id=self.client_id)
+                                        include_client_id=True, client_id=self.client_id)
 
     def get_tokens_from_auth_code(self, auth_code: str) -> dict[str: str]:
         """Returns access and refresh token as dict using an auth-code"""
         oa_session = OAuth2Session(self.client_id, redirect_uri=self.redirect_uri, scope=self.scope)
         return oa_session.fetch_token(self.token_url, client_secret=self.client_secret, include_client_id=True,
-                                    code=auth_code)
+                                      code=auth_code)
 
     def get_tokens(self) -> dict[str: str]:
         server_thread = threading.Thread(target=self.start_server)
@@ -66,6 +65,7 @@ class OauthProcess:
         self.kill_server()
         time.sleep(.2)
         return self.tokens
+
 
 class Handler(BaseHTTPRequestHandler):
     def __init__(self, *args, oauth_process: OauthProcess = None, **kwargs):
@@ -97,7 +97,7 @@ class Handler(BaseHTTPRequestHandler):
 
         # Parse Query String
         parsed = urlparse(self.path)
-        #print(parse_qs(parsed.query))
+        # print(parse_qs(parsed.query))
         auth_code = parse_qs(parsed.query)["code"][0]
 
         tokens = self.oauth_process.get_tokens_from_auth_code(auth_code)

@@ -5,7 +5,9 @@
 import logging
 from hermes.commands.init.oauth_process import OauthProcess
 
+
 USING_SANDBOX = True
+
 
 local_port = 8334
 redirect_uri = 'http://localhost:' + str(local_port) + '/callback'
@@ -24,6 +26,7 @@ client_secret = sandbox_client_secret if USING_SANDBOX else real_client_secret
 authorize_url = sandbox_authorize_url if USING_SANDBOX else real_authorize_url
 token_url = sandbox_token_url if USING_SANDBOX else real_token_url
 
+
 class StringHandler(logging.Handler):
     def __init__(self):
         super().__init__()
@@ -36,9 +39,13 @@ class StringHandler(logging.Handler):
     def get_logs(self):
         return self.log_messages
 
+
 string_handler = StringHandler()
+
+
 def print_logs_for_requests():
-    """Forwards all logging from the requests_oauthlib.oauth2_session module to the console so we can see the used request headers and data."""
+    """Forwards all logging from the requests_oauthlib.oauth2_session module to the console so we can see the used
+    request headers and data."""
     logging.basicConfig(
         level=logging.DEBUG,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -58,6 +65,7 @@ def print_logs_for_requests():
 
     module_logger.addHandler(string_handler)
 
+
 def oauth_process() -> OauthProcess:
     return OauthProcess(
         client_id=client_id,
@@ -68,9 +76,11 @@ def oauth_process() -> OauthProcess:
         local_port=local_port
     )
 
+
 def get_tokens() -> dict[str: str]:
     """Starts the oauth procedure and returns collected tokens as dict"""
     return oauth_process().get_tokens()
+
 
 def get_refresh_token(with_prefix: bool = True) -> str:
     return get_tokens().setdefault('refresh_token', '')

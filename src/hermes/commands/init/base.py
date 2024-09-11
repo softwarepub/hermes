@@ -52,7 +52,7 @@ def scout_current_folder() -> HermesInitFolderInfo:
                     info.git_remote_url = whitespace_split[1]
                     break
         branch_info = subprocess.run(['git', 'branch'], capture_output=True, text=True, check=True).stdout
-        for line in remote_info.splitlines():
+        for line in branch_info.splitlines():
             if line.startswith("*"):
                 info.current_branch = line.split()[1].strip()
                 break
@@ -71,6 +71,8 @@ def wait_until_the_user_is_done():
 
 
 USE_FANCY_HYPERLINKS = False
+
+
 def create_console_hyperlink(url: str, word: str) -> str:
     return f"\033]8;;{url}\033\\{word}\033]8;;\033\\" if USE_FANCY_HYPERLINKS else f"{word} ({url})"
 
@@ -98,8 +100,9 @@ class HermesInitCommand(HermesCommand):
         self.folder_info: HermesInitFolderInfo = HermesInitFolderInfo()
 
     def init_command_parser(self, command_parser: argparse.ArgumentParser) -> None:
-        command_parser.add_argument('--only-set-refresh-token', action='store_true', default=False, dest="only_refresh_token",
-                                    help="Instead of doing the whole setup, this just stores a new refresh token as secret.")
+        command_parser.add_argument('--only-set-refresh-token', action='store_true', default=False,
+                                    dest="only_refresh_token",
+                                    help="Instead of the whole setup, this just stores a new refresh token as secret.")
         command_parser.add_argument("--github-token", action='store', default="", dest="github_token",
                                     help="Use this together with --only-set-refresh-token")
 
@@ -129,13 +132,13 @@ class HermesInitCommand(HermesCommand):
         # Abort if there is no git
         if not self.folder_info.has_git:
             sc.echo("The current directory has no `.git` subdirectory. "
-                       "Please execute `hermes init` in the root directory of your git project.")
+                    "Please execute `hermes init` in the root directory of your git project.")
             return
 
         # Abort if neither GitHub nor gitlab is used
         if not (self.folder_info.uses_github or self.folder_info.uses_gitlab):
             sc.echo("Your git project ({}) is not connected to github or gitlab. It is mandatory for HERMES to "
-                       "use one of those hosting services.".format(self.folder_info.git_remote_url))
+                    "use one of those hosting services.".format(self.folder_info.git_remote_url))
             return
 
         sc.echo(f"Starting to initialize HERMES in {self.folder_info.absolute_path}")
@@ -159,7 +162,7 @@ class HermesInitCommand(HermesCommand):
         if not self.folder_info.has_citation_cff:
             citation_cff_url = "https://citation-file-format.github.io/cff-initializer-javascript/#/"
             sc.echo("Your project does not contain a `CITATION.cff` file (yet). It would be very helpful for "
-                       "saving important metadata which is necessary for publishing.")
+                    "saving important metadata which is necessary for publishing.")
             create_cff_now = sc.confirm("Do you want to create a `CITATION.cff` file now?", default=True)
             if create_cff_now:
                 sc.echo("{} to create the file. Then move it into the project folder before you continue.".format(
@@ -212,7 +215,7 @@ class HermesInitCommand(HermesCommand):
         # Getting Zenodo token
         zenodo_token = ""
         setup_method = sc.choose("How do you want to connect your project to your Zenodo account?",
-                           [("o", "using OAuth (default)"), ("m", "doing it manually")], default="o")
+                                 [("o", "using OAuth (default)"), ("m", "doing it manually")], default="o")
         if setup_method == "o":
             sc.echo("Opening browser to log into your Zenodo account...")
             zenodo_token = oauth_zenodo.get_refresh_token()
@@ -241,8 +244,10 @@ class HermesInitCommand(HermesCommand):
                     github_permissions.allow_actions(self.folder_info.git_remote_url, token=token)
             else:
                 sc.echo("Now add this token to your {} under the name ZENODO_SANDBOX.".format(
-                    create_console_hyperlink(self.folder_info.git_remote_url.replace(".git", "/settings/secrets/actions"),
-                                             "project's GitHub secrets")
+                    create_console_hyperlink(
+                        self.folder_info.git_remote_url.replace(".git", "/settings/secrets/actions"),
+                        "project's GitHub secrets"
+                    )
                 ))
                 wait_until_the_user_is_done()
                 sc.echo("Next go to your {} and check the checkbox which reads:".format(
@@ -256,4 +261,3 @@ class HermesInitCommand(HermesCommand):
             print("GITLAB INIT NOT IMPLEMENTED YET")
 
         sc.echo("HERMES was initialized.")
-
