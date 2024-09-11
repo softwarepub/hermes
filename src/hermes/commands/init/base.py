@@ -153,7 +153,7 @@ class HermesInitCommand(HermesCommand):
             # TODO Replace this with another link or package data
             hermes_toml_raw_url = "https://raw.githubusercontent.com/nheeb/zenodo-test/main/hermes.toml"
             download_file_from_url(hermes_toml_raw_url, os.path.join(os.getcwd(), "hermes.toml"))
-            sc.echo(f"hermes.toml was {"replaced" if self.folder_info.has_hermes_toml else "created"}.")
+            sc.echo(f"hermes.toml was {'replaced' if self.folder_info.has_hermes_toml else 'created'}.")
 
         # Creating the citation File
         if not self.folder_info.has_citation_cff:

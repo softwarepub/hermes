@@ -47,16 +47,14 @@ class OauthProcess:
     def get_tokens_from_refresh_token(self, refresh_token: str) -> dict[str: str]:
         """Returns access and refresh token as dict using a refresh token"""
         oa_session = OAuth2Session(self.client_id, redirect_uri=self.redirect_uri, scope=self.scope)
-        token = oa_session.refresh_token(self.token_url, refresh_token=refresh_token, client_secret=self.client_secret,
+        return oa_session.refresh_token(self.token_url, refresh_token=refresh_token, client_secret=self.client_secret,
                                      include_client_id=True, client_id=self.client_id)
-        return token
 
     def get_tokens_from_auth_code(self, auth_code: str) -> dict[str: str]:
         """Returns access and refresh token as dict using an auth-code"""
         oa_session = OAuth2Session(self.client_id, redirect_uri=self.redirect_uri, scope=self.scope)
-        token = oa_session.fetch_token(self.token_url, client_secret=self.client_secret, include_client_id=True,
+        return oa_session.fetch_token(self.token_url, client_secret=self.client_secret, include_client_id=True,
                                     code=auth_code)
-        return token
 
     def get_tokens(self) -> dict[str: str]:
         server_thread = threading.Thread(target=self.start_server)
