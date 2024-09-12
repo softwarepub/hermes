@@ -9,7 +9,8 @@ Slim, self-made version of click so we don't need to use it for simple console q
 PRINT_DEBUG = False
 
 
-def echo(text: str, debug: bool = False):
+def echo(text, debug: bool = False):
+    text = str(text)
     if (not debug) or PRINT_DEBUG:
         print(text)
 

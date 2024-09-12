@@ -12,16 +12,18 @@ authorization_base_url = 'https://github.com/login/oauth/authorize'
 token_url = 'https://github.com/login/oauth/access_token'
 redirect_uri = 'http://localhost:' + str(local_port) + '/callback'
 scope = "repo"
-
+device_code_url = "https://github.com/login/device/code"
 
 def oauth_process() -> OauthProcess:
     return OauthProcess(
+        name="GitHub",
         client_id=client_id,
         client_secret=client_secret,
         token_url=token_url,
         authorize_url=authorization_base_url,
         scope=scope,
-        local_port=local_port
+        local_port=local_port,
+        device_code_url=device_code_url
     )
 
 

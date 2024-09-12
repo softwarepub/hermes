@@ -217,7 +217,6 @@ class HermesInitCommand(HermesCommand):
         setup_method = sc.choose("How do you want to connect your project to your Zenodo account?",
                                  [("o", "using OAuth (default)"), ("m", "doing it manually")], default="o")
         if setup_method == "o":
-            sc.echo("Opening browser to log into your Zenodo account...")
             zenodo_token = oauth_zenodo.get_refresh_token()
             if zenodo_token:
                 sc.echo("OAuth at Zenodo was successful.")
@@ -234,8 +233,8 @@ class HermesInitCommand(HermesCommand):
         # Adding the token to the git secrets & changing action workflow settings
         if self.folder_info.uses_github:
             if setup_method == "o":
-                sc.echo("Opening browser to log into your GitHub account...")
                 token = oauth_github.get_access_token()
+                sc.echo(token)
                 if token:
                     sc.echo("OAuth at GitHub was successful.")
                     sc.echo(token, debug=True)

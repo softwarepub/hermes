@@ -68,6 +68,7 @@ def print_logs_for_requests():
 
 def oauth_process() -> OauthProcess:
     return OauthProcess(
+        name="Zenodo",
         client_id=client_id,
         client_secret=client_secret,
         token_url=token_url,
@@ -83,4 +84,4 @@ def get_tokens() -> dict[str: str]:
 
 
 def get_refresh_token(with_prefix: bool = True) -> str:
-    return get_tokens().setdefault('refresh_token', '')
+    return get_tokens().get('refresh_token', '')
