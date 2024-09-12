@@ -70,13 +70,6 @@ def wait_until_the_user_is_done():
             pass
 
 
-USE_FANCY_HYPERLINKS = False
-
-
-def create_console_hyperlink(url: str, word: str) -> str:
-    return f"\033]8;;{url}\033\\{word}\033]8;;\033\\" if USE_FANCY_HYPERLINKS else f"{word} ({url})"
-
-
 def download_file_from_url(url, filepath):
     with requests.get(url, stream=True) as r:
         r.raise_for_status()
@@ -222,16 +215,20 @@ class HermesInitCommand(HermesCommand):
                 sc.echo("OAuth at Zenodo was successful.")
                 sc.echo(zenodo_token, debug=True)
             else:
-                sc.echo("Something went wrong while doing oauth.")
-        else:
+                sc.echo("Something went wrong while doing OAuth. You'll have to do it manually instead.")
+        if setup_method == "m" or zenodo_token == '':
             zenodo_token_url = "https://sandbox.zenodo.org/account/settings/applications/tokens/new/"
-            sc.echo("If you haven't already, {}. You might have to create an account first.".format(
-                create_console_hyperlink(zenodo_token_url, "create a access token for zenodo")
+            sc.echo("{} and create an access token.".format(
+                sc.create_console_hyperlink(zenodo_token_url, "Open this link")
             ))
-            wait_until_the_user_is_done()
+            if setup_method == "m":
+                sc.press_enter_to_continue()
+            else:
+                zenodo_token = sc.answer("Then enter the token here: ")
 
         # Adding the token to the git secrets & changing action workflow settings
         if self.folder_info.uses_github:
+            oauth_success = False
             if setup_method == "o":
                 token = oauth_github.get_access_token()
                 sc.echo(token)
@@ -241,20 +238,24 @@ class HermesInitCommand(HermesCommand):
                     github_secrets.create_secret(self.folder_info.git_remote_url, "ZENODO_SANDBOX",
                                                  secret_value=zenodo_token, token=token)
                     github_permissions.allow_actions(self.folder_info.git_remote_url, token=token)
-            else:
-                sc.echo("Now add this token to your {} under the name ZENODO_SANDBOX.".format(
-                    create_console_hyperlink(
+                    oauth_success = True
+                else:
+                    sc.echo("Something went wrong while doing OAuth. You'll have to do it manually instead.")
+            if not oauth_success:
+                sc.echo("Now add {} to your {} under the name ZENODO_SANDBOX.".format(
+                    f"the token ({zenodo_token})" if zenodo_token else "the token",
+                    sc.create_console_hyperlink(
                         self.folder_info.git_remote_url.replace(".git", "/settings/secrets/actions"),
                         "project's GitHub secrets"
                     )
                 ))
-                wait_until_the_user_is_done()
+                sc.press_enter_to_continue()
                 sc.echo("Next go to your {} and check the checkbox which reads:".format(
-                    create_console_hyperlink(self.folder_info.git_remote_url.replace(".git", "/settings/actions"),
-                                             "project settings")
+                    sc.create_console_hyperlink(self.folder_info.git_remote_url.replace(".git", "/settings/actions"),
+                                                "project settings")
                 ))
                 sc.echo("Allow GitHub Actions to create and approve pull requests")
-                wait_until_the_user_is_done()
+                sc.press_enter_to_continue()
                 sc.echo("Good job!")
         elif self.folder_info.uses_gitlab:
             print("GITLAB INIT NOT IMPLEMENTED YET")

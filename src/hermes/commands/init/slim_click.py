@@ -28,6 +28,10 @@ def confirm(text: str, default: bool = True) -> bool:
             print("Error: invalid input")
 
 
+def answer(text: str) -> str:
+    return input(text)
+
+
 def press_enter_to_continue(text: str = "Press ENTER to continue"):
     input(text)
 
@@ -50,3 +54,10 @@ def choose(text: str, options: list[tuple[str, str]], default: str = "") -> str:
             return default
         else:
             print("Error: invalid input")
+
+
+USE_FANCY_HYPERLINKS = False
+
+
+def create_console_hyperlink(url: str, word: str) -> str:
+    return f"\033]8;;{url}\033\\{word}\033]8;;\033\\" if USE_FANCY_HYPERLINKS else f"{word} ({url})"
