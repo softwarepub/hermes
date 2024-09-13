@@ -18,7 +18,7 @@ from urllib.parse import parse_qs, urlparse
 import hermes.commands.init.slim_click as sc
 
 PREFER_DEVICE_FLOW = False
-DEACTIVATE_BROWSER_OPENING = False
+DEACTIVATE_BROWSER_OPENING = True
 
 class OauthProcess:
     def __init__(self, name: str, client_id: str, client_secret: str, authorize_url: str, token_url: str, scope: str,

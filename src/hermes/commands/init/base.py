@@ -159,7 +159,7 @@ class HermesInitCommand(HermesCommand):
             create_cff_now = sc.confirm("Do you want to create a `CITATION.cff` file now?", default=True)
             if create_cff_now:
                 sc.echo("{} to create the file. Then move it into the project folder before you continue.".format(
-                    create_console_hyperlink(citation_cff_url, "Use this website")))
+                    sc.create_console_hyperlink(citation_cff_url, "Use this website")))
                 sc.press_enter_to_continue()
                 self.refresh_folder_info()
                 if self.folder_info.has_citation_cff:
@@ -169,7 +169,7 @@ class HermesInitCommand(HermesCommand):
             else:
                 sc.echo("You better do it later or HERMES won't work properly.")
                 sc.echo("You can {} to create the file. Then move it into the project folder.".format(
-                    create_console_hyperlink(citation_cff_url, "use this website")))
+                    sc.create_console_hyperlink(citation_cff_url, "use this website")))
         else:
             sc.echo("Your project already contains a `CITATION.cff` file. Nice!")
 

@@ -27,45 +27,6 @@ authorize_url = sandbox_authorize_url if USING_SANDBOX else real_authorize_url
 token_url = sandbox_token_url if USING_SANDBOX else real_token_url
 
 
-class StringHandler(logging.Handler):
-    def __init__(self):
-        super().__init__()
-        self.log_messages = []
-
-    def emit(self, record):
-        log_entry = self.format(record)
-        self.log_messages.append(log_entry)
-
-    def get_logs(self):
-        return self.log_messages
-
-
-string_handler = StringHandler()
-
-
-def print_logs_for_requests():
-    """Forwards all logging from the requests_oauthlib.oauth2_session module to the console so we can see the used
-    request headers and data."""
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        handlers=[string_handler]
-    )
-
-    module_logger = logging.getLogger('requests_oauthlib.oauth2_session')
-    module_logger.setLevel(logging.DEBUG)
-
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.DEBUG)
-
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    console_handler.setFormatter(formatter)
-
-    module_logger.addHandler(console_handler)
-
-    module_logger.addHandler(string_handler)
-
-
 def oauth_process() -> OauthProcess:
     return OauthProcess(
         name="Zenodo",
