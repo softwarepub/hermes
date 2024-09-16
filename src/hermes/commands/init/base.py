@@ -281,7 +281,7 @@ class HermesInitCommand(HermesCommand):
                     sc.echo("Something went wrong while doing OAuth. You'll have to do it manually instead.")
             if not oauth_success:
                 sc.echo("Now add {} to your {} under the name ZENODO_SANDBOX.".format(
-                    f"the token ({self.tokens["zenodo"]})" if self.tokens["zenodo"] else "the token",
+                    "the token ({})".format(self.tokens["zenodo"]) if self.tokens["zenodo"] else "the token",
                     sc.create_console_hyperlink(
                         self.folder_info.git_remote_url.replace(".git", "/settings/secrets/actions"),
                         "project's GitHub secrets"
