@@ -272,7 +272,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
                 _log.debug(f"Tokens: {str(tokens)}")
                 auth_token = tokens.get("access_token", "")
                 _log.debug(f"Auth Token: {auth_token}")
-                #TODO Update the secret (github token is needed)
+                # TODO Update the secret (github token is needed)
             if not auth_token:
                 raise DepositionUnauthorizedError("No valid auth token given for deposition platform")
             self.client = self.invenio_client_class(self.config,
