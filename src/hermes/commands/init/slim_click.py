@@ -17,12 +17,12 @@ def echo(text, debug: bool = False):
 
 def confirm(text: str, default: bool = True) -> bool:
     while True:
-        answer = input(text + (" [Y/n]" if default else " [y/N]") + ": ").lower()
-        if answer == "y":
+        _answer = input(text + (" [Y/n]" if default else " [y/N]") + ": ").lower()
+        if _answer == "y":
             return True
-        elif answer == "n":
+        elif _answer == "n":
             return False
-        elif answer == "":
+        elif _answer == "":
             return default
         else:
             print("Error: invalid input")
@@ -32,7 +32,7 @@ def answer(text: str) -> str:
     return input(text)
 
 
-def press_enter_to_continue(text: str = "Press ENTER to continue"):
+def press_enter_to_continue(text: str = "Press ENTER to continue") -> None:
     input(text)
 
 
@@ -47,10 +47,10 @@ def choose(text: str, options: list[tuple[str, str]], default: str = "") -> str:
         description = o[1]
         print(f"[{char}] {description}")
     while True:
-        answer = input("Your choice: ").lower()
-        if answer in list(zip(*options))[0]:
-            return answer
-        elif answer == "" and default != "":
+        _answer = input("Your choice: ").lower()
+        if _answer in list(zip(*options))[0]:
+            return _answer
+        elif _answer == "" and default != "":
             return default
         else:
             print("Error: invalid input")

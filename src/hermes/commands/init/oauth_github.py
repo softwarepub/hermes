@@ -14,6 +14,7 @@ redirect_uri = 'http://localhost:' + str(local_port) + '/callback'
 scope = "repo"
 device_code_url = "https://github.com/login/device/code"
 
+
 def oauth_process() -> OauthProcess:
     return OauthProcess(
         name="GitHub",

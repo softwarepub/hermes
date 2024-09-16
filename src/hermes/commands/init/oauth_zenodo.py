@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-FileContributor: Nitai Heeb
 
-import logging
 from hermes.commands.init.oauth_process import OauthProcess
 
 
@@ -31,7 +30,7 @@ def oauth_process() -> OauthProcess:
     return OauthProcess(
         name="Zenodo",
         client_id=client_id,
-        client_secret=client_secret,
+        # client_secret=client_secret,
         token_url=token_url,
         authorize_url=authorize_url,
         scope=scope,

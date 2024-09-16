@@ -4,12 +4,10 @@
 # SPDX-FileContributor: David Pape
 
 from __future__ import annotations
-
 import os
 import threading
 import time
 import webbrowser
-
 import requests
 from threading import Event
 from requests_oauthlib import OAuth2Session
@@ -17,12 +15,13 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, urlparse
 import hermes.commands.init.slim_click as sc
 
-PREFER_DEVICE_FLOW = False
-DEACTIVATE_BROWSER_OPENING = True
+PREFER_DEVICE_FLOW = True
+DEACTIVATE_BROWSER_OPENING = False
+
 
 class OauthProcess:
-    def __init__(self, name: str, client_id: str, client_secret: str, authorize_url: str, token_url: str, scope: str,
-                 local_port: int = 5333, device_code_url: str = ""):
+    def __init__(self, name: str, client_id: str = "", client_secret: str = "", authorize_url: str = "",
+                 token_url: str = "", scope: str = "", local_port: int = 5333, device_code_url: str = ""):
         self.name = name
         self.local_port = local_port
         self.scope = scope
@@ -68,7 +67,7 @@ class OauthProcess:
 
     def get_tokens_from_device_flow(self) -> dict[str: str]:
         if self.device_code_url == "":
-            sc.echo(f"Device-Flow is not available for {self.name}")
+            sc.echo(f"Device-Flow is not available for {self.name}", debug=True)
             return {}
         sc.echo(f"Using Device-Flow instead to authorize with {self.name}")
 

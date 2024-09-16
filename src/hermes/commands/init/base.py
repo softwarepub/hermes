@@ -5,10 +5,9 @@
 import argparse
 import os
 import subprocess
-
 import requests
+import toml
 from pydantic import BaseModel
-
 from hermes.commands.base import HermesCommand
 import hermes.commands.init.oauth_github as oauth_github
 import hermes.commands.init.oauth_zenodo as oauth_zenodo
@@ -91,6 +90,8 @@ class HermesInitCommand(HermesCommand):
     def __init__(self, parser: argparse.ArgumentParser):
         super().__init__(parser)
         self.folder_info: HermesInitFolderInfo = HermesInitFolderInfo()
+        self.tokens: dict[str: str] = {}
+        self.setup_method: str = ""
 
     def init_command_parser(self, command_parser: argparse.ArgumentParser) -> None:
         command_parser.add_argument('--only-set-refresh-token', action='store_true', default=False,
@@ -106,6 +107,34 @@ class HermesInitCommand(HermesCommand):
         self.folder_info = scout_current_folder()
 
     def __call__(self, args: argparse.Namespace) -> None:
+        # Test if init is possible and wanted. If not: sys.exit
+        self.test_initialization(args)
+
+        # Creating the hermes.toml file
+        self.create_hermes_toml()
+
+        # Creating the citation File
+        self.create_citation_cff()
+
+        # Adding .hermes to the .gitignore
+        self.update_gitignore()
+
+        # Creating the ci file
+        self.create_ci_template()
+
+        # Choosing setup method
+        self.setup_method = sc.choose("How do you want to connect with Zenodo / GitHub?",
+                                      [("o", "using OAuth (default)"), ("m", "doing it manually")], default="o")
+
+        # Getting Zenodo token
+        self.get_zenodo_token()
+
+        # Adding the token to the git secrets & changing action workflow settings
+        self.configure_git_project()
+
+        sc.echo("HERMES was initialized.")
+
+    def test_initialization(self, args: argparse.Namespace):
         # Abort if git is not installed
         if not is_git_installed():
             sc.echo("Git is currently not installed. It is mandatory for HERMES to have git installed.")
@@ -143,15 +172,27 @@ class HermesInitCommand(HermesCommand):
             if not sc.confirm("Do you want to initialize Hermes anyway? "):
                 return
 
-        # Creating the hermes.toml file
+    def create_hermes_toml(self):
+        default_values = {
+            "harvest": {
+                "sources": ["cff"]
+            },
+            "deposit": {
+                "target": "invenio_rdm",
+                "invenio_rdm": {
+                    "site_url": "https://sandbox.zenodo.org",
+                    "access_right": "open"
+                 }
+            }
+        }
+
         if (not self.folder_info.has_hermes_toml) \
                 or sc.confirm("Do you want to replace your `hermes.toml` with a new one?", default=False):
-            # TODO Replace this with another link or package data
-            hermes_toml_raw_url = "https://raw.githubusercontent.com/nheeb/zenodo-test/main/hermes.toml"
-            download_file_from_url(hermes_toml_raw_url, os.path.join(os.getcwd(), "hermes.toml"))
-            sc.echo(f"hermes.toml was {'replaced' if self.folder_info.has_hermes_toml else 'created'}.")
+            with open('hermes.toml', 'w') as toml_file:
+                toml.dump(default_values, toml_file)
+            sc.echo("`hermes.toml` was created.")
 
-        # Creating the citation File
+    def create_citation_cff(self):
         if not self.folder_info.has_citation_cff:
             citation_cff_url = "https://citation-file-format.github.io/cff-initializer-javascript/#/"
             sc.echo("Your project does not contain a `CITATION.cff` file (yet). It would be very helpful for "
@@ -173,7 +214,7 @@ class HermesInitCommand(HermesCommand):
         else:
             sc.echo("Your project already contains a `CITATION.cff` file. Nice!")
 
-        # Adding .hermes to the .gitignore
+    def update_gitignore(self):
         if not self.folder_info.has_gitignore:
             with open(".gitignore", 'w') as file:
                 pass
@@ -190,7 +231,7 @@ class HermesInitCommand(HermesCommand):
                     file.write(".hermes/\n")
                 sc.echo("Added `.hermes/` to the `.gitignore` file.")
 
-        # Creating the ci file
+    def create_ci_template(self):
         if self.folder_info.uses_github:
             # TODO Replace this later with the link to the real templates (not the feature branch)
             github_ci_template_raw_url = ("https://raw.githubusercontent.com/softwarepub/ci-templates/feature/"
@@ -205,45 +246,42 @@ class HermesInitCommand(HermesCommand):
             download_file_from_url(github_ci_template_raw_url, ci_file_path)
             sc.echo(f"GitHub CI yml file was created at {ci_file_path}")
 
-        # Getting Zenodo token
-        zenodo_token = ""
-        setup_method = sc.choose("How do you want to connect your project to your Zenodo account?",
-                                 [("o", "using OAuth (default)"), ("m", "doing it manually")], default="o")
-        if setup_method == "o":
-            zenodo_token = oauth_zenodo.get_refresh_token()
-            if zenodo_token:
+    def get_zenodo_token(self):
+        self.tokens["zenodo"] = ""
+        if self.setup_method == "o":
+            self.tokens["zenodo"] = oauth_zenodo.get_refresh_token()
+            if self.tokens["zenodo"]:
                 sc.echo("OAuth at Zenodo was successful.")
-                sc.echo(zenodo_token, debug=True)
+                sc.echo(self.tokens["zenodo"], debug=True)
             else:
                 sc.echo("Something went wrong while doing OAuth. You'll have to do it manually instead.")
-        if setup_method == "m" or zenodo_token == '':
+        if self.setup_method == "m" or self.tokens["zenodo"] == '':
             zenodo_token_url = "https://sandbox.zenodo.org/account/settings/applications/tokens/new/"
             sc.echo("{} and create an access token.".format(
                 sc.create_console_hyperlink(zenodo_token_url, "Open this link")
             ))
-            if setup_method == "m":
+            if self.setup_method == "m":
                 sc.press_enter_to_continue()
             else:
-                zenodo_token = sc.answer("Then enter the token here: ")
+                self.tokens["zenodo"] = sc.answer("Then enter the token here: ")
 
-        # Adding the token to the git secrets & changing action workflow settings
+    def configure_git_project(self):
         if self.folder_info.uses_github:
             oauth_success = False
-            if setup_method == "o":
-                token = oauth_github.get_access_token()
-                sc.echo(token)
-                if token:
+            if self.setup_method == "o":
+                self.tokens["github"] = oauth_github.get_access_token()
+                if self.tokens["github"]:
                     sc.echo("OAuth at GitHub was successful.")
-                    sc.echo(token, debug=True)
+                    sc.echo(self.tokens["github"], debug=True)
                     github_secrets.create_secret(self.folder_info.git_remote_url, "ZENODO_SANDBOX",
-                                                 secret_value=zenodo_token, token=token)
-                    github_permissions.allow_actions(self.folder_info.git_remote_url, token=token)
+                                                 secret_value=self.tokens["zenodo"], token=self.tokens["github"])
+                    github_permissions.allow_actions(self.folder_info.git_remote_url, token=self.tokens["github"])
                     oauth_success = True
                 else:
                     sc.echo("Something went wrong while doing OAuth. You'll have to do it manually instead.")
             if not oauth_success:
                 sc.echo("Now add {} to your {} under the name ZENODO_SANDBOX.".format(
-                    f"the token ({zenodo_token})" if zenodo_token else "the token",
+                    f"the token ({self.tokens["zenodo"]})" if self.tokens["zenodo"] else "the token",
                     sc.create_console_hyperlink(
                         self.folder_info.git_remote_url.replace(".git", "/settings/secrets/actions"),
                         "project's GitHub secrets"
@@ -259,5 +297,3 @@ class HermesInitCommand(HermesCommand):
                 sc.echo("Good job!")
         elif self.folder_info.uses_gitlab:
             print("GITLAB INIT NOT IMPLEMENTED YET")
-
-        sc.echo("HERMES was initialized.")
