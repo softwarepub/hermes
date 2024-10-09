@@ -13,10 +13,8 @@ from urllib.parse import urlparse
 from pathlib import Path
 from pydantic import BaseModel
 from hermes.commands.base import HermesCommand
-import hermes.commands.init.oauth_github as oauth_github
-import hermes.commands.init.oauth_zenodo as oauth_zenodo
-import hermes.commands.init.github_secrets as github_secrets
-import hermes.commands.init.github_permissions as github_permissions
+import hermes.commands.init.connect_with_github as connect_github
+import hermes.commands.init.connect_with_zenodo as connect_zenodo
 import hermes.commands.init.slim_click as sc
 
 
@@ -193,7 +191,7 @@ class HermesInitCommand(HermesCommand):
             match self.folder_info.used_git_hoster:
                 case GitHoster.GitHub:
                     zenodo_refresh_token = "REFRESH_TOKEN:" + os.environ.get('ZENODO_TOKEN_REFRESH')
-                    github_secrets.create_secret(self.folder_info.git_remote_url, "ZENODO_SANDBOX",
+                    connect_github.create_secret(self.folder_info.git_remote_url, "ZENODO_SANDBOX",
                                                  zenodo_refresh_token, args.github_token)
             sys.exit()
 
@@ -315,8 +313,8 @@ class HermesInitCommand(HermesCommand):
     def get_zenodo_token(self, sandbox: bool = True):
         self.tokens[self.deposit_platform] = ""
         if self.setup_method == "o":
-            oauth_zenodo.setup(sandbox)
-            self.tokens[self.deposit_platform] = oauth_zenodo.get_refresh_token()
+            connect_zenodo.setup(sandbox)
+            self.tokens[self.deposit_platform] = connect_zenodo.get_refresh_token()
             if self.tokens[self.deposit_platform]:
                 sc.echo("OAuth at Zenodo was successful.")
                 sc.echo(self.tokens[self.deposit_platform], debug=True)
@@ -338,14 +336,14 @@ class HermesInitCommand(HermesCommand):
             case GitHoster.GitHub:
                 oauth_success = False
                 if self.setup_method == "o":
-                    self.tokens[GitHoster.GitHub] = oauth_github.get_access_token()
+                    self.tokens[GitHoster.GitHub] = connect_github.get_access_token()
                     if self.tokens[GitHoster.GitHub]:
                         sc.echo("OAuth at GitHub was successful.")
                         sc.echo(self.tokens[GitHoster.GitHub], debug=True)
-                        github_secrets.create_secret(self.folder_info.git_remote_url, "ZENODO_SANDBOX",
+                        connect_github.create_secret(self.folder_info.git_remote_url, "ZENODO_SANDBOX",
                                                      secret_value=self.tokens[self.deposit_platform],
                                                      token=self.tokens[GitHoster.GitHub])
-                        github_permissions.allow_actions(self.folder_info.git_remote_url,
+                        connect_github.allow_actions(self.folder_info.git_remote_url,
                                                          token=self.tokens[GitHoster.GitHub])
                         oauth_success = True
                     else:

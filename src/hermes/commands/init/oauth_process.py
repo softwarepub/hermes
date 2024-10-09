@@ -79,7 +79,7 @@ class OauthProcess:
 
         response = requests.post(self.device_code_url, data=data)
         if response.status_code != 200:
-            print(f"Error while requesting device code: {response.status_code}. {response.text}")
+            sc.echo(f"Error while requesting device code: {response.status_code}. {response.text}")
             return {}
         response_data = dict(parse_qs(response.text))
 
@@ -89,7 +89,7 @@ class OauthProcess:
         interval = float(response_data['interval'][0])
 
         # User has to open the url and enter the code
-        print(f"Open {verification_uri} and enter this code: {user_code}")
+        sc.echo(f"Open {verification_uri} and enter this code: {user_code}")
 
         # Wait for the tokens
         while True:

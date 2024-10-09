@@ -23,7 +23,7 @@ from hermes.error import MisconfigurationError
 from hermes.model.context import CodeMetaContext
 from hermes.model.path import ContextPath
 from hermes.utils import hermes_user_agent
-from hermes.commands.init.oauth_zenodo import oauth_process
+from hermes.commands.init.connect_with_zenodo import oauth_process
 
 
 _log = logging.getLogger("cli.deposit.invenio")
