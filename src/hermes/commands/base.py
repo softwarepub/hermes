@@ -104,6 +104,13 @@ class HermesCommand(abc.ABC):
             help="Configuration file in TOML format",
         )
 
+        # Add a new argument to accept a URL for harvesting
+        parser.add_argument(
+            "--url",
+            type=str,
+            help="URL from which to extract metadata"
+        )
+        
         plugin_args = parser.add_argument_group("Extra options")
         plugin_args.add_argument(
             "-O",
