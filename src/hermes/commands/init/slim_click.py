@@ -6,7 +6,7 @@
 Slim, self-made version of click so we don't need to use it for simple console questions.
 """
 
-PRINT_DEBUG = False
+PRINT_DEBUG = True
 """If this is true, echo() will print texts with debug=True."""
 
 
@@ -15,9 +15,15 @@ def echo(text: str, debug: bool = False):
     :param text: The printed text.
     :param debug: If debug, the text will only be printed when slim_click.PRINT_DEBUG is true.
     """
-    text = str(text)
     if (not debug) or PRINT_DEBUG:
-        print(text)
+        print(("DEBUG: " if debug else "") + str(text))
+
+
+def debug_info(*args, **kwargs):
+    kwarg_lines = [f"{str(k)} = {str(v)}" for k, v in kwargs.items()]
+    kwarg_lines.extend([str(arg) for arg in args])
+    text = "\n".join(kwarg_lines)
+    echo(str(text), True)
 
 
 def confirm(text: str, default: bool = True) -> bool:

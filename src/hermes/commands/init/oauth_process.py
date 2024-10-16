@@ -9,6 +9,7 @@ import threading
 import time
 import webbrowser
 import requests
+import json
 from threading import Event
 from requests_oauthlib import OAuth2Session
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -17,6 +18,20 @@ import hermes.commands.init.slim_click as sc
 
 PREFER_DEVICE_FLOW = True
 DEACTIVATE_BROWSER_OPENING = False
+
+
+def parse_response_to_dict(response_text: str) -> dict:
+    try:
+        response_dict = json.loads(response_text)
+        return response_dict
+    except json.JSONDecodeError:
+        return dict(parse_qs(response_text))
+
+
+def extract_value(value):
+    if isinstance(value, list):
+        return value[0] if value else None
+    return value
 
 
 class OauthProcess:
@@ -66,10 +81,11 @@ class OauthProcess:
                                       code=auth_code)
 
     def get_tokens_from_device_flow(self) -> dict[str: str]:
-        if self.device_code_url == "":
-            sc.echo(f"Device-Flow is not available for {self.name}", debug=True)
+        if self.device_code_url == "" or self.token_url == "":
+            sc.echo(f"Device-Flow is not available for {self.name}")
             return {}
-        sc.echo(f"Using Device-Flow instead to authorize with {self.name}")
+        sc.echo(f"Using Device-Flow to authorize with {self.name}")
+        sc.echo(f"Device URL = {self.device_code_url}", debug=True)
 
         # Getting the device code
         data = {
@@ -80,16 +96,26 @@ class OauthProcess:
         response = requests.post(self.device_code_url, data=data)
         if response.status_code != 200:
             sc.echo(f"Error while requesting device code: {response.status_code}. {response.text}")
+            sc.debug_info(str(response.__dict__))
             return {}
-        response_data = dict(parse_qs(response.text))
 
-        device_code = response_data['device_code'][0]
-        user_code = response_data['user_code'][0]
-        verification_uri = response_data['verification_uri'][0]
-        interval = float(response_data['interval'][0])
+        sc.debug_info(f"Response Text: {response.text}")
+
+        response_data = parse_response_to_dict(response.text)
+
+        device_code = extract_value(response_data['device_code'])
+        user_code = extract_value(response_data['user_code'])
+        verification_uri = extract_value(response_data['verification_uri'])
+        verification_uri_complete = ""
+        if 'verification_uri_complete' in response_data.keys():
+            verification_uri_complete = extract_value(response_data['verification_uri_complete'])
+        interval = float(extract_value(response_data['interval']))
 
         # User has to open the url and enter the code
-        sc.echo(f"Open {verification_uri} and enter this code: {user_code}")
+        if verification_uri_complete:
+            sc.echo(f"Open {verification_uri_complete} and confirm the code ({user_code})")
+        else:
+            sc.echo(f"Open {verification_uri} and enter this code: {user_code}")
 
         # Wait for the tokens
         while True:
@@ -111,6 +137,9 @@ class OauthProcess:
             time.sleep(interval)
 
     def get_tokens_from_oauth(self) -> dict[str: str]:
+        if self.authorize_url == "":
+            sc.echo(f"OAuth is not available for {self.name}")
+            return {}
         sc.echo(f"Opening browser to log into your {self.name} account...")
         self.tokens = {}
         server_thread = threading.Thread(target=self.start_server)

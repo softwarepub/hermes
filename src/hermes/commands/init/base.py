@@ -14,6 +14,7 @@ from pathlib import Path
 from pydantic import BaseModel
 from hermes.commands.base import HermesCommand
 import hermes.commands.init.connect_with_github as connect_github
+import hermes.commands.init.connect_with_gitlab as connect_gitlab
 import hermes.commands.init.connect_with_zenodo as connect_zenodo
 import hermes.commands.init.slim_click as sc
 
@@ -36,6 +37,12 @@ class DepositPlatform(Enum):
 DepositPlatformChars: dict[DepositPlatform, str] = {
         DepositPlatform.Zenodo: "z",
         DepositPlatform.ZenodoSandbox: "s"
+    }
+
+
+DepositPlatformUrls: dict[DepositPlatform, str] = {
+        DepositPlatform.Zenodo: "https://zenodo.org/",
+        DepositPlatform.ZenodoSandbox: "https://sandbox.zenodo.org/"
     }
 
 
@@ -78,13 +85,11 @@ def scout_current_folder() -> HermesInitFolderInfo:
                 break
         if info.git_remote_url:
             parsed_url = urlparse(info.git_remote_url)
-            info.git_base_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
+            info.git_base_url = f"{parsed_url.scheme}://{parsed_url.netloc}/"
             sc.echo(f"git base url = {info.git_base_url}", debug=True)
     if "github.com" in info.git_remote_url:
         info.used_git_hoster = GitHoster.GitHub
-    elif "gitlab.com" in info.git_remote_url:
-        info.used_git_hoster = GitHoster.GitLab
-    elif "401" in subprocess.run(['curl', info.git_base_url + "/api/v4/version"],
+    elif "401" in subprocess.run(['curl', info.git_base_url + "api/v4/version"],
                                  capture_output=True, text=True).stdout:
         info.used_git_hoster = GitHoster.GitLab
     info.has_hermes_toml = os.path.isfile(os.path.join(current_dir, "hermes.toml"))
@@ -145,10 +150,19 @@ class HermesInitCommand(HermesCommand):
         sc.echo("Scan complete.", debug=True)
 
     def __call__(self, args: argparse.Namespace) -> None:
-        sc.echo("Starting hermes init...")
+        sc.echo("Starting hermes init...", debug=True)
 
         # Test if init is possible and wanted. If not: sys.exit
         self.test_initialization(args)
+
+        # Choosing desired deposit platform
+        self.choose_deposit_platform()
+
+        # Choosing setup method
+        self.setup_method = sc.choose(
+            f"How do you want to setup {self.deposit_platform.name} and the {self.folder_info.used_git_hoster.name} CI?",
+            {"a": "automatically (using OAuth / Device Flow)", "m": "manually (with instructions)"}, default="a"
+        )
 
         # Creating the hermes.toml file
         self.create_hermes_toml()
@@ -156,18 +170,11 @@ class HermesInitCommand(HermesCommand):
         # Creating the citation File
         self.create_citation_cff()
 
-        # Choosing desired deposit platform
-        self.choose_deposit_platform()
-
         # Adding .hermes to the .gitignore
         self.update_gitignore()
 
         # Creating the ci file
         self.create_ci_template()
-
-        # Choosing setup method
-        self.setup_method = sc.choose("How do you want to connect with Zenodo / GitHub?",
-                                      {"o": "using OAuth", "m": "doing it manually"}, default="o")
 
         # Connect with deposit platform
         self.connect_deposit_platform()
@@ -219,6 +226,7 @@ class HermesInitCommand(HermesCommand):
                 sys.exit()
 
     def create_hermes_toml(self):
+        deposit_url = DepositPlatformUrls.get(self.deposit_platform)
         default_values = {
             "harvest": {
                 "sources": ["cff"]
@@ -226,7 +234,7 @@ class HermesInitCommand(HermesCommand):
             "deposit": {
                 "target": "invenio_rdm",
                 "invenio_rdm": {
-                    "site_url": "https://sandbox.zenodo.org",
+                    "site_url": deposit_url,
                     "access_right": "open"
                  }
             }
@@ -235,6 +243,7 @@ class HermesInitCommand(HermesCommand):
         if (not self.folder_info.has_hermes_toml) \
                 or sc.confirm("Do you want to replace your `hermes.toml` with a new one?", default=False):
             with open('hermes.toml', 'w') as toml_file:
+                # noinspection PyTypeChecker
                 toml.dump(default_values, toml_file)
             sc.echo("`hermes.toml` was created.")
 
@@ -262,9 +271,7 @@ class HermesInitCommand(HermesCommand):
 
     def update_gitignore(self):
         if not self.folder_info.has_gitignore:
-            # noinspection PyUnusedLocal
-            with open(".gitignore", 'w') as file:
-                pass
+            open(".gitignore", 'w')
             sc.echo("A new `.gitignore` file was created.")
         self.refresh_folder_info()
         if self.folder_info.has_gitignore:
@@ -312,7 +319,7 @@ class HermesInitCommand(HermesCommand):
 
     def get_zenodo_token(self, sandbox: bool = True):
         self.tokens[self.deposit_platform] = ""
-        if self.setup_method == "o":
+        if self.setup_method == "a":
             connect_zenodo.setup(sandbox)
             self.tokens[self.deposit_platform] = connect_zenodo.get_refresh_token()
             if self.tokens[self.deposit_platform]:
@@ -334,66 +341,99 @@ class HermesInitCommand(HermesCommand):
     def configure_git_project(self):
         match self.folder_info.used_git_hoster:
             case GitHoster.GitHub:
-                oauth_success = False
-                if self.setup_method == "o":
-                    self.tokens[GitHoster.GitHub] = connect_github.get_access_token()
-                    if self.tokens[GitHoster.GitHub]:
-                        sc.echo("OAuth at GitHub was successful.")
-                        sc.echo(self.tokens[GitHoster.GitHub], debug=True)
-                        connect_github.create_secret(self.folder_info.git_remote_url, "ZENODO_SANDBOX",
-                                                     secret_value=self.tokens[self.deposit_platform],
-                                                     token=self.tokens[GitHoster.GitHub])
-                        connect_github.allow_actions(self.folder_info.git_remote_url,
-                                                         token=self.tokens[GitHoster.GitHub])
-                        oauth_success = True
-                    else:
-                        sc.echo("Something went wrong while doing OAuth. You'll have to do it manually instead.")
-                if not oauth_success:
-                    sc.echo("Add the {} token{} to your {} under the name ZENODO_SANDBOX.".format(
-                        self.deposit_platform.name,
-                        f" ({self.tokens[self.deposit_platform]})" if self.tokens[self.deposit_platform] else "",
-                        sc.create_console_hyperlink(
-                            self.folder_info.git_remote_url.replace(".git", "/settings/secrets/actions"),
-                            "project's GitHub secrets"
-                        )
-                    ))
-                    sc.press_enter_to_continue()
-                    sc.echo("Next open your {} and check the checkbox which reads:".format(
-                        sc.create_console_hyperlink(
-                            self.folder_info.git_remote_url.replace(".git", "/settings/actions"),
-                            "project settings"
-                        )
-                    ))
-                    sc.echo("Allow GitHub Actions to create and approve pull requests")
-                    sc.press_enter_to_continue()
-                    sc.echo("Good job!")
+                self.configure_github()
             case GitHoster.GitLab:
-                oauth_success = False
-                if self.setup_method == "o":
-                    # TODO oauth for gitlab
-                    pass
-                if not oauth_success:
-                    sc.echo("Go to your {} and create a new token.".format(
-                        sc.create_console_hyperlink(
-                            self.folder_info.git_remote_url.replace(".git", "/-/settings/ci_cd"),
-                            "project's access tokens")
-                    ))
-                    sc.echo("It needs to have the 'developer' role and 'write_repository' scope.")
-                    sc.press_enter_to_continue()
-                    sc.echo("Open your {} and go to 'Variables'".format(
-                        sc.create_console_hyperlink(
-                            self.folder_info.git_remote_url.replace(".git", "/-/settings/ci_cd"),
-                            "project's ci settings")
-                    ))
-                    sc.echo("Then, add that token as variable with key HERMES_PUSH_TOKEN.")
-                    sc.echo("(For your safety, you should set the visibility to 'Masked'.)")
-                    sc.press_enter_to_continue()
-                    sc.echo("Next, add the {} token{} as variable with key ZENODO_TOKEN.".format(
-                        self.deposit_platform.name,
-                        f" ({self.tokens[self.deposit_platform]})" if self.tokens[self.deposit_platform] else ""
-                    ))
-                    sc.echo("(For your safety, you should set the visibility to 'Masked'.)")
-                    sc.press_enter_to_continue()
+                self.configure_gitlab()
+
+    def configure_github(self):
+        oauth_success = False
+        if self.setup_method == "a":
+            self.tokens[GitHoster.GitHub] = connect_github.get_access_token()
+            if self.tokens[GitHoster.GitHub]:
+                sc.echo("OAuth at GitHub was successful.")
+                sc.echo(self.tokens[GitHoster.GitHub], debug=True)
+                connect_github.create_secret(self.folder_info.git_remote_url, "ZENODO_SANDBOX",
+                                             secret_value=self.tokens[self.deposit_platform],
+                                             token=self.tokens[GitHoster.GitHub])
+                connect_github.allow_actions(self.folder_info.git_remote_url,
+                                             token=self.tokens[GitHoster.GitHub])
+                oauth_success = True
+            else:
+                sc.echo("Something went wrong while doing OAuth. You'll have to do it manually instead.")
+        if not oauth_success:
+            sc.echo("Add the {} token{} to your {} under the name ZENODO_SANDBOX.".format(
+                self.deposit_platform.name,
+                f" ({self.tokens[self.deposit_platform]})" if self.tokens[self.deposit_platform] else "",
+                sc.create_console_hyperlink(
+                    self.folder_info.git_remote_url.replace(".git", "/settings/secrets/actions"),
+                    "project's GitHub secrets"
+                )
+            ))
+            sc.press_enter_to_continue()
+            sc.echo("Next open your {} and check the checkbox which reads:".format(
+                sc.create_console_hyperlink(
+                    self.folder_info.git_remote_url.replace(".git", "/settings/actions"),
+                    "project settings"
+                )
+            ))
+            sc.echo("Allow GitHub Actions to create and approve pull requests")
+            sc.press_enter_to_continue()
+            sc.echo("Good job!")
+
+    def configure_gitlab(self):
+        oauth_success = False
+        if self.setup_method == "a":
+            gl = connect_gitlab.GitLabConnection(self.folder_info.git_remote_url)
+            if not gl.has_client():
+                sc.echo("Unfortunately HERMES does not support automatic authorization with your GitLab "
+                        "installment.")
+                sc.echo("Go to your {} and create a new token.".format(
+                    sc.create_console_hyperlink(
+                        self.folder_info.git_remote_url.replace(".git", "/-/settings/access_tokens"),
+                        "project's access tokens")
+                ))
+                sc.echo("It needs to have the 'developer' role and 'api' + 'write_repository' scope.")
+                token = sc.answer("Then paste the token here: ")
+                # TODO Make that token do something
+            if gl.authorize():
+                vars_created = gl.create_variable(
+                    "ZENODO_TOKEN", self.tokens[self.deposit_platform],
+                    f"This token is used by Hermes to publish on {self.deposit_platform.name}."
+                )
+                token = gl.create_project_access_token("hermes_token")
+                if token:
+                    vars_created = vars_created and gl.create_variable(
+                        "HERMES_PUSH_TOKEN", token,
+                        "This token is used by Hermes to create pull requests."
+                    )
+                else:
+                    vars_created = False
+                oauth_success = vars_created
+            if not oauth_success:
+                sc.echo("Something went wrong while setting up GitLab automatically.")
+                sc.echo("You will have to do it manually instead.")
+        if not oauth_success:
+            sc.echo("Go to your {} and create a new token.".format(
+                sc.create_console_hyperlink(
+                    self.folder_info.git_remote_url.replace(".git", "/-/settings/access_tokens"),
+                    "project's access tokens")
+            ))
+            sc.echo("It needs to have the 'developer' role and 'write_repository' scope.")
+            sc.press_enter_to_continue()
+            sc.echo("Open your {} and go to 'Variables'".format(
+                sc.create_console_hyperlink(
+                    self.folder_info.git_remote_url.replace(".git", "/-/settings/ci_cd"),
+                    "project's ci settings")
+            ))
+            sc.echo("Then, add that token as variable with key HERMES_PUSH_TOKEN.")
+            sc.echo("(For your safety, you should set the visibility to 'Masked'.)")
+            sc.press_enter_to_continue()
+            sc.echo("Next, add the {} token{} as variable with key ZENODO_TOKEN.".format(
+                self.deposit_platform.name,
+                f" ({self.tokens[self.deposit_platform]})" if self.tokens[self.deposit_platform] else ""
+            ))
+            sc.echo("(For your safety, you should set the visibility to 'Masked'.)")
+            sc.press_enter_to_continue()
 
     def choose_deposit_platform(self):
         deposit_platform_char = sc.choose(

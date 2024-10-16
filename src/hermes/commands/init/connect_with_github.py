@@ -6,6 +6,7 @@ import requests
 from base64 import b64encode
 from nacl import encoding, public
 from hermes.commands.init.oauth_process import OauthProcess
+import hermes.commands.init.slim_click as sc
 
 
 local_port = 8333
@@ -66,9 +67,9 @@ def allow_actions(project_url: str, token):
     response = requests.put(action_permissions_url, headers=headers, json=data)
 
     if response.status_code in [204]:
-        print("Project settings updated successfully.")
+        sc.echo("Project settings updated successfully.")
     else:
-        print(f"Failed to update project settings: {response.status_code} {response.text}")
+        sc.echo(f"Failed to update project settings: {response.status_code} {response.text}")
 
 
 def encrypt_secret(public_key: str, secret_value: str) -> str:
@@ -116,6 +117,6 @@ def create_secret(project_url: str, secret_name: str, secret_value, token):
     response = requests.put(secrets_url, headers=headers, json=data)
 
     if response.status_code in [201, 204]:
-        print(f"Secret '{secret_name}' created/updated successfully.")
+        sc.echo(f"Secret '{secret_name}' created/updated successfully.")
     else:
-        print(f"Failed to create/update secret: {response.status_code} {response.text}")
+        sc.echo(f"Failed to create/update secret: {response.status_code} {response.text}")
