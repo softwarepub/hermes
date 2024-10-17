@@ -32,6 +32,7 @@ class RodareDepositPlugin(InvenioDepositPlugin):
     invenio_client_class = RodareClient
     invenio_resolver_class = RodareResolver
     robis_url = "https://www.hzdr.de/robis"
+    robis_publication_url = "https://www.hzdr.de/publications/Publ-{pub_id}"
 
     def prepare(self) -> None:
         super().prepare()
@@ -58,7 +59,7 @@ class RodareDepositPlugin(InvenioDepositPlugin):
         deposition_metadata = super()._codemeta_to_invenio_deposition()
 
         robis_identifier = {
-            "identifier": f"https://www.hzdr.de/publications/Publ-{pub_id}",
+            "identifier": self.robis_publication_url.format(pub_id=pub_id),
             "relation": "isIdenticalTo",
             "scheme": "url",
         }
