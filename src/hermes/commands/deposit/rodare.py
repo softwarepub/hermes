@@ -94,6 +94,8 @@ class RodareDepositPlugin(InvenioDepositPlugin):
         identifiers.
 
         An example publication on Rodare: https://rodare.hzdr.de/api/records/2
+
+        The associated Robis page: https://www.hzdr.de/publications/Publ-27151
         """
         pub_id = self.config.robis_pub_id
         deposition_metadata = super()._codemeta_to_invenio_deposition()
