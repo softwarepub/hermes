@@ -8,6 +8,7 @@ import subprocess
 import sys
 import requests
 import toml
+import re
 from enum import Enum, auto
 from urllib.parse import urlparse
 from pathlib import Path
@@ -130,7 +131,7 @@ class HermesInitCommand(HermesCommand):
     def __init__(self, parser: argparse.ArgumentParser):
         super().__init__(parser)
         self.folder_info: HermesInitFolderInfo = HermesInitFolderInfo()
-        self.tokens: dict[str: str] = {}
+        self.tokens: dict = {}
         self.setup_method: str = ""
         self.deposit_platform: DepositPlatform = DepositPlatform.Empty
 
@@ -160,7 +161,7 @@ class HermesInitCommand(HermesCommand):
 
         # Choosing setup method
         self.setup_method = sc.choose(
-            f"How do you want to setup {self.deposit_platform.name} and the {self.folder_info.used_git_hoster.name} CI?",
+            f"How do you want to connect {self.deposit_platform.name} with your {self.folder_info.used_git_hoster.name} CI?",
             {"a": "automatically (using OAuth / Device Flow)", "m": "manually (with instructions)"}, default="a"
         )
 
@@ -303,8 +304,8 @@ class HermesInitCommand(HermesCommand):
                 hermes_ci_template_url = ("https://raw.githubusercontent.com/softwarepub/ci-templates/refs/heads/"
                                           "feature/init-command/gitlab/hermes-ci.yml")
                 gitlab_ci_path = Path(".gitlab-ci.yml")
-                Path(".gitlab").mkdir(parents=True, exist_ok=True)
-                hermes_ci_path = Path(".gitlab") / "hermes-ci.yml"
+                Path("gitlab").mkdir(parents=True, exist_ok=True)
+                hermes_ci_path = Path("gitlab") / "hermes-ci.yml"
                 if gitlab_ci_path.exists():
                     if string_in_file(gitlab_ci_path, "hermes-ci.yml"):
                         sc.echo(f"It seems like your {gitlab_ci_path} file is already configured for hermes.")
@@ -315,13 +316,21 @@ class HermesInitCommand(HermesCommand):
                     download_file_from_url(gitlab_ci_template_url, gitlab_ci_path)
                     sc.echo(f"{gitlab_ci_path} was created.")
                 download_file_from_url(hermes_ci_template_url, hermes_ci_path)
+                # When using gitlab.com we need to use gitlab-org-docker as tag
+                # TODO make this cleaner
+                if "gitlab.com" in self.folder_info.git_remote_url:
+                    with open(hermes_ci_path, 'r') as file:
+                        content = file.read()
+                    new_content = re.sub(r'(tags:\n\s+- )docker', r'\1gitlab-org-docker', content)
+                    with open(hermes_ci_path, 'w') as file:
+                        file.write(new_content)
                 sc.echo(f"{hermes_ci_path} was created.")
 
     def get_zenodo_token(self, sandbox: bool = True):
         self.tokens[self.deposit_platform] = ""
         if self.setup_method == "a":
             connect_zenodo.setup(sandbox)
-            self.tokens[self.deposit_platform] = connect_zenodo.get_refresh_token()
+            self.tokens[self.deposit_platform] = "REFRESH_TOKEN:" + connect_zenodo.get_refresh_token()
             if self.tokens[self.deposit_platform]:
                 sc.echo("OAuth at Zenodo was successful.")
                 sc.echo(self.tokens[self.deposit_platform], debug=True)

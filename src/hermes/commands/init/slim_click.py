@@ -6,7 +6,7 @@
 Slim, self-made version of click so we don't need to use it for simple console questions.
 """
 
-PRINT_DEBUG = True
+PRINT_DEBUG = False
 """If this is true, echo() will print texts with debug=True."""
 
 
@@ -63,7 +63,7 @@ def choose(text: str, options: dict[str, str], default: str = "") -> str:
     for char, description in options.items():
         char = char.lower().strip()
         if char == default.lower():
-            description += " (default)"
+            description += " [default]"
         print(f"[{char}] {description}")
     while True:
         _answer = input("Your choice: ").lower().strip()

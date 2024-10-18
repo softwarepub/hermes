@@ -113,7 +113,7 @@ class OauthProcess:
 
         # User has to open the url and enter the code
         if verification_uri_complete:
-            sc.echo(f"Open {verification_uri_complete} and confirm the code ({user_code})")
+            sc.echo(f"Open {verification_uri_complete} and confirm the code.")
         else:
             sc.echo(f"Open {verification_uri} and enter this code: {user_code}")
 
