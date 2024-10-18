@@ -75,7 +75,7 @@ def main() -> None:
     except Exception as e:
         log.error("An error occurred during execution of %s", args.command.command_name)
         log.debug("Original exception was: %s", e)
-
+        raise e
         sys.exit(2)
 
     if args.command.errors:
