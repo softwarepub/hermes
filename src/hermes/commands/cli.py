@@ -13,7 +13,7 @@ import sys
 
 from hermes import logger
 from hermes.commands import HermesHelpCommand, HermesCleanCommand, HermesHarvestCommand, HermesProcessCommand, \
-                            HermesCurateCommand, HermesDepositCommand, HermesPostprocessCommand
+                            HermesCurateCommand, HermesDepositCommand, HermesPostprocessCommand, HermesInitCommand
 from hermes.commands.base import HermesCommand
 
 
@@ -36,6 +36,7 @@ def main() -> None:
 
     for command in (
             HermesHelpCommand(parser),
+            HermesInitCommand(parser),
             HermesCleanCommand(parser),
             HermesHarvestCommand(parser),
             HermesProcessCommand(parser),
@@ -74,7 +75,7 @@ def main() -> None:
     except Exception as e:
         log.error("An error occurred during execution of %s", args.command.command_name)
         log.debug("Original exception was: %s", e)
-
+        raise e
         sys.exit(2)
 
     if args.command.errors:
