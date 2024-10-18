@@ -44,7 +44,9 @@ class GitLabConnection:
         for client in site_specific_oauth_clients:
             if client["url"] in project_url:
                 self.client_id = client["client_id"]
-                self.gitlab_instance_name = f"GitLab ({client["name_addition"]})"
+                name_addition = client["name_addition"]
+                self.gitlab_instance_name = f"GitLab ({name_addition})"
+                break
 
     def oauth_process(self) -> OauthProcess:
         return OauthProcess(
