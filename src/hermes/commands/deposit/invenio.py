@@ -230,7 +230,7 @@ class InvenioResolver:
         return self._extract_license_id_from_response(response.json())
 
     @staticmethod
-    def _extract_license_id_from_response(data: dict):
+    def _extract_license_id_from_response(data: dict) -> str:
         return data["metadata"]["id"]
 
 
