@@ -227,7 +227,11 @@ class InvenioResolver:
         # Catch other problems
         response.raise_for_status()
 
-        return response.json()["id"]
+        return self._extract_license_id_from_response(response.json())
+
+    @staticmethod
+    def _extract_license_id_from_response(data: dict) -> str:
+        return data["metadata"]["id"]
 
 
 class InvenioDepositSettings(BaseModel):
