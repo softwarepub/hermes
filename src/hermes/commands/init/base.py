@@ -3,6 +3,7 @@
 # SPDX-FileContributor: Nitai Heeb
 
 import argparse
+import logging
 import os
 import subprocess
 import sys
@@ -328,7 +329,8 @@ class HermesInitCommand(HermesCommand):
 
     def get_zenodo_token(self, sandbox: bool = True):
         self.tokens[self.deposit_platform] = ""
-        if self.setup_method == "a":
+        # Deactivated Zenodo OAuth as long as the refresh token bug is not fixed.
+        if self.setup_method == "a" and False:
             connect_zenodo.setup(sandbox)
             self.tokens[self.deposit_platform] = "REFRESH_TOKEN:" + connect_zenodo.get_refresh_token()
             if self.tokens[self.deposit_platform]:
@@ -342,6 +344,7 @@ class HermesInitCommand(HermesCommand):
             sc.echo("{} and create an access token.".format(
                 sc.create_console_hyperlink(zenodo_token_url, "Open this link")
             ))
+            sc.echo("It needs the scopes \"deposit:actions\" and \"deposit:write\".")
             if self.setup_method == "m":
                 sc.press_enter_to_continue()
             else:

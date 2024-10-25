@@ -4,20 +4,38 @@
 # SPDX-FileContributor: David Pape
 
 from __future__ import annotations
+import logging
+
 import os
 import threading
 import time
 import webbrowser
 import requests
+import requests_oauthlib
 import json
 from threading import Event
-from requests_oauthlib import OAuth2Session
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, urlparse
 import hermes.commands.init.slim_click as sc
 
 PREFER_DEVICE_FLOW = True
 DEACTIVATE_BROWSER_OPENING = False
+
+
+def setup_logging_for_oauthlib():
+    """
+    This makes requests_oauthlib.oauth2_session print all the debug logs onto the console.
+    It only works if the hermes logger is deactivated.
+    """
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger('requests_oauthlib.oauth2_session')
+    logger.setLevel(logging.DEBUG)
+    if not logger.hasHandlers():
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        console_handler.setFormatter(formatter)
+        logger.addHandler(console_handler)
 
 
 def parse_response_to_dict(response_text: str) -> dict:
@@ -48,6 +66,7 @@ class OauthProcess:
         self.shutdown_event = Event()
         self.tokens = {}
         self.device_code_url = device_code_url
+        self.server: HTTPServer = None
 
     def create_handler_constructor(self):
         def handler(*args, **kwargs):
@@ -57,10 +76,11 @@ class OauthProcess:
     def start_server(self, port: int = None):
         port = port or self.local_port
         with HTTPServer(("127.0.0.1", port), self.create_handler_constructor()) as server:
-            server.serve_forever()
+            self.server = server
+            self.server.serve_forever()
 
     def kill_server(self):
-        pass
+        self.server.shutdown()
 
     def open_browser(self, port: int = None) -> bool:
         if DEACTIVATE_BROWSER_OPENING:
@@ -70,19 +90,33 @@ class OauthProcess:
 
     def get_tokens_from_refresh_token(self, refresh_token: str) -> dict[str: str]:
         """Returns access and refresh token as dict using a refresh token"""
-        oa_session = OAuth2Session(self.client_id, redirect_uri=self.redirect_uri, scope=self.scope)
+        # Maybe we need this later to debug the weird Zenodo refresh token error
+        # data = {
+        #     "grant_type": "refresh_token",
+        #     "refresh_token": refresh_token,
+        #     "client_id": self.client_id,
+        #     "client_secret": self.client_secret,
+        #     "scope": self.scope
+        # }
+        # response = requests.post(self.token_url, data=data)
+        # sc.debug_info(response=response.__dict__)
+        # sc.debug_info(
+        #     client_id=self.client_id, redirect_uri=self.redirect_uri, scope=self.scope,
+        #     token_url=self.token_url, refresh_token=refresh_token, client_secret=self.client_secret
+        # )
+        oa_session = requests_oauthlib.OAuth2Session(self.client_id, redirect_uri=self.redirect_uri, scope=self.scope)
         return oa_session.refresh_token(self.token_url, refresh_token=refresh_token, client_secret=self.client_secret,
                                         include_client_id=True, client_id=self.client_id)
 
     def get_tokens_from_auth_code(self, auth_code: str) -> dict[str: str]:
         """Returns access and refresh token as dict using an auth-code"""
-        oa_session = OAuth2Session(self.client_id, redirect_uri=self.redirect_uri, scope=self.scope)
+        oa_session = requests_oauthlib.OAuth2Session(self.client_id, redirect_uri=self.redirect_uri, scope=self.scope)
         return oa_session.fetch_token(self.token_url, client_secret=self.client_secret, include_client_id=True,
                                       code=auth_code)
 
     def get_tokens_from_device_flow(self) -> dict[str: str]:
         if self.device_code_url == "" or self.token_url == "":
-            sc.echo(f"Device-Flow is not available for {self.name}")
+            sc.echo(f"Device-Flow is not available for {self.name}", debug=True)
             return {}
         sc.echo(f"Using Device-Flow to authorize with {self.name}")
         sc.echo(f"Device URL = {self.device_code_url}", debug=True)
@@ -176,7 +210,7 @@ class Handler(BaseHTTPRequestHandler):
             self.index()
 
     def index(self):
-        oa_session = OAuth2Session(self.oauth_process.client_id, scope=self.oauth_process.scope)
+        oa_session = requests_oauthlib.OAuth2Session(self.oauth_process.client_id, scope=self.oauth_process.scope)
         authorization_url, state = oa_session.authorization_url(self.oauth_process.authorize_url)
         os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
         os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = '1'

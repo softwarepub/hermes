@@ -5,16 +5,41 @@
 """
 Slim, self-made version of click so we don't need to use it for simple console questions.
 """
+from enum import Enum
 
 PRINT_DEBUG = False
 """If this is true, echo() will print texts with debug=True."""
 
 
-def echo(text: str, debug: bool = False):
+class Formats(Enum):
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    EMPTY = ''
+
+    def __add__(self, other):
+        new = Formats(self)
+        new.ansi = self.value + other.value
+        return new
+
+    def get_ansi(self) -> str:
+        return getattr(self, "ansi", "") or self.value
+
+
+def echo(text: str, debug: bool = False, formatting: Formats = Formats.EMPTY):
     """
     :param text: The printed text.
     :param debug: If debug, the text will only be printed when slim_click.PRINT_DEBUG is true.
+    :param formatting: You can use the Formats Enum to give the text a special color or formatting.
     """
+    if formatting != Formats.EMPTY:
+        text = f"{formatting.get_ansi()}{text}{Formats.ENDC.get_ansi()}"
     if (not debug) or PRINT_DEBUG:
         print(("DEBUG: " if debug else "") + str(text))
 
