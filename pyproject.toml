@@ -90,6 +90,7 @@ codemeta = "hermes.commands.harvest.codemeta:CodeMetaHarvestPlugin"
 file = "hermes.commands.deposit.file:FileDepositPlugin"
 invenio = "hermes.commands.deposit.invenio:InvenioDepositPlugin"
 invenio_rdm = "hermes.commands.deposit.invenio_rdm:IvenioRDMDepositPlugin"
+rodare = "hermes.commands.deposit.rodare:RodareDepositPlugin"
 
 [tool.poetry.plugins."hermes.postprocess"]
 config_invenio_record_id = "hermes.commands.postprocess.invenio:config_record_id"
