@@ -7,7 +7,7 @@ Slim, self-made version of click so we don't need to use it for simple console q
 """
 from enum import Enum
 
-PRINT_DEBUG = False
+PRINT_DEBUG = True
 """If this is true, echo() will print texts with debug=True."""
 
 
@@ -47,8 +47,8 @@ def echo(text: str, debug: bool = False, formatting: Formats = Formats.EMPTY):
 def debug_info(*args, **kwargs):
     kwarg_lines = [f"{str(k)} = {str(v)}" for k, v in kwargs.items()]
     kwarg_lines.extend([str(arg) for arg in args])
-    text = "\n".join(kwarg_lines)
-    echo(str(text), True)
+    for text in kwarg_lines:
+        echo(str(text), True)
 
 
 def confirm(text: str, default: bool = True) -> bool:

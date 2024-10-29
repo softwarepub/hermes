@@ -77,12 +77,12 @@ class GitLabConnection:
         if response.status_code == 200:
             project_info = response.json()
             self.project_id = project_info["id"]
+            sc.debug_info("Received project id")
             sc.debug_info(project_id=self.project_id)
             return True
         else:
             sc.echo(f"Could not get project id for {self.project_url}.")
             sc.debug_info(response_text=response.text)
-            sc.debug_info(response_dict=response.__dict__)
             return False
 
     def create_project_access_token(self, name: str, scopes: list[str] = None) -> str:
@@ -95,10 +95,11 @@ class GitLabConnection:
         response = requests.post(request_url, headers=headers, json=data)
         if response.status_code == 201:
             response_data = response.json()
+            sc.echo("Created Gitlab project access token.", formatting=sc.Formats.OKGREEN)
             sc.debug_info(response_data=response_data)
             return response_data["token"]
         else:
-            sc.echo("Could not create a project access token.")
+            sc.echo("Could not create a project access token.", formatting=sc.Formats.WARNING)
             sc.debug_info(response_text=response.text)
             sc.debug_info(response_dict=response.__dict__)
             return ""
@@ -106,6 +107,7 @@ class GitLabConnection:
     def create_variable(self, key: str, value, description: str = "") -> bool:
         assert self.access_token
         # First try to delete the variable if it already exists
+        sc.debug_info(f"Creating Variable {key}")
         headers = {"Authorization": f"Bearer {self.access_token}"}
         delete_url = urljoin(self.api_url, f"projects/{self.project_id}/variables/{key}")
         delete_response = requests.delete(delete_url, headers=headers)
@@ -116,10 +118,10 @@ class GitLabConnection:
         response = requests.post(create_url, headers=headers, json=data)
         if response.status_code == 201:
             desc = f" ({description})" if description else ""
-            sc.echo(f"Successfully created CI Variable {key}{desc}.")
+            sc.echo(f"Successfully created CI Variable {key}{desc}.", formatting=sc.Formats.OKGREEN)
             return True
         else:
-            sc.echo(f"Could not create CI Variable {key}.")
+            sc.echo(f"Could not create CI Variable {key}.", formatting=sc.Formats.FAIL)
             sc.debug_info(response_text=response.text)
-            sc.debug_info(response_dict=response.__dict__)
+            sc.debug_info(post_data=data, headers=headers)
             return False
