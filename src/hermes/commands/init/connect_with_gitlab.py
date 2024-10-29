@@ -11,7 +11,7 @@ import hermes.commands.init.slim_click as sc
 
 default_scopes = "api write_repository"
 device_code_addition = "oauth/authorize_device"
-token_addition= "oauth/token"
+token_addition = "oauth/token"
 
 site_specific_oauth_clients = [
     {
@@ -53,18 +53,22 @@ class GitLabConnection:
                 name=self.gitlab_instance_name,
                 client_id=self.client_id,
                 scope=default_scopes,
-                device_code_url = self.base_url + device_code_addition,
-                token_url = self.base_url + token_addition
+                device_code_url=self.base_url + device_code_addition,
+                token_url=self.base_url + token_addition
             )
 
     def has_client(self) -> bool:
         return self.client_id != ""
 
-    def authorize(self) -> bool:
-        # Use Oauth to get access token
-        self.access_token = self.oauth_process().get_tokens().get('access_token', '')
-        if not self.access_token:
-            return False
+    def authorize(self, token: str = "") -> bool:
+        if token:
+            # Either take the token from the parameter
+            self.access_token = token
+        else:
+            # Or use Oauth to get access token
+            self.access_token = self.oauth_process().get_tokens().get('access_token', '')
+            if not self.access_token:
+                return False
         # Use that token to get the project id (the token is needed since the project might be private)
         request_url = urljoin(self.api_url, f"projects/{quote(self.project_namespace_name, safe='')}")
         headers = {"Authorization": f"Bearer {self.access_token}"}
@@ -94,7 +98,7 @@ class GitLabConnection:
             sc.debug_info(response_data=response_data)
             return response_data["token"]
         else:
-            sc.echo(f"Could not create a project access token.")
+            sc.echo("Could not create a project access token.")
             sc.debug_info(response_text=response.text)
             sc.debug_info(response_dict=response.__dict__)
             return ""

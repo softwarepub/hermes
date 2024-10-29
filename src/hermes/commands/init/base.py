@@ -3,7 +3,6 @@
 # SPDX-FileContributor: Nitai Heeb
 
 import argparse
-import logging
 import os
 import subprocess
 import sys
@@ -162,7 +161,8 @@ class HermesInitCommand(HermesCommand):
 
         # Choosing setup method
         self.setup_method = sc.choose(
-            f"How do you want to connect {self.deposit_platform.name} with your {self.folder_info.used_git_hoster.name} CI?",
+            f"How do you want to connect {self.deposit_platform.name} "
+            f"with your {self.folder_info.used_git_hoster.name} CI?",
             {"a": "automatically (using OAuth / Device Flow)", "m": "manually (with instructions)"}, default="a"
         )
 
@@ -393,9 +393,11 @@ class HermesInitCommand(HermesCommand):
             sc.echo("Good job!")
 
     def configure_gitlab(self):
+        # Doing it with API / OAuth
         oauth_success = False
         if self.setup_method == "a":
             gl = connect_gitlab.GitLabConnection(self.folder_info.git_remote_url)
+            token = ""
             if not gl.has_client():
                 sc.echo("Unfortunately HERMES does not support automatic authorization with your GitLab "
                         "installment.")
@@ -406,14 +408,13 @@ class HermesInitCommand(HermesCommand):
                 ))
                 sc.echo("It needs to have the 'developer' role and 'api' + 'write_repository' scope.")
                 token = sc.answer("Then paste the token here: ")
-                # TODO Make that token do something
-            if gl.authorize():
+            if gl.authorize(token):
                 vars_created = gl.create_variable(
                     "ZENODO_TOKEN", self.tokens[self.deposit_platform],
                     f"This token is used by Hermes to publish on {self.deposit_platform.name}."
                 )
-                token = gl.create_project_access_token("hermes_token")
-                if token:
+                project_token = gl.create_project_access_token("hermes_token")
+                if project_token:
                     vars_created = vars_created and gl.create_variable(
                         "HERMES_PUSH_TOKEN", token,
                         "This token is used by Hermes to create pull requests."
@@ -424,6 +425,8 @@ class HermesInitCommand(HermesCommand):
             if not oauth_success:
                 sc.echo("Something went wrong while setting up GitLab automatically.")
                 sc.echo("You will have to do it manually instead.")
+
+        # Doing it without API
         if not oauth_success:
             sc.echo("Go to your {} and create a new token.".format(
                 sc.create_console_hyperlink(
