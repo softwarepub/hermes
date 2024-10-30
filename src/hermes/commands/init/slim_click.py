@@ -7,7 +7,7 @@ Slim, self-made version of click so we don't need to use it for simple console q
 """
 from enum import Enum
 
-PRINT_DEBUG = True
+PRINT_DEBUG = False
 """If this is true, echo() will print texts with debug=True."""
 
 
@@ -62,7 +62,7 @@ def confirm(text: str, default: bool = True) -> bool:
         elif _answer == "":
             return default
         else:
-            print("Error: invalid input")
+            echo("Error: invalid input", formatting=Formats.FAIL)
 
 
 def answer(text: str) -> str:
@@ -92,12 +92,28 @@ def choose(text: str, options: dict[str, str], default: str = "") -> str:
         print(f"[{char}] {description}")
     while True:
         _answer = input("Your choice: ").lower().strip()
+        if _answer == "" and default != "":
+            _answer = default
         if _answer in options.keys():
+            echo(f"You selected {options[_answer]}.", formatting=Formats.OKCYAN)
             return _answer
-        elif _answer == "" and default != "":
-            return default
         else:
-            print("Error: invalid input")
+            echo("Error: invalid input", formatting=Formats.FAIL)
+
+
+def headline(text: str):
+    echo("")
+    echo(text, formatting=Formats.HEADER)
+
+
+current_steps = 0
+max_steps = 0
+
+
+def next_step(description: str):
+    global current_steps
+    current_steps += 1
+    headline(f"-- Step {current_steps} of {max_steps}: {description} --")
 
 
 USE_FANCY_HYPERLINKS = False

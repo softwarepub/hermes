@@ -21,7 +21,7 @@ site_specific_oauth_clients = [
     }, {
         "url": "https://jugit.fz-juelich.de/",
         "client_id": "11a7e4215747574199db639e58b95093f7d47a6d202ed7026acf40c1c5bee4b5",
-        "name_addition": "fzj"
+        "name_addition": "jugit"
     }, {
         "url": "https://codebase.helmholtz.cloud/",
         "client_id": "24722afbaa0d7c09566902879811c6552afa6a0bbd2cc421ab3e89af4faa2ed8",

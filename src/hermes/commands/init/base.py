@@ -153,12 +153,12 @@ class HermesInitCommand(HermesCommand):
         sc.echo("Scan complete.", debug=True)
 
     def __call__(self, args: argparse.Namespace) -> None:
-        sc.echo("Starting hermes init...", debug=True)
-
         # Test if init is possible and wanted. If not: sys.exit
         self.test_initialization(args)
 
-        sc.echo(f"Starting to initialize HERMES in {self.folder_info.absolute_path}", formatting=sc.Formats.OKGREEN)
+        sc.echo(f"Starting to initialize HERMES in {self.folder_info.absolute_path} ...")
+        sc.max_steps = 6
+        sc.next_step("Configure deposition platform and setup method")
 
         # Choosing desired deposit platform
         self.choose_deposit_platform()
@@ -174,11 +174,17 @@ class HermesInitCommand(HermesCommand):
             default="a"
         )
 
+        sc.next_step("Create hermes.toml file")
+
         # Creating the hermes.toml file
         self.create_hermes_toml()
 
+        sc.next_step("Create CITATION.cff file")
+
         # Creating the citation File
         self.create_citation_cff()
+
+        sc.next_step("Create git CI files")
 
         # Adding .hermes to the .gitignore
         self.update_gitignore()
@@ -186,13 +192,19 @@ class HermesInitCommand(HermesCommand):
         # Creating the ci file
         self.create_ci_template()
 
+        sc.next_step("Setup deposition platform")
+
         # Connect with deposit platform
         self.connect_deposit_platform()
+
+        sc.next_step("Setup git project")
 
         # Adding the token to the git secrets & changing action workflow settings
         self.configure_git_project()
 
+        sc.echo("")
         sc.echo("HERMES is now initialized and ready to be used.", formatting=sc.Formats.OKGREEN+sc.Formats.BOLD)
+        sc.echo("")
 
     def test_initialization(self, args: argparse.Namespace):
         # Abort if git is not installed
@@ -206,21 +218,24 @@ class HermesInitCommand(HermesCommand):
         # Abort if there is no git
         if not self.folder_info.has_git:
             sc.echo("The current directory has no `.git` subdirectory. "
-                    "Please execute `hermes init` in the root directory of your git project.")
+                    "Please execute `hermes init` in the root directory of your git project.",
+                    formatting=sc.Formats.FAIL)
             sys.exit()
 
         # Abort if neither GitHub nor gitlab is used
         if self.folder_info.used_git_hoster == GitHoster.Empty:
             sc.echo("Your git project ({}) is not connected to github or gitlab. It is mandatory for HERMES to "
-                    "use one of those hosting services.".format(self.folder_info.git_remote_url))
+                    "use one of those hosting services.".format(self.folder_info.git_remote_url),
+                    formatting=sc.Formats.FAIL)
             sys.exit()
         else:
             sc.echo(f"Git project using {self.folder_info.used_git_hoster.name} detected.")
+            sc.echo("")
 
         # Abort if there is already a hermes.toml
         if self.folder_info.has_hermes_toml:
             sc.echo("The current directory already has a `hermes.toml`. "
-                    "It seems like HERMES was already initialized for this project.")
+                    "It seems like HERMES was already initialized for this project.", formatting=sc.Formats.WARNING)
             if not sc.confirm("Do you want to initialize Hermes anyway? "):
                 sys.exit()
 
