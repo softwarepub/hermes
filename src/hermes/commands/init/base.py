@@ -13,10 +13,11 @@ from enum import Enum, auto
 from urllib.parse import urlparse, urljoin
 from pathlib import Path
 from pydantic import BaseModel
+from dataclasses import dataclass
 from hermes.commands.base import HermesCommand
-import hermes.commands.init.connect_with_github as connect_github
-import hermes.commands.init.connect_with_gitlab as connect_gitlab
-import hermes.commands.init.connect_with_zenodo as connect_zenodo
+import hermes.commands.init.connect_github as connect_github
+import hermes.commands.init.connect_gitlab as connect_gitlab
+import hermes.commands.init.connect_zenodo as connect_zenodo
 import hermes.commands.init.slim_click as sc
 
 
@@ -53,6 +54,7 @@ DepositPlatformUrls: dict[DepositPlatform, str] = {
     }
 
 
+@dataclass
 class HermesInitFolderInfo:
     def __init__(self):
         self.absolute_path: str = ""
@@ -96,19 +98,12 @@ def scout_current_folder() -> HermesInitFolderInfo:
             sc.echo(f"git base url = {info.git_base_url}", debug=True)
     if "github.com" in info.git_remote_url:
         info.used_git_hoster = GitHoster.GitHub
-    elif "401" in subprocess.run(['curl', info.git_base_url + "api/v4/version"],
-                                 capture_output=True, text=True).stdout:
+    elif connect_gitlab.is_url_gitlab(info.git_base_url):
         info.used_git_hoster = GitHoster.GitLab
     info.has_hermes_toml = os.path.isfile(os.path.join(current_dir, "hermes.toml"))
     info.has_gitignore = os.path.isfile(os.path.join(current_dir, ".gitignore"))
     info.has_citation_cff = os.path.isfile(os.path.join(current_dir, "CITATION.cff"))
     return info
-
-
-def wait_until_the_user_is_done():
-    if not sc.confirm("Are you done?", default=False):
-        while not sc.confirm("Are you done now?", default=True):
-            pass
 
 
 def download_file_from_url(url, filepath, append: bool = False):

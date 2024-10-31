@@ -30,6 +30,11 @@ site_specific_oauth_clients = [
 ]
 
 
+def is_url_gitlab(url: str) -> bool:
+    parsed_url = urlparse(url)
+    return requests.get(f"{parsed_url.scheme}://{parsed_url.netloc}/api/v4/version").status_code == 401
+
+
 class GitLabConnection:
     def __init__(self, project_url: str):
         self.project_url: str = project_url
