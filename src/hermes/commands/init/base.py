@@ -148,63 +148,40 @@ class HermesInitCommand(HermesCommand):
         sc.echo("Scan complete.", debug=True)
 
     def __call__(self, args: argparse.Namespace) -> None:
-        # Test if init is possible and wanted. If not: sys.exit
         self.test_initialization(args)
 
         sc.echo(f"Starting to initialize HERMES in {self.folder_info.absolute_path} ...")
         sc.max_steps = 6
+
         sc.next_step("Configure deposition platform and setup method")
-
-        # Choosing desired deposit platform
         self.choose_deposit_platform()
-
-        # Choosing setup method
-        self.setup_method = sc.choose(
-            f"How do you want to connect {DepositPlatformNames[self.deposit_platform]} "
-            f"with your {self.folder_info.used_git_hoster.name} CI?",
-            options={
-                "a": "automatically (using OAuth / Device Flow)",
-                "m": "manually (with instructions)"
-            },
-            default="a"
-        )
+        self.choose_setup_method()
 
         sc.next_step("Create hermes.toml file")
-
-        # Creating the hermes.toml file
         self.create_hermes_toml()
 
         sc.next_step("Create CITATION.cff file")
-
-        # Creating the citation File
         self.create_citation_cff()
 
         sc.next_step("Create git CI files")
-
-        # Adding .hermes to the .gitignore
         self.update_gitignore()
-
-        # Creating the ci file
         self.create_ci_template()
 
         sc.next_step("Setup deposition platform")
-
-        # Connect with deposit platform
         self.connect_deposit_platform()
 
         sc.next_step("Setup git project")
-
-        # Adding the token to the git secrets & changing action workflow settings
         self.configure_git_project()
 
-        sc.echo("")
-        sc.echo("HERMES is now initialized and ready to be used.", formatting=sc.Formats.OKGREEN+sc.Formats.BOLD)
-        sc.echo("")
+        sc.echo("\nHERMES is now initialized and ready to be used.\n", formatting=sc.Formats.OKGREEN+sc.Formats.BOLD)
 
     def test_initialization(self, args: argparse.Namespace):
+        """Test if init is possible and wanted. If not: sys.exit()"""
         # Abort if git is not installed
         if not is_git_installed():
-            sc.echo("Git is currently not installed. It is mandatory for HERMES to have git installed.")
+            sc.echo("Git is currently not installed. It is recommended to use HERMES with git.",
+                    formatting=sc.Formats.WARNING)
+            self.no_git_setup()
             sys.exit()
 
         # Look at the current folder
@@ -214,24 +191,26 @@ class HermesInitCommand(HermesCommand):
         if not self.folder_info.has_git:
             sc.echo("The current directory has no `.git` subdirectory. "
                     "Please execute `hermes init` in the root directory of your git project.",
-                    formatting=sc.Formats.FAIL)
+                    formatting=sc.Formats.WARNING)
+            self.no_git_setup()
             sys.exit()
 
         # Abort if neither GitHub nor gitlab is used
         if self.folder_info.used_git_hoster == GitHoster.Empty:
-            sc.echo("Your git project ({}) is not connected to github or gitlab. It is mandatory for HERMES to "
+            sc.echo("Your git project ({}) is not connected to GitHub or GitLab. It is recommended for HERMES to "
                     "use one of those hosting services.".format(self.folder_info.git_remote_url),
-                    formatting=sc.Formats.FAIL)
+                    formatting=sc.Formats.WARNING)
+            self.no_git_setup()
             sys.exit()
         else:
-            sc.echo(f"Git project using {self.folder_info.used_git_hoster.name} detected.")
-            sc.echo("")
+            sc.echo(f"Git project using {self.folder_info.used_git_hoster.name} detected.\n")
 
         # Abort if there is already a hermes.toml
         if self.folder_info.has_hermes_toml:
             sc.echo("The current directory already has a `hermes.toml`. "
                     "It seems like HERMES was already initialized for this project.", formatting=sc.Formats.WARNING)
-            if not sc.confirm("Do you want to initialize Hermes anyway? "):
+            if not sc.confirm("Do you want to initialize Hermes anyway? "
+                              "(Hermes config files and related project variables will be overwritten.) "):
                 sys.exit()
 
     def create_hermes_toml(self):
@@ -360,6 +339,7 @@ class HermesInitCommand(HermesCommand):
                 self.tokens[self.deposit_platform] = sc.answer("Then enter the token here: ")
 
     def configure_git_project(self):
+        """Adding the token to the git secrets & changing action workflow settings"""
         match self.folder_info.used_git_hoster:
             case GitHoster.GitHub:
                 self.configure_github()
@@ -461,6 +441,7 @@ class HermesInitCommand(HermesCommand):
             sc.press_enter_to_continue()
 
     def choose_deposit_platform(self):
+        """User chooses his desired deposit platform"""
         deposit_platform_char = sc.choose(
             "Where do you want to publish the software?",
             {DepositPlatformChars[dp]: DepositPlatformNames[dp] for dp in DepositPlatformChars.keys()},
@@ -468,6 +449,17 @@ class HermesInitCommand(HermesCommand):
         )
         self.deposit_platform = next((dp for dp, c in DepositPlatformChars.items() if c == deposit_platform_char),
                                      DepositPlatform.Empty)
+
+    def choose_setup_method(self):
+        self.setup_method = sc.choose(
+            f"How do you want to connect {DepositPlatformNames[self.deposit_platform]} "
+            f"with your {self.folder_info.used_git_hoster.name} CI?",
+            options={
+                "a": "automatically (using OAuth / Device Flow)",
+                "m": "manually (with instructions)"
+            },
+            default="a"
+        )
 
     def connect_deposit_platform(self):
         assert self.deposit_platform != DepositPlatform.Empty
@@ -478,3 +470,19 @@ class HermesInitCommand(HermesCommand):
             case DepositPlatform.ZenodoSandbox:
                 connect_zenodo.setup(True)
                 self.get_zenodo_token()
+
+    def no_git_setup(self, start_question: str = ""):
+        """Makes the init for a gitless project (basically just creating hermes.toml)"""
+        if start_question == "":
+            start_question = "Do you want to initialize HERMES anyways? (No CI/CD files will be created)"
+        if sc.confirm(start_question):
+            sc.max_steps = 2
+
+            sc.next_step("Create hermes.toml file")
+            self.create_hermes_toml()
+
+            sc.next_step("Create CITATION.cff file")
+            self.create_citation_cff()
+
+            sc.echo("\nHERMES is now initialized (without git integration).\n",
+                    formatting=sc.Formats.OKGREEN)

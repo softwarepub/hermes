@@ -176,8 +176,7 @@ class OauthProcess:
             return {}
         sc.echo(f"Opening browser to log into your {self.name} account...")
         self.tokens = {}
-        server_thread = threading.Thread(target=self.start_server)
-        server_thread.daemon = True
+        server_thread = threading.Thread(target=self.start_server, daemon=True)
         server_thread.start()
         time.sleep(.8)
         if self.open_browser():
@@ -225,7 +224,6 @@ class Handler(BaseHTTPRequestHandler):
 
         # Parse Query String
         parsed = urlparse(self.path)
-        # print(parse_qs(parsed.query))
         auth_code = parse_qs(parsed.query)["code"][0]
 
         tokens = self.oauth_process.get_tokens_from_auth_code(auth_code)
