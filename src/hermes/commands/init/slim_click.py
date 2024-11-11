@@ -56,10 +56,13 @@ def confirm(text: str, default: bool = True) -> bool:
     while True:
         _answer = input(text + (" [Y/n]" if default else " [y/N]") + ": ").lower()
         if _answer == "y":
+            echo("")
             return True
         elif _answer == "n":
+            echo("")
             return False
         elif _answer == "":
+            echo("")
             return default
         else:
             echo("Error: invalid input", formatting=Formats.FAIL)
@@ -67,11 +70,14 @@ def confirm(text: str, default: bool = True) -> bool:
 
 def answer(text: str) -> str:
     """Returns the user's response to the given text. It is just a wrapper for input()."""
-    return input(text)
+    a = input(text)
+    echo("")
+    return a
 
 
 def press_enter_to_continue(text: str = "Press ENTER to continue") -> None:
     input(text)
+    echo("")
 
 
 def choose(text: str, options: dict[str, str], default: str = "") -> str:
@@ -95,7 +101,7 @@ def choose(text: str, options: dict[str, str], default: str = "") -> str:
         if _answer == "" and default != "":
             _answer = default
         if _answer in options.keys():
-            echo(f"You selected {options[_answer]}.", formatting=Formats.OKCYAN)
+            echo(f"You selected \"{options[_answer]}\".\n", formatting=Formats.OKCYAN)
             return _answer
         else:
             echo("Error: invalid input", formatting=Formats.FAIL)

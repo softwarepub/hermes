@@ -64,8 +64,12 @@ class HermesInitFolderInfo:
         self.used_git_hoster: GitHoster = GitHoster.Empty
         self.has_hermes_toml: bool = False
         self.has_gitignore: bool = False
-        self.has_citation_cff = False
+        self.has_citation_cff: bool = False
+        self.has_readme: bool = False
         self.current_branch: str = ""
+        self.current_dir: str = ""
+        self.dir_list: list[str] = []
+        self.dir_folders: list[str] = []
 
 
 def is_git_installed():
@@ -79,6 +83,7 @@ def is_git_installed():
 def scout_current_folder() -> HermesInitFolderInfo:
     info = HermesInitFolderInfo()
     current_dir = os.getcwd()
+    info.current_dir = current_dir
     info.absolute_path = str(current_dir)
     info.has_git = os.path.isdir(os.path.join(current_dir, ".git"))
     if info.has_git:
@@ -103,6 +108,13 @@ def scout_current_folder() -> HermesInitFolderInfo:
     info.has_hermes_toml = os.path.isfile(os.path.join(current_dir, "hermes.toml"))
     info.has_gitignore = os.path.isfile(os.path.join(current_dir, ".gitignore"))
     info.has_citation_cff = os.path.isfile(os.path.join(current_dir, "CITATION.cff"))
+    info.has_readme = os.path.isfile(os.path.join(current_dir, "README.md"))
+    info.dir_list = os.listdir(current_dir)
+    info.dir_folders = [
+        f for f in info.dir_list
+        if os.path.isdir(os.path.join(current_dir, f))
+        and not f.startswith(".")
+    ]
     return info
 
 
@@ -135,6 +147,13 @@ class HermesInitCommand(HermesCommand):
         self.tokens: dict = {}
         self.setup_method: str = ""
         self.deposit_platform: DepositPlatform = DepositPlatform.Empty
+        self.ci_parameters: dict = {
+            "deposit_zip_name": "showcase.zip",
+            "deposit_zip_files": "",
+            "deposit_initial": "--initial",
+            "deposit_extra_files": "",
+            "push_branch": "main"
+        }
 
     def init_command_parser(self, command_parser: argparse.ArgumentParser) -> None:
         pass
@@ -148,14 +167,18 @@ class HermesInitCommand(HermesCommand):
         sc.echo("Scan complete.", debug=True)
 
     def __call__(self, args: argparse.Namespace) -> None:
-        self.test_initialization(args)
+        self.test_initialization()
 
         sc.echo(f"Starting to initialize HERMES in {self.folder_info.absolute_path} ...")
-        sc.max_steps = 6
+        sc.max_steps = 7
 
         sc.next_step("Configure deposition platform and setup method")
         self.choose_deposit_platform()
         self.choose_setup_method()
+
+        sc.next_step("Configure HERMES behaviour")
+        self.choose_push_branch()
+        self.choose_deposit_files()
 
         sc.next_step("Create hermes.toml file")
         self.create_hermes_toml()
@@ -167,15 +190,15 @@ class HermesInitCommand(HermesCommand):
         self.update_gitignore()
         self.create_ci_template()
 
-        sc.next_step("Setup deposition platform")
+        sc.next_step("Connect with deposition platform")
         self.connect_deposit_platform()
 
-        sc.next_step("Setup git project")
+        sc.next_step("Connect with git project")
         self.configure_git_project()
 
         sc.echo("\nHERMES is now initialized and ready to be used.\n", formatting=sc.Formats.OKGREEN+sc.Formats.BOLD)
 
-    def test_initialization(self, args: argparse.Namespace):
+    def test_initialization(self):
         """Test if init is possible and wanted. If not: sys.exit()"""
         # Abort if git is not installed
         if not is_git_installed():
@@ -229,7 +252,7 @@ class HermesInitCommand(HermesCommand):
         }
 
         if (not self.folder_info.has_hermes_toml) \
-                or sc.confirm("Do you want to replace your `hermes.toml` with a new one?", default=False):
+                or sc.confirm("Do you want to replace your `hermes.toml` with a new one?", default=True):
             with open('hermes.toml', 'w') as toml_file:
                 # noinspection PyTypeChecker
                 toml.dump(default_values, toml_file)
@@ -279,18 +302,19 @@ class HermesInitCommand(HermesCommand):
             case GitHoster.GitHub:
                 # TODO Replace this later with the link to the real templates (not the feature branch)
                 template_url = ("https://raw.githubusercontent.com/softwarepub/ci-templates/refs/heads/"
-                                "feature/init-command/TEMPLATE_hermes_github_to_zenodo.yml")
+                                "feature/init-custom-ci/init/TEMPLATE_hermes_github_to_zenodo.yml")
                 ci_file_folder = ".github/workflows"
                 ci_file_name = "hermes_github.yml"
                 Path(ci_file_folder).mkdir(parents=True, exist_ok=True)
                 ci_file_path = Path(ci_file_folder) / ci_file_name
                 download_file_from_url(template_url, ci_file_path)
+                self.configure_ci_template(ci_file_path)
                 sc.echo(f"GitHub CI: File was created at {ci_file_path}", formatting=sc.Formats.OKGREEN)
             case GitHoster.GitLab:
                 gitlab_ci_template_url = ("https://raw.githubusercontent.com/softwarepub/ci-templates/refs/heads/"
-                                          "feature/init-command/TEMPLATE_hermes_gitlab_to_zenodo.yml")
+                                          "feature/init-custom-ci/init/TEMPLATE_hermes_gitlab_to_zenodo.yml")
                 hermes_ci_template_url = ("https://raw.githubusercontent.com/softwarepub/ci-templates/refs/heads/"
-                                          "feature/init-command/gitlab/hermes-ci.yml")
+                                          "feature/init-custom-ci/init/hermes-ci.yml")
                 gitlab_ci_path = Path(".gitlab-ci.yml")
                 Path("gitlab").mkdir(parents=True, exist_ok=True)
                 hermes_ci_path = Path("gitlab") / "hermes-ci.yml"
@@ -303,7 +327,9 @@ class HermesInitCommand(HermesCommand):
                 else:
                     download_file_from_url(gitlab_ci_template_url, gitlab_ci_path)
                     sc.echo(f"GitLab CI: {gitlab_ci_path} was created.", formatting=sc.Formats.OKGREEN)
+                self.configure_ci_template(gitlab_ci_path)
                 download_file_from_url(hermes_ci_template_url, hermes_ci_path)
+                self.configure_ci_template(hermes_ci_path)
 
                 # When using gitlab.com we need to use gitlab-org-docker as tag
                 if "gitlab.com" in self.folder_info.git_remote_url:
@@ -314,6 +340,20 @@ class HermesInitCommand(HermesCommand):
                         file.write(new_content)
 
                 sc.echo(f"GitLab CI: {hermes_ci_path} was created.", formatting=sc.Formats.OKGREEN)
+
+    def configure_ci_template(self, ci_file_path):
+        """This replaces all {%parameter%} in a ci file with values from ci_parameters dict"""
+        with open(ci_file_path, 'r') as file:
+            content = file.read()
+        parameters = list(set(re.findall(r'{%(.*?)%}', content)))
+        for parameter in parameters:
+            if parameter in self.ci_parameters:
+                content = content.replace(f'{{%{parameter}%}}', self.ci_parameters[parameter])
+            else:
+                sc.echo(f"Warning: CI File Parameter {{%{parameter}%}} was not set.",
+                        formatting=sc.Formats.WARNING)
+        with open(ci_file_path, 'w') as file:
+            file.write(content)
 
     def get_zenodo_token(self):
         self.tokens[self.deposit_platform] = ""
@@ -486,3 +526,66 @@ class HermesInitCommand(HermesCommand):
 
             sc.echo("\nHERMES is now initialized (without git integration).\n",
                     formatting=sc.Formats.OKGREEN)
+
+    def choose_push_branch(self):
+        push_choice = sc.choose("When should the automated HERMES process start?",
+                                {
+                                    "c": f"When I push the current branch {self.folder_info.current_branch}",
+                                    "o": "When I push an other branch"
+                                }, default="c")
+        if push_choice == "c":
+            self.ci_parameters["push_branch"] = self.folder_info.current_branch
+        elif push_choice == "o":
+            self.ci_parameters["push_branch"] = sc.answer("Enter the other branch: ")
+
+    def choose_deposit_files(self):
+        dp_name = DepositPlatformNames[self.deposit_platform]
+        add_readme = False
+        if self.folder_info.has_readme:
+            if sc.confirm(f"Do you want to append your README.md to the {dp_name} upload?"):
+                self.ci_parameters["deposit_extra_files"] = "--file README.md "
+                add_readme = True
+        options = {
+                      "a": "All (non hidden) folders",
+                      "x": "Everything (all folders & all files)",
+                      "c": "Enter a custom list of paths"
+                  }
+        if len(self.folder_info.dir_folders) <= 10:
+            options.update(
+                {str(i): f"Only {folder}/*" for i, folder in enumerate(self.folder_info.dir_folders)}
+            )
+        file_choice = sc.choose(f"Which{" other" if add_readme else ""} folders / files of your root directory "
+                                f"should be included in the {dp_name} upload?", options=options, default="a")
+        match file_choice:
+            case "a":
+                self.ci_parameters["deposit_zip_files"] = " ".join(self.folder_info.dir_folders)
+            case "x":
+                self.ci_parameters["deposit_zip_files"] = ""
+            case "c":
+                custom_files = []
+                while True:
+                    custom_path = sc.answer("Enter a path you want to include (enter nothing if you are done): ")
+                    if custom_path == "":
+                        break
+                    if os.path.exists(os.path.join(self.folder_info.current_dir, custom_path)):
+                        custom_files.append(custom_path)
+                        sc.echo(f"{custom_path} has been added.", formatting=sc.Formats.OKGREEN)
+                    else:
+                        sc.echo(f"{custom_path} does not exist.", formatting=sc.Formats.FAIL)
+                self.ci_parameters["deposit_zip_files"] = " ".join(custom_files)
+            case _:
+                if file_choice.isdigit():
+                    index = int(file_choice)
+                    if index < len(self.folder_info.dir_folders):
+                        self.ci_parameters["deposit_zip_files"] = self.folder_info.dir_folders[index]
+        sc.echo("Your upload will consist of the following:")
+        if add_readme:
+            sc.echo("\tUnzipped:", formatting=sc.Formats.BOLD)
+            sc.echo("\t\tREADME.md", formatting=sc.Formats.OKCYAN)
+        sc.echo("\tZipped:", formatting=sc.Formats.BOLD)
+        if self.ci_parameters["deposit_zip_files"] != "":
+            for file in self.ci_parameters["deposit_zip_files"].split(" "):
+                sc.echo(f"\t\t{file}", formatting=sc.Formats.OKCYAN)
+        else:
+            for file in self.folder_info.dir_list:
+                sc.echo(f"\t\t{file}", formatting=sc.Formats.OKCYAN)
