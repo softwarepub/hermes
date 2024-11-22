@@ -554,7 +554,7 @@ class HermesInitCommand(HermesCommand):
             options.update(
                 {str(i): f"Only {folder}/*" for i, folder in enumerate(self.folder_info.dir_folders)}
             )
-        _other =  ' other' if add_readme else ''
+        _other = ' other' if add_readme else ''
         file_choice = sc.choose(f"Which{_other} folders / files of your root directory "
                                 f"should be included in the {dp_name} upload?", options=options, default="a")
         match file_choice:
