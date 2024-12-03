@@ -147,6 +147,10 @@ class HermesInitCommand(HermesCommand):
         self.tokens: dict = {}
         self.setup_method: str = ""
         self.deposit_platform: DepositPlatform = DepositPlatform.Empty
+        self.template_base_url: str = "https://raw.githubusercontent.com"
+        self.template_branch: str = "feature/init-custom-ci"
+        self.template_repo: str = "softwarepub/ci-templates"
+        self.template_folder: str = "init"
         self.ci_parameters: dict = {
             "deposit_zip_name": "showcase.zip",
             "deposit_zip_files": "",
@@ -156,7 +160,8 @@ class HermesInitCommand(HermesCommand):
         }
 
     def init_command_parser(self, command_parser: argparse.ArgumentParser) -> None:
-        pass
+        command_parser.add_argument('--template-branch', nargs=1, default="",
+                                    help="Branch or tag of the ci-templates repository.")
 
     def load_settings(self, args: argparse.Namespace):
         pass
@@ -167,6 +172,12 @@ class HermesInitCommand(HermesCommand):
         sc.echo("Scan complete.", debug=True)
 
     def __call__(self, args: argparse.Namespace) -> None:
+        # Save command parameter (template branch)
+        if hasattr(args, "template_branch"):
+            if args.template_branch != "":
+                self.template_branch = args.template_branch
+
+        # Test if init is valid in current folder
         self.test_initialization()
 
         sc.echo(f"Starting to initialize HERMES in {self.folder_info.absolute_path} ...")
@@ -237,6 +248,7 @@ class HermesInitCommand(HermesCommand):
                 sys.exit()
 
     def create_hermes_toml(self):
+        """Creates the hermes.toml file based on a dictionary"""
         deposit_url = DepositPlatformUrls.get(self.deposit_platform)
         default_values = {
             "harvest": {
@@ -259,6 +271,7 @@ class HermesInitCommand(HermesCommand):
             sc.echo("`hermes.toml` was created.", formatting=sc.Formats.OKGREEN)
 
     def create_citation_cff(self):
+        """If there is no CITATION.cff, the user gets the opportunity to create one online."""
         if not self.folder_info.has_citation_cff:
             citation_cff_url = "https://citation-file-format.github.io/cff-initializer-javascript/#/"
             sc.echo("Your project does not contain a `CITATION.cff` file (yet). It would be very helpful for "
@@ -282,6 +295,7 @@ class HermesInitCommand(HermesCommand):
             sc.echo("Your project already contains a `CITATION.cff` file. Nice!", formatting=sc.Formats.OKGREEN)
 
     def update_gitignore(self):
+        """Creates .gitignore if there is none and adds '.hermes' to it"""
         if not self.folder_info.has_gitignore:
             open(".gitignore", 'w')
             sc.echo("A new `.gitignore` file was created.", formatting=sc.Formats.OKGREEN)
@@ -297,12 +311,16 @@ class HermesInitCommand(HermesCommand):
                     file.write(".hermes/\n")
                 sc.echo("Added `.hermes/` to the `.gitignore` file.", formatting=sc.Formats.OKGREEN)
 
+    def get_template_url(self, filename: str) -> str:
+        return (f"{self.template_base_url}/{self.template_repo}/refs/heads/"
+                f"{self.template_branch}/{self.template_folder}/{filename}")
+
     def create_ci_template(self):
+        """Downloads and configures the ci workflow files using templates from the chosen template branch"""
         match self.folder_info.used_git_hoster:
             case GitHoster.GitHub:
                 # TODO Replace this later with the link to the real templates (not the feature branch)
-                template_url = ("https://raw.githubusercontent.com/softwarepub/ci-templates/refs/heads/"
-                                "feature/init-custom-ci/init/TEMPLATE_hermes_github_to_zenodo.yml")
+                template_url = self.get_template_url("TEMPLATE_hermes_github_to_zenodo.yml")
                 ci_file_folder = ".github/workflows"
                 ci_file_name = "hermes_github.yml"
                 Path(ci_file_folder).mkdir(parents=True, exist_ok=True)
@@ -311,10 +329,8 @@ class HermesInitCommand(HermesCommand):
                 self.configure_ci_template(ci_file_path)
                 sc.echo(f"GitHub CI: File was created at {ci_file_path}", formatting=sc.Formats.OKGREEN)
             case GitHoster.GitLab:
-                gitlab_ci_template_url = ("https://raw.githubusercontent.com/softwarepub/ci-templates/refs/heads/"
-                                          "feature/init-custom-ci/init/TEMPLATE_hermes_gitlab_to_zenodo.yml")
-                hermes_ci_template_url = ("https://raw.githubusercontent.com/softwarepub/ci-templates/refs/heads/"
-                                          "feature/init-custom-ci/init/hermes-ci.yml")
+                gitlab_ci_template_url = self.get_template_url("TEMPLATE_hermes_gitlab_to_zenodo.yml")
+                hermes_ci_template_url = self.get_template_url("hermes-ci.yml")
                 gitlab_ci_path = Path(".gitlab-ci.yml")
                 Path("gitlab").mkdir(parents=True, exist_ok=True)
                 hermes_ci_path = Path("gitlab") / "hermes-ci.yml"
@@ -342,7 +358,7 @@ class HermesInitCommand(HermesCommand):
                 sc.echo(f"GitLab CI: {hermes_ci_path} was created.", formatting=sc.Formats.OKGREEN)
 
     def configure_ci_template(self, ci_file_path):
-        """This replaces all {%parameter%} in a ci file with values from ci_parameters dict"""
+        """Replaces all {%parameter%} in a ci file with values from ci_parameters dict"""
         with open(ci_file_path, 'r') as file:
             content = file.read()
         parameters = list(set(re.findall(r'{%(.*?)%}', content)))
@@ -502,13 +518,14 @@ class HermesInitCommand(HermesCommand):
         )
 
     def connect_deposit_platform(self):
+        """Acquires the access token of the chosen deposit platform"""
         assert self.deposit_platform != DepositPlatform.Empty
         match self.deposit_platform:
             case DepositPlatform.Zenodo:
-                connect_zenodo.setup(False)
+                connect_zenodo.setup(using_sandbox=False)
                 self.get_zenodo_token()
             case DepositPlatform.ZenodoSandbox:
-                connect_zenodo.setup(True)
+                connect_zenodo.setup(using_sandbox=True)
                 self.get_zenodo_token()
 
     def no_git_setup(self, start_question: str = ""):
@@ -528,6 +545,8 @@ class HermesInitCommand(HermesCommand):
                     formatting=sc.Formats.OKGREEN)
 
     def choose_push_branch(self):
+        """User chooses the branch that should be used to activate the whole hermes process"""
+        # TODO make it possible to choose tags as well
         push_choice = sc.choose("When should the automated HERMES process start?",
                                 {
                                     "c": f"When I push the current branch {self.folder_info.current_branch}",
@@ -539,6 +558,7 @@ class HermesInitCommand(HermesCommand):
             self.ci_parameters["push_branch"] = sc.answer("Enter the other branch: ")
 
     def choose_deposit_files(self):
+        """User chooses the files that should be included in the deposition"""
         dp_name = DepositPlatformNames[self.deposit_platform]
         add_readme = False
         if self.folder_info.has_readme:

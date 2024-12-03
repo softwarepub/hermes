@@ -54,7 +54,7 @@ def debug_info(*args, **kwargs):
 def confirm(text: str, default: bool = True) -> bool:
     """The user gets to decide between yes (y) and no (n). The answer will be returned as bool."""
     while True:
-        _answer = input(text + (" [Y/n]" if default else " [y/N]") + ": ").lower()
+        _answer = input(text + (" [Y/n]" if default else " [y/N]") + ": \n").lower()
         if _answer == "y":
             echo("")
             return True
@@ -62,7 +62,7 @@ def confirm(text: str, default: bool = True) -> bool:
             echo("")
             return False
         elif _answer == "":
-            echo("")
+            echo("Y\n" if default else "N\n")
             return default
         else:
             echo("Error: invalid input", formatting=Formats.FAIL)
@@ -76,7 +76,7 @@ def answer(text: str) -> str:
 
 
 def press_enter_to_continue(text: str = "Press ENTER to continue") -> None:
-    input(text)
+    input(text + "\n")
     echo("")
 
 
