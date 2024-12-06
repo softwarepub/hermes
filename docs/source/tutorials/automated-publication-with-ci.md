@@ -9,6 +9,7 @@ SPDX-FileContributor: Oliver Bertuch
 SPDX-FileContributor: Michael Meinel
 SPDX-FileContributor: Stephan Druskat
 SPDX-FileContributor: Sophie Kernchen
+SPDX-FileContributor: Nitai Heeb
 -->
 
 # Set up automatic software publishing
@@ -20,6 +21,28 @@ This tutorial works for repositories hosted on GitHub or GitLab, and shows how t
 This tutorial should also work with the "real" [Zenodo](https://zenodo.org).
 ```
  
+## Automated Setup using `hermes init`
+
+To use the automated setup you need Python to be installed on your device.
+If it is not installed, you can [download Python here](https://www.python.org/downloads/).
+
+Then, use pip in your preferred console to install HERMES on your device.
+```{code-block} bash
+python -m pip install hermes
+```
+
+Once installed, navigate to the *main directory of your git project*.
+From there you can start the automated setup by running `hermes init`.
+
+```{note}
+Going through the automated setup could take up to 10 minutes with the majority of that time being the creation of your
+project-specific CITATIONS.cff file using [cffinit](https://citation-file-format.github.io/cff-initializer-javascript/).
+```
+
+# Manual setup
+
+If using Python is not an option, you can set up the HERMES workflow manually for your git project by following the steps below.
+
 ## Configure your .gitignore
  
 The HERMES workflow (`hermes`) uses temporary caches in `.hermes/`.
