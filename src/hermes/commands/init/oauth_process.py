@@ -195,6 +195,7 @@ class OauthProcess:
 
 
 class Handler(BaseHTTPRequestHandler):
+    """Simple implementation of BaseHTTPRequestHandler for getting oauth responses"""
     def __init__(self, *args, oauth_process: OauthProcess = None, **kwargs):
         self.oauth_process = oauth_process
         super().__init__(*args, **kwargs)
