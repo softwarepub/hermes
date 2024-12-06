@@ -14,8 +14,8 @@ SPDX-FileContributor: Michael Meinel
 
 # Overview
 
-```{warning}
-This is a work in progress. Expect disruptive changes.
+```{info}
+This is work in progress.
 ```
 
 Research software must be formally published to satisfy FAIR principles and unlock academic credit. Publication
