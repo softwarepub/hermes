@@ -59,7 +59,11 @@ class BaseDepositPlugin(HermesPlugin):
 
     @abc.abstractmethod
     def map_metadata(self) -> None:
-        """Map the given metadata to the target schema of the deposition platform."""
+        """Map the given metadata to the target schema of the deposition platform.
+
+        When mapping metadata, make sure to add traces to the HERMES software, e.g. via
+        DataCite's ``relatedIdentifier`` using the ``isCompiledBy`` relation.
+        """
         pass
 
     def is_initial_publication(self) -> bool:
