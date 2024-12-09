@@ -14,8 +14,8 @@ SPDX-FileContributor: Michael Meinel
 
 # Overview
 
-```{warning}
-This is a work in progress. Expect disruptive changes.
+```{tip}
+This is work in progress.
 ```
 
 Research software must be formally published to satisfy FAIR principles and unlock academic credit. Publication
@@ -59,9 +59,14 @@ api/index
 ```
 
 ```{toctree}
+:maxdepth: 1
+:caption: HERMES project
+project/index
+```
+
+```{toctree}
 :hidden:
 :caption: Related
-Project Website <https://project.software-metadata.pub>
 Concept Paper <https://arxiv.org/abs/2201.09015>
 ```
 
