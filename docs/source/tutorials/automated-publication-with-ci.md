@@ -55,6 +55,8 @@ This also works with many Jupyter Hubs, no need for a Linux computer!
      hermes init
    ```
    Now simply follow the steps through the setup.
+7. When you're done, don't forget to add, commit and push the changes and new files you just made!
+
 
 ```{important}
 Be advised: during the setup, you can choose to grant access to all of your projects on your social coding platform.
