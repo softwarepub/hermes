@@ -18,16 +18,25 @@ SPDX-FileContributor: Michael Meinel
 This is work in progress.
 ```
 
-Research software must be formally published to satisfy FAIR principles and unlock academic credit. Publication
-repositories enable this and provide PIDs for software versions, but only through tedious, mostly manual process. 
+Research software must be formally published to satisfy the 
+[*FAIR Principles for Research Software*](https://doi.org/10.15497/RDA00068),
+improve software sustainability and 
+enable software citation. 
+Publication repositories make software publication possible 
+and provide PIDs for software versions.
+But software publication is often a tedious, manual process. 
 
-The HERMES workflow enables automated publication of rich research software metadata and artifacts to publication
-repositories using open source tooling. 
+HERMES workflows automate the publication of research software with rich research metadata
+using an open source tool, the `hermes` Python package. 
 
-We follow a *push based* model and run in continuous integration (CI) infrastructures integrated in common code platforms 
-such as GitHub or GitLab to avoid going out of service and overcome limitations of pull-based web services. 
+HERMES follows a *push-based* model and runs in 
+continuous integration (CI) systems.
+This way, it helps overcome limitations of platform-centric
+pull-based services and grants its users full control over the
+publication process and the metadata compiled for the publication. 
 
-Rich descriptive metadata is the key element to useful software publications. We harvest existing metadata from source
+Rich descriptive metadata is the key element to useful software publications. 
+We harvest existing metadata from source
 code repos and connected platforms, then process, collate and present them for curation, thus preparing software for
 automatic submission to publication repositories. 
 
@@ -72,25 +81,16 @@ project/presentations
 Concept Paper <https://arxiv.org/abs/2201.09015>
 ```
 
-## Feedback
+## Get in touch!
 
-This is an open repository to collect feedback on the HERMES workflow.
-
-We see our project as part of a global and inter-disciplinary effort to improve the state of the art in 
-research software engineering, maintenance and scholarly communications around research software. We therefore
-appreciate any feedback you may have on the HERMES project itself and any of its outputs.
+HERMES is part of a global and interdisciplinary effort to improve the state of the art in 
+research software engineering, maintenance and scholarly communications around research software. We
+appreciate any feedback you may have.
 
 **How to give feedback**
 
-Either [create an issue](https://github.com/hermes-hmc/workflow/issues/new/choose) in our project repository or 
-[send us an email](mailto:team@software-metadata.pub?subject=HERMES%20WOrkflow%20Reachout).
-
-## Acknowledgements
-
-This project (ZT-I-PF-3-006) was funded by the *Initiative and Networking Fund*
-of the [Helmholtz Association](https://www.helmholtz.de/en/about-us/structure-and-governance/initiating-and-networking)
-in the framework of the [Helmholtz Metadata Collaboration](https://helmholtz-metadaten.de)'s
-[2020 project call](https://helmholtz-metadaten.de/en/projects/hmc-projects-2020).
+Either [create an issue](https://github.com/softwarepub/hermes/issues/new/choose) in our project repository or 
+[send us an email](mailto:team@software-metadata.pub?subject=HERMES%20Workflows).
 
 ```{include} ../../LICENSE.md
 ```
