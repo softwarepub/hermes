@@ -67,9 +67,10 @@ def allow_actions(project_url: str, token):
     response = requests.put(action_permissions_url, headers=headers, json=data)
 
     if response.status_code in [204]:
-        sc.echo("Project settings updated successfully.")
+        sc.echo("Project settings updated successfully.", formatting=sc.Formats.OKGREEN)
     else:
-        sc.echo(f"Failed to update project settings: {response.status_code} {response.text}")
+        sc.echo(f"Failed to update project settings: {response.status_code} {response.text}",
+                formatting=sc.Formats.FAIL)
 
 
 def encrypt_secret(public_key: str, secret_value: str) -> str:
@@ -103,6 +104,8 @@ def create_secret(project_url: str, secret_name: str, secret_value, token):
         key_id = public_key_data['key_id']
         public_key = public_key_data['key']
     else:
+        sc.echo(f"Failed to retrieve public key: {response.status_code} {response.text}",
+                formatting=sc.Formats.FAIL)
         raise Exception(f"Failed to retrieve public key: {response.status_code} {response.text}")
 
     # Encrypt the secret value using the public key
@@ -117,6 +120,7 @@ def create_secret(project_url: str, secret_name: str, secret_value, token):
     response = requests.put(secrets_url, headers=headers, json=data)
 
     if response.status_code in [201, 204]:
-        sc.echo(f"Secret '{secret_name}' created/updated successfully.")
+        sc.echo(f"Secret '{secret_name}' created/updated successfully.", formatting=sc.Formats.OKGREEN)
     else:
-        sc.echo(f"Failed to create/update secret: {response.status_code} {response.text}")
+        sc.echo(f"Failed to create/update secret: {response.status_code} {response.text}",
+                formatting=sc.Formats.FAIL)
