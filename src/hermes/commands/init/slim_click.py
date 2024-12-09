@@ -92,9 +92,9 @@ def choose(text: str, options: list[str], default: int = 0) -> int:
     assert 0 <= default < len(options), "Default index should match the options list."
     print(text)
     for i, option in enumerate(options):
-        index = f"{i:<2d}"
+        index = f"{i:>2d}"
         if i == default:
-            index = f"{i:<1d}*"
+            index = f"*{i:>1d}"
         print(f"[{index}] {option}")
     while True:
         chosen_index = -1
