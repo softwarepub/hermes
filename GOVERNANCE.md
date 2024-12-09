@@ -9,8 +9,10 @@ Decisions that adhere to a single [repository in the scope of the HERMES project
 are made by *lazy consensus*: 
 
 1. The maintainer of the repository makes a decision.
-2. If no members of the steering group veto the decision within the triage period defined for the repository,
-the decision becomes effective and can be acted upon.
+2. If no members of the steering group veto the decision within the decision period of one week (168 hours),
+the decision becomes effective and can be acted upon. 
+The maintainer and any member of the steering group can ask for a longer decision period, 
+which must be granted. 
 3. If one or more members of the steering group veto the decision, 
 the discussion is discussed until consensus is reached.
 
