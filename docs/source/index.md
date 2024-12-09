@@ -62,6 +62,8 @@ api/index
 :maxdepth: 1
 :caption: HERMES project
 project/index
+project/events
+project/presentations
 ```
 
 ```{toctree}

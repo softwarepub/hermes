@@ -4,14 +4,6 @@ sd_hide_title: true
 
 # Overview
 
-```{toctree}
-:hidden:
-:caption: Project Materials
-events
-presentations
-Concept Paper <https://arxiv.org/abs/2201.09015>
-```
-
 **HERMES** is an acronym for "**HE**lmholtz **R**ich **ME**tadata **S**oftware publication".
 
 To satisfy the principles of [FAIR research software](https://doi.org/10.15497/RDA00068),
