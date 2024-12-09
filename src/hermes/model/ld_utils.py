@@ -61,8 +61,7 @@ class jsonld_dict(dict):
             self._context = self.COMMON_CONTEXT[:]
             self['@context'] = self._context
         else:
-            self._context = self['@context']
-            _log.warning("Skipping default context as a context is already given: %s", self['@context'])
+            self._context = super().__getitem__('@context')
 
     def _unmap(self, value):
         if isinstance(value, list):
