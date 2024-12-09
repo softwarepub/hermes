@@ -10,8 +10,8 @@ import hermes.commands.init.slim_click as sc
 
 
 local_port = 8333
-client_id = 'Ov23ctl0gNzr9smeVIHR'
-client_secret = 'd516303374f7e55189fe74fb2af77f31a965ad57'
+client_id = 'Ov23linvdC7WzHnOO2WK'
+client_secret = 'empty-as-not-needed-for-public-device-flow'
 authorization_base_url = 'https://github.com/login/oauth/authorize'
 token_url = 'https://github.com/login/oauth/access_token'
 redirect_uri = 'http://localhost:' + str(local_port) + '/callback'
