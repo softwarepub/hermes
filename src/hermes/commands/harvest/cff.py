@@ -16,10 +16,10 @@ from ruamel.yaml import YAML
 import jsonschema
 from cffconvert import Citation
 
+from hermes.commands.harvest.base import HermesHarvestPlugin, HermesHarvestCommand
 from hermes.model.context import ContextPath
 from hermes.model.errors import HermesValidationError
-from hermes.commands.harvest.base import HermesHarvestPlugin, HermesHarvestCommand
-
+from hermes.model.ld_utils import jsonld_dict
 
 # TODO: should this be configurable via a CLI option?
 _CFF_VERSION = '1.2.0'
@@ -53,8 +53,8 @@ class CffHarvestPlugin(HermesHarvestPlugin):
         # Convert to CodeMeta using cffconvert
         codemeta_dict = self._convert_cff_to_codemeta(cff_data)
         # TODO Replace the following temp patch for #112 once there is a new cffconvert version with cffconvert#309
-        codemeta_dict = self._patch_author_emails(cff_dict, codemeta_dict)
-
+        codemeta_dict = jsonld_dict(self._patch_author_emails(cff_dict, codemeta_dict))
+        codemeta_dict.add_context({'legalName': {'@id': "schema:name"}})
         return codemeta_dict, {'local_path': str(cff_file)}
 
     def _load_cff_from_file(self, cff_data: str) -> t.Any:

@@ -6,13 +6,13 @@
 
 import argparse
 import typing as t
-from datetime import datetime
 
 from pydantic import BaseModel
 
 from hermes.commands.base import HermesCommand, HermesPlugin
-from hermes.model.context import HermesContext, HermesHarvestContext
+from hermes.model.context_manager import HermesContext
 from hermes.model.errors import HermesValidationError, MergeError
+from hermes.model.ld_utils import bundled_document_loader, jsonld_dict
 
 
 class HermesHarvestPlugin(HermesPlugin):
@@ -39,28 +39,40 @@ class HermesHarvestCommand(HermesCommand):
 
     def __call__(self, args: argparse.Namespace) -> None:
         self.args = args
-        ctx = HermesContext()
 
         # Initialize the harvest cache directory here to indicate the step ran
-        ctx.init_cache("harvest")
+        ctx = HermesContext()
+        ctx.prepare_step('harvest')
 
         for plugin_name in self.settings.sources:
             try:
+                # Load plugin and run the harvester
                 plugin_func = self.plugins[plugin_name]()
                 harvested_data, tags = plugin_func(self)
 
-                with HermesHarvestContext(ctx, plugin_name) as harvest_ctx:
-                    harvest_ctx.update_from(harvested_data,
-                                            plugin=plugin_name,
-                                            timestamp=datetime.now().isoformat(), **tags)
-                    for _key, ((_value, _tag), *_trace) in harvest_ctx._data.items():
-                        if any(v != _value and t == _tag for v, t in _trace):
-                            raise MergeError(_key, None, _value)
+                # Ensure we have a jsonld_dict here to allow expansion
+                if not isinstance(harvested_data, jsonld_dict):
+                    harvested_data = jsonld_dict(**harvested_data)
+
+                # Transform the graph into a canoncial form
+                expanded_data, jsonld_context = harvested_data.expand()
+
+                with ctx[plugin_name] as plugin_ctx:
+                    plugin_ctx['data'] = harvested_data
+                    plugin_ctx['jsonld'] = expanded_data
+                    plugin_ctx['context'] = jsonld_context
+                    plugin_ctx['tags'] = tags
 
             except KeyError as e:
                 self.log.error("Plugin '%s' not found.", plugin_name)
                 self.errors.append(e)
 
+            #except HermesHarvestError as e:
+            #    self.log.error("Harvesting %s failed: %s", plugin_name, e)
+            #    self.errors.append(e)
+
             except HermesValidationError as e:
                 self.log.error("Error while executing %s: %s", plugin_name, e)
                 self.errors.append(e)
+
+        ctx.finalize_step('harvest')
