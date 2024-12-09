@@ -58,9 +58,9 @@ def allow_actions(project_url: str, token):
         'X-GitHub-Api-Version': '2022-11-28'
     }
 
-    # Create or update the secret in the repository
+    # Make it possible for workflows to create pull requests
     data = {
-        'default_workflow_permissions': 'write',
+        # 'default_workflow_permissions': 'write',
         'can_approve_pull_request_reviews': True
     }
 
@@ -71,6 +71,7 @@ def allow_actions(project_url: str, token):
     else:
         sc.echo(f"Failed to update project settings: {response.status_code} {response.text}",
                 formatting=sc.Formats.FAIL)
+        raise Exception(f"Failed to update project settings: {response.status_code} {response.text}")
 
 
 def encrypt_secret(public_key: str, secret_value: str) -> str:
@@ -124,3 +125,4 @@ def create_secret(project_url: str, secret_name: str, secret_value, token):
     else:
         sc.echo(f"Failed to create/update secret: {response.status_code} {response.text}",
                 formatting=sc.Formats.FAIL)
+        raise Exception(f"Failed to create/update secret: {response.status_code} {response.text}")
