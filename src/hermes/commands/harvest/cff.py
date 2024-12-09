@@ -47,6 +47,7 @@ class CffHarvestPlugin(HermesHarvestPlugin):
 
         # Validate the content to be correct CFF
         cff_dict = self._load_cff_from_file(cff_data)
+
         if command.settings.cff.enable_validation and not self._validate(cff_file, cff_dict):
             raise HermesValidationError(cff_file)
 
@@ -54,6 +55,7 @@ class CffHarvestPlugin(HermesHarvestPlugin):
         codemeta_dict = self._convert_cff_to_codemeta(cff_data)
         # TODO Replace the following temp patch for #112 once there is a new cffconvert version with cffconvert#309
         codemeta_dict = self._patch_author_emails(cff_dict, codemeta_dict)
+        codemeta_dict["version"] = str(codemeta_dict["version"])    # Convert Version to string
 
         return codemeta_dict, {'local_path': str(cff_file)}
 
