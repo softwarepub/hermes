@@ -64,6 +64,42 @@ class jsonld_dict(dict):
             self._context = self['@context']
             _log.warning("Skipping default context as a context is already given: %s", self['@context'])
 
+    def _unmap(self, value):
+        if isinstance(value, list):
+            if len(value) > 1:
+                raise ValueError("Ambiguous")
+            value = value[0]
+        if isinstance(value, dict):
+            if '@value' in value:
+                value = self._unmap(value["@value"])
+            elif '@list' in value:
+                value = self._wrap(value['@list'])
+
+        if isinstance(value, dict):
+            value = jsonld_dict(**value)
+
+        return value
+
+    def _wrap(self, item):
+        if isinstance(item, list):
+            return [
+                jsonld_dict(**v) if isinstance(v, dict) else v
+                for v in item
+            ]
+        elif isinstance(item, dict):
+            return jsonld_dict(**item)
+        else:
+            return item
+
+    def __getitem__(self, item):
+        iri, mode = item
+
+        value = self.get(iri, None)
+        if mode == 'jsonld':
+            return self._wrap(value)
+        elif mode == 'value':
+            return self._unmap(value)
+
     def add_context(self, context):
         if not isinstance(self._context, list):
             self._context = [self._context]
@@ -78,3 +114,57 @@ class jsonld_dict(dict):
         self = cls()
         self.add_context(kwargs)
         return self
+
+    @classmethod
+    def from_file(cls, path: pathlib.Path):
+        data = json.load(path.open("r"))
+        if isinstance(data, list):
+            if len(data) > 1:
+                raise ValueError("Data is not a dict.")
+            data = data[0]
+        return cls(**data)
+
+
+class ValueAccess:
+    def __init__(self, linked_data: jsonld_dict):
+        self._data = linked_data
+
+    def term_to_iri(self, term):
+        res, *_ = jsonld.expand({term: {}, '@context': self._data.get('@context')})
+        key, *_ = res.keys()
+        return key
+
+    def __getitem__(self, term):
+        item = self._data[self.term_to_iri(term), 'value']
+        if isinstance(item, list):
+            item = [ValueAccess(v) if isinstance(v, jsonld_dict) else v for v in item]
+        elif isinstance(item, jsonld_dict):
+            item = ValueAccess(item)
+        return item
+
+
+class JSONLDAccess:
+    def __init__(self, linked_data: jsonld_dict):
+        self._data = linked_data
+
+    def __getitem__(self, iri):
+        item = self._data[iri, 'jsonld']
+        if isinstance(item, list):
+            item = [JSONLDAccess(v) if isinstance(v, jsonld_dict) else v for v in item]
+        elif isinstance(item, jsonld_dict):
+            item = JSONLDAccess(item)
+        return item
+
+
+if __name__ == '__main__':
+    data = jsonld_dict.from_file(pathlib.Path(".hermes") / "harvest" / "cff" / "jsonld.json")
+    print(data["http://schema.org/name", "jsonld"][0]["@value", "value"])
+    print(data["http://schema.org/name", "value"])
+    print(data["http://schema.org/author", "jsonld"][0]["@list", "jsonld"][0]["http://schema.org/affiliation", "value"])
+    print(data["http://schema.org/author", "value"][-1]["http://schema.org/givenName", "value"])
+
+    access = ValueAccess(data)
+    print(access["author"][0]["http://schema.org/givenName"])
+
+    access = JSONLDAccess(data)
+    print(access["http://schema.org/author"][0]["@list"][0]["http://schema.org/affiliation"][0]["http://schema.org/name"][0]["@value"])
