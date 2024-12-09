@@ -7,9 +7,8 @@ sd_hide_title: true
 ```{toctree}
 :hidden:
 :caption: Project Materials
-[//]: # (resources)
-[//]: # (events)
-[//]: # (presentations)
+events
+presentations
 Concept Paper <https://arxiv.org/abs/2201.09015>
 ```
 
