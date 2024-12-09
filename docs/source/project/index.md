@@ -6,27 +6,16 @@ sd_hide_title: true
 
 **HERMES** is an acronym for "**HE**lmholtz **R**ich **ME**tadata **S**oftware publication".
 
-To satisfy the principles of [FAIR research software](https://doi.org/10.15497/RDA00068),
-software sustainability and software citation, research software must be formally
-published. Publication repositories make this possible and provide published software
-versions with unique and persistent identifiers. However, software publication
-is still a tedious, mostly manual process and impedes promoting software to first
-class research citizenship.
+The project received initial funding as a 
+[Helmholtz Metadata Collaboration](https://helmholtz-metadaten.de) 
+[2020 cohort project](https://helmholtz-metadaten.de/en/inf-projects/hermes-helmholtz-rich-metadata-software-publication) 
+(ZT-I-PF-3-006) from the *Initiative and Networking Fund*
+of the [Helmholtz Association](https://www.helmholtz.de/en/about-us/structure-and-governance/initiating-and-networking).
 
-To streamline software publication, this project **develops automated workflows**
-to publish research software with rich metadata. Our tooling utilizes
-continuous integration solutions to retrieve, collate, and process existing
-metadata in source repositories, and publish them on publication repositories,
-including checks against existing metadata requirements. To accompany the
-tooling and enable researchers to easily reuse it, the project also provides
-comprehensive documentation and templates for widely used CI solutions.
-
-Many, if not most, publication repositories cannot be labeled "research
-software ready" today (2022). In addition to the deposition workflows, this
-project cooperates with the upstream [InvenioRDM](https://invenio-software.org/products/rdm/)
-and [Dataverse](https://dataverse.org) projects. We are working on the necessary bits to
-**achieve full readiness** for these and put a nice badge on 'em.
-
+The project developed the initial implementation of the
+[HERMES workflow](../index.md)
+and cooperated with the upstream [InvenioRDM](https://invenio-software.org/products/rdm/)
+and [Dataverse](https://dataverse.org) projects. 
 
 ## Members
 
@@ -89,40 +78,13 @@ Made by [DLR](https://dlr.de), [HZDR](https://hzdr.de) and [FZJ](https://fz-juel
 
 </p>
 
-While the project partners are members of the [Helmholtz Association](https://helmholtz.de),
-it's by no means limited to it!
-
-We have an open mindset and will release any outcomes as open material.
-Software will be developed in the open and released with an open source license.
-Any scholarly publications, documentation and training materials will be
+All outputs of the project are openly available. 
+Software is developed in the open and released under an open source license.
+Any scholarly publications, documentation and training materials is
 provided open access.
 
-
-## Get in touch!
-
-We see our project as part of a global and inter-disciplinary effort to improve the state of the art in research software engineering, maintenance and scholarly communications around research software. We would therefore like to encourage discussion and collaboration around HERMES, and appreciate any feedback you may have on the HERMES project itself or any of its outputs.
-
-### Getting in touch
-
-✉ You can always write the HERMES team an email at [team@software-metadata.pub](mailto:team@software-metadata.pub).
-
-If what you would like to talk about is easier to do in a video call, you are invited to join our weekly project meetings.
-These take place regularly on *Wednesdays, at 10:00 CET/CEST* ([check to see what this is in your timezone](https://arewemeetingyet.com/Berlin/2022-09-14/10:00/w/HERMES%20project%20meeting)).
-
-If you want to join us, please let us know via email first, so we can share details on how to join, etc.
-We will also try to find a date and time that suits you, if you cannot make the regular time at all.
-
-### Providing feedback
-
-We collect feedback on the HERMES project in an [open project repository on GitHub](https://github.com/hermes-hmc/project.software-metadata.pub).
-You can [create an issue there](https://github.com/hermes-hmc/project.software-metadata.pub/issues/new/choose), or simply write us an email at [team@software-metadata.pub](mailto:team@software-metadata.pub?subject=HERMES%20feedback).
-
-## Acknowledgements
-
-This project (ZT-I-PF-3-006) was funded by the *Initiative and Networking Fund*
-of the [Helmholtz Association](https://www.helmholtz.de/en/about-us/structure-and-governance/initiating-and-networking)
-in the framework of the [Helmholtz Metadata Collaboration](https://helmholtz-metadaten.de)'s
-[2020 project call](https://helmholtz-metadaten.de/en/projects/hmc-projects-2020).
+```{include} ../../../GOVERNANCE.md
+```
 
 ## License
 
