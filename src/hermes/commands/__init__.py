@@ -10,6 +10,7 @@
 
 from hermes.commands.base import HermesHelpCommand
 from hermes.commands.clean.base import HermesCleanCommand
+from hermes.commands.init.base import HermesInitCommand
 from hermes.commands.curate.base import HermesCurateCommand
 from hermes.commands.harvest.base import HermesHarvestCommand
 from hermes.commands.process.base import HermesProcessCommand
