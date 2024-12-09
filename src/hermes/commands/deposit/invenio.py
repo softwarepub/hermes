@@ -22,7 +22,7 @@ from hermes.commands.deposit.error import DepositionUnauthorizedError
 from hermes.error import MisconfigurationError
 from hermes.model.context import CodeMetaContext
 from hermes.model.path import ContextPath
-from hermes.utils import hermes_user_agent
+from hermes.utils import hermes_doi, hermes_user_agent
 
 
 _log = logging.getLogger("cli.deposit.invenio")
@@ -521,6 +521,14 @@ class InvenioDepositPlugin(BaseDepositPlugin):
             for contributor in metadata.get("contributor", []) if contributor.get("name") != "GitHub"
         ]
 
+        related_identifiers = [
+            {
+                "identifier": hermes_doi,
+                "relation": "isCompiledBy",
+                "scheme": "doi",
+            },
+        ]
+
         # TODO: Use the fields currently set to `None`.
         # Some more fields are available but they most likely don't relate to software
         # publications targeted by hermes.
@@ -555,7 +563,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
             # TODO: A good source for this could be `tool.poetry.keywords` in pyproject.toml.
             "keywords": None,
             "notes": None,
-            "related_identifiers": None,
+            "related_identifiers": related_identifiers,
             # TODO: Use `contributors`. In the case of the hermes workflow itself, the
             # contributors are currently all in `creators` already. So for now, we set this
             # to `None`. Change this when relationship between authors and contributors can
