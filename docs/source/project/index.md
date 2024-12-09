@@ -7,17 +7,10 @@ sd_hide_title: true
 ```{toctree}
 :hidden:
 :caption: Project Materials
-resources
-events
-presentations
+[//]: # (resources)
+[//]: # (events)
+[//]: # (presentations)
 Concept Paper <https://arxiv.org/abs/2201.09015>
-Workflow Documentation <https://docs.software-metadata.pub>
-```
-
-```{toctree}
-:hidden:
-:caption: Related
-GDCC Software, Workflow and Containers WG <https://swc.wgs.gdcc.io>
 ```
 
 **HERMES** is an acronym for "**HE**lmholtz **R**ich **ME**tadata **S**oftware publication".
@@ -38,7 +31,7 @@ tooling and enable researchers to easily reuse it, the project also provides
 comprehensive documentation and templates for widely used CI solutions.
 
 ````{margin}
-```{image} _static/img/rs-ready-badge.svg
+```{image} ../_static/img/rs-ready-badge.svg
    :alt: Research Software Ready Badge
    :class: badge-icon
 ```
@@ -57,54 +50,54 @@ Made by [DLR](https://dlr.de), [HZDR](https://hzdr.de) and [FZJ](https://fz-juel
 
 <p>
 
-```{image} _static/img/schlauch.jpg
+```{image} ../_static/img/schlauch.jpg
     :alt: Tobias Schlauch
     :class: member
     :target: https://www.dlr.de/sc/desktopdefault.aspx/tabid-1192/1635_read-25578
 ```
 
-```{image} _static/img/druskat.jpg
+```{image} ../_static/img/druskat.jpg
     :alt: Stephan Druskat
     :class: member
     :target: https://www.dlr.de/sc/desktopdefault.aspx/tabid-1192/1635_read-37013
 ```
 
-```{image} _static/img/meinel.png
+```{image} ../_static/img/meinel.png
     :alt: Michael Meinel
     :class: member
     :target: https://www.dlr.de/sc/desktopdefault.aspx/tabid-1192/1635_read-5420
 ```
 
-```{image} _static/img/kernchen.jpg
+```{image} ../_static/img/kernchen.jpg
     :alt: Sophie Kernchen
     :class: member
 ```
 
-```{image} _static/img/knodel.jpg
+```{image} ../_static/img/knodel.jpg
     :alt: Oliver Knodel
     :class: member
     :target: https://www.hzdr.de/db/!ContMan.Visi.Card?pUid=132739&pNid=5
 ```
 
-```{image} _static/img/juckeland.jpg
+```{image} ../_static/img/juckeland.jpg
     :alt: Guido Juckeland
     :class: member
     :target: https://www.hzdr.de/db/!ContMan.Visi.Card?pUid=4930&pNid=5
 ```
 
-```{image} _static/img/kelling.jpg
+```{image} ../_static/img/kelling.jpg
     :alt: Jeffrey Kelling
     :class: member
     :target: https://www.hzdr.de/db/!ContMan.Visi.Card?pUid=5156&pNid=5
 ```
 
-```{image} _static/img/pape.jpg
+```{image} ../_static/img/pape.jpg
     :alt: David Pape
     :class: member
     :target: https://www.hzdr.de/db/!ContMan.Visi.Card?pUid=139658&pNid=5
 ```
 
-```{image} _static/img/bertuch.jpg
+```{image} ../_static/img/bertuch.jpg
     :alt: Oliver Bertuch
     :class: member
     :target: https://fz-juelich.de/profile/bertuch_o
