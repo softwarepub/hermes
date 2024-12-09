@@ -82,34 +82,35 @@ class RodareDepositPlugin(InvenioDepositPlugin):
             f"HERMES may be used for subsequent releases. {self.robis_url}"
         )
 
-    def _codemeta_to_invenio_deposition(self) -> dict:
-        """Update the deposition metadata from the parent class.
+    def related_identifiers(self):
+        """Update the related identifiers with link to Robis.
 
-        Deposits on Rodare require a connection to the publication database Robis. To
-        make this connection, the deposit metadata has to contain the field ``pub_id``
-        which can be used to find the publication at
-        ``https://www.hzdr.de/publications/Publ-{pub_id}``.
-
-        Additionally (this is not required by Rodare), we make a connection via related
-        identifiers.
+        Add the Robis Publ-Id as a related identifier. This is additional metadata which
+        is not required by Rodare or Robis. It helps users find the related publication
+        on Robis at ``https://www.hzdr.de/publications/Publ-{pub_id}``.
 
         An example publication on Rodare: https://rodare.hzdr.de/api/records/2
 
         The associated Robis page: https://www.hzdr.de/publications/Publ-27151
         """
-        pub_id = self.config.robis_pub_id
+        identifiers = super().related_identifiers()
+        identifiers.append(
+            {
+                "identifier": self.robis_publication_url.format(
+                    pub_id=self.config.robis_pub_id
+                ),
+                "relation": "isIdenticalTo",
+                "scheme": "url",
+            }
+        )
+        return identifiers
+
+    def _codemeta_to_invenio_deposition(self) -> dict:
+        """Update the deposition metadata with Robis Publ-Id.
+
+        Deposits on Rodare require a connection to the publication database Robis. To
+        make this connection, the deposit metadata has to contain the field ``pub_id``.
+        """
         deposition_metadata = super()._codemeta_to_invenio_deposition()
-
-        robis_identifier = {
-            "identifier": self.robis_publication_url.format(pub_id=pub_id),
-            "relation": "isIdenticalTo",
-            "scheme": "url",
-        }
-
-        related_identifiers: list = deposition_metadata.get("related_identifiers", [])
-        related_identifiers.append(robis_identifier)
-
-        deposition_metadata["related_identifiers"] = related_identifiers
-        deposition_metadata["pub_id"] = pub_id
-
+        deposition_metadata["pub_id"] = self.config.robis_pub_id
         return deposition_metadata
