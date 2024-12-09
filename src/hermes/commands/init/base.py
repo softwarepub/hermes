@@ -6,14 +6,19 @@ import argparse
 import os
 import subprocess
 import sys
+from logging import StreamHandler
+
 import requests
 import toml
 import re
+import logging
 from enum import Enum, auto
 from urllib.parse import urlparse, urljoin
 from pathlib import Path
+
 from pydantic import BaseModel
 from dataclasses import dataclass
+# from hermes import logger
 from hermes.commands.base import HermesCommand
 import hermes.commands.init.connect_github as connect_github
 import hermes.commands.init.connect_gitlab as connect_gitlab
@@ -179,7 +184,23 @@ class HermesInitCommand(HermesCommand):
         self.folder_info = scout_current_folder()
         sc.echo("Scan complete.", debug=True)
 
+    def setup_colorfull_logging(self):
+        # Remove old StreamHandler
+        logging.getHandlerByName("terminal").setLevel(logging.CRITICAL)
+        # Set new colorful Handler
+        self.log.setLevel(level=logging.DEBUG)
+        self.log.addHandler(sc.ColorLogHandler())
+        # Test log
+        self.log.debug("debug mist")
+        self.log.info("info mist")
+        self.log.warning('\033[93m' + "warning mist" + '\033[0m')
+        self.log.error("error mist")
+        self.log.critical("critical mist")
+
     def __call__(self, args: argparse.Namespace) -> None:
+        # Setup logging
+        self.setup_colorfull_logging()
+
         # Save command parameter (template branch)
         if hasattr(args, "template_branch"):
             if args.template_branch != "":

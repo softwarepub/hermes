@@ -5,6 +5,7 @@
 """
 Slim, self-made version of click so we don't need to use it for simple console questions.
 """
+import logging
 from enum import Enum
 
 PRINT_DEBUG = False
@@ -20,6 +21,7 @@ class Formats(Enum):
     FAIL = '\033[91m'
     ENDC = '\033[0m'
     BOLD = '\033[1m'
+    ITALIC = '\033[3m'
     UNDERLINE = '\033[4m'
     EMPTY = ''
 
@@ -132,3 +134,38 @@ USE_FANCY_HYPERLINKS = False
 def create_console_hyperlink(url: str, word: str) -> str:
     """Use this to have a consistent display of hyperlinks."""
     return f"\033]8;;{url}\033\\{word}\033]8;;\033\\" if USE_FANCY_HYPERLINKS else f"{word} ({url})"
+
+
+class ColorLogHandler(logging.Handler):
+    def __init__(self):
+        super().__init__()
+        self.setLevel(logging.DEBUG)
+        self.formatter = ColorLogFormatter()
+
+    def emit(self, record):
+        log_entry = self.formatter.format(record)
+        echo(log_entry)
+
+
+class ColorLogFormatter(logging.Formatter):
+    def __init__(self, _formats = None):
+        """
+        Own version of a terminal log formatter to print our log messages with color.
+        """
+        super().__init__()
+        self.formats = {
+            'DEBUG': Formats.ITALIC.get_ansi() + '%(message)s' + Formats.ENDC.get_ansi(),
+            'INFO': Formats.OKGREEN.get_ansi() + '%(message)s' + Formats.ENDC.get_ansi(),
+            'WARNING': Formats.WARNING.get_ansi() + '%(message)s' + Formats.ENDC.get_ansi(),
+            'ERROR': Formats.FAIL.get_ansi() + '%(message)s' + Formats.ENDC.get_ansi(),
+            'CRITICAL': (Formats.FAIL + Formats.BOLD).get_ansi() + '%(message)s' + Formats.ENDC.get_ansi(),
+        }
+
+    def format(self, record):
+        log_format = self.formats.get(record.levelname, self._default_format())
+        formatter = logging.Formatter(log_format)
+        return formatter.format(record)
+
+    @staticmethod
+    def _default_format():
+        return '%(message)s'
