@@ -36,15 +36,9 @@ class DepositPlatform(Enum):
     ZenodoSandbox = auto()
 
 
-DepositPlatformChars: dict[DepositPlatform, str] = {
-        DepositPlatform.Zenodo: "z",
-        DepositPlatform.ZenodoSandbox: "s"
-    }
-
-
 DepositPlatformNames: dict[DepositPlatform, str] = {
+        DepositPlatform.ZenodoSandbox: "Zenodo (Sandbox)",
         DepositPlatform.Zenodo: "Zenodo",
-        DepositPlatform.ZenodoSandbox: "Zenodo (Sandbox)"
     }
 
 
@@ -88,10 +82,11 @@ def scout_current_folder() -> HermesInitFolderInfo:
     info.has_git = os.path.isdir(os.path.join(current_dir, ".git"))
     if info.has_git:
         git_remote = str(subprocess.run(['git', 'remote'], capture_output=True, text=True).stdout).strip()
-        sc.echo(f"git remote = {git_remote}", debug=True)
-        info.git_remote_url = str(subprocess.run(['git', 'remote', 'get-url', git_remote],
-                                                 capture_output=True, text=True).stdout).strip()
-        sc.echo(f"git remote url = {info.git_remote_url}", debug=True)
+        sc.debug_info(f"git remote = {git_remote}")
+        # Get remote url
+        info.git_remote_url = convert_remote_url(
+            str(subprocess.run(['git', 'remote', 'get-url', git_remote],capture_output=True, text=True).stdout)
+        )
         branch_info = str(subprocess.run(['git', 'branch'], capture_output=True, text=True).stdout)
         for line in branch_info.splitlines():
             if line.startswith("*"):
@@ -100,7 +95,7 @@ def scout_current_folder() -> HermesInitFolderInfo:
         if info.git_remote_url:
             parsed_url = urlparse(info.git_remote_url)
             info.git_base_url = f"{parsed_url.scheme}://{parsed_url.netloc}/"
-            sc.echo(f"git base url = {info.git_base_url}", debug=True)
+            sc.debug_info(f"git base url = {info.git_base_url}")
     if "github.com" in info.git_remote_url:
         info.used_git_hoster = GitHoster.GitHub
     elif connect_gitlab.is_url_gitlab(info.git_base_url):
@@ -129,6 +124,19 @@ def download_file_from_url(url, filepath, append: bool = False):
 def string_in_file(file_path, search_string: str) -> bool:
     with open(file_path, 'r', encoding='utf-8') as file:
         return any(search_string in line for line in file)
+
+
+def convert_remote_url(url: str) -> str:
+    """
+    Takes any url produced by 'git remote get-url origin' and returns a unified version with https & without .git
+    """
+    url = url.strip()
+    # Remove .git from the end of the url
+    url = url.removesuffix(".git")
+    # Convert ssh url into http url
+    if re.findall(r"^.+@.+\..+:.+\/.+$", url):
+        url = re.sub(r"^.+@(.+\..+):(.+\/.+)$", r"https://\1/\2", url)
+    return url
 
 
 class HermesInitSettings(BaseModel):
@@ -423,15 +431,14 @@ class HermesInitCommand(HermesCommand):
                 self.deposit_platform.name,
                 f" ({self.tokens[self.deposit_platform]})" if self.tokens[self.deposit_platform] else "",
                 sc.create_console_hyperlink(
-                    self.folder_info.git_remote_url.replace(".git", "/settings/secrets/actions"),
+                    self.folder_info.git_remote_url + "/settings/secrets/actions",
                     "project's GitHub secrets"
                 )
             ))
             sc.press_enter_to_continue()
             sc.echo("Next open your {} and check the checkbox which reads:".format(
                 sc.create_console_hyperlink(
-                    self.folder_info.git_remote_url.replace(".git", "/settings/actions"),
-                    "project settings"
+                    self.folder_info.git_remote_url + "/settings/actions", "project settings"
                 )
             ))
             sc.echo("Allow GitHub Actions to create and approve pull requests")
@@ -448,7 +455,7 @@ class HermesInitCommand(HermesCommand):
                         "installment.")
                 sc.echo("Go to your {} and create a new token.".format(
                     sc.create_console_hyperlink(
-                        self.folder_info.git_remote_url.replace(".git", "/-/settings/access_tokens"),
+                        self.folder_info.git_remote_url + "/-/settings/access_tokens",
                         "project's access tokens")
                 ))
                 sc.echo("It needs to have the 'developer' role and 'api' + 'write_repository' scope.")
@@ -476,15 +483,13 @@ class HermesInitCommand(HermesCommand):
         if not oauth_success:
             sc.echo("Go to your {} and create a new token.".format(
                 sc.create_console_hyperlink(
-                    self.folder_info.git_remote_url.replace(".git", "/-/settings/access_tokens"),
-                    "project's access tokens")
+                    self.folder_info.git_remote_url + "/-/settings/access_tokens", "project's access tokens")
             ))
             sc.echo("It needs to have the 'developer' role and 'write_repository' scope.")
             sc.press_enter_to_continue()
             sc.echo("Open your {} and go to 'Variables'".format(
                 sc.create_console_hyperlink(
-                    self.folder_info.git_remote_url.replace(".git", "/-/settings/ci_cd"),
-                    "project's ci settings")
+                    self.folder_info.git_remote_url + "/-/settings/ci_cd", "project's ci settings")
             ))
             sc.echo("Then, add that token as variable with key HERMES_PUSH_TOKEN.")
             sc.echo("(For your safety, you should set the visibility to 'Masked'.)")
@@ -498,24 +503,22 @@ class HermesInitCommand(HermesCommand):
 
     def choose_deposit_platform(self):
         """User chooses his desired deposit platform"""
-        deposit_platform_char = sc.choose(
-            "Where do you want to publish the software?",
-            {DepositPlatformChars[dp]: DepositPlatformNames[dp] for dp in DepositPlatformChars.keys()},
-            default=DepositPlatformChars[DepositPlatform.ZenodoSandbox]
+        deposit_platform_list = list(DepositPlatformNames.keys())
+        deposit_platform_index = sc.choose(
+            "Where do you want to publish the software?", [DepositPlatformNames[dp] for dp in deposit_platform_list]
         )
-        self.deposit_platform = next((dp for dp, c in DepositPlatformChars.items() if c == deposit_platform_char),
-                                     DepositPlatform.Empty)
+        self.deposit_platform = deposit_platform_list[deposit_platform_index]
 
     def choose_setup_method(self):
-        self.setup_method = sc.choose(
+        setup_method_index = sc.choose(
             f"How do you want to connect {DepositPlatformNames[self.deposit_platform]} "
             f"with your {self.folder_info.used_git_hoster.name} CI?",
-            options={
-                "a": "automatically (using OAuth / Device Flow)",
-                "m": "manually (with instructions)"
-            },
-            default="a"
+            options = [
+                "Automatically (using OAuth / Device Flow)",
+                "Manually (with instructions)",
+            ]
         )
+        self.setup_method = ["a", "m"][setup_method_index]
 
     def connect_deposit_platform(self):
         """Acquires the access token of the chosen deposit platform"""
@@ -547,15 +550,20 @@ class HermesInitCommand(HermesCommand):
     def choose_push_branch(self):
         """User chooses the branch that should be used to activate the whole hermes process"""
         # TODO make it possible to choose tags as well
-        push_choice = sc.choose("When should the automated HERMES process start?",
-                                {
-                                    "c": f"When I push the current branch {self.folder_info.current_branch}",
-                                    "o": "When I push an other branch"
-                                }, default="c")
-        if push_choice == "c":
+        push_choice = sc.choose(
+            "When should the automated HERMES process start?",
+            [
+                f"When I push the current branch {self.folder_info.current_branch}",
+                "When I push an other branch",
+                "When a push a specific tag (not implemented)",
+            ]
+        )
+        if push_choice == 0:
             self.ci_parameters["push_branch"] = self.folder_info.current_branch
-        elif push_choice == "o":
+        elif push_choice == 1:
             self.ci_parameters["push_branch"] = sc.answer("Enter the other branch: ")
+        elif push_choice == 2:
+            sc.echo("Not implemented", formatting=sc.Formats.WARNING)
 
     def choose_deposit_files(self):
         """User chooses the files that should be included in the deposition"""
@@ -565,24 +573,23 @@ class HermesInitCommand(HermesCommand):
             if sc.confirm(f"Do you want to append your README.md to the {dp_name} upload?"):
                 self.ci_parameters["deposit_extra_files"] = "--file README.md "
                 add_readme = True
-        options = {
-                      "a": "All (non hidden) folders",
-                      "x": "Everything (all folders & all files)",
-                      "c": "Enter a custom list of paths"
-                  }
-        if len(self.folder_info.dir_folders) <= 10:
-            options.update(
-                {str(i): f"Only {folder}/*" for i, folder in enumerate(self.folder_info.dir_folders)}
-            )
+        options = [
+            "All (non hidden) folders",
+            "Everything (all folders & all files)",
+            "Enter a custom list of paths",
+        ]
+        folder_base_index: int = len(options)
+        for folder in self.folder_info.dir_folders:
+            options.append(f"Only {folder}/*")
         _other = ' other' if add_readme else ''
         file_choice = sc.choose(f"Which{_other} folders / files of your root directory "
-                                f"should be included in the {dp_name} upload?", options=options, default="a")
+                                f"should be included in the {dp_name} upload?", options=options)
         match file_choice:
-            case "a":
+            case 0:
                 self.ci_parameters["deposit_zip_files"] = " ".join(self.folder_info.dir_folders)
-            case "x":
+            case 1:
                 self.ci_parameters["deposit_zip_files"] = ""
-            case "c":
+            case 2:
                 custom_files = []
                 while True:
                     custom_path = sc.answer("Enter a path you want to include (enter nothing if you are done): ")
@@ -595,10 +602,9 @@ class HermesInitCommand(HermesCommand):
                         sc.echo(f"{custom_path} does not exist.", formatting=sc.Formats.FAIL)
                 self.ci_parameters["deposit_zip_files"] = " ".join(custom_files)
             case _:
-                if file_choice.isdigit():
-                    index = int(file_choice)
-                    if index < len(self.folder_info.dir_folders):
-                        self.ci_parameters["deposit_zip_files"] = self.folder_info.dir_folders[index]
+                index = int(file_choice) - folder_base_index
+                if 0 <= index < len(self.folder_info.dir_folders):
+                    self.ci_parameters["deposit_zip_files"] = self.folder_info.dir_folders[index]
         sc.echo("Your upload will consist of the following:")
         if add_readme:
             sc.echo("\tUnzipped:", formatting=sc.Formats.BOLD)

@@ -45,7 +45,7 @@ def allow_actions(project_url: str, token):
     # Repository details
     url_split = project_url.split('/')
     repo_owner = url_split[-2]
-    repo_name = url_split[-1].replace(".git", "")
+    repo_name = url_split[-1]
 
     # GitHub API URLs
     repo_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}"
@@ -84,7 +84,7 @@ def create_secret(project_url: str, secret_name: str, secret_value, token):
     # Repository details
     url_split = project_url.split('/')
     repo_owner = url_split[-2]
-    repo_name = url_split[-1].replace(".git", "")
+    repo_name = url_split[-1]
 
     # GitHub API URLs
     repo_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}"

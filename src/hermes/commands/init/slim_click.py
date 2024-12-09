@@ -80,29 +80,32 @@ def press_enter_to_continue(text: str = "Press ENTER to continue") -> None:
     echo("")
 
 
-def choose(text: str, options: dict[str, str], default: str = "") -> str:
+def choose(text: str, options: list[str], default: int = 0) -> int:
     """
     The user gets to make a choice between predefined answers.
 
     :param text: Displayed text / question
-    :param options: Dict with possible answers {char -> description}
-    :param default: Selected answer (char) if the user doesn't enter anything
+    :param options: List with possible answers
+    :param default: Selected answer (index) if the user doesn't enter anything
+    :return: The index of the selected option
     """
-    default = default.lower().strip()
-    assert default in options.keys(), "Default char should be a key in the options dict."
+    assert 0 <= default < len(options), "Default index should match the options list."
     print(text)
-    for char, description in options.items():
-        char = char.lower().strip()
-        if char == default.lower():
-            description += " [default]"
-        print(f"[{char}] {description}")
+    for i, option in enumerate(options):
+        index = f"{i:<2d}"
+        if i == default:
+            index = f"{i:<1d}*"
+        print(f"[{index}] {option}")
     while True:
-        _answer = input("Your choice: ").lower().strip()
-        if _answer == "" and default != "":
-            _answer = default
-        if _answer in options.keys():
-            echo(f"You selected \"{options[_answer]}\".\n", formatting=Formats.OKCYAN)
-            return _answer
+        chosen_index = -1
+        response: str = input(f"Your choice [default is {default}]: ").lower().strip()
+        if response == "":
+            chosen_index = default
+        elif response.isdigit():
+            chosen_index = int(response)
+        if 0 <= chosen_index < len(options):
+            echo(f"You selected \"{options[chosen_index]}\".\n", formatting=Formats.OKCYAN)
+            return chosen_index
         else:
             echo("Error: invalid input", formatting=Formats.FAIL)
 

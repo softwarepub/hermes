@@ -41,7 +41,7 @@ class GitLabConnection:
         parsed_url = urlparse(project_url)
         self.base_url: str = f"{parsed_url.scheme}://{parsed_url.netloc}/"
         self.api_url: str = urljoin(self.base_url, "api/v4/")
-        self.project_namespace_name: str = parsed_url.path.removeprefix("/").removesuffix(".git")
+        self.project_namespace_name: str = parsed_url.path.removeprefix("/")
         self.gitlab_instance_name: str = f"GitLab ({parsed_url.netloc})"
         self.client_id: str = ""
         self.access_token: str = ""
