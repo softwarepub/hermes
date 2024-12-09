@@ -85,7 +85,7 @@ def scout_current_folder() -> HermesInitFolderInfo:
         sc.debug_info(f"git remote = {git_remote}")
         # Get remote url
         info.git_remote_url = convert_remote_url(
-            str(subprocess.run(['git', 'remote', 'get-url', git_remote],capture_output=True, text=True).stdout)
+            str(subprocess.run(['git', 'remote', 'get-url', git_remote], capture_output=True, text=True).stdout)
         )
         branch_info = str(subprocess.run(['git', 'branch'], capture_output=True, text=True).stdout)
         for line in branch_info.splitlines():
@@ -513,7 +513,7 @@ class HermesInitCommand(HermesCommand):
         setup_method_index = sc.choose(
             f"How do you want to connect {DepositPlatformNames[self.deposit_platform]} "
             f"with your {self.folder_info.used_git_hoster.name} CI?",
-            options = [
+            options=[
                 "Automatically (using OAuth / Device Flow)",
                 "Manually (with instructions)",
             ]
