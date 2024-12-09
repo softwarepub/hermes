@@ -21,13 +21,6 @@ including checks against existing metadata requirements. To accompany the
 tooling and enable researchers to easily reuse it, the project also provides
 comprehensive documentation and templates for widely used CI solutions.
 
-````{margin}
-```{image} ../_static/img/rs-ready-badge.svg
-   :alt: Research Software Ready Badge
-   :class: badge-icon
-```
-````
-
 Many, if not most, publication repositories cannot be labeled "research
 software ready" today (2022). In addition to the deposition workflows, this
 project cooperates with the upstream [InvenioRDM](https://invenio-software.org/products/rdm/)
