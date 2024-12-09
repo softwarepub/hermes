@@ -125,35 +125,35 @@ class jsonld_dict(dict):
         return cls(**data)
 
 
-class ValueAccess:
+class _Access:
+    _mode = None
+
     def __init__(self, linked_data: jsonld_dict):
         self._data = linked_data
 
-    def term_to_iri(self, term):
+    def _map_key(self, key: str):
+        return key
+
+    def __getitem__(self, key):
+        item = self._data[self._map_key(key), self._mode]
+        if isinstance(item, list):
+            item = [self.__class__(v) if isinstance(v, jsonld_dict) else v for v in item]
+        elif isinstance(item, jsonld_dict):
+            item = self.__class__(item)
+        return item
+
+
+class JSONLDAccess(_Access):
+    _mode = "jsonld"
+
+
+class ValueAccess(_Access):
+    _mode = "value"
+
+    def _map_key(self, term):
         res, *_ = jsonld.expand({term: {}, '@context': self._data.get('@context')})
         key, *_ = res.keys()
         return key
-
-    def __getitem__(self, term):
-        item = self._data[self.term_to_iri(term), 'value']
-        if isinstance(item, list):
-            item = [ValueAccess(v) if isinstance(v, jsonld_dict) else v for v in item]
-        elif isinstance(item, jsonld_dict):
-            item = ValueAccess(item)
-        return item
-
-
-class JSONLDAccess:
-    def __init__(self, linked_data: jsonld_dict):
-        self._data = linked_data
-
-    def __getitem__(self, iri):
-        item = self._data[iri, 'jsonld']
-        if isinstance(item, list):
-            item = [JSONLDAccess(v) if isinstance(v, jsonld_dict) else v for v in item]
-        elif isinstance(item, jsonld_dict):
-            item = JSONLDAccess(item)
-        return item
 
 
 if __name__ == '__main__':
