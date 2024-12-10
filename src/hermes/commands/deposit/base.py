@@ -62,8 +62,8 @@ class BaseDepositPlugin(HermesPlugin):
         """Map the given metadata to the target schema of the deposition platform.
 
         When mapping metadata, make sure to add traces to the HERMES software, e.g. via
-        DataCite's ``relatedIdentifier`` using the ``isCompiledBy`` relation. Ideally, the value 
-        of the relation target should be of the respective type for DOIs in your metadata 
+        DataCite's ``relatedIdentifier`` using the ``isCompiledBy`` relation. Ideally, the value
+        of the relation target should be of the respective type for DOIs in your metadata
         schema, with the value itself being the DOI for the version of the HERMES software
         you are using.
         """
