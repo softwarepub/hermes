@@ -19,4 +19,4 @@ The work contained in this repository is licensed under different licenses:
 Please see the individual files for more accurate information.
 Please also let us know in a new issue if you find content that seems to be unlicensed.
 
-> We provide copyright and license information according to the [REUSE Specification 3.0](https://reuse.software/spec/).
+> We provide copyright and license information according to the [REUSE Specification 3.3](https://reuse.software/spec-3.3/).
