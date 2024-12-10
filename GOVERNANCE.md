@@ -24,15 +24,15 @@ must be based on full consensus within the steering group.
 
 The following are the repositories that are governed by the steering group. 
 
-- <https://github.com/softwarepub/hermes>
-- <https://github.com/softwarepub/ci-templates>
-- <https://github.com/softwarepub/hermes-harvest-template>
-- <https://github.com/softwarepub/hermes-plugin-git>
-- <https://github.com/softwarepub/hermes-plugin-python>
-- <https://github.com/softwarepub/showcase>
-- <https://github.com/softwarepub/schema.software-metadata.pub>
-- <https://github.com/softwarepub/github-action>
-- <https://github.com/softwarepub/concept-paper>
+- <https://github.com/softwarepub/hermes> (Maintainer: Stephan Druskat - @sdruskat)
+- <https://github.com/softwarepub/ci-templates> (Maintainer: Oliver Bertuch - @poikilotherm)
+- <https://github.com/softwarepub/hermes-harvest-template> (Maintainer: tbc)
+- <https://github.com/softwarepub/hermes-plugin-git> (Maintainer: Sophie Kernchen - @SKernchen)
+- <https://github.com/softwarepub/hermes-plugin-python> (Maintainer: Michael Meinel - @led02)
+- <https://github.com/softwarepub/showcase> (Maintainer: Oliver Bertuch - @poikilotherm)
+- <https://github.com/softwarepub/schema.software-metadata.pub> (Maintainer: Michael Meinel - @led02)
+- <https://github.com/softwarepub/github-action> (Maintainer: Oliver Bertuch - @poikilotherm)
+- <https://github.com/softwarepub/concept-paper> (Maintainer: Stephan Druskat - @sdruskat)
 
 ### HERMES Steering Group
 
