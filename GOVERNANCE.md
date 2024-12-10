@@ -15,7 +15,8 @@ together with the maintainer(s) of the repositories affected by the decision.
 Decisions that adhere to a single [repository in the scope of the HERMES project](#hermes-project-repositories)
 are made by *lazy consensus*: 
 
-1. The maintainer of the repository makes a decision.
+1. The maintainer of the repository makes a decision and notifies the HERMES steering group
+(using `@softwarepub/hermes-steering-group` mention).
 2. If no members of the steering group veto the decision within the decision period of one week (168 hours),
 the decision becomes effective and can be acted upon. 
 The maintainer and any member of the steering group can ask for a longer decision period, 
@@ -46,7 +47,9 @@ The following are the repositories that are governed by the steering group.
 The HERMES Steering Group has three members, 
 each of who represents one of the three Helmholtz centers 
 who were funded under the original Helmholtz Metadata Collaboration project (ZT-I-PF-3-006), i.e.,
-German Aerospace Center (DLR), Helmholtz-Zentrum Dresden-Rossendorf (HZDR), Forschungszentrum Jülich (FZJ).
+German Aerospace Center (DLR), 
+Helmholtz-Zentrum Dresden-Rossendorf (HZDR), 
+Forschungszentrum Jülich (FZJ).
 
 Currently the Steering Group consists of:
 
