@@ -58,4 +58,4 @@ Whenever a member of the Steering Group wants to step down,
 they are asked to nominate a successor.
 If no successor is named,
 the two remaining members seek a successor affiliated with the Helmholtz center of the leaving member.
-New members of the Steering Group join if neither of the other two members disagree with the decision to join. 
+New members of the Steering Group join if neither of the other two members disagrees with the decision to join. 
