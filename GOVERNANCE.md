@@ -1,6 +1,6 @@
 <!--
 SPDX-FileCopyrightText: 2024 German Aerospace Center (DLR)
-SPDX-FileCopyrightText: 2024 Stephan Druskat
+SPDX-FileContributor: Stephan Druskat
 
 SPDX-License-Identifier: CC-BY-SA-4.0
 -->
