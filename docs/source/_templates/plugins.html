@@ -6,12 +6,13 @@ SPDX-FileContributor: David Pape
 <ul>
 {%- for step in ("harvest", "process", "curate", "deposit", "postprocess") -%}
   {%- for plugin in data -%}
-    {% if plugin.step == step %}
+    {%- if plugin.step == step -%}
       <li style="margin-top: 0.5rem;">
         <script type="application/ld+json">
         {
           "@context": "https://schema.org/",
           "name": "{{ plugin.name }}",
+          {%- if plugin.repository_url -%}"url": "{{ plugin.repository_url }}",{%- endif -%}
           {%- if plugin.pypi_url -%}"installUrl": "{{ plugin.pypi_url }}",{%- endif -%}
           {%- if plugin.description -%}"abstract": "{{ plugin.description }}",{%- endif -%}
           {%- if plugin.author -%}"author": {"@type": "Organization", "name": "{{ plugin.author }}"},{%- endif -%}
