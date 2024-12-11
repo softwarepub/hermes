@@ -1,0 +1,61 @@
+[
+    {
+        "name": "CITATION.cff",
+        "description": "Harvest plugin for CITATION.cff files.",
+        "author": "Hermes team",
+        "builtin": true
+    },
+    {
+        "name": "codemeta.json",
+        "description": "Harvest plugin for codemeta.json files.",
+        "author": "Hermes team",
+        "builtin": true
+    },
+    {
+        "name": "hermes-plugin-git",
+        "description": "Harvest plugin for Git repository metadata.",
+        "author": "Hermes team",
+        "repository_url": "https://github.com/softwarepub/hermes-plugin-git"
+    },
+    {
+        "name": "hermes-plugin-python",
+        "description": "Harvest plugin for .toml files.",
+        "author": "Hermes team",
+        "repository_url": "https://github.com/softwarepub/hermes-plugin-python",
+        "pypi_url": "https://pypi.org/project/hermes-plugin-python/"
+    },
+    {
+        "name": "merge",
+        "description": "Process plugin for basic merging of metadata.",
+        "author": "Hermes team",
+        "builtin": true
+    },
+    {
+        "name": "Invenio Deposit",
+        "description": "Deposit plugin for Invenio-based platforms.",
+        "author": "Hermes team",
+        "builtin": true
+    },
+    {
+        "name": "Invenio RDM Deposit",
+        "description": "Deposit plugin for Invenio RDM-based platforms such as Zenodo.",
+        "author": "Hermes team",
+        "builtin": true
+    },
+    {
+        "name": "Rodare Deposit",
+        "description": "Deposit plugin for the Rodare publication platform at HZDR.",
+        "author": "Hermes team",
+        "builtin": true
+    },
+    {
+        "name": "Invenio Postprocess",
+        "author": "Hermes team",
+        "builtin": true
+    },
+    {
+        "name": "Invenio RDM Postprocess",
+        "author": "Hermes team",
+        "builtin": true
+    }
+]

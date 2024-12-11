@@ -33,6 +33,15 @@ automatic submission to publication repositories.
 
 ![](_static/img/workflow-overview.svg)
 
+## Plugins
+
+Hermes is built to be extensible for your needs.
+This is a list of available plugins:
+
+```{datatemplate:json} ../source/plugins.json
+:template: plugins.html
+```
+
 ## Documentation
  
 <!--

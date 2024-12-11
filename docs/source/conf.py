@@ -60,6 +60,7 @@ extensions = [
     'autoapi.extension',
     'sphinxcontrib.mermaid',
     'sphinx_togglebutton',
+    'sphinxcontrib.datatemplates',
 ]
 
 language = 'en'
