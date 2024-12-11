@@ -19,31 +19,31 @@ This is work in progress.
 ```
 
 Research software must be formally published to satisfy FAIR principles and unlock academic credit. Publication
-repositories enable this and provide PIDs for software versions, but only through tedious, mostly manual process. 
+repositories enable this and provide PIDs for software versions, but only through tedious, mostly manual process.
 
 The HERMES workflow enables automated publication of rich research software metadata and artifacts to publication
-repositories using open source tooling. 
+repositories using open source tooling.
 
-We follow a *push based* model and run in continuous integration (CI) infrastructures integrated in common code platforms 
-such as GitHub or GitLab to avoid going out of service and overcome limitations of pull-based web services. 
+We follow a *push based* model and run in continuous integration (CI) infrastructures integrated in common code platforms
+such as GitHub or GitLab to avoid going out of service and overcome limitations of pull-based web services.
 
 Rich descriptive metadata is the key element to useful software publications. We harvest existing metadata from source
 code repos and connected platforms, then process, collate and present them for curation, thus preparing software for
-automatic submission to publication repositories. 
+automatic submission to publication repositories.
 
 ![](_static/img/workflow-overview.svg)
 
 ## Plugins
 
 Hermes is built to be extensible for your needs.
-This is a list of available plugins:
+This is a list of available plugins for the different steps in the Hermes workflow:
 
 ```{datatemplate:json} ../source/plugins.json
-:template: plugins.html
+:template: plugins.md
 ```
 
 ## Documentation
- 
+
 <!--
 ```{toctree}
  cli
@@ -78,13 +78,13 @@ Concept Paper <https://arxiv.org/abs/2201.09015>
 
 This is an open repository to collect feedback on the HERMES workflow.
 
-We see our project as part of a global and inter-disciplinary effort to improve the state of the art in 
+We see our project as part of a global and inter-disciplinary effort to improve the state of the art in
 research software engineering, maintenance and scholarly communications around research software. We therefore
 appreciate any feedback you may have on the HERMES project itself and any of its outputs.
 
 **How to give feedback**
 
-Either [create an issue](https://github.com/hermes-hmc/workflow/issues/new/choose) in our project repository or 
+Either [create an issue](https://github.com/hermes-hmc/workflow/issues/new/choose) in our project repository or
 [send us an email](mailto:team@software-metadata.pub?subject=HERMES%20WOrkflow%20Reachout).
 
 ## Acknowledgements
