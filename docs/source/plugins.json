@@ -3,24 +3,28 @@
         "name": "CITATION.cff",
         "description": "Harvest plugin for CITATION.cff files.",
         "author": "Hermes team",
+        "step": "harvest",
         "builtin": true
     },
     {
         "name": "codemeta.json",
         "description": "Harvest plugin for codemeta.json files.",
         "author": "Hermes team",
+        "step": "harvest",
         "builtin": true
     },
     {
         "name": "hermes-plugin-git",
         "description": "Harvest plugin for Git repository metadata.",
         "author": "Hermes team",
+        "step": "harvest",
         "repository_url": "https://github.com/softwarepub/hermes-plugin-git"
     },
     {
         "name": "hermes-plugin-python",
         "description": "Harvest plugin for .toml files.",
         "author": "Hermes team",
+        "step": "harvest",
         "repository_url": "https://github.com/softwarepub/hermes-plugin-python",
         "pypi_url": "https://pypi.org/project/hermes-plugin-python/"
     },
@@ -28,34 +32,47 @@
         "name": "merge",
         "description": "Process plugin for basic merging of metadata.",
         "author": "Hermes team",
+        "step": "process",
+        "builtin": true
+    },
+    {
+        "name": "curate",
+        "description": "Curation plugin for no-check acceptance of the metadata.",
+        "author": "Hermes team",
+        "step": "curate",
         "builtin": true
     },
     {
         "name": "Invenio Deposit",
         "description": "Deposit plugin for Invenio-based platforms.",
         "author": "Hermes team",
+        "step": "deposit",
         "builtin": true
     },
     {
         "name": "Invenio RDM Deposit",
         "description": "Deposit plugin for Invenio RDM-based platforms such as Zenodo.",
         "author": "Hermes team",
+        "step": "deposit",
         "builtin": true
     },
     {
         "name": "Rodare Deposit",
         "description": "Deposit plugin for the Rodare publication platform at HZDR.",
         "author": "Hermes team",
+        "step": "deposit",
         "builtin": true
     },
     {
         "name": "Invenio Postprocess",
         "author": "Hermes team",
+        "step": "postprocess",
         "builtin": true
     },
     {
         "name": "Invenio RDM Postprocess",
         "author": "Hermes team",
+        "step": "postprocess",
         "builtin": true
     }
 ]
