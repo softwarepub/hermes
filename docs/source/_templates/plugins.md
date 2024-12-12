@@ -9,7 +9,7 @@ SPDX-FileContributor: David Pape
 
 <ul>
 {%- for plugin in data -%}
-  {%- if plugin.step == step -%}
+  {%- if step in plugin.steps -%}
   <li style="margin-top: 0.5rem;">
     <script type="application/ld+json">
     {
@@ -19,7 +19,7 @@ SPDX-FileContributor: David Pape
       {%- if plugin.pypi_url -%}"installUrl": "{{ plugin.pypi_url }}",{%- endif -%}
       {%- if plugin.description -%}"abstract": "{{ plugin.description }}",{%- endif -%}
       {%- if plugin.author -%}"author": {"@type": "Organization", "name": "{{ plugin.author }}"},{%- endif -%}
-      "keywords": "{{ plugin.step }}",
+      "keywords": {{ plugin.steps|tojson }},
       "@type": "SoftwareApplication" {# Careful, no trailing comma! #}
     }
     </script>
