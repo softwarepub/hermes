@@ -5,6 +5,7 @@
 # SPDX-FileContributor: Stephan Druskat
 # SPDX-FileContributor: Oliver Bertuch
 # SPDX-FileContributor: Michael Meinel
+# SPDX-FileContributor: David Pape
 
 
 # Configuration file for the Sphinx documentation builder.
@@ -31,7 +32,8 @@ sys.path.append(str(Path('_ext').resolve()))
 project = 'HERMES Workflow'
 copyright = '2024, HERMES project'
 author = 'Oliver Bertuch, Stephan Druskat, Guido Juckeland, Jeffrey Kelling, ' + \
-         'Oliver Knodel, Michael Meinel, Tobias Schlauch, Sophie Kernchen'
+         'Oliver Knodel, Michael Meinel, Tobias Schlauch, Sophie Kernchen, ' + \
+         'David Pape'
 
 
 # The full version, including alpha/beta/rc tags
