@@ -3,9 +3,10 @@ SPDX-FileCopyrightText: 2024 Helmholtz-Zentrum Dresden-Rossendorf
 SPDX-License-Identifier: CC-BY-SA-4.0
 SPDX-FileContributor: David Pape
 #}
+
 {% for step in ("harvest", "process", "curate", "deposit", "postprocess") %}
 
-### {{ step }}
+### {{ step|title }}
 
 <ul>
 {%- for plugin in data -%}
@@ -27,8 +28,8 @@ SPDX-FileContributor: David Pape
     <a href="{{ plugin.repository_url }}" rel="nofollow">{{ plugin.name }}</a>
     {%- else -%}
     {{ plugin.name }}
-    {%- endif %}
-    <span style="color: gray;">by <em>{{ plugin.author }}</em><br></span>
+    {%- endif -%}
+    <span style="color: gray;"> by <em>{{ plugin.author }}</em><br></span>
     {%- if plugin.description -%}
     {{ plugin.description }}<br>
     {%- endif -%}
