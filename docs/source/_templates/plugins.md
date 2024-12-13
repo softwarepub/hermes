@@ -12,18 +12,6 @@ SPDX-FileContributor: David Pape
 {%- for plugin in data -%}
   {%- if step in plugin.steps -%}
   <li style="margin-top: 0.5rem;">
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org/",
-      "name": "{{ plugin.name }}",
-      {%- if plugin.repository_url -%}"url": "{{ plugin.repository_url }}",{%- endif -%}
-      {%- if plugin.pypi_url -%}"installUrl": "{{ plugin.pypi_url }}",{%- endif -%}
-      {%- if plugin.description -%}"abstract": "{{ plugin.description }}",{%- endif -%}
-      {%- if plugin.author -%}"author": {"@type": "Organization", "name": "{{ plugin.author }}"},{%- endif -%}
-      "keywords": {{ plugin.steps|tojson }},
-      "@type": "SoftwareApplication" {# Careful, no trailing comma! #}
-    }
-    </script>
     {%- if plugin.repository_url -%}
     <a href="{{ plugin.repository_url }}" rel="nofollow">{{ plugin.name }}</a>
     {%- else -%}

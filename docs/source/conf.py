@@ -21,7 +21,9 @@
 #
 import os
 import sys
+from pathlib import Path
 sys.path.insert(0, os.path.abspath('../../src'))
+sys.path.append(str(Path('_ext').resolve()))
 
 
 # -- Project information -----------------------------------------------------
@@ -61,6 +63,8 @@ extensions = [
     'sphinxcontrib.mermaid',
     'sphinx_togglebutton',
     'sphinxcontrib.datatemplates',
+    # Custom extensions, see `_ext` directory.
+    'plugin_markup',
 ]
 
 language = 'en'

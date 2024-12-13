@@ -35,6 +35,9 @@ automatic submission to publication repositories.
 
 ## Plugins
 
+```{plugin-markup} plugins.json
+```
+
 Hermes is built to be extensible for your needs.
 This is a list of available plugins for the different steps in the Hermes workflow:
 
