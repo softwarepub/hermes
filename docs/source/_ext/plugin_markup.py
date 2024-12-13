@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2024 Helmholtz-Zentrum Dresden-Rossendorf
+# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileContributor: David Pape
+
 import json
 from pathlib import Path
 from typing import Any, Dict
@@ -7,7 +11,16 @@ from sphinx.application import Sphinx
 from sphinx.util.docutils import SphinxDirective
 
 
-def plugin_to_jsonld(obj: Dict[str, Any]) -> Dict[str, Any]:
+def plugin_to_jsonld(plugin: Dict[str, Any]) -> Dict[str, Any]:
+    """Convert plugin metadata from the used JSON format to JSON-LD with Schema.org.
+
+    The ``plugin`` is transformed into a ``schema:SoftwareApplication``. For most
+    attributes of the plugin, a mapping into Schema.org terms is performed. The author
+    is expressed as a ``schema:Organization`` using the given author field as the
+    ``name``. The steps targeted by the plugin are expressed using the ``keyword`` field
+    by transforming them to the keywords ``hermes-step-<STEP>`` where ``<STEP>`` is the
+    name of the workflow step.
+    """
     data = {
         "@context": "https://schema.org/",
         "@type": "SoftwareApplication",
@@ -20,15 +33,15 @@ def plugin_to_jsonld(obj: Dict[str, Any]) -> Dict[str, Any]:
         "abstract": "description",
     }
     for schema_name, our_name in basic_mapping.items():
-        if (value := obj.get(our_name)) is not None:
+        if (value := plugin.get(our_name)) is not None:
             data[schema_name] = value
 
-    if (author := obj.get("author")) is not None:
+    if (author := plugin.get("author")) is not None:
         data["author"] = {"@type": "Organization", "name": author}
 
     keywords = []
 
-    for step in obj.get("steps", []):
+    for step in plugin.get("steps", []):
         keywords.append(f"hermes-step-{step}")
 
     data["keywords"] = keywords
@@ -36,6 +49,19 @@ def plugin_to_jsonld(obj: Dict[str, Any]) -> Dict[str, Any]:
 
 
 class PluginMarkupDirective(SphinxDirective):
+    """A Sphinx directive to render the ``plugins.json`` file to Schema.org markup.
+
+    The plugins file is passed to the directive as the first parameter, i.e., in
+    Markdown:
+
+    .. code:: markdown
+
+       ```{plugin-markup} path/to/plugins.json
+       ```
+
+    For each plugin listed in the file, a ``<script type="application/ld.json">`` tag
+    is generated.
+    """
     required_arguments = 1
 
     def run(self) -> list[nodes.Node]:
@@ -56,6 +82,7 @@ class PluginMarkupDirective(SphinxDirective):
 
 
 def setup(app: Sphinx):
+    """Wire up the directive so that it can be used as ``plugin-markup``."""
     app.add_directive("plugin-markup", PluginMarkupDirective)
     return {
         "version": "0.1",
