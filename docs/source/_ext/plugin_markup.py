@@ -19,7 +19,8 @@ def plugin_to_jsonld(plugin: Dict[str, Any]) -> Dict[str, Any]:
     is expressed as a ``schema:Organization`` using the given author field as the
     ``name``. The steps targeted by the plugin are expressed using the ``keyword`` field
     by transforming them to the keywords ``hermes-step-<STEP>`` where ``<STEP>`` is the
-    name of the workflow step.
+    name of the workflow step. If the plugin is marked as a Hermes ``builtin``, this is
+    expressed using ``schema:isPartOf``.
     """
     data = {
         "@context": "https://schema.org/",
@@ -38,6 +39,15 @@ def plugin_to_jsonld(plugin: Dict[str, Any]) -> Dict[str, Any]:
 
     if (author := plugin.get("author")) is not None:
         data["author"] = {"@type": "Organization", "name": author}
+
+    hermes = {
+        "@type": "SoftwareApplication",
+        "@id": "https://doi.org/10.5281/zenodo.13221383",  # Hermes concept ID
+        "name": "hermes",
+    }
+
+    if plugin.get("builtin", False):
+        data["isPartOf"] = hermes
 
     keywords = []
 
