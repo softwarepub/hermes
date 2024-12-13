@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-FileContributor: David Pape
 
+"""Basic CLI to list plugins from the Hermes market place."""
+
 import json
 from html.parser import HTMLParser
 
@@ -13,6 +15,8 @@ MARKETPLACE_URL = "https://hermes.software-metadata.pub"
 
 
 class PluginMarketPlaceParser(HTMLParser):
+    """Parser for the JSON-LD Schema.org markup used in the marketplace."""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.is_json_ld = False
