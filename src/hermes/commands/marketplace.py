@@ -6,6 +6,7 @@
 
 import json
 from html.parser import HTMLParser
+from typing import Any, Dict, List
 
 import requests
 
@@ -19,8 +20,8 @@ class PluginMarketPlaceParser(HTMLParser):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.is_json_ld = False
-        self.plugins = []
+        self.is_json_ld: bool = False
+        self.plugins: List[Dict[str, Any]] = []
 
     def handle_starttag(self, tag, attrs):
         if tag == "script" and ("type", "application/ld+json") in attrs:
