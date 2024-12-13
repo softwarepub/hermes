@@ -69,7 +69,7 @@ class PluginMarkupDirective(SphinxDirective):
        ```{plugin-markup} path/to/plugins.json
        ```
 
-    For each plugin listed in the file, a ``<script type="application/ld.json">`` tag
+    For each plugin listed in the file, a ``<script type="application/ld+json">`` tag
     is generated.
     """
     required_arguments = 1
