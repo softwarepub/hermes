@@ -8,6 +8,7 @@ SPDX-License-Identifier: CC-BY-SA-4.0
 SPDX-FileContributor: Oliver Bertuch
 SPDX-FileContributor: Stephan Druskat
 SPDX-FileContributor: Michael Meinel
+SPDX-FileContributor: David Pape
 -->
 
 ![](_static/img/header.png)
