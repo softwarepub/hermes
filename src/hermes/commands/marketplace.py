@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-FileContributor: David Pape
 
-"""Basic CLI to list plugins from the Hermes market place."""
+"""Basic CLI to list plugins from the Hermes marketplace."""
 
 from html.parser import HTMLParser
 from typing import List, Optional
