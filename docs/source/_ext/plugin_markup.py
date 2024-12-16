@@ -57,8 +57,8 @@ def plugin_to_schema_org(plugin: Dict[str, Any]) -> SchemaOrgSoftwarePublication
 class PluginMarkupDirective(SphinxDirective):
     """A Sphinx directive to render the ``plugins.json`` file to Schema.org markup.
 
-    The plugins file is passed to the directive as the first parameter, i.e., in
-    Markdown:
+    The plugins file and its jsonschema are passed to the directive as parameters, i.e.,
+    in Markdown:
 
     .. code:: markdown
 
