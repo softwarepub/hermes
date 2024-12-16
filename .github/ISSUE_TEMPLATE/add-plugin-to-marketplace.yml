@@ -13,7 +13,9 @@ body:
       value: |
         Thank you for building a plugin for Hermes and sharing it with the community!
 
-        Via this issue template, you can send us the required information to add your plugin to the [Hermes plugin marketplace](https://hermes.software-metadata.pub#plugins). Alternatively, you may file a pull request, adding the plugin to [`plugins.json`](https://github.com/softwarepub/hermes/tree/develop/docs/source/plugins.json) yourself.
+        The [Hermes plugin marketplace](https://hermes.software-metadata.pub#plugins) is a curated list of plugins on our website that allows you to share plugins that you developed, and others to find them.
+
+        Via this issue template, you can send us the required information to add your plugin to the marketplace. Alternatively, you may file a pull request, adding the plugin to [`plugins.json`](https://github.com/softwarepub/hermes/tree/develop/docs/source/plugins.json) yourself.
 
   - id: "name"
     type: "input"
