@@ -1,0 +1,57 @@
+{
+  "type": "array",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "List of plugins",
+  "uniqueItems": true,
+  "minItems": 1,
+  "items": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "Name of the plugin"
+      },
+      "author": {
+        "type": "string",
+        "description": "Author of the plugin, usually a team or organization"
+      },
+      "description": {
+        "type": "string",
+        "description": "A short description of the plugin"
+      },
+      "steps": {
+        "type": "array",
+        "description": "Steps of the Hermes workflow targeted by this plugin",
+        "items": {
+          "type": "string",
+          "uniqueItems": true,
+          "enum": [
+            "harvest",
+            "process",
+            "curate",
+            "deposit",
+            "postprocess"
+          ]
+        }
+      },
+      "repository_url": {
+        "type": "string",
+        "description": "Link to the repository where users can find and inspect the source code of the plugin",
+        "format": "uri"
+      },
+      "pypi_url": {
+        "type": "string",
+        "description": "Link to the project on PyPI",
+        "format": "uri"
+      },
+      "builtin": {
+        "type": "boolean",
+        "description": "Whether this plugin is built into Hermes"
+      }
+    },
+    "required": [
+      "name",
+      "author"
+    ]
+  }
+}
