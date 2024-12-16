@@ -10,9 +10,15 @@ from docutils import nodes
 from sphinx.application import Sphinx
 from sphinx.util.docutils import SphinxDirective
 
+from hermes.commands.marketplace import (
+    SchemaOrgOrganization,
+    SchemaOrgSoftwarePublication,
+    schema_org_hermes,
+)
 
-def plugin_to_jsonld(plugin: Dict[str, Any]) -> Dict[str, Any]:
-    """Convert plugin metadata from the used JSON format to JSON-LD with Schema.org.
+
+def plugin_to_schema_org(plugin: Dict[str, Any]) -> SchemaOrgSoftwarePublication:
+    """Convert plugin metadata from the used JSON format to Schema.org.
 
     The ``plugin`` is transformed into a ``schema:SoftwareApplication``. For most
     attributes of the plugin, a mapping into Schema.org terms is performed. The author
@@ -22,40 +28,17 @@ def plugin_to_jsonld(plugin: Dict[str, Any]) -> Dict[str, Any]:
     name of the workflow step. If the plugin is marked as a Hermes ``builtin``, this is
     expressed using ``schema:isPartOf``.
     """
-    data = {
-        "@context": "https://schema.org/",
-        "@type": "SoftwareApplication",
-    }
+    keywords = [f"hermes-step-{step}" for step in plugin.get("steps", [])]
 
-    basic_mapping = {
-        "name": "name",
-        "url": "repository_url",
-        "installUrl": "pypi_url",
-        "abstract": "description",
-    }
-    for schema_name, our_name in basic_mapping.items():
-        if (value := plugin.get(our_name)) is not None:
-            data[schema_name] = value
-
-    if (author := plugin.get("author")) is not None:
-        data["author"] = {"@type": "Organization", "name": author}
-
-    hermes = {
-        "@type": "SoftwareApplication",
-        "@id": "https://doi.org/10.5281/zenodo.13221383",  # Hermes concept ID
-        "name": "hermes",
-    }
-
-    if plugin.get("builtin", False):
-        data["isPartOf"] = hermes
-
-    keywords = []
-
-    for step in plugin.get("steps", []):
-        keywords.append(f"hermes-step-{step}")
-
-    data["keywords"] = keywords
-    return data
+    return SchemaOrgSoftwarePublication(
+        name=plugin.get("name"),
+        url=plugin.get("repository_url"),
+        install_url=plugin.get("pypi_url"),
+        abstract=plugin.get("description"),
+        author=SchemaOrgOrganization(name=au) if (au := plugin.get("author")) else None,
+        is_part_of=schema_org_hermes if plugin.get("builtin", False) else None,
+        keywords=keywords or None,
+    )
 
 
 class PluginMarkupDirective(SphinxDirective):
@@ -84,8 +67,10 @@ class PluginMarkupDirective(SphinxDirective):
 
         tags = []
         for plugin in plugin_data:
-            markup = plugin_to_jsonld(plugin)
-            tag = f'<script type="application/ld+json">{json.dumps(markup)}</script>'
+            markup = plugin_to_schema_org(plugin).model_dump_json(
+                by_alias=True, exclude_none=True
+            )
+            tag = f'<script type="application/ld+json">{markup}</script>'
             tags.append(nodes.raw(rawsource=markup, text=tag, format="html"))
 
         return tags

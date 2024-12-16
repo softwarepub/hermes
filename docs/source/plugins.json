@@ -1,13 +1,13 @@
 [
     {
-        "name": "CITATION.cff",
+        "name": "CITATION.cff Harvester",
         "description": "Harvest plugin for CITATION.cff files.",
         "author": "Hermes team",
         "steps": ["harvest"],
         "builtin": true
     },
     {
-        "name": "codemeta.json",
+        "name": "codemeta.json Harvester",
         "description": "Harvest plugin for codemeta.json files.",
         "author": "Hermes team",
         "steps": ["harvest"],
