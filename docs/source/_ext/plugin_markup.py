@@ -62,7 +62,7 @@ class PluginMarkupDirective(SphinxDirective):
 
     .. code:: markdown
 
-       ```{plugin-markup} path/to/plugins.json
+       ```{plugin-markup} path/to/plugins.json path/to/plugins-schema.json
        ```
 
     For each plugin listed in the file, a ``<script type="application/ld+json">`` tag
