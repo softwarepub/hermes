@@ -91,17 +91,19 @@ def main():
     parser = PluginMarketPlaceParser()
     parser.feed(response.text)
 
-    print(
-        f"See the detailed list of plugins here: {MARKETPLACE_URL}#plugins", end="\n\n"
-    )
+    print(f"See the detailed list of plugins here: {MARKETPLACE_URL}#plugins")
 
-    for plugin in parser.plugins:
-        where = (
-            "(builtin)"
-            if plugin.is_part_of == schema_org_hermes
-            else (plugin.url or "")
-        )
-        print(f"{plugin.name:>30}  {where}")
+    if parser.plugins:
+        print()
+        alignment = max(map(lambda plugin: len(plugin.name), parser.plugins)) + 1
+        for plugin in parser.plugins:
+            where = (
+                "builtin"
+                if plugin.is_part_of == schema_org_hermes
+                else (plugin.url or "")
+            )
+            print(f"{plugin.name:>{alignment}} {where}")
+        print()
 
 
 if __name__ == "__main__":
