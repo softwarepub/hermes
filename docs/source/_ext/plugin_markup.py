@@ -76,7 +76,7 @@ class PluginMarkupDirective(SphinxDirective):
         directory = filename.parent
 
         plugins_file = directory / self.arguments[0]
-        log_message("reading plugins file", str(plugins_file))
+        log_message("reading plugins file", text2=str(plugins_file))
         with open(plugins_file) as file:
             plugin_data = json.load(file)
 
