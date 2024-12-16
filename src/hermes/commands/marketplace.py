@@ -91,7 +91,10 @@ def main():
     parser = PluginMarketPlaceParser()
     parser.feed(response.text)
 
-    print(f"See the detailed list of plugins here: {MARKETPLACE_URL}#plugins")
+    print(
+        "A detailed list of available plugins can be found on the "
+        f"Hermes website at {MARKETPLACE_URL}#plugins"
+    )
 
     if parser.plugins:
         print()
