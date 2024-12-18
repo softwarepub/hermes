@@ -4,6 +4,7 @@
         "description": "Harvest plugin for CITATION.cff files.",
         "author": "Hermes team",
         "steps": ["harvest"],
+        "harvested_files": ["CITATION.cff"],
         "builtin": true
     },
     {
@@ -11,6 +12,7 @@
         "description": "Harvest plugin for codemeta.json files.",
         "author": "Hermes team",
         "steps": ["harvest"],
+        "harvested_files": ["codemeta.json"],
         "builtin": true
     },
     {
@@ -25,6 +27,7 @@
         "description": "Harvest plugin for .toml files.",
         "author": "Hermes team",
         "steps": ["harvest"],
+        "harvested_files": ["pyproject.toml"],
         "repository_url": "https://github.com/softwarepub/hermes-plugin-python",
         "pypi_url": "https://pypi.org/project/hermes-plugin-python/"
     },

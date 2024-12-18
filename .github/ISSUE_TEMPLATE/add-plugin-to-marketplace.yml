@@ -48,6 +48,13 @@ body:
       multiple: true
       options: ["harvest", "process", "curate", "deposit", "postprocess"]
 
+  - id: "harvested-files"
+    type: "input"
+    attributes:
+      label: "Harvested files"
+      description: "The types of files your plugin harvests (if it is a harvest plugin)"
+      placeholder: "foobar, foobar.yml, foobar.json"
+
   - id: "repository-url"
     type: "input"
     attributes:

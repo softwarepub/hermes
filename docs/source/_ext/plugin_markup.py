@@ -3,6 +3,7 @@
 # SPDX-FileContributor: David Pape
 
 import json
+import re
 from pathlib import Path
 from typing import Any, Dict
 
@@ -30,6 +31,19 @@ def log_message(text: str, text2: str = None) -> None:
     logger.info(message)
 
 
+def keywordify(text: str) -> str:
+    """Make keyword-friendly text.
+
+    The result will only contain lowercase a through z and hyphens, e.g.:
+
+    * CITATION.cff → citation-cff
+    * codemeta.json → codemeta-json
+    * LICENSE → license
+    """
+    text = text.casefold()
+    return re.sub(r"[^a-z]", "-", text)
+
+
 def plugin_to_schema_org(plugin: Dict[str, Any]) -> SchemaOrgSoftwarePublication:
     """Convert plugin metadata from the used JSON format to Schema.org.
 
@@ -42,6 +56,11 @@ def plugin_to_schema_org(plugin: Dict[str, Any]) -> SchemaOrgSoftwarePublication
     expressed using ``schema:isPartOf``.
     """
     keywords = [f"hermes-step-{step}" for step in plugin.get("steps", [])]
+
+    if "harvest" in plugin.get("steps", []) and (
+        harvested_files := plugin.get("harvested_files", [])
+    ):
+        keywords += [f"hermes-harvest-{keywordify(file)}" for file in harvested_files]
 
     return SchemaOrgSoftwarePublication(
         name=plugin.get("name"),

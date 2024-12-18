@@ -6,6 +6,7 @@
   "minItems": 1,
   "items": {
     "type": "object",
+    "additionalProperties": false,
     "properties": {
       "name": {
         "type": "string",
@@ -32,6 +33,14 @@
             "deposit",
             "postprocess"
           ]
+        }
+      },
+      "harvested_files": {
+        "type": "array",
+        "description": "Names of files harvested by a harvest plugin",
+        "items": {
+          "type": "string",
+          "uniqueItems": true
         }
       },
       "repository_url": {
