@@ -50,7 +50,7 @@ Any update needs lazy consensus [as defined above](#governance) from all members
 ### HERMES Steering Group
 
 The HERMES Steering Group has three members, 
-each of who represents one of the three Helmholtz centers 
+each of whom represents one of the three Helmholtz centers 
 who were funded under the original Helmholtz Metadata Collaboration project (ZT-I-PF-3-006), i.e.,
 German Aerospace Center (DLR), 
 Helmholtz-Zentrum Dresden-Rossendorf (HZDR), 
