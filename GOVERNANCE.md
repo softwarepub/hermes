@@ -15,22 +15,22 @@ together with the maintainer(s) of the repositories affected by the decision.
 Decisions that adhere to a single [repository in the scope of the HERMES project](#hermes-project-repositories)
 are made by *lazy consensus*: 
 
-1. The maintainer of the repository makes a decision and notifies the HERMES steering group
+1. The maintainer of the repository makes a decision and notifies the HERMES Steering Group
 (using `@softwarepub/hermes-steering-group` mention).
-2. If no members of the steering group veto the decision within the decision period of one week (168 hours),
+2. If no members of the Steering Group veto the decision within the decision period of one week (168 hours),
 the decision becomes effective and can be acted upon. 
-The maintainer and any member of the steering group can ask for a longer decision period, 
+The maintainer and any member of the Steering Group can ask for a longer decision period, 
 which must be granted. 
-3. If one or more members of the steering group veto the decision, 
-the discussion is discussed until consensus is reached.
+3. If one or more members of the Steering Group veto the decision, 
+the decision is discussed until consensus is reached.
 
 Decisions that adhere to more than one [repository in the scope of the HERMES project](#hermes-project-repositories)
-must be based on full consensus within the steering group. 
+must be based on full consensus within the Steering Group. 
 
 
 ### HERMES project repositories
 
-The following are the repositories that are governed by the steering group. 
+The following are the repositories that are governed by the Steering Group. 
 
 - <https://github.com/softwarepub/hermes> (Maintainer: Stephan Druskat)
 - <https://github.com/softwarepub/ci-templates> (Maintainer: Oliver Bertuch)
@@ -40,6 +40,12 @@ The following are the repositories that are governed by the steering group.
 - <https://github.com/softwarepub/schema.software-metadata.pub> (Maintainer: Michael Meinel)
 - <https://github.com/softwarepub/github-action> (Maintainer: Oliver Bertuch)
 - <https://github.com/softwarepub/concept-paper> (Maintainer: Stephan Druskat)
+
+New repositories may be added to, 
+and existing repositories may be removed from, 
+the project by the [Steering Group](#hermes-steering-group)
+by updating the above list.
+Any update needs lazy consensus [as defined above](#governance) from all members of the Steering Group.
 
 ### HERMES Steering Group
 
