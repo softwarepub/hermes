@@ -34,7 +34,6 @@ The following are the repositories that are governed by the steering group.
 
 - <https://github.com/softwarepub/hermes> (Maintainer: Stephan Druskat)
 - <https://github.com/softwarepub/ci-templates> (Maintainer: Oliver Bertuch)
-- <https://github.com/softwarepub/hermes-harvest-template> (Maintainer: tbc)
 - <https://github.com/softwarepub/hermes-plugin-git> (Maintainer: Sophie Kernchen)
 - <https://github.com/softwarepub/hermes-plugin-python> (Maintainer: Michael Meinel)
 - <https://github.com/softwarepub/showcase> (Maintainer: Oliver Bertuch)
