@@ -55,11 +55,10 @@ def plugin_to_schema_org(plugin: Dict[str, Any]) -> SchemaOrgSoftwarePublication
     name of the workflow step. If the plugin is marked as a Hermes ``builtin``, this is
     expressed using ``schema:isPartOf``.
     """
-    keywords = [f"hermes-step-{step}" for step in plugin.get("steps", [])]
-
-    if "harvest" in plugin.get("steps", []) and (
-        harvested_files := plugin.get("harvested_files", [])
-    ):
+    steps = plugin.get("steps", [])
+    keywords = [f"hermes-step-{step}" for step in steps]
+    if "harvest" in steps:
+        harvested_files = plugin.get("harvested_files", [])
         keywords += [f"hermes-harvest-{keywordify(file)}" for file in harvested_files]
 
     return SchemaOrgSoftwarePublication(
