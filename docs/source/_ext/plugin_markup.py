@@ -95,7 +95,7 @@ class PluginMarkupDirective(SphinxDirective):
                 by_alias=True, exclude_none=True
             )
             tag = f'<script type="application/ld+json">{markup}</script>'
-            tags.append(nodes.raw(rawsource=markup, text=tag, format="html"))
+            tags.append(nodes.raw(text=tag, format="html"))
 
         return tags
 
