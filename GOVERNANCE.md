@@ -61,3 +61,13 @@ they are asked to nominate a successor.
 If no successor is named,
 the two remaining members seek a successor affiliated with the Helmholtz center of the leaving member.
 New members of the Steering Group join if neither of the other two members disagrees with the decision to join. 
+
+### HERMES repository maintainers
+
+Each [repository in the scope of the HERMES project](#hermes-project-repositories) should have one maintainer at all times.
+The Steering Group appoints the maintainer for this repository in agreement with the appointed person.
+Whenever a maintainer wants to step down,
+they are asked to nominate a successor.
+If no successor is named,
+the Steering Group seeks a successor.
+One member of the Steering Group steps in as interim maintainer until a successor is found.
