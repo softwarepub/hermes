@@ -55,7 +55,8 @@ class CffHarvestPlugin(HermesHarvestPlugin):
         codemeta_dict = self._convert_cff_to_codemeta(cff_data)
         # TODO Replace the following temp patch for #112 once there is a new cffconvert version with cffconvert#309
         codemeta_dict = self._patch_author_emails(cff_dict, codemeta_dict)
-        codemeta_dict["version"] = str(codemeta_dict["version"])    # Convert Version to string
+        if "version" in codemeta_dict:
+            codemeta_dict["version"] = str(codemeta_dict["version"])   # Convert Version to string
 
         return codemeta_dict, {'local_path': str(cff_file)}
 
