@@ -24,10 +24,10 @@ from hermes.commands.marketplace import (
 logger = logging.getLogger(__name__)
 
 
-def log_message(text: str, text2: str = None) -> None:
+def log_message(text: str, detail: str = None) -> None:
     message = colorize("bold", "[Plugin Markup]") + " " + text
-    if text2 is not None:
-        message += " " + colorize("darkgreen", text2)
+    if detail is not None:
+        message += " " + colorize("darkgreen", detail)
     logger.info(message)
 
 
@@ -94,12 +94,12 @@ class PluginMarkupDirective(SphinxDirective):
         directory = filename.parent
 
         plugins_file = directory / self.arguments[0]
-        log_message("reading plugins file", text2=str(plugins_file))
+        log_message("reading plugins file", detail=str(plugins_file))
         with open(plugins_file) as file:
             plugin_data = json.load(file)
 
         plugins_schema_file = directory / self.arguments[1]
-        log_message("reading plugins schema file", text2=str(plugins_schema_file))
+        log_message("reading plugins schema file", detail=str(plugins_schema_file))
         with open(plugins_schema_file) as file:
             plugin_schema = json.load(file)
 
