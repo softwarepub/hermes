@@ -29,6 +29,9 @@ class SchemaOrgModel(BaseModel):
     type_: str = Field(alias="@type")
     id_: Optional[str] = Field(alias="@id", default=None)
 
+    def model_dump_jsonld(self):
+        return self.model_dump_json(by_alias=True, exclude_none=True)
+
 
 class SchemaOrgOrganization(SchemaOrgModel):
     """Validation and serialization of ``schema:Organization``.

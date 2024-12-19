@@ -109,9 +109,7 @@ class PluginMarkupDirective(SphinxDirective):
         log_message("converting plugins to markup")
         tags = []
         for plugin in plugin_data:
-            markup = plugin_to_schema_org(plugin).model_dump_json(
-                by_alias=True, exclude_none=True
-            )
+            markup = plugin_to_schema_org(plugin).model_dump_jsonld()
             tag = f'<script type="application/ld+json">{markup}</script>'
             tags.append(nodes.raw(text=tag, format="html"))
 
