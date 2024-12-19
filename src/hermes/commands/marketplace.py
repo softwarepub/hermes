@@ -46,8 +46,8 @@ class SchemaOrgOrganization(SchemaOrgModel):
     name: str
 
 
-class SchemaOrgSoftwarePublication(SchemaOrgModel):
-    """Validation and serialization of ``schema:SoftwarePublication``.
+class SchemaOrgSoftwareApplication(SchemaOrgModel):
+    """Validation and serialization of ``schema:SoftwareApplication``.
 
     This model does not incorporate all possible fields and is meant to be used merely
     for the purposes of the Hermes marketplace.
@@ -60,11 +60,11 @@ class SchemaOrgSoftwarePublication(SchemaOrgModel):
     install_url: Optional[str] = None
     abstract: Optional[str] = None
     author: Optional[SchemaOrgOrganization] = None
-    is_part_of: Optional["SchemaOrgSoftwarePublication"] = None
+    is_part_of: Optional["SchemaOrgSoftwareApplication"] = None
     keywords: List["str"] = None
 
 
-schema_org_hermes = SchemaOrgSoftwarePublication(id_=hermes_doi, name="hermes")
+schema_org_hermes = SchemaOrgSoftwareApplication(id_=hermes_doi, name="hermes")
 
 
 class PluginMarketPlaceParser(HTMLParser):
@@ -73,7 +73,7 @@ class PluginMarketPlaceParser(HTMLParser):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.is_json_ld: bool = False
-        self.plugins: List[SchemaOrgSoftwarePublication] = []
+        self.plugins: List[SchemaOrgSoftwareApplication] = []
 
     def handle_starttag(self, tag, attrs):
         if tag == "script" and ("type", "application/ld+json") in attrs:
@@ -84,7 +84,7 @@ class PluginMarketPlaceParser(HTMLParser):
 
     def handle_data(self, data):
         if self.is_json_ld:
-            plugin = SchemaOrgSoftwarePublication.model_validate_json(data)
+            plugin = SchemaOrgSoftwareApplication.model_validate_json(data)
             self.plugins.append(plugin)
 
 

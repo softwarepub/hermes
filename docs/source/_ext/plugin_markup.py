@@ -16,7 +16,7 @@ from sphinx.util.docutils import SphinxDirective
 
 from hermes.commands.marketplace import (
     SchemaOrgOrganization,
-    SchemaOrgSoftwarePublication,
+    SchemaOrgSoftwareApplication,
     schema_org_hermes,
 )
 
@@ -44,7 +44,7 @@ def keywordify(text: str) -> str:
     return re.sub(r"[^a-z]", "-", text)
 
 
-def plugin_to_schema_org(plugin: Dict[str, Any]) -> SchemaOrgSoftwarePublication:
+def plugin_to_schema_org(plugin: Dict[str, Any]) -> SchemaOrgSoftwareApplication:
     """Convert plugin metadata from the used JSON format to Schema.org.
 
     The ``plugin`` is transformed into a ``schema:SoftwareApplication``. For most
@@ -63,7 +63,7 @@ def plugin_to_schema_org(plugin: Dict[str, Any]) -> SchemaOrgSoftwarePublication
         harvested_files = plugin.get("harvested_files", [])
         keywords += [f"hermes-harvest-{keywordify(file)}" for file in harvested_files]
 
-    return SchemaOrgSoftwarePublication(
+    return SchemaOrgSoftwareApplication(
         name=plugin.get("name"),
         url=plugin.get("repository_url"),
         install_url=plugin.get("pypi_url"),
