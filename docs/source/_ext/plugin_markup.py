@@ -52,8 +52,10 @@ def plugin_to_schema_org(plugin: Dict[str, Any]) -> SchemaOrgSoftwarePublication
     is expressed as a ``schema:Organization`` using the given author field as the
     ``name``. The steps targeted by the plugin are expressed using the ``keyword`` field
     by transforming them to the keywords ``hermes-step-<STEP>`` where ``<STEP>`` is the
-    name of the workflow step. If the plugin is marked as a Hermes ``builtin``, this is
-    expressed using ``schema:isPartOf``.
+    name of the workflow step. The ``harvested_files`` are also transformed into
+    keywords by making the text "keyword-friendly" and prepending ``hermes-harvest-``.
+    If the plugin is marked as a Hermes ``builtin``, this is expressed using
+    ``schema:isPartOf``.
     """
     steps = plugin.get("steps", [])
     keywords = [f"hermes-step-{step}" for step in steps]
