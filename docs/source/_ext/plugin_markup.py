@@ -80,7 +80,7 @@ class PluginMarkupDirective(SphinxDirective):
     The plugins file and its jsonschema are passed to the directive as parameters, i.e.,
     in Markdown:
 
-    .. code:: markdown
+    .. code-block:: markdown
 
        ```{plugin-markup} path/to/plugins.json path/to/plugins-schema.json
        ```
