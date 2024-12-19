@@ -22,9 +22,8 @@
 #
 import os
 import sys
-from pathlib import Path
 sys.path.insert(0, os.path.abspath('../../src'))
-sys.path.append(str(Path('_ext').resolve()))
+sys.path.append(os.path.abspath('_ext'))
 
 
 # -- Project information -----------------------------------------------------
