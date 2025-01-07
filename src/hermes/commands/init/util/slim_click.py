@@ -5,12 +5,29 @@
 """
 Slim, self-made version of click so we don't need to use it for simple console questions.
 """
+
 import logging
 from enum import Enum
 
 PRINT_DEBUG = False
-"""If this is true, echo() will print texts with debug=True."""
+"""If true, echo() will print debug texts."""
 
+AUTO_LOG_ON_ECHO = True
+"""
+If true, echo() will add lines to the log file based on Formats.get_log_type.
+Otherwise use the log_as parameter of the echo() command.
+"""
+
+USE_FANCY_HYPERLINKS = False
+"""If true, links will be hidden in the console. Not all consoles support this however."""
+
+max_steps = 0
+"""Set this to have a upper limit for the step-headlines created by next_step()"""
+current_steps = 0
+"""The number if the last printed step"""
+
+default_file_logger: logging.Logger
+"""The file logger used by echo if AUTO_LOG_ON_ECHO"""
 
 class Formats(Enum):
     HEADER = '\033[95m'
@@ -33,24 +50,42 @@ class Formats(Enum):
     def get_ansi(self) -> str:
         return getattr(self, "ansi", "") or self.value
 
+    def get_log_type(self, default: int = logging.INFO) -> int:
+        if Formats.WARNING.value in self.value:
+            return logging.WARNING
+        if Formats.FAIL.value in self.value:
+            return logging.ERROR
+        if Formats.OKGREEN.value in self.value:
+            return logging.INFO
+        return default
 
-def echo(text: str, debug: bool = False, formatting: Formats = Formats.EMPTY):
+
+def echo(text: str, formatting: Formats = Formats.EMPTY, log_as: int = logging.NOTSET):
     """
+    Prints the text with the given formatting. If log_as is set or AUTO_LOG_ON_ECHO is true it gets logged as well.
     :param text: The printed text.
-    :param debug: If debug, the text will only be printed when slim_click.PRINT_DEBUG is true.
     :param formatting: You can use the Formats Enum to give the text a special color or formatting.
+    :param log_as: Creates a log entry with the given text if this is set.
     """
+    # Get logging type from formatting if AUTO_LOG_ON_ECHO
+    if AUTO_LOG_ON_ECHO and log_as == logging.NOTSET and text != "":
+        log_as = formatting.get_log_type(logging.INFO)
+    # Add text to log if there is a logger
+    if log_as != logging.NOTSET and default_file_logger:
+        default_file_logger.log(log_as, text)
+    # Format the text for the console
     if formatting != Formats.EMPTY:
         text = f"{formatting.get_ansi()}{text}{Formats.ENDC.get_ansi()}"
-    if (not debug) or PRINT_DEBUG:
-        print(("DEBUG: " if debug else "") + str(text))
+    # Print it
+    if (log_as != logging.DEBUG) or PRINT_DEBUG:
+        print(("DEBUG: " if log_as == logging.DEBUG else "") + str(text))
 
 
 def debug_info(*args, **kwargs):
     kwarg_lines = [f"{str(k)} = {str(v)}" for k, v in kwargs.items()]
     kwarg_lines.extend([str(arg) for arg in args])
     for text in kwarg_lines:
-        echo(str(text), True)
+        echo(str(text), log_as=logging.DEBUG)
 
 
 def confirm(text: str, default: bool = True) -> bool:
@@ -58,13 +93,13 @@ def confirm(text: str, default: bool = True) -> bool:
     while True:
         _answer = input(text + (" [Y/n]" if default else " [y/N]") + ": \n").lower()
         if _answer == "y":
-            echo("")
+            print("")
             return True
         elif _answer == "n":
-            echo("")
+            print("")
             return False
         elif _answer == "":
-            echo("Y\n" if default else "N\n")
+            print("Y\n" if default else "N\n")
             return default
         else:
             echo("Error: invalid input", formatting=Formats.FAIL)
@@ -92,7 +127,7 @@ def choose(text: str, options: list[str], default: int = 0) -> int:
     :return: The index of the selected option
     """
     assert 0 <= default < len(options), "Default index should match the options list."
-    print(text)
+    echo(text)
     for i, option in enumerate(options):
         index = f"{i:>2d}"
         if i == default:
@@ -113,22 +148,16 @@ def choose(text: str, options: list[str], default: int = 0) -> int:
 
 
 def headline(text: str):
-    echo("")
+    """Prints a big headline onto the console"""
+    print("")
     echo(text, formatting=Formats.HEADER)
 
 
-current_steps = 0
-max_steps = 0
-
-
 def next_step(description: str):
+    """Keeps track of named steps by printing matching headlines. Make sure to set max_steps beforehand"""
     global current_steps
     current_steps += 1
     headline(f"-- Step {current_steps} of {max_steps}: {description} --")
-
-
-USE_FANCY_HYPERLINKS = False
-"""If true links will be hidden in the console. Not all consoles support this however."""
 
 
 def create_console_hyperlink(url: str, word: str) -> str:
@@ -144,7 +173,7 @@ class ColorLogHandler(logging.Handler):
 
     def emit(self, record):
         log_entry = self.formatter.format(record)
-        echo(log_entry)
+        print(log_entry)
 
 
 class ColorLogFormatter(logging.Formatter):

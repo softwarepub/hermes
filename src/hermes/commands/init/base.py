@@ -6,8 +6,6 @@ import argparse
 import os
 import subprocess
 import sys
-from logging import StreamHandler
-
 import requests
 import toml
 import re
@@ -15,15 +13,14 @@ import logging
 from enum import Enum, auto
 from urllib.parse import urlparse, urljoin
 from pathlib import Path
-
+from importlib import metadata
 from pydantic import BaseModel
 from dataclasses import dataclass
-# from hermes import logger
-from hermes.commands.base import HermesCommand
-import hermes.commands.init.connect_github as connect_github
-import hermes.commands.init.connect_gitlab as connect_gitlab
-import hermes.commands.init.connect_zenodo as connect_zenodo
-import hermes.commands.init.slim_click as sc
+from hermes.commands.base import HermesCommand, HermesPlugin
+import hermes.commands.init.util.connect_github as connect_github
+import hermes.commands.init.util.connect_gitlab as connect_gitlab
+import hermes.commands.init.util.connect_zenodo as connect_zenodo
+import hermes.commands.init.util.slim_click as sc
 
 
 TUTORIAL_URL = "https://docs.software-metadata.pub/en/latest/tutorials/automated-publication-with-ci.html"
@@ -144,6 +141,18 @@ def convert_remote_url(url: str) -> str:
     return url
 
 
+def get_builtin_plugins(plugin_commands: list[str]) -> dict[str: HermesPlugin]:
+    plugins = {}
+    for plugin_command_name in plugin_commands:
+        entry_point_group = f"hermes.{plugin_command_name}"
+        group_plugins = {
+            entry_point.name: entry_point.load()
+            for entry_point in metadata.entry_points(group=entry_point_group)
+        }
+        plugins.update(group_plugins)
+    return plugins
+
+
 class HermesInitSettings(BaseModel):
     """Configuration of the ``init`` command."""
     pass
@@ -171,6 +180,8 @@ class HermesInitCommand(HermesCommand):
             "deposit_extra_files": "",
             "push_branch": "main"
         }
+        self.plugin_relevant_commands = ["harvest", "deposit"]
+        self.builtin_plugins: dict[str: HermesPlugin] = get_builtin_plugins(self.plugin_relevant_commands)
 
     def init_command_parser(self, command_parser: argparse.ArgumentParser) -> None:
         command_parser.add_argument('--template-branch', nargs=1, default="",
@@ -180,26 +191,32 @@ class HermesInitCommand(HermesCommand):
         pass
 
     def refresh_folder_info(self):
-        sc.echo("Scanning folder...", debug=True)
+        sc.debug_info("Scanning folder...")
         self.folder_info = scout_current_folder()
-        sc.echo("Scan complete.", debug=True)
+        sc.debug_info("Scan complete.")
 
-    def setup_colorfull_logging(self):
+    def setup_colorful_logging(self):
         # Remove old StreamHandler
         logging.getHandlerByName("terminal").setLevel(logging.CRITICAL)
         # Set new colorful Handler
         self.log.setLevel(level=logging.DEBUG)
         self.log.addHandler(sc.ColorLogHandler())
-        # Test log
+        # Test log TODO remove this
         self.log.debug("debug mist")
         self.log.info("info mist")
-        self.log.warning('\033[93m' + "warning mist" + '\033[0m')
+        self.log.warning("warning mist")
         self.log.error("error mist")
         self.log.critical("critical mist")
 
     def __call__(self, args: argparse.Namespace) -> None:
+        print(args)
+        print(self.plugins)
+        print(self.builtin_plugins.keys())
+
+        return
+
         # Setup logging
-        self.setup_colorfull_logging()
+        self.setup_colorful_logging()
 
         # Save command parameter (template branch)
         if hasattr(args, "template_branch"):
@@ -408,7 +425,7 @@ class HermesInitCommand(HermesCommand):
         #     self.tokens[self.deposit_platform] = "REFRESH_TOKEN:" + connect_zenodo.get_refresh_token()
         #     if self.tokens[self.deposit_platform]:
         #         sc.echo("OAuth at Zenodo was successful.")
-        #         sc.echo(self.tokens[self.deposit_platform], debug=True)
+        #         sc.debug_info(self.tokens[self.deposit_platform])
         #     else:
         #         sc.echo("Something went wrong while doing OAuth. You'll have to do it manually instead.")
         if self.setup_method == "m" or self.tokens[self.deposit_platform] == '':

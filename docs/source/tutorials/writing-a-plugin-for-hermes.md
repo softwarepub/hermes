@@ -26,7 +26,7 @@ If you never used HERMES before, you might want to check the tutorial: [Automate
 
 HERMES uses a plugin architecture. Therefore, users are invited to contribute own features.
 The structure for every plugin follows the same schema.
-There is a top-level base class for every plugin. In this `HermesPlugin` class there is one abstract method `__ call __` which needs to be overwritten.
+There is a top-level base class for every plugin. In this `HermesPlugin` class there is one abstract method `__call__` which needs to be overwritten.
 Furthermore, the `HermesCommand` class provides all needs for writing a plugin used in a HERMES command.
 So the `HermesPlugin`s call method gets an instance of the `HermesCommand` that triggered this plugin to run.
 In our case this will be the `HermesHarvestCommand` which calls all harvest plugins.
@@ -38,6 +38,7 @@ To overwrite a parameter from command line, use the `-O` command line option fol
 E.g., you can set your authentication token for InvenioRDM by adding the following options to your call to `hermes deposit`:
 ```shell
 hermes deposit -O invenio_rdm.auth_token YourSecretAuthToken
+```
 
 ## Set Up Plugin
 To write a new plugin, it is important to follow the given structure.
@@ -65,9 +66,9 @@ class GitHarvestPlugin(HermesHarvestPlugin):
 ```
  
 The code uses the `HermesHarvestPlugin` as base class and pydantics Basemodel for the settings. In the `GitHarvestSettings` you
-can see that an additional parameter is defined. The Parameter `from_branch` is specific for this plugin and can be accessed inside the plugin using `self.settings.harvest.git.git_branch` as long as our plugin will be named git.
+can see that an additional parameter is defined. The Parameter `from_branch` is specific for this plugin and can be accessed inside the plugin using `self.settings.harvest.git.from_branch` as long as our plugin will be named git.
 In the `hermes.toml` this would be achieved by [harvest.{plugin_name}].
-The `GitHarvestSettings` are associated with the `GitHarvestPlugin`. In the plugin you need to overwrite the `__ call __` method.
+The `GitHarvestSettings` are associated with the `GitHarvestPlugin`. In the plugin you need to overwrite the `__call__` method.
 For now a simple Hello World will do. The method returns two dictionaries. These will contain the harvested data in CodeMeta (JSON-LD) and additional information, e.g., to provide provenance information.
 That is the basic structure for the plugins source code.
 

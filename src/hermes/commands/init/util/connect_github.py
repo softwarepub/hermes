@@ -5,8 +5,8 @@
 import requests
 from base64 import b64encode
 from nacl import encoding, public
-from hermes.commands.init.oauth_process import OauthProcess
-import hermes.commands.init.slim_click as sc
+from hermes.commands.init.util.oauth_process import OauthProcess
+import hermes.commands.init.util.slim_click as sc
 
 
 local_port = 8333

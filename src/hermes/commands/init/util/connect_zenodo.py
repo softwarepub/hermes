@@ -4,8 +4,8 @@
 
 import time
 import oauthlib.oauth2.rfc6749.errors
-from hermes.commands.init.oauth_process import OauthProcess
-import hermes.commands.init.slim_click as sc
+from hermes.commands.init.util.oauth_process import OauthProcess
+import hermes.commands.init.util.slim_click as sc
 
 
 USING_SANDBOX_AS_DEFAULT = True

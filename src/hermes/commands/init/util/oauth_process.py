@@ -16,7 +16,7 @@ import json
 from threading import Event
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, urlparse
-import hermes.commands.init.slim_click as sc
+import hermes.commands.init.util.slim_click as sc
 
 PREFER_DEVICE_FLOW = True
 DEACTIVATE_BROWSER_OPENING = False
@@ -116,10 +116,10 @@ class OauthProcess:
 
     def get_tokens_from_device_flow(self) -> dict[str: str]:
         if self.device_code_url == "" or self.token_url == "":
-            sc.echo(f"Device-Flow is not available for {self.name}", debug=True)
+            sc.debug_info(f"Device-Flow is not available for {self.name}")
             return {}
         sc.echo(f"Using Device-Flow to authorize with {self.name}")
-        sc.echo(f"Device URL = {self.device_code_url}", debug=True)
+        sc.debug_info(f"Device URL = {self.device_code_url}")
 
         # Getting the device code
         data = {

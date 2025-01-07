@@ -5,8 +5,8 @@
 import requests
 from urllib.parse import urlparse, urljoin, quote
 from datetime import datetime, timedelta
-from hermes.commands.init.oauth_process import OauthProcess
-import hermes.commands.init.slim_click as sc
+from hermes.commands.init.util.oauth_process import OauthProcess
+import hermes.commands.init.util.slim_click as sc
 
 
 default_scopes = "api write_repository"
