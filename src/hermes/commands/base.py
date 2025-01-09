@@ -45,18 +45,19 @@ class HermesCommand(abc.ABC):
         self.log = logging.getLogger(f"hermes.{self.command_name}")
         self.errors = []
 
-    def init_plugins(self):
+    @classmethod
+    def init_plugins(cls):
         """Collect and initialize the plugins available for the HERMES command."""
 
         # Collect all entry points for this group (i.e., all valid plug-ins for the step)
-        entry_point_group = f"hermes.{self.command_name}"
+        entry_point_group = f"hermes.{cls.command_name}"
         group_plugins = {
             entry_point.name: entry_point.load()
             for entry_point in metadata.entry_points(group=entry_point_group)
         }
 
         # Collect the plug-in specific configurations
-        self.derive_settings_class({
+        cls.derive_settings_class({
             plugin_name: plugin_class.settings_class
             for plugin_name, plugin_class in group_plugins.items()
             if hasattr(plugin_class, "settings_class") and plugin_class.settings_class is not None
