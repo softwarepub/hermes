@@ -106,7 +106,7 @@ class BaseDepositPlugin(HermesPlugin):
         pass
 
 
-class DepositSettings(BaseModel):
+class _DepositSettings(BaseModel):
     """Generic deposition settings."""
 
     target: str = ""
@@ -116,7 +116,7 @@ class HermesDepositCommand(HermesCommand):
     """ Deposit the curated metadata to repositories. """
 
     command_name = "deposit"
-    settings_class = DepositSettings
+    settings_class = _DepositSettings
 
     def init_command_parser(self, command_parser: argparse.ArgumentParser) -> None:
         command_parser.add_argument('--file', '-f', nargs=1, action='append',

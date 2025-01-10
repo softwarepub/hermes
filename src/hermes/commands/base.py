@@ -16,7 +16,7 @@ from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class HermesSettings(BaseSettings):
+class _HermesSettings(BaseSettings):
     """Root class for HERMES configuration model."""
 
     model_config = SettingsConfigDict(env_file_encoding='utf-8')
@@ -31,7 +31,7 @@ class HermesCommand(abc.ABC):
     """
 
     command_name: str = ""
-    settings_class: Type = HermesSettings
+    settings_class: Type = _HermesSettings
 
     def __init__(self, parser: argparse.ArgumentParser):
         """Initialize a new instance of any HERMES command.
