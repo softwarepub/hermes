@@ -21,6 +21,7 @@ are made by *lazy consensus*:
 the decision becomes effective and can be acted upon. 
 The maintainer and any member of the Steering Group can ask for a longer decision period, 
 which must be granted. 
+During this period, the steering committee should meet to discuss the decision.
 3. If one or more members of the Steering Group veto the decision, 
 the decision is discussed until consensus is reached.
 
