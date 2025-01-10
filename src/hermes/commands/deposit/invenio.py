@@ -22,7 +22,7 @@ from hermes.commands.deposit.error import DepositionUnauthorizedError
 from hermes.error import MisconfigurationError
 from hermes.model.context import CodeMetaContext
 from hermes.model.path import ContextPath
-from hermes.utils import hermes_user_agent
+from hermes.utils import hermes_doi, hermes_user_agent
 
 
 _log = logging.getLogger("cli.deposit.invenio")
@@ -267,6 +267,21 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
         if client is None:
             auth_token = self.config.auth_token
+
+            # TODO reactivate this code again, once we use Zenodo OAuth again (once the refresh token works)
+            # If auth_token is a refresh-token, get the auth-token from that.
+            # if str(auth_token).startswith("REFRESH_TOKEN:"):
+            #     _log.debug(f"Getting token from refresh_token {auth_token}")
+            #     # TODO How do we know if this targets sandbox or not?
+            #     # Now we assume it's sandbox
+            #     connect_zenodo.setup(True)
+            #     tokens = connect_zenodo.oauth_process() \
+            #         .get_tokens_from_refresh_token(auth_token.split("REFRESH_TOKEN:")[1])
+            #     _log.debug(f"Tokens: {str(tokens)}")
+            #     auth_token = tokens.get("access_token", "")
+            #     _log.debug(f"Auth Token: {auth_token}")
+            #     # TODO Update the secret (github/lab token is needed)
+
             if not auth_token:
                 raise DepositionUnauthorizedError("No valid auth token given for deposition platform")
             self.client = self.invenio_client_class(self.config,
@@ -376,6 +391,20 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         # Store link to latest draft to be used in :func:`update_metadata`.
         old_deposit = response.json()
         self.links.update(old_deposit["links"])
+
+    def related_identifiers(self):
+        """Return desired related identifiers.
+
+        In all cases, we add HERMES as ``isCompiledBy`` relation to be able to trace and
+        advertise HERMES usage across publication repositories.
+        """
+        return [
+            {
+                "identifier": hermes_doi,
+                "relation": "isCompiledBy",
+                "scheme": "doi",
+            },
+        ]
 
     def update_metadata(self) -> None:
         """Update the metadata of a draft."""
@@ -555,7 +584,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
             # TODO: A good source for this could be `tool.poetry.keywords` in pyproject.toml.
             "keywords": None,
             "notes": None,
-            "related_identifiers": None,
+            "related_identifiers": self.related_identifiers(),
             # TODO: Use `contributors`. In the case of the hermes workflow itself, the
             # contributors are currently all in `creators` already. So for now, we set this
             # to `None`. Change this when relationship between authors and contributors can

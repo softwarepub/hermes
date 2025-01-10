@@ -14,7 +14,7 @@ SPDX-FileContributor: Michael Meinel
 
 # Overview
 
-```{tip}
+```{note}
 This is work in progress.
 ```
 
