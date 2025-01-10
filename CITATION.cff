@@ -14,9 +14,9 @@ title: hermes
 message: >-
   If you use this software, please cite it using the
   metadata from this file.
-version: 0.8.1
+version: 0.9.0
 license: "Apache-2.0"
-abstract: "Tool to automate software publication. Not stable yet."
+abstract: "Tool to automate software publication."
 type: software
 authors:
   - given-names: Michael
