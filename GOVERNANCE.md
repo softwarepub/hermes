@@ -60,8 +60,9 @@ Forschungszentrum Jülich (FZJ).
 Currently the Steering Group consists of:
 
 - Stephan Druskat (DLR), stephan.druskat@dlr.de
-- David Pape (HZDR)
-- Nitai Heeb (FZJ)
+- David Pape (HZDR), d.pape@hzdr.de
+- Nitai Heeb (FZJ), n.heeb@fz-juelich.de
+
 
 Whenever a member of the Steering Group wants to step down,
 they are asked to nominate a successor.
