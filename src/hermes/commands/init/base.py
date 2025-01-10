@@ -554,7 +554,7 @@ class HermesInitCommand(HermesCommand):
             "When should the automated HERMES process start?",
             [
                 f"When I push the current branch {self.folder_info.current_branch}",
-                "When I push an other branch",
+                "When I push another branch",
                 "When a push a specific tag (not implemented)",
             ]
         )
