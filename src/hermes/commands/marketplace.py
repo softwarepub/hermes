@@ -1,9 +1,9 @@
-# SPDX-FileCopyrightText: 2024 Helmholtz-Zentrum Dresden-Rossendorf
+# SPDX-FileCopyrightText: 2024 Helmholtz-Zentrum Dresden-Rossendorf, German Aerospace Center (DLR)
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-FileContributor: David Pape
+# SPDX-FileContributor: Stephan Druskat
 
 """Basic CLI to list plugins from the Hermes marketplace."""
-
 from html.parser import HTMLParser
 from typing import List, Optional
 
@@ -87,6 +87,16 @@ class PluginMarketPlaceParser(HTMLParser):
             self.plugins.append(plugin)
 
 
+def _sort_plugins_by_step(plugins: list[SchemaOrgSoftwareApplication]) -> dict[str, list[SchemaOrgSoftwareApplication]]:
+    sorted_plugins = {k:[] for k in ["harvest", "process", "curate", "deposit", "postprocess"]}
+    for p in plugins:
+        for kw in p.keywords:
+            if kw.startswith("hermes-step-"):
+                sorted_plugins[kw.removeprefix("hermes-step-")].append(p)
+    return sorted_plugins
+
+
+
 def main():
     response = requests.get(MARKETPLACE_URL, headers={"User-Agent": hermes_user_agent})
     response.raise_for_status()
@@ -95,20 +105,26 @@ def main():
     parser.feed(response.text)
 
     print(
-        "A detailed list of available plugins can be found on the Hermes website at",
-        MARKETPLACE_URL,
+        "A detailed list of available plugins can be found on the HERMES website at",
+        MARKETPLACE_URL + "."
     )
+
+    def _plugin_loc(_plugin: SchemaOrgSoftwareApplication) -> str:
+        return "builtin" if _plugin.is_part_of == schema_org_hermes else (_plugin.url or "")
 
     if parser.plugins:
         print()
-        alignment = max(map(lambda plugin: len(plugin.name), parser.plugins)) + 1
-        for plugin in parser.plugins:
-            where = (
-                "builtin"
-                if plugin.is_part_of == schema_org_hermes
-                else (plugin.url or "")
-            )
-            print(f"{plugin.name:>{alignment}} {where}")
+        max_name_len = max(map(lambda plugin: len(plugin.name), parser.plugins))
+        max_loc_len = max(map(lambda plugin: len(_plugin_loc(plugin)), parser.plugins))
+        row_sep = "-" * (17 + max_name_len + max_loc_len)
+        print("HERMES step   " + "Plugin name" + (" " * (max_name_len -8)) + "Plugin location")
+        print(row_sep)
+        name_alignment = max(map(lambda plugin: len(plugin.name), parser.plugins))# + 1
+        plugins_sorted = _sort_plugins_by_step(parser.plugins)
+        for step in plugins_sorted.keys():
+            for plugin in plugins_sorted[step]:
+                print(f"{step:>11}   {plugin.name:{name_alignment}}   {_plugin_loc(plugin)}")
+        print(row_sep)
         print()
 
 
