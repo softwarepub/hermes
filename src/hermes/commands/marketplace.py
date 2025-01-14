@@ -13,8 +13,7 @@ from pydantic.alias_generators import to_camel
 
 from hermes.utils import hermes_doi, hermes_user_agent
 
-MARKETPLACE_URL = "https://hermes.software-metadata.pub"
-MARKETPLACE_URL_DISPLAY = f"{MARKETPLACE_URL}#plugins"
+MARKETPLACE_URL = "https://hermes.software-metadata.pub/marketplace"
 
 
 class SchemaOrgModel(BaseModel):
@@ -96,8 +95,8 @@ def main():
     parser.feed(response.text)
 
     print(
-        "A detailed list of available plugins can be found on the "
-        f"Hermes website at {MARKETPLACE_URL_DISPLAY}"
+        "A detailed list of available plugins can be found on the Hermes website at",
+        MARKETPLACE_URL,
     )
 
     if parser.plugins:
