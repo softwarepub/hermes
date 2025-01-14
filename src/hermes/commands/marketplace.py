@@ -118,11 +118,10 @@ def main():
         row_sep = "-" * (17 + max_name_len + max_loc_len)
         print("HERMES step   " + "Plugin name" + (" " * (max_name_len - 8)) + "Plugin location")
         print(row_sep)
-        name_alignment = max(map(lambda plugin: len(plugin.name), parser.plugins))
         plugins_sorted = _sort_plugins_by_step(parser.plugins)
         for step in plugins_sorted.keys():
             for plugin in plugins_sorted[step]:
-                print(f"{step:>11}   {plugin.name:{name_alignment}}   {_plugin_loc(plugin)}")
+                print(f"{step:>11}   {plugin.name:{max_name_len}}   {_plugin_loc(plugin)}")
         print(row_sep)
         print()
 
