@@ -88,13 +88,12 @@ class PluginMarketPlaceParser(HTMLParser):
 
 
 def _sort_plugins_by_step(plugins: list[SchemaOrgSoftwareApplication]) -> dict[str, list[SchemaOrgSoftwareApplication]]:
-    sorted_plugins = {k:[] for k in ["harvest", "process", "curate", "deposit", "postprocess"]}
+    sorted_plugins = {k: [] for k in ["harvest", "process", "curate", "deposit", "postprocess"]}
     for p in plugins:
         for kw in p.keywords:
             if kw.startswith("hermes-step-"):
                 sorted_plugins[kw.removeprefix("hermes-step-")].append(p)
     return sorted_plugins
-
 
 
 def main():
@@ -117,9 +116,9 @@ def main():
         max_name_len = max(map(lambda plugin: len(plugin.name), parser.plugins))
         max_loc_len = max(map(lambda plugin: len(_plugin_loc(plugin)), parser.plugins))
         row_sep = "-" * (17 + max_name_len + max_loc_len)
-        print("HERMES step   " + "Plugin name" + (" " * (max_name_len -8)) + "Plugin location")
+        print("HERMES step   " + "Plugin name" + (" " * (max_name_len - 8)) + "Plugin location")
         print(row_sep)
-        name_alignment = max(map(lambda plugin: len(plugin.name), parser.plugins))# + 1
+        name_alignment = max(map(lambda plugin: len(plugin.name), parser.plugins))
         plugins_sorted = _sort_plugins_by_step(parser.plugins)
         for step in plugins_sorted.keys():
             for plugin in plugins_sorted[step]:
