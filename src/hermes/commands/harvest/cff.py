@@ -19,7 +19,9 @@ from cffconvert import Citation
 from hermes.commands.harvest.base import HermesHarvestPlugin, HermesHarvestCommand
 from hermes.model.context import ContextPath
 from hermes.model.errors import HermesValidationError
+from hermes.commands.harvest.base import HermesHarvestPlugin, HermesHarvestCommand
 from hermes.model.ld_utils import jsonld_dict
+
 
 # TODO: should this be configurable via a CLI option?
 _CFF_VERSION = '1.2.0'
@@ -47,6 +49,7 @@ class CffHarvestPlugin(HermesHarvestPlugin):
 
         # Validate the content to be correct CFF
         cff_dict = self._load_cff_from_file(cff_data)
+
         if command.settings.cff.enable_validation and not self._validate(cff_file, cff_dict):
             raise HermesValidationError(cff_file)
 
@@ -55,6 +58,8 @@ class CffHarvestPlugin(HermesHarvestPlugin):
         # TODO Replace the following temp patch for #112 once there is a new cffconvert version with cffconvert#309
         codemeta_dict = jsonld_dict(self._patch_author_emails(cff_dict, codemeta_dict))
         codemeta_dict.add_context({'legalName': {'@id': "schema:name"}})
+        if "version" in codemeta_dict:
+            codemeta_dict["version"] = str(codemeta_dict["version"])   # Convert Version to string
         return codemeta_dict, {'local_path': str(cff_file)}
 
     def _load_cff_from_file(self, cff_data: str) -> t.Any:

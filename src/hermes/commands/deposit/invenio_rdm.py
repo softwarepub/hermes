@@ -69,6 +69,10 @@ class InvenioRDMResolver(InvenioResolver):
 
         return license_info
 
+    @staticmethod
+    def _extract_license_id_from_response(data: dict) -> str:
+        return data["id"]
+
     def _search_license_info(self, _url: str, valid_licenses: dict) -> t.Optional[dict]:
         for license_info in valid_licenses['hits']['hits']:
             try:
