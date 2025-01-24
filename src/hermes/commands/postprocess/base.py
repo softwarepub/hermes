@@ -15,7 +15,7 @@ class HermesPostprocessPlugin(HermesPlugin):
     pass
 
 
-class PostprocessSettings(BaseModel):
+class _PostprocessSettings(BaseModel):
     """Generic post-processing settings."""
 
     execute: list = []
@@ -25,7 +25,7 @@ class HermesPostprocessCommand(HermesCommand):
     """Post-process the published metadata after deposition."""
 
     command_name = "postprocess"
-    settings_class = PostprocessSettings
+    settings_class = _PostprocessSettings
 
     def __call__(self, args: argparse.Namespace) -> None:
         pass

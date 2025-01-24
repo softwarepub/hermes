@@ -139,7 +139,7 @@ def convert_remote_url(url: str) -> str:
     return url
 
 
-class HermesInitSettings(BaseModel):
+class _HermesInitSettings(BaseModel):
     """Configuration of the ``init`` command."""
     pass
 
@@ -147,7 +147,7 @@ class HermesInitSettings(BaseModel):
 class HermesInitCommand(HermesCommand):
     """ Install HERMES onto a project. """
     command_name = "init"
-    settings_class = HermesInitSettings
+    settings_class = _HermesInitSettings
 
     def __init__(self, parser: argparse.ArgumentParser):
         super().__init__(parser)
@@ -554,7 +554,7 @@ class HermesInitCommand(HermesCommand):
             "When should the automated HERMES process start?",
             [
                 f"When I push the current branch {self.folder_info.current_branch}",
-                "When I push an other branch",
+                "When I push another branch",
                 "When a push a specific tag (not implemented)",
             ]
         )

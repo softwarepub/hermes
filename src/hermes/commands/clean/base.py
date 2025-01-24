@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from hermes.commands.base import HermesCommand
 
 
-class HermesCleanSettings(BaseModel):
+class _HermesCleanSettings(BaseModel):
     """Configuration of the ``clean`` command."""
     pass
 
@@ -21,7 +21,7 @@ class HermesCleanCommand(HermesCommand):
     """ Clean up caches from previous HERMES runs. """
 
     command_name = "clean"
-    settings_class = HermesCleanSettings
+    settings_class = _HermesCleanSettings
 
     def __call__(self, args: argparse.Namespace) -> None:
         self.log.info("Removing HERMES caches...")
