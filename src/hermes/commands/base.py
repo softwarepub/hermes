@@ -104,13 +104,6 @@ class HermesCommand(abc.ABC):
             help="Configuration file in TOML format",
         )
 
-        # Add a new argument to accept a URL for harvesting
-        parser.add_argument(
-            "--url",
-            type=str,
-            help="URL from which to extract metadata"
-        )
-        
         plugin_args = parser.add_argument_group("Extra options")
         plugin_args.add_argument(
             "-O",
@@ -138,7 +131,7 @@ class HermesCommand(abc.ABC):
     def load_settings(self, args: argparse.Namespace):
         """Load settings from the configuration file (passed in from command line)."""
 
-        toml_data = toml.load(args.path / args.config)
+        toml_data = toml.load("." / args.config)
         self.root_settings = HermesCommand.settings_class.model_validate(toml_data)
         self.settings = getattr(self.root_settings, self.command_name)
 
