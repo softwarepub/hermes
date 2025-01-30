@@ -19,6 +19,7 @@ from cffconvert import Citation
 from hermes.model.context import ContextPath
 from hermes.model.errors import HermesValidationError
 from hermes.commands.harvest.base import HermesHarvestPlugin, HermesHarvestCommand
+from hermes.commands.harvest.util.remote_harvesting import normalize_url, fetch_metadata_from_repo
 
 
 # TODO: should this be configurable via a CLI option?
@@ -106,18 +107,23 @@ class CffHarvestPlugin(HermesHarvestPlugin):
             return True
 
     def _get_single_cff(self, path: pathlib.Path) -> t.Optional[pathlib.Path]:
-        # Find CFF files in directories and subdirectories
-        cff_file = path / 'CITATION.cff'
-        if cff_file.exists():
-            return cff_file
+        if str(path).startswith("http:") or str(path).startswith("https:"):
+            # Find CFF files from the provided URL repository
+            normalized_url = normalize_url(str(path))
+            return fetch_metadata_from_repo(normalized_url, "CITATION.cff")
+        else:
+            # Find CFF files in directories and subdirectories
+            cff_file = path / 'CITATION.cff'
+            if cff_file.exists():
+                return cff_file
 
-        # TODO: Do we really want to search recursive? CFF convention is the file should be at the topmost dir,
-        #       which is given via the --path arg. Maybe add another option to enable pointing to a single file?
-        #       (So this stays "convention over configuration")
-        files = list(path.rglob('**/CITATION.cff'))
-        if len(files) == 1:
-            return pathlib.Path(files[0])
-        # TODO: Shouldn't we log/echo the found CFF files so a user can debug/cleanup?
-        # TODO: Do we want to hand down a logging instance via Hermes context or just encourage
-        #       peeps to use the Click context?
-        return None
+            # TODO: Do we really want to search recursive? CFF convention is the file should be at the topmost dir,
+            #       which is given via the --path arg. Maybe add another option to enable pointing to a single file?
+            #       (So this stays "convention over configuration")
+            files = list(path.rglob('**/CITATION.cff'))
+            if len(files) == 1:
+                return pathlib.Path(files[0])
+            # TODO: Shouldn't we log/echo the found CFF files so a user can debug/cleanup?
+            # TODO: Do we want to hand down a logging instance via Hermes context or just encourage
+            #       peeps to use the Click context?
+            return None
