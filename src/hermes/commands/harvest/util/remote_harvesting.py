@@ -3,7 +3,7 @@ import re
 import requests
 import tempfile
 import typing as t
-
+import os
 
 def normalize_url(path: str) -> str:
     """Normalize a given URL by correcting backslashes and fixing malformed HTTPS."""
@@ -73,3 +73,14 @@ def _download_to_tempfile(url: str, filename: str) -> pathlib.Path:
     except Exception as e:
         print(f"Error downloading {filename}: {e}")
         return None
+
+
+def remove_temp_file(file_path: pathlib.Path, temp_dir: pathlib.Path = pathlib.Path("C:/Temp")):
+    """
+    Removes a temporary file if it is inside the temp directory.
+
+    :param file_path: The file path to check and remove.
+    :param temp_dir: The directory considered as temporary (default: "C:/Temp").
+    """
+    if str(file_path).startswith(str(temp_dir)):
+        os.remove(file_path)
