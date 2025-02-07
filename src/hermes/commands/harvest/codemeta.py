@@ -13,7 +13,7 @@ import typing as t
 from hermes.commands.harvest.base import HermesHarvestCommand, HermesHarvestPlugin
 from hermes.commands.harvest.util.validate_codemeta import validate_codemeta
 from hermes.model.errors import HermesValidationError
-from hermes.commands.harvest.util.remote_harvesting import normalize_url, fetch_metadata_from_repo
+from hermes.commands.harvest.util.remote_harvesting import normalize_url, fetch_metadata_from_repo, remove_temp_file
 
 class CodeMetaHarvestPlugin(HermesHarvestPlugin):
     def __call__(self, command: HermesHarvestCommand) -> t.Tuple[t.Dict, t.Dict]:
@@ -38,6 +38,7 @@ class CodeMetaHarvestPlugin(HermesHarvestPlugin):
         if not self._validate(codemeta_file):
             raise HermesValidationError(codemeta_file)
 
+        remove_temp_file(codemeta_file)
         codemeta = json.loads(codemeta_str)
         return codemeta, {'local_path': str(codemeta_file)}
 
