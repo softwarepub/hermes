@@ -19,7 +19,7 @@ from cffconvert import Citation
 from hermes.model.context import ContextPath
 from hermes.model.errors import HermesValidationError
 from hermes.commands.harvest.base import HermesHarvestPlugin, HermesHarvestCommand
-from hermes.commands.harvest.util.remote_harvesting import normalize_url, fetch_metadata_from_repo
+from hermes.commands.harvest.util.remote_harvesting import normalize_url, fetch_metadata_from_repo, remove_temp_file
 
 
 # TODO: should this be configurable via a CLI option?
@@ -46,6 +46,7 @@ class CffHarvestPlugin(HermesHarvestPlugin):
         # Read the content
         cff_data = cff_file.read_text()
 
+        remove_temp_file(cff_file)
         # Validate the content to be correct CFF
         cff_dict = self._load_cff_from_file(cff_data)
         if command.settings.cff.enable_validation and not self._validate(cff_file, cff_dict):
