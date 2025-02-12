@@ -50,6 +50,8 @@ pyparsing = "^3.0.9"
 requests = "^2.28.1"
 pydantic = "^2.5.1"
 pydantic-settings = "^2.1.0"
+requests-oauthlib = "^2.0.0"
+pynacl = "^1.5.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.1.1"
@@ -78,9 +80,11 @@ sphinxext-opengraph = "^0.6.3"
 sphinxcontrib-mermaid="^0.8.1"
 sphinx-togglebutton="^0.3.2"
 reuse = "^1.1.2"
+sphinxcontrib-datatemplates = "^0.11.0"
 
 [tool.poetry.plugins.console_scripts]
 hermes = "hermes.commands.cli:main"
+hermes-marketplace = "hermes.commands.marketplace:main"
 
 [tool.poetry.plugins."hermes.harvest"]
 cff = "hermes.commands.harvest.cff:CffHarvestPlugin"
@@ -90,6 +94,7 @@ codemeta = "hermes.commands.harvest.codemeta:CodeMetaHarvestPlugin"
 file = "hermes.commands.deposit.file:FileDepositPlugin"
 invenio = "hermes.commands.deposit.invenio:InvenioDepositPlugin"
 invenio_rdm = "hermes.commands.deposit.invenio_rdm:IvenioRDMDepositPlugin"
+rodare = "hermes.commands.deposit.rodare:RodareDepositPlugin"
 
 [tool.poetry.plugins."hermes.postprocess"]
 config_invenio_record_id = "hermes.commands.postprocess.invenio:config_record_id"

@@ -139,3 +139,27 @@ a [forking pattern](https://docs.github.com/en/get-started/quickstart/fork-a-rep
 1. Delete the release branch.
 1. 💡 If something goes wrong in the release branch, you can always delete it, fix things in a feature branch, merge
   into `develop` following the workflow above, and start anew.
+
+## Build
+
+To build `hermes` locally, run the
+following command from the project root:
+
+```shell
+poetry install
+```
+
+To build the documentation in your *poetry* environment, run the
+following commands from the project root:
+
+```shell
+poetry install --with docs
+poetry run task docs-build
+```
+
+Or use [`sphinx-autobuild`](https://github.com/executablebooks/sphinx-autobuild) to enable a self-updating preview service:
+
+```shell
+poetry install --with docs
+poetry run task docs-live
+```
