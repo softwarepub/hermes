@@ -1,3 +1,10 @@
+# SPDX-FileCopyrightText: 2025 OFFIS e.V.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# SPDX-FileContributor: Stephan Ferenz
+# SPDX-FileContributor: Aida Jafarbigloo
+
 import pathlib
 import re
 import requests
