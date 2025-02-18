@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-FileContributor: Nitai Heeb
 
+import json
 import pytest
 from hermes.commands.init.base import convert_remote_url, is_git_installed, string_in_file, download_file_from_url
 from unittest.mock import patch, MagicMock
@@ -84,7 +85,7 @@ def test_get_tokens_from_device_flow(mock_post, oauth):
                 "verification_uri": "https://nonsense.com/device",
                 "interval": 1
             },
-            text=str({
+            text=json.dumps({
                 "device_code": "test_device_code",
                 "user_code": "test_user_code",
                 "verification_uri": "https://nonsense.com/device",
