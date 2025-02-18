@@ -1,0 +1,81 @@
+[
+    {
+        "name": "CITATION.cff Harvester",
+        "description": "Harvest plugin for CITATION.cff files.",
+        "author": "Hermes team",
+        "steps": ["harvest"],
+        "harvested_files": ["CITATION.cff"],
+        "builtin": true
+    },
+    {
+        "name": "codemeta.json Harvester",
+        "description": "Harvest plugin for codemeta.json files.",
+        "author": "Hermes team",
+        "steps": ["harvest"],
+        "harvested_files": ["codemeta.json"],
+        "builtin": true
+    },
+    {
+        "name": "hermes-plugin-git",
+        "description": "Harvest plugin for Git repository metadata.",
+        "author": "Hermes team",
+        "steps": ["harvest"],
+        "repository_url": "https://github.com/softwarepub/hermes-plugin-git"
+    },
+    {
+        "name": "hermes-plugin-python",
+        "description": "Harvest plugin for .toml files.",
+        "author": "Hermes team",
+        "steps": ["harvest"],
+        "harvested_files": ["pyproject.toml"],
+        "repository_url": "https://github.com/softwarepub/hermes-plugin-python",
+        "pypi_url": "https://pypi.org/project/hermes-plugin-python/"
+    },
+    {
+        "name": "Merge",
+        "description": "Process plugin for basic merging of metadata.",
+        "author": "Hermes team",
+        "steps": ["process"],
+        "builtin": true
+    },
+    {
+        "name": "Curate",
+        "description": "Curation plugin for no-check acceptance of the metadata.",
+        "author": "Hermes team",
+        "steps": ["curate"],
+        "builtin": true
+    },
+    {
+        "name": "Invenio Deposit",
+        "description": "Deposit plugin for Invenio-based platforms.",
+        "author": "Hermes team",
+        "steps": ["deposit"],
+        "builtin": true
+    },
+    {
+        "name": "Invenio RDM Deposit",
+        "description": "Deposit plugin for Invenio RDM-based platforms such as Zenodo.",
+        "author": "Hermes team",
+        "steps": ["deposit"],
+        "builtin": true
+    },
+    {
+        "name": "Rodare Deposit",
+        "description": "Deposit plugin for the Rodare publication platform at HZDR.",
+        "author": "Hermes team",
+        "steps": ["deposit"],
+        "builtin": true
+    },
+    {
+        "name": "Invenio Postprocess",
+        "author": "Hermes team",
+        "steps": ["postprocess"],
+        "builtin": true
+    },
+    {
+        "name": "Invenio RDM Postprocess",
+        "author": "Hermes team",
+        "steps": ["postprocess"],
+        "builtin": true
+    }
+]

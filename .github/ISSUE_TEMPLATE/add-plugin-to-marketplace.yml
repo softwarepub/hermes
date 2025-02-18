@@ -1,0 +1,76 @@
+# SPDX-FileCopyrightText: 2024 Helmholtz-Zentrum Dresden-Rossendorf
+# SPDX-License-Identifier: CC-BY-SA-4.0
+# SPDX-FileContributor: David Pape
+
+name: "Add Plugin to Marketplace"
+description: "I want to add a plugin to the Hermes plugin marketplace."
+title: "[New Plugin]: "
+labels: ["documentation"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for building a plugin for Hermes and sharing it with the community!
+
+        The [Hermes plugin marketplace](https://hermes.software-metadata.pub#plugins) is a curated list of plugins on our website that allows you to share plugins that you developed, and others to find them.
+
+        Via this issue template, you can send us the required information to add your plugin to the marketplace. Alternatively, you may file a pull request, adding the plugin to [`plugins.json`](https://github.com/softwarepub/hermes/tree/develop/docs/source/plugins.json) yourself.
+
+  - id: "name"
+    type: "input"
+    attributes:
+      label: "Name"
+      description: "The name of the plugin"
+      placeholder: "Foobar Harvesting and Quux Deposit Plugin"
+    validations:
+      required: true
+
+  - id: "author"
+    type: "input"
+    attributes:
+      label: "Author"
+      description: "The author of the plugin, usually a team or organization"
+      placeholder: "Team Quux at Fizzbuzz Institute"
+
+  - id: "description"
+    type: "textarea"
+    attributes:
+      label: "Description"
+      description: "A short description of your plugin"
+      placeholder: "Plugin for harvesting foobar files and uploading deposits to quux repo."
+
+  - id: "steps"
+    type: "dropdown"
+    attributes:
+      label: "Steps"
+      description: "Steps of the Hermes workflow targeted by your plugin"
+      multiple: true
+      options: ["harvest", "process", "curate", "deposit", "postprocess"]
+
+  - id: "harvested-files"
+    type: "input"
+    attributes:
+      label: "Harvested files"
+      description: "The types of files your plugin harvests (if it is a harvest plugin)"
+      placeholder: "foobar, foobar.yml, foobar.json"
+
+  - id: "repository-url"
+    type: "input"
+    attributes:
+      label: "Repository"
+      description: "The link to the repository where users can find and inspect the source code of your plugin"
+      placeholder: "https://git.example.com/quux/hermes-plugin-quux"
+
+  - id: "pypi-url"
+    type: "input"
+    attributes:
+      label: "PyPI URL"
+      description: "The link to your project on PyPI"
+      placeholder: "https://pypi.org/project/hermes-plugin-quux/"
+
+  - id: "comments"
+    type: "textarea"
+    attributes:
+      label: "Comments"
+      description: "Any additional comments you would like to add"

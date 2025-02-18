@@ -5,6 +5,7 @@
 # SPDX-FileContributor: Stephan Druskat
 # SPDX-FileContributor: Oliver Bertuch
 # SPDX-FileContributor: Michael Meinel
+# SPDX-FileContributor: David Pape
 
 
 # Configuration file for the Sphinx documentation builder.
@@ -22,6 +23,7 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../../src'))
+sys.path.append(os.path.abspath('_ext'))
 
 
 # -- Project information -----------------------------------------------------
@@ -29,7 +31,8 @@ sys.path.insert(0, os.path.abspath('../../src'))
 project = 'HERMES Workflow'
 copyright = '2024, HERMES project'
 author = 'Oliver Bertuch, Stephan Druskat, Guido Juckeland, Jeffrey Kelling, ' + \
-         'Oliver Knodel, Michael Meinel, Tobias Schlauch, Sophie Kernchen'
+         'Oliver Knodel, Michael Meinel, Tobias Schlauch, Sophie Kernchen, ' + \
+         'David Pape'
 
 
 # The full version, including alpha/beta/rc tags
@@ -60,6 +63,9 @@ extensions = [
     'autoapi.extension',
     'sphinxcontrib.mermaid',
     'sphinx_togglebutton',
+    'sphinxcontrib.datatemplates',
+    # Custom extensions, see `_ext` directory.
+    'plugin_markup',
 ]
 
 language = 'en'

@@ -1,0 +1,128 @@
+# SPDX-FileCopyrightText: 2024 Helmholtz-Zentrum Dresden-Rossendorf
+# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileContributor: David Pape
+
+import json
+import re
+from pathlib import Path
+from typing import Any, Dict
+
+from docutils import nodes
+from jsonschema import validate
+from sphinx.application import Sphinx
+from sphinx.util import logging
+from sphinx.util.console import colorize
+from sphinx.util.docutils import SphinxDirective
+
+from hermes.commands.marketplace import (
+    SchemaOrgOrganization,
+    SchemaOrgSoftwareApplication,
+    schema_org_hermes,
+)
+
+
+logger = logging.getLogger(__name__)
+
+
+def log_message(text: str, detail: str = None) -> None:
+    message = colorize("bold", "[Plugin Markup]") + " " + text
+    if detail is not None:
+        message += " " + colorize("darkgreen", detail)
+    logger.info(message)
+
+
+def keywordify(text: str) -> str:
+    """Make keyword-friendly text.
+
+    The result will only contain lowercase a through z and hyphens, e.g.:
+
+    * CITATION.cff → citation-cff
+    * codemeta.json → codemeta-json
+    * LICENSE → license
+    """
+    text = text.casefold()
+    return re.sub(r"[^a-z]", "-", text)
+
+
+def plugin_to_schema_org(plugin: Dict[str, Any]) -> SchemaOrgSoftwareApplication:
+    """Convert plugin metadata from the used JSON format to Schema.org.
+
+    The ``plugin`` is transformed into a ``schema:SoftwareApplication``. For most
+    attributes of the plugin, a mapping into Schema.org terms is performed. The author
+    is expressed as a ``schema:Organization`` using the given author field as the
+    ``name``. The steps targeted by the plugin are expressed using the ``keyword`` field
+    by transforming them to the keywords ``hermes-step-<STEP>`` where ``<STEP>`` is the
+    name of the workflow step. The ``harvested_files`` are also transformed into
+    keywords by making the text "keyword-friendly" and prepending ``hermes-harvest-``.
+    If the plugin is marked as a Hermes ``builtin``, this is expressed using
+    ``schema:isPartOf``.
+    """
+    steps = plugin.get("steps", [])
+    keywords = [f"hermes-step-{step}" for step in steps]
+    if "harvest" in steps:
+        harvested_files = plugin.get("harvested_files", [])
+        keywords += [f"hermes-harvest-{keywordify(file)}" for file in harvested_files]
+
+    return SchemaOrgSoftwareApplication(
+        name=plugin.get("name"),
+        url=plugin.get("repository_url"),
+        install_url=plugin.get("pypi_url"),
+        abstract=plugin.get("description"),
+        author=SchemaOrgOrganization(name=au) if (au := plugin.get("author")) else None,
+        is_part_of=schema_org_hermes if plugin.get("builtin", False) else None,
+        keywords=keywords or None,
+    )
+
+
+class PluginMarkupDirective(SphinxDirective):
+    """A Sphinx directive to render the ``plugins.json`` file to Schema.org markup.
+
+    The plugins file and its jsonschema are passed to the directive as parameters, i.e.,
+    in Markdown:
+
+    .. code-block:: markdown
+
+       ```{plugin-markup} path/to/plugins.json path/to/plugins-schema.json
+       ```
+
+    For each plugin listed in the file, a ``<script type="application/ld+json">`` tag
+    is generated.
+    """
+
+    required_arguments = 2
+
+    def run(self) -> list[nodes.Node]:
+        filename = Path(self.get_source_info()[0])  # currently processing this file
+        directory = filename.parent
+
+        plugins_file = directory / self.arguments[0]
+        log_message("reading plugins file", detail=str(plugins_file))
+        with open(plugins_file) as file:
+            plugin_data = json.load(file)
+
+        plugins_schema_file = directory / self.arguments[1]
+        log_message("reading plugins schema file", detail=str(plugins_schema_file))
+        with open(plugins_schema_file) as file:
+            plugin_schema = json.load(file)
+
+        log_message("validating plugins")
+        validate(plugin_data, plugin_schema)
+
+        log_message("converting plugins to markup")
+        tags = []
+        for plugin in plugin_data:
+            markup = plugin_to_schema_org(plugin).model_dump_jsonld()
+            tag = f'<script type="application/ld+json">{markup}</script>'
+            tags.append(nodes.raw(text=tag, format="html"))
+
+        return tags
+
+
+def setup(app: Sphinx):
+    """Wire up the directive so that it can be used as ``plugin-markup``."""
+    app.add_directive("plugin-markup", PluginMarkupDirective)
+    return {
+        "version": "0.1",
+        "parallel_read_safe": True,
+        "parallel_write_safe": True,
+    }

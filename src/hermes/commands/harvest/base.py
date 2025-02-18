@@ -25,7 +25,7 @@ class HermesHarvestPlugin(HermesPlugin):
         pass
 
 
-class HarvestSettings(BaseModel):
+class _HarvestSettings(BaseModel):
     """Generic harvesting settings."""
 
     sources: list[str] = []
@@ -35,7 +35,7 @@ class HermesHarvestCommand(HermesCommand):
     """ Harvest metadata from configured sources. """
 
     command_name = "harvest"
-    settings_class = HarvestSettings
+    settings_class = _HarvestSettings
 
     def __call__(self, args: argparse.Namespace) -> None:
         self.args = args

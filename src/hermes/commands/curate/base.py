@@ -15,7 +15,7 @@ from hermes.commands.base import HermesCommand
 from hermes.model.context import CodeMetaContext
 
 
-class CurateSettings(BaseModel):
+class _CurateSettings(BaseModel):
     """Generic deposition settings."""
 
     pass
@@ -25,7 +25,7 @@ class HermesCurateCommand(HermesCommand):
     """ Curate the unified metadata before deposition. """
 
     command_name = "curate"
-    settings_class = CurateSettings
+    settings_class = _CurateSettings
 
     def init_command_parser(self, command_parser: argparse.ArgumentParser) -> None:
         pass
