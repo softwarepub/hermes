@@ -43,7 +43,7 @@ def parse_response_to_dict(response_text: str) -> dict:
         response_dict = json.loads(response_text)
         return response_dict
     except json.JSONDecodeError:
-        return dict(parse_qs(response_text))
+        return {k: extract_value(v) for k, v in dict(parse_qs(response_text)).items()}
 
 
 def extract_value(value):

@@ -16,7 +16,6 @@ from pathlib import Path
 from importlib import metadata
 from pydantic import BaseModel
 from dataclasses import dataclass
-
 from requests import HTTPError
 
 from hermes.commands.base import HermesCommand, HermesPlugin
