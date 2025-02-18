@@ -26,8 +26,9 @@ max_steps = 0
 current_steps = 0
 """The number if the last printed step"""
 
-default_file_logger: logging.Logger
+default_file_logger: logging.Logger = None
 """The file logger used by echo if AUTO_LOG_ON_ECHO"""
+
 
 class Formats(Enum):
     HEADER = '\033[95m'
@@ -177,7 +178,7 @@ class ColorLogHandler(logging.Handler):
 
 
 class ColorLogFormatter(logging.Formatter):
-    def __init__(self, _formats = None):
+    def __init__(self, _formats=None):
         """
         Own version of a terminal log formatter to print our log messages with color.
         """

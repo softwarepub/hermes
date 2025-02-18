@@ -16,6 +16,9 @@ from pathlib import Path
 from importlib import metadata
 from pydantic import BaseModel
 from dataclasses import dataclass
+
+from requests import HTTPError
+
 from hermes.commands.base import HermesCommand, HermesPlugin
 import hermes.commands.init.util.connect_github as connect_github
 import hermes.commands.init.util.connect_gitlab as connect_gitlab
@@ -98,10 +101,10 @@ def scout_current_folder() -> HermesInitFolderInfo:
             parsed_url = urlparse(info.git_remote_url)
             info.git_base_url = f"{parsed_url.scheme}://{parsed_url.netloc}/"
             sc.debug_info(f"git base url = {info.git_base_url}")
-    if "github.com" in info.git_remote_url:
-        info.used_git_hoster = GitHoster.GitHub
-    elif connect_gitlab.is_url_gitlab(info.git_base_url):
-        info.used_git_hoster = GitHoster.GitLab
+        if "github.com" in info.git_remote_url:
+            info.used_git_hoster = GitHoster.GitHub
+        elif connect_gitlab.is_url_gitlab(info.git_base_url):
+            info.used_git_hoster = GitHoster.GitLab
     info.has_hermes_toml = os.path.isfile(os.path.join(current_dir, "hermes.toml"))
     info.has_gitignore = os.path.isfile(os.path.join(current_dir, ".gitignore"))
     info.has_citation_cff = os.path.isfile(os.path.join(current_dir, "CITATION.cff"))
@@ -116,11 +119,14 @@ def scout_current_folder() -> HermesInitFolderInfo:
 
 
 def download_file_from_url(url, filepath, append: bool = False):
-    with requests.get(url, stream=True) as r:
-        r.raise_for_status()
-        with open(filepath, 'ab' if append else 'wb') as f:
-            for chunk in r.iter_content(chunk_size=8192):
-                f.write(chunk)
+    try:
+        with requests.get(url, stream=True) as r:
+            r.raise_for_status()
+            with open(filepath, 'ab' if append else 'wb') as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    f.write(chunk)
+    except HTTPError:
+        sc.echo(f"No file found at {url}.", formatting=sc.Formats.FAIL)
 
 
 def string_in_file(file_path, search_string: str) -> bool:
@@ -195,28 +201,17 @@ class HermesInitCommand(HermesCommand):
         self.folder_info = scout_current_folder()
         sc.debug_info("Scan complete.")
 
-    def setup_colorful_logging(self):
+    def setup_file_logging(self):
         # Remove old StreamHandler
         logging.getHandlerByName("terminal").setLevel(logging.CRITICAL)
-        # Set new colorful Handler
-        self.log.setLevel(level=logging.DEBUG)
-        self.log.addHandler(sc.ColorLogHandler())
-        # Test log TODO remove this
-        self.log.debug("debug mist")
-        self.log.info("info mist")
-        self.log.warning("warning mist")
-        self.log.error("error mist")
-        self.log.critical("critical mist")
+        # Set file logger level
+        self.log.setLevel(level=logging.INFO)
+        # Connect logger with sc
+        sc.default_file_logger = self.log
 
     def __call__(self, args: argparse.Namespace) -> None:
-        print(args)
-        print(self.plugins)
-        print(self.builtin_plugins.keys())
-
-        return
-
         # Setup logging
-        self.setup_colorful_logging()
+        self.setup_file_logging()
 
         # Save command parameter (template branch)
         if hasattr(args, "template_branch"):
@@ -438,7 +433,18 @@ class HermesInitCommand(HermesCommand):
             if self.setup_method == "m":
                 sc.press_enter_to_continue()
             else:
-                self.tokens[self.deposit_platform] = sc.answer("Then enter the token here: ")
+                while True:
+                    self.tokens[self.deposit_platform] = sc.answer("Enter the token here: ")
+                    valid = connect_zenodo.test_if_token_is_valid(self.tokens[self.deposit_platform])
+                    if valid:
+                        sc.echo(f"The token was validated by {connect_zenodo.name}.",
+                                formatting=sc.Formats.OKGREEN)
+                        break
+                    else:
+                        sc.echo(f"The token could not be validated by {connect_zenodo.name}. "
+                                "Make sure to enter the complete token.\n"
+                                "(If this error persists, you should try switching to the manual setup mode.)",
+                                formatting=sc.Formats.WARNING)
 
     def configure_git_project(self):
         """Adding the token to the git secrets & changing action workflow settings"""
