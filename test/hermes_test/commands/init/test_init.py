@@ -76,12 +76,21 @@ def oauth():
 @patch("requests.post")
 def test_get_tokens_from_device_flow(mock_post, oauth):
     mock_post.side_effect = [
-        MagicMock(status_code=200, json=lambda: {
-            "device_code": "test_device_code",
-            "user_code": "test_user_code",
-            "verification_uri": "https://nonsense.com/device",
-            "interval": 1
-        }),
+        MagicMock(
+            status_code=200,
+            json=lambda: {
+                "device_code": "test_device_code",
+                "user_code": "test_user_code",
+                "verification_uri": "https://nonsense.com/device",
+                "interval": 1
+            },
+            text=str({
+                "device_code": "test_device_code",
+                "user_code": "test_user_code",
+                "verification_uri": "https://nonsense.com/device",
+                "interval": 1
+            })
+        ),
         MagicMock(status_code=200, json=lambda: {"access_token": "test_access_token"})
     ]
 
