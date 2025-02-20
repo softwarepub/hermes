@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: 2024 German Aerospace Center (DLR)
+SPDX-FileCopyrightText: 2025 German Aerospace Center (DLR), Forschungszentrum Jülich GmbH
 
 SPDX-License-Identifier: CC-BY-SA-4.0
 -->
@@ -7,6 +7,8 @@ SPDX-License-Identifier: CC-BY-SA-4.0
 <!--
 SPDX-FileContributor: Michael Meinel
 SPDX-FileContributor: Sophie Kernchen
+SPDX-FileContributor: Nitai Heeb
+SPDX-FileContributor: Oliver Bertuch
 -->
 
 # Write a plugin for HERMES
@@ -65,15 +67,21 @@ class GitHarvestPlugin(HermesHarvestPlugin):
         return {}, {}
 ```
  
-The code uses the `HermesHarvestPlugin` as base class and pydantics Basemodel for the settings. In the `GitHarvestSettings` you
-can see that an additional parameter is defined. The Parameter `from_branch` is specific for this plugin and can be accessed inside the plugin using `self.settings.harvest.git.from_branch` as long as our plugin will be named git.
+The code uses the `HermesHarvestPlugin` as base class and pydantic's base model for the settings.
+In the `GitHarvestSettings` you can see that an additional parameter is defined.
+The Parameter `from_branch` is specific for this plugin and can be accessed inside the plugin using `self.settings.harvest.git.from_branch` as long as our plugin will be named `git`.
 In the `hermes.toml` this would be achieved by [harvest.{plugin_name}].
-The `GitHarvestSettings` are associated with the `GitHarvestPlugin`. In the plugin you need to overwrite the `__call__` method.
-For now a simple Hello World will do. The method returns two dictionaries. These will contain the harvested data in CodeMeta (JSON-LD) and additional information, e.g., to provide provenance information.
+The `GitHarvestSettings` are associated with the `GitHarvestPlugin`.
+In the plugin you need to overwrite the `__call__` method.
+For now a simple "Hello World" will do. The method returns two dictionaries.
+These will contain the harvested data in CodeMeta (JSON-LD) and additional information, e.g., to provide provenance information.
 That is the basic structure for the plugins source code.
 
-To integrate this code, you have to register it as a plugin in the `pyproject.toml`. To learn more about the `pyproject.toml` check https://python-poetry.org/docs/pyproject/ or refer to [PEP621](https://peps.python.org/pep-0621/).
-We will just look at the important places for this plugin. There are two ways to integrate this plugin. First we will show how to use the plugin environment as the running base with HERMES as a dependency.
+To integrate this code, you have to register it as a plugin in the `pyproject.toml`.
+To learn more about the `pyproject.toml` check https://python-poetry.org/docs/pyproject/ or refer to [PEP621](https://peps.python.org/pep-0621/).
+We will just look at the important places for this plugin.
+There are two ways to integrate this plugin.
+First we will show how to use the plugin environment as the running base with HERMES as a dependency.
 Then we say how to integrate this plugin in HERMES itself.
 
 ### Include HERMES as Dependency
@@ -125,10 +133,10 @@ Note that this differs with the accessibility and your wishes, check [Explicit P
 
 The second thing to adapt is to declare the access point for the plugin.
 You can do that with `git = "hermes_plugin_git.harvest:GitHarvestPlugin"`.
-This expression makes the GitHarvestPlugin from the hermes_plugin_git package, a hermes.harvest plugin named git.
+This expression makes the `GitHarvestPlugin` from the `hermes_plugin_git` package, a `hermes.harvest` plugin named `git`.
 So you need to configure this line with your plugin properties.
 
-Now you just need to add the plugin to the hermes.toml and reinstall the adapted poetry package.
+Now you just need to add the plugin to the `hermes.toml` and reinstall the adapted poetry package.
 
 ### Configure hermes.toml
 To use the plugin, you have to activate it in the `hermes.toml`.
