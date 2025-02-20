@@ -19,9 +19,7 @@ from dataclasses import dataclass
 from requests import HTTPError
 
 from hermes.commands.base import HermesCommand, HermesPlugin
-import hermes.commands.init.util.connect_github as connect_github
-import hermes.commands.init.util.connect_gitlab as connect_gitlab
-import hermes.commands.init.util.connect_zenodo as connect_zenodo
+from hermes.commands.init.util import connect_github, connect_gitlab, connect_zenodo
 import hermes.commands.init.util.slim_click as sc
 
 
