@@ -42,7 +42,7 @@ def test_download_file_from_url(mock_get, tmp_path):
     mock_get.return_value.__enter__.return_value.raise_for_status = MagicMock()
 
     test_file = tmp_path / "downloaded.txt"
-    download_file_from_url("https://test.com/file.txt", test_file)
+    download_file_from_url("https://example.com/file.txt", test_file)
 
     with open(test_file, "r", encoding="utf-8") as f:
         assert f.read() == "test_content"
