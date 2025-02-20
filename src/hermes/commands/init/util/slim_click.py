@@ -3,7 +3,8 @@
 # SPDX-FileContributor: Nitai Heeb
 
 """
-Slim, self-made version of click so we don't need to use it for simple console questions.
+Slim, self-made and partial implementation of some `click <https://click.palletsprojects.com>`_ functionality,
+so we don't need to add another large dependency for simple console questions and outputs.
 """
 
 import logging
