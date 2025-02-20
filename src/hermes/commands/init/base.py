@@ -14,15 +14,15 @@ from importlib import metadata
 from pathlib import Path
 from urllib.parse import urljoin, urlparse
 
-import hermes.commands.init.util.connect_github as connect_github
-import hermes.commands.init.util.connect_gitlab as connect_gitlab
-import hermes.commands.init.util.connect_zenodo as connect_zenodo
-import hermes.commands.init.util.slim_click as sc
 import requests
 import toml
-from hermes.commands.base import HermesCommand, HermesPlugin
 from pydantic import BaseModel
 from requests import HTTPError
+
+import hermes.commands.init.util.slim_click as sc
+from hermes.commands.base import HermesCommand, HermesPlugin
+from hermes.commands.init.util import (connect_github, connect_gitlab,
+                                       connect_zenodo)
 
 TUTORIAL_URL = "https://docs.software-metadata.pub/en/latest/tutorials/automated-publication-with-ci.html"
 

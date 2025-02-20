@@ -42,7 +42,7 @@ def test_download_file_from_url(mock_get, tmp_path):
     mock_get.return_value.__enter__.return_value.raise_for_status = MagicMock()
 
     test_file = tmp_path / "downloaded.txt"
-    download_file_from_url("https://test.com/file.txt", test_file)
+    download_file_from_url("https://example.com/file.txt", test_file)
 
     with open(test_file, "r", encoding="utf-8") as f:
         assert f.read() == "test_content"
@@ -53,7 +53,7 @@ def test_download_file_from_url(mock_get, tmp_path):
     [
         ('{"access_token": "abc123", "test": "200"}', {"access_token": "abc123", "test": "200"}),
         ("access_token=abc123&test=200", {"access_token": "abc123", "test": "200"}),
-        ("nonsense", {})
+        ("example", {})
     ]
 )
 def test_parse_response_to_dict(response: str, d: dict):
@@ -66,9 +66,9 @@ def oauth():
         name="TestService",
         client_id="test_client",
         client_secret="test_secret",
-        authorize_url="https://nonsense.com/oauth/authorize",
-        token_url="https://nonsense.com/oauth/token",
-        device_code_url="https://nonsense.com/oauth/authorize_device",
+        authorize_url="https://example.com/oauth/authorize",
+        token_url="https://example.com/oauth/token",
+        device_code_url="https://example.com/oauth/authorize_device",
         scope="xxx",
         local_port=1234
     )
@@ -82,13 +82,13 @@ def test_get_tokens_from_device_flow(mock_post, oauth):
             json=lambda: {
                 "device_code": "test_device_code",
                 "user_code": "test_user_code",
-                "verification_uri": "https://nonsense.com/device",
+                "verification_uri": "https://example.com/device",
                 "interval": 1
             },
             text=json.dumps({
                 "device_code": "test_device_code",
                 "user_code": "test_user_code",
-                "verification_uri": "https://nonsense.com/device",
+                "verification_uri": "https://example.com/device",
                 "interval": 1
             })
         ),
