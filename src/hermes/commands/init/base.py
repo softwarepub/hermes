@@ -24,7 +24,7 @@ from hermes.commands.base import HermesCommand, HermesPlugin
 from hermes.commands.init.util import (connect_github, connect_gitlab,
                                        connect_zenodo)
 
-TUTORIAL_URL = "https://docs.software-metadata.pub/en/latest/tutorials/automated-publication-with-ci.html"
+TUTORIAL_URL = "https://hermes.software-metadata.pub/en/latest/tutorials/automated-publication-with-ci.html"
 
 
 class GitHoster(Enum):
