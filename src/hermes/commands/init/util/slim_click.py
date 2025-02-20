@@ -179,10 +179,10 @@ class ColorLogHandler(logging.Handler):
 
 
 class ColorLogFormatter(logging.Formatter):
+    """
+    Own version of a terminal log formatter to print our log messages with color.
+    """
     def __init__(self, _formats=None):
-        """
-        Own version of a terminal log formatter to print our log messages with color.
-        """
         super().__init__()
         self.formats = {
             'DEBUG': Formats.ITALIC.get_ansi() + '%(message)s' + Formats.ENDC.get_ansi(),
