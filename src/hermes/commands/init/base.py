@@ -3,27 +3,26 @@
 # SPDX-FileContributor: Nitai Heeb
 
 import argparse
+import logging
 import os
+import re
 import subprocess
 import sys
-import requests
-import toml
-import re
-import logging
-from enum import Enum, auto
-from urllib.parse import urlparse, urljoin
-from pathlib import Path
-from importlib import metadata
-from pydantic import BaseModel
 from dataclasses import dataclass
-from requests import HTTPError
+from enum import Enum, auto
+from importlib import metadata
+from pathlib import Path
+from urllib.parse import urljoin, urlparse
 
-from hermes.commands.base import HermesCommand, HermesPlugin
 import hermes.commands.init.util.connect_github as connect_github
 import hermes.commands.init.util.connect_gitlab as connect_gitlab
 import hermes.commands.init.util.connect_zenodo as connect_zenodo
 import hermes.commands.init.util.slim_click as sc
-
+import requests
+import toml
+from hermes.commands.base import HermesCommand, HermesPlugin
+from pydantic import BaseModel
+from requests import HTTPError
 
 TUTORIAL_URL = "https://docs.software-metadata.pub/en/latest/tutorials/automated-publication-with-ci.html"
 
@@ -416,12 +415,6 @@ class HermesInitCommand(HermesCommand):
         # Deactivated Zenodo OAuth as long as the refresh token bug is not fixed.
         if self.setup_method == "a":
             sc.echo("Doing OAuth with Zenodo is currently not available.")
-        #     self.tokens[self.deposit_platform] = "REFRESH_TOKEN:" + connect_zenodo.get_refresh_token()
-        #     if self.tokens[self.deposit_platform]:
-        #         sc.echo("OAuth at Zenodo was successful.")
-        #         sc.debug_info(self.tokens[self.deposit_platform])
-        #     else:
-        #         sc.echo("Something went wrong while doing OAuth. You'll have to do it manually instead.")
         if self.setup_method == "m" or self.tokens[self.deposit_platform] == '':
             zenodo_token_url = urljoin(DepositPlatformUrls[self.deposit_platform],
                                        "account/settings/applications/tokens/new/")
