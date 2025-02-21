@@ -5,8 +5,9 @@
 import time
 import requests
 import oauthlib.oauth2.rfc6749.errors
-from hermes.commands.init.util.oauth_process import OauthProcess
-import hermes.commands.init.util.slim_click as sc
+
+from . import slim_click as sc
+from .oauth_process import OauthProcess
 
 # NOTE: We are currently not using the public Zenodo OAuth2 client. This has two reasons:
 # 1. We need a non-expiring access token like the ones you create manually so that Hermes can always access the

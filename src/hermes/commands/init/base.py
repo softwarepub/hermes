@@ -55,7 +55,7 @@ DepositPlatformUrls: dict[DepositPlatform, str] = {
 class HermesInitFolderInfo:
     def __init__(self):
         self.absolute_path: str = ""
-        self.has_git: bool = False
+        self.has_git_folder: bool = False
         self.git_remote_url: str = ""
         self.git_base_url: str = ""
         self.used_git_hoster: GitHoster = GitHoster.Empty
@@ -78,17 +78,20 @@ def is_git_installed():
 
 
 def scout_current_folder() -> HermesInitFolderInfo:
+    """
+    This method looks at the current directory and collects all init relevant data.
+
+    @return: HermesInitFolderInfo object containing the gathered knowledge
+    """
     info = HermesInitFolderInfo()
     current_dir = os.getcwd()
     info.current_dir = current_dir
     info.absolute_path = str(current_dir)
 
-    # TODO: should be "has_git_folder" instead of "has_git"
-    info.has_git = os.path.isdir(os.path.join(current_dir, ".git"))
-    # TODO: missing an "else" case where people get a nice info they might not be at the project root or this is not a git-enabled project
-    if info.has_git:
+    info.has_git_folder = os.path.isdir(os.path.join(current_dir, ".git"))
+    # git-enabled project
+    if info.has_git_folder:
         # Get remote name for next command
-        # TODO: missing a check if git is actually around as an executable and missing error handling if not or command fails
         # TODO: missing case of multiple configured remotes (should we make the user choose?)
         git_remote = str(subprocess.run(['git', 'remote'], capture_output=True, text=True).stdout).strip()
         sc.debug_info(f"git remote = {git_remote}")
@@ -174,6 +177,16 @@ def get_builtin_plugins(plugin_commands: list[str]) -> dict[str: HermesPlugin]:
     return plugins
 
 
+def get_handler_by_name(name: str) -> logging.Handler:
+    """Own implementation of logging.getHandlerByName so that we don't require Python 3.12"""
+    for logger_name in logging.root.manager.loggerDict:
+        logger = logging.getLogger(logger_name)
+        for handler in logger.handlers:
+            if handler.get_name() == name:
+                return handler
+    return None
+
+
 class _HermesInitSettings(BaseModel):
     """Configuration of the ``init`` command."""
     pass
@@ -217,8 +230,10 @@ class HermesInitCommand(HermesCommand):
         sc.debug_info("Scan complete.")
 
     def setup_file_logging(self):
-        # Remove old StreamHandler
-        logging.getHandlerByName("terminal").setLevel(logging.CRITICAL)
+        # Silence old StreamHandler
+        handler = get_handler_by_name("terminal")
+        if handler:
+            handler.setLevel(logging.CRITICAL)
         # Set file logger level
         self.log.setLevel(level=logging.INFO)
         # Connect logger with sc
@@ -278,7 +293,7 @@ class HermesInitCommand(HermesCommand):
         self.refresh_folder_info()
 
         # Abort if there is no git
-        if not self.folder_info.has_git:
+        if not self.folder_info.has_git_folder:
             sc.echo("The current directory has no `.git` subdirectory. "
                     "Please execute `hermes init` in the root directory of your git project.",
                     formatting=sc.Formats.WARNING)
@@ -365,6 +380,7 @@ class HermesInitCommand(HermesCommand):
                 with open(".gitignore", "a") as file:
                     file.write("# Ignoring all HERMES cache files\n")
                     file.write(".hermes/\n")
+                    file.write("hermes.log\n")
                 sc.echo("Added `.hermes/` to the `.gitignore` file.", formatting=sc.Formats.OKGREEN)
 
     def get_template_url(self, filename: str) -> str:

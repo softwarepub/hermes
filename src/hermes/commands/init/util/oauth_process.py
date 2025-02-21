@@ -16,7 +16,8 @@ import json
 from threading import Event
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, urlparse
-import hermes.commands.init.util.slim_click as sc
+
+from . import slim_click as sc
 
 PREFER_DEVICE_FLOW = True
 DEACTIVATE_BROWSER_OPENING = False
