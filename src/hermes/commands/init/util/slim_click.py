@@ -1,9 +1,10 @@
-# SPDX-FileCopyrightText: 2024 Forschungszentrum Jülich
+# SPDX-FileCopyrightText: 2024 Forschungszentrum Jülich GmbH
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-FileContributor: Nitai Heeb
 
 """
-Slim, self-made version of click so we don't need to use it for simple console questions.
+Slim, self-made and partial implementation of some `click <https://click.palletsprojects.com>`_ functionality,
+so we don't need to add another large dependency for simple console questions and outputs.
 """
 
 import logging
@@ -178,10 +179,10 @@ class ColorLogHandler(logging.Handler):
 
 
 class ColorLogFormatter(logging.Formatter):
+    """
+    Own version of a terminal log formatter to print our log messages with color.
+    """
     def __init__(self, _formats=None):
-        """
-        Own version of a terminal log formatter to print our log messages with color.
-        """
         super().__init__()
         self.formats = {
             'DEBUG': Formats.ITALIC.get_ansi() + '%(message)s' + Formats.ENDC.get_ansi(),

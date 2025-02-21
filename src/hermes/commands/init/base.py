@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2024 Forschungszentrum Jülich
+# SPDX-FileCopyrightText: 2024 Forschungszentrum Jülich GmbH
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-FileContributor: Nitai Heeb
 
@@ -24,7 +24,7 @@ from hermes.commands.base import HermesCommand, HermesPlugin
 from hermes.commands.init.util import (connect_github, connect_gitlab,
                                        connect_zenodo)
 
-TUTORIAL_URL = "https://docs.software-metadata.pub/en/latest/tutorials/automated-publication-with-ci.html"
+TUTORIAL_URL = "https://hermes.software-metadata.pub/en/latest/tutorials/automated-publication-with-ci.html"
 
 
 class GitHoster(Enum):
@@ -82,19 +82,25 @@ def scout_current_folder() -> HermesInitFolderInfo:
     current_dir = os.getcwd()
     info.current_dir = current_dir
     info.absolute_path = str(current_dir)
+
+    # TODO: should be "has_git_folder" instead of "has_git"
     info.has_git = os.path.isdir(os.path.join(current_dir, ".git"))
+    # TODO: missing an "else" case where people get a nice info they might not be at the project root or this is not a git-enabled project
     if info.has_git:
+        # Get remote name for next command
+        # TODO: missing a check if git is actually around as an executable and missing error handling if not or command fails
+        # TODO: missing case of multiple configured remotes (should we make the user choose?)
         git_remote = str(subprocess.run(['git', 'remote'], capture_output=True, text=True).stdout).strip()
         sc.debug_info(f"git remote = {git_remote}")
-        # Get remote url
+
+        # Get remote url via Git CLI and convert it to an HTTP link in case it's an SSH remote.
+        # TODO: unchecked usage of empty remote name
         info.git_remote_url = convert_remote_url(
             str(subprocess.run(['git', 'remote', 'get-url', git_remote], capture_output=True, text=True).stdout)
         )
-        branch_info = str(subprocess.run(['git', 'branch'], capture_output=True, text=True).stdout)
-        for line in branch_info.splitlines():
-            if line.startswith("*"):
-                info.current_branch = line.split()[1].strip()
-                break
+        # TODO: missing an "else" part!
+        # TODO: can't these three pieces be stitched together to only execute when there is a remote?
+        # TODO: is the url parsing necessary of it's hosted on github?
         if info.git_remote_url:
             parsed_url = urlparse(info.git_remote_url)
             info.git_base_url = f"{parsed_url.scheme}://{parsed_url.netloc}/"
@@ -103,6 +109,16 @@ def scout_current_folder() -> HermesInitFolderInfo:
             info.used_git_hoster = GitHoster.GitHub
         elif connect_gitlab.is_url_gitlab(info.git_base_url):
             info.used_git_hoster = GitHoster.GitLab
+
+        # Extract current branch name information by parsing Git output
+        # TODO: no exception or handling in case branch is empty (e.g. detached HEAD)
+        # TODO: why not use git rev-parse --abbrev-ref HEAD ?
+        branch_info = str(subprocess.run(['git', 'branch'], capture_output=True, text=True).stdout)
+        for line in branch_info.splitlines():
+            if line.startswith("*"):
+                info.current_branch = line.split()[1].strip()
+                break
+
     info.has_hermes_toml = os.path.isfile(os.path.join(current_dir, "hermes.toml"))
     info.has_gitignore = os.path.isfile(os.path.join(current_dir, ".gitignore"))
     info.has_citation_cff = os.path.isfile(os.path.join(current_dir, "CITATION.cff"))
@@ -113,6 +129,7 @@ def scout_current_folder() -> HermesInitFolderInfo:
         if os.path.isdir(os.path.join(current_dir, f))
         and not f.startswith(".")
     ]
+
     return info
 
 
