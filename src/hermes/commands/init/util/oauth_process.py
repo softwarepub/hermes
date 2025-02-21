@@ -39,10 +39,15 @@ def setup_logging_for_oauthlib():
 
 
 def parse_response_to_dict(response_text: str) -> dict:
+    """
+    Tries to read the response_text as Json-String to return it as dict.
+    If that fails, it tries to read it as query string.
+    """
     try:
         response_dict = json.loads(response_text)
         return response_dict
     except json.JSONDecodeError:
+        # Using extract_value to get the same output as json.loads since parse_qs likes to wrap every value into a list
         return {k: extract_value(v) for k, v in parse_qs(response_text).items()}
 
 
@@ -90,20 +95,6 @@ class OauthProcess:
 
     def get_tokens_from_refresh_token(self, refresh_token: str) -> dict[str: str]:
         """Returns access and refresh token as dict using a refresh token"""
-        # Maybe we need this later to debug the weird Zenodo refresh token error
-        # data = {
-        #     "grant_type": "refresh_token",
-        #     "refresh_token": refresh_token,
-        #     "client_id": self.client_id,
-        #     "client_secret": self.client_secret,
-        #     "scope": self.scope
-        # }
-        # response = requests.post(self.token_url, data=data)
-        # sc.debug_info(response=response.__dict__)
-        # sc.debug_info(
-        #     client_id=self.client_id, redirect_uri=self.redirect_uri, scope=self.scope,
-        #     token_url=self.token_url, refresh_token=refresh_token, client_secret=self.client_secret
-        # )
         oa_session = requests_oauthlib.OAuth2Session(self.client_id, redirect_uri=self.redirect_uri, scope=self.scope)
         return oa_session.refresh_token(self.token_url, refresh_token=refresh_token, client_secret=self.client_secret,
                                         include_client_id=True, client_id=self.client_id)

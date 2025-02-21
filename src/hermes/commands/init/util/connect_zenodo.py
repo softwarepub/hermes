@@ -8,6 +8,11 @@ import oauthlib.oauth2.rfc6749.errors
 from hermes.commands.init.util.oauth_process import OauthProcess
 import hermes.commands.init.util.slim_click as sc
 
+# NOTE: We are currently not using the public Zenodo OAuth2 client. This has two reasons:
+# 1. We need a non-expiring access token like the ones you create manually so that Hermes can always access the
+# account later on.
+# 2. Using the refresh token mechanism to compensate for that is currently not an option since it only works on
+# the real Zenodo (not the sandbox) until they fix it. see test_if_refresh_token_authorization_works()
 
 USING_SANDBOX_AS_DEFAULT = True
 
