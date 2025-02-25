@@ -1,12 +1,13 @@
-# SPDX-FileCopyrightText: 2024 Forschungszentrum Jülich
+# SPDX-FileCopyrightText: 2024 Forschungszentrum Jülich GmbH
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-FileContributor: Nitai Heeb
 
 import requests
 from base64 import b64encode
 from nacl import encoding, public
-from hermes.commands.init.oauth_process import OauthProcess
-import hermes.commands.init.slim_click as sc
+
+from . import slim_click as sc
+from .oauth_process import OauthProcess
 
 
 local_port = 8333

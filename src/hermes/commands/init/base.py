@@ -1,27 +1,30 @@
-# SPDX-FileCopyrightText: 2024 Forschungszentrum Jülich
+# SPDX-FileCopyrightText: 2024 Forschungszentrum Jülich GmbH
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-FileContributor: Nitai Heeb
 
 import argparse
+import logging
 import os
+import re
 import subprocess
 import sys
+from dataclasses import dataclass
+from enum import Enum, auto
+from importlib import metadata
+from pathlib import Path
+from urllib.parse import urljoin, urlparse
+
 import requests
 import toml
-import re
-from enum import Enum, auto
-from urllib.parse import urlparse, urljoin
-from pathlib import Path
 from pydantic import BaseModel
-from dataclasses import dataclass
-from hermes.commands.base import HermesCommand
-import hermes.commands.init.connect_github as connect_github
-import hermes.commands.init.connect_gitlab as connect_gitlab
-import hermes.commands.init.connect_zenodo as connect_zenodo
-import hermes.commands.init.slim_click as sc
+from requests import HTTPError
 
+import hermes.commands.init.util.slim_click as sc
+from hermes.commands.base import HermesCommand, HermesPlugin
+from hermes.commands.init.util import (connect_github, connect_gitlab,
+                                       connect_zenodo)
 
-TUTORIAL_URL = "https://docs.software-metadata.pub/en/latest/tutorials/automated-publication-with-ci.html"
+TUTORIAL_URL = "https://hermes.software-metadata.pub/en/latest/tutorials/automated-publication-with-ci.html"
 
 
 class GitHoster(Enum):
@@ -52,7 +55,7 @@ DepositPlatformUrls: dict[DepositPlatform, str] = {
 class HermesInitFolderInfo:
     def __init__(self):
         self.absolute_path: str = ""
-        self.has_git: bool = False
+        self.has_git_folder: bool = False
         self.git_remote_url: str = ""
         self.git_base_url: str = ""
         self.used_git_hoster: GitHoster = GitHoster.Empty
@@ -75,31 +78,50 @@ def is_git_installed():
 
 
 def scout_current_folder() -> HermesInitFolderInfo:
+    """
+    This method looks at the current directory and collects all init relevant data.
+
+    @return: HermesInitFolderInfo object containing the gathered knowledge
+    """
     info = HermesInitFolderInfo()
     current_dir = os.getcwd()
     info.current_dir = current_dir
     info.absolute_path = str(current_dir)
-    info.has_git = os.path.isdir(os.path.join(current_dir, ".git"))
-    if info.has_git:
+
+    info.has_git_folder = os.path.isdir(os.path.join(current_dir, ".git"))
+    # git-enabled project
+    if info.has_git_folder:
+        # Get remote name for next command
+        # TODO: missing case of multiple configured remotes (should we make the user choose?)
         git_remote = str(subprocess.run(['git', 'remote'], capture_output=True, text=True).stdout).strip()
         sc.debug_info(f"git remote = {git_remote}")
-        # Get remote url
+
+        # Get remote url via Git CLI and convert it to an HTTP link in case it's an SSH remote.
+        # TODO: unchecked usage of empty remote name
         info.git_remote_url = convert_remote_url(
             str(subprocess.run(['git', 'remote', 'get-url', git_remote], capture_output=True, text=True).stdout)
         )
+        # TODO: missing an "else" part!
+        # TODO: can't these three pieces be stitched together to only execute when there is a remote?
+        # TODO: is the url parsing necessary of it's hosted on github?
+        if info.git_remote_url:
+            parsed_url = urlparse(info.git_remote_url)
+            info.git_base_url = f"{parsed_url.scheme}://{parsed_url.netloc}/"
+            sc.debug_info(f"git base url = {info.git_base_url}")
+        if "github.com" in info.git_remote_url:
+            info.used_git_hoster = GitHoster.GitHub
+        elif connect_gitlab.is_url_gitlab(info.git_base_url):
+            info.used_git_hoster = GitHoster.GitLab
+
+        # Extract current branch name information by parsing Git output
+        # TODO: no exception or handling in case branch is empty (e.g. detached HEAD)
+        # TODO: why not use git rev-parse --abbrev-ref HEAD ?
         branch_info = str(subprocess.run(['git', 'branch'], capture_output=True, text=True).stdout)
         for line in branch_info.splitlines():
             if line.startswith("*"):
                 info.current_branch = line.split()[1].strip()
                 break
-        if info.git_remote_url:
-            parsed_url = urlparse(info.git_remote_url)
-            info.git_base_url = f"{parsed_url.scheme}://{parsed_url.netloc}/"
-            sc.debug_info(f"git base url = {info.git_base_url}")
-    if "github.com" in info.git_remote_url:
-        info.used_git_hoster = GitHoster.GitHub
-    elif connect_gitlab.is_url_gitlab(info.git_base_url):
-        info.used_git_hoster = GitHoster.GitLab
+
     info.has_hermes_toml = os.path.isfile(os.path.join(current_dir, "hermes.toml"))
     info.has_gitignore = os.path.isfile(os.path.join(current_dir, ".gitignore"))
     info.has_citation_cff = os.path.isfile(os.path.join(current_dir, "CITATION.cff"))
@@ -110,15 +132,19 @@ def scout_current_folder() -> HermesInitFolderInfo:
         if os.path.isdir(os.path.join(current_dir, f))
         and not f.startswith(".")
     ]
+
     return info
 
 
 def download_file_from_url(url, filepath, append: bool = False):
-    with requests.get(url, stream=True) as r:
-        r.raise_for_status()
-        with open(filepath, 'ab' if append else 'wb') as f:
-            for chunk in r.iter_content(chunk_size=8192):
-                f.write(chunk)
+    try:
+        with requests.get(url, stream=True) as r:
+            r.raise_for_status()
+            with open(filepath, 'ab' if append else 'wb') as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    f.write(chunk)
+    except HTTPError:
+        sc.echo(f"No file found at {url}.", formatting=sc.Formats.FAIL)
 
 
 def string_in_file(file_path, search_string: str) -> bool:
@@ -137,6 +163,28 @@ def convert_remote_url(url: str) -> str:
     if re.findall(r"^.+@.+\..+:.+\/.+$", url):
         url = re.sub(r"^.+@(.+\..+):(.+\/.+)$", r"https://\1/\2", url)
     return url
+
+
+def get_builtin_plugins(plugin_commands: list[str]) -> dict[str: HermesPlugin]:
+    plugins = {}
+    for plugin_command_name in plugin_commands:
+        entry_point_group = f"hermes.{plugin_command_name}"
+        group_plugins = {
+            entry_point.name: entry_point.load()
+            for entry_point in metadata.entry_points(group=entry_point_group)
+        }
+        plugins.update(group_plugins)
+    return plugins
+
+
+def get_handler_by_name(name: str) -> logging.Handler:
+    """Own implementation of logging.getHandlerByName so that we don't require Python 3.12"""
+    for logger_name in logging.root.manager.loggerDict:
+        logger = logging.getLogger(logger_name)
+        for handler in logger.handlers:
+            if handler.get_name() == name:
+                return handler
+    return None
 
 
 class _HermesInitSettings(BaseModel):
@@ -166,6 +214,8 @@ class HermesInitCommand(HermesCommand):
             "deposit_extra_files": "",
             "push_branch": "main"
         }
+        self.plugin_relevant_commands = ["harvest", "deposit"]
+        self.builtin_plugins: dict[str: HermesPlugin] = get_builtin_plugins(self.plugin_relevant_commands)
 
     def init_command_parser(self, command_parser: argparse.ArgumentParser) -> None:
         command_parser.add_argument('--template-branch', nargs=1, default="",
@@ -175,11 +225,24 @@ class HermesInitCommand(HermesCommand):
         pass
 
     def refresh_folder_info(self):
-        sc.echo("Scanning folder...", debug=True)
+        sc.debug_info("Scanning folder...")
         self.folder_info = scout_current_folder()
-        sc.echo("Scan complete.", debug=True)
+        sc.debug_info("Scan complete.")
+
+    def setup_file_logging(self):
+        # Silence old StreamHandler
+        handler = get_handler_by_name("terminal")
+        if handler:
+            handler.setLevel(logging.CRITICAL)
+        # Set file logger level
+        self.log.setLevel(level=logging.INFO)
+        # Connect logger with sc
+        sc.default_file_logger = self.log
 
     def __call__(self, args: argparse.Namespace) -> None:
+        # Setup logging
+        self.setup_file_logging()
+
         # Save command parameter (template branch)
         if hasattr(args, "template_branch"):
             if args.template_branch != "":
@@ -230,7 +293,7 @@ class HermesInitCommand(HermesCommand):
         self.refresh_folder_info()
 
         # Abort if there is no git
-        if not self.folder_info.has_git:
+        if not self.folder_info.has_git_folder:
             sc.echo("The current directory has no `.git` subdirectory. "
                     "Please execute `hermes init` in the root directory of your git project.",
                     formatting=sc.Formats.WARNING)
@@ -317,6 +380,7 @@ class HermesInitCommand(HermesCommand):
                 with open(".gitignore", "a") as file:
                     file.write("# Ignoring all HERMES cache files\n")
                     file.write(".hermes/\n")
+                    file.write("hermes.log\n")
                 sc.echo("Added `.hermes/` to the `.gitignore` file.", formatting=sc.Formats.OKGREEN)
 
     def get_template_url(self, filename: str) -> str:
@@ -384,12 +448,6 @@ class HermesInitCommand(HermesCommand):
         # Deactivated Zenodo OAuth as long as the refresh token bug is not fixed.
         if self.setup_method == "a":
             sc.echo("Doing OAuth with Zenodo is currently not available.")
-        #     self.tokens[self.deposit_platform] = "REFRESH_TOKEN:" + connect_zenodo.get_refresh_token()
-        #     if self.tokens[self.deposit_platform]:
-        #         sc.echo("OAuth at Zenodo was successful.")
-        #         sc.echo(self.tokens[self.deposit_platform], debug=True)
-        #     else:
-        #         sc.echo("Something went wrong while doing OAuth. You'll have to do it manually instead.")
         if self.setup_method == "m" or self.tokens[self.deposit_platform] == '':
             zenodo_token_url = urljoin(DepositPlatformUrls[self.deposit_platform],
                                        "account/settings/applications/tokens/new/")
@@ -400,7 +458,18 @@ class HermesInitCommand(HermesCommand):
             if self.setup_method == "m":
                 sc.press_enter_to_continue()
             else:
-                self.tokens[self.deposit_platform] = sc.answer("Then enter the token here: ")
+                while True:
+                    self.tokens[self.deposit_platform] = sc.answer("Enter the token here: ")
+                    valid = connect_zenodo.test_if_token_is_valid(self.tokens[self.deposit_platform])
+                    if valid:
+                        sc.echo(f"The token was validated by {connect_zenodo.name}.",
+                                formatting=sc.Formats.OKGREEN)
+                        break
+                    else:
+                        sc.echo(f"The token could not be validated by {connect_zenodo.name}. "
+                                "Make sure to enter the complete token.\n"
+                                "(If this error persists, you should try switching to the manual setup mode.)",
+                                formatting=sc.Formats.WARNING)
 
     def configure_git_project(self):
         """Adding the token to the git secrets & changing action workflow settings"""

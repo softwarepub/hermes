@@ -1,12 +1,13 @@
-# SPDX-FileCopyrightText: 2024 Forschungszentrum Jülich
+# SPDX-FileCopyrightText: 2024 Forschungszentrum Jülich GmbH
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-FileContributor: Nitai Heeb
 
 import requests
 from urllib.parse import urlparse, urljoin, quote
 from datetime import datetime, timedelta
-from hermes.commands.init.oauth_process import OauthProcess
-import hermes.commands.init.slim_click as sc
+
+from . import slim_click as sc
+from .oauth_process import OauthProcess
 
 
 default_scopes = "api write_repository"
