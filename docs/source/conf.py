@@ -58,6 +58,12 @@ def read_authors_from_pyproject():
     # Convert the list of authors to a comma-separated string
     return ", ".join([a.split(" <")[0] for a in authors])
 
+def read_version_from_pyproject():
+    metadata = read_from_pyproject()
+    version = metadata.get("version", "")
+    if not version:
+        return "No version metadata found in pyproject.toml"
+    return version
 
 
 # -- Project information -----------------------------------------------------
@@ -67,7 +73,7 @@ copyright = '2024, HERMES project'
 author = read_authors_from_pyproject()
 
 # The full version, including alpha/beta/rc tags
-release = '2024-01-11'
+release = read_version_from_pyproject()
 
 
 # -- General configuration ---------------------------------------------------
