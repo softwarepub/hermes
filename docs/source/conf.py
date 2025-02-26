@@ -69,7 +69,7 @@ def read_version_from_pyproject():
 # -- Project information -----------------------------------------------------
 
 project = 'HERMES Workflow'
-copyright = '2024, HERMES project'
+copyright = '2025 by Forschungszentrum Jülich (FZJ), German Aerospace Center (DLR) and Helmholtz-Zentrum Dresden-Rossendorf (HZDR)'
 author = read_authors_from_pyproject()
 
 # The full version, including alpha/beta/rc tags
