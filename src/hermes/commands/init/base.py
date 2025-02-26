@@ -160,7 +160,7 @@ class HermesInitCommand(HermesCommand):
         self.template_repo: str = "softwarepub/ci-templates"
         self.template_folder: str = "init"
         self.ci_parameters: dict = {
-            "deposit_zip_name": "showcase.zip",
+            "deposit_zip_name": "artifact.zip",
             "deposit_zip_files": "",
             "deposit_initial": "--initial",
             "deposit_extra_files": "",
