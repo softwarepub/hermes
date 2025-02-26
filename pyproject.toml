@@ -108,6 +108,13 @@ docs-clean = "poetry run sphinx-build -M clean docs/source docs/build"
 docs-live = "poetry run sphinx-autobuild docs/source docs/build"
 flake8 = "poetry run flake8 ./test/ ./src/ --count --select=E9,F63,F7,F82 --statistics"
 
+[tool.pytest.ini_options]
+norecursedirs = "docs/*"
+testpaths = [
+    "test"
+]
+addopts = "--cov=hermes --cov-report term"
+
 [build-system]
 requires = ["poetry-core>=1.2.0"]
 build-backend = "poetry.core.masonry.api"
