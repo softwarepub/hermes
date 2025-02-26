@@ -13,14 +13,15 @@ version = "0.8.1"
 description = "Workflow to publish research software with rich metadata"
 homepage = "https://software-metadata.pub"
 license = "Apache-2.0"
+# All natural persons doing regular contributions and equipped with write access to the repo.
+# Alphabetical order of last name. See also GOVERNANCE.md.
 authors = [
-    "Stephan Druskat <stephan.druskat@dlr.de>",
-    "Michael Meinel <michael.meinel@dlr.de>",
     "Oliver Bertuch <o.bertuch@fz-juelich.de>",
-    "Jeffrey Kelling <j.kelling@hzdr.de>",
-    "Oliver Knodel <o.knodel@hzdr.de>",
-    "David Pape <d.pape@hzdr.de>",
+    "Stephan Druskat <stephan.druskat@dlr.de>",
+    "Nitai Heeb <n.heeb@fz-juelich.de>",
     "Sophie Kernchen <sohpie.kernchen@dlr.de>",
+    "Michael Meinel <michael.meinel@dlr.de>",
+    "David Pape <d.pape@hzdr.de>"
 ]
 
 readme = "README.md"
