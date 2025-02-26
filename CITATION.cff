@@ -54,6 +54,11 @@ authors:
     email: sophie.kernchen@dlr.de
     affiliation: German Aerospace Center (DLR)
     orcid: 'https://orcid.org/0009-0005-4430-6743'
+  - given-names: Nitai
+    family-names: Heeb
+    email: n.heeb@fz-juelich.de
+    affiliation: Forschungszentrum Jülich
+    orcid: 'https://orcid.org/0009-0001-8382-4923'
 identifiers:
   - type: doi
     value: 10.5281/zenodo.13221384
