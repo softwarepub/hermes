@@ -137,7 +137,7 @@ class HermesCommand(abc.ABC):
             self.settings = getattr(self.root_settings, self.command_name)
         except FileNotFoundError as e:
             self.log.error("hermes.toml was not found.")
-            raise e # This will lead to our default error message & sys.exit
+            raise e  # This will lead to our default error message & sys.exit
 
     def patch_settings(self, args: argparse.Namespace):
         """Process command line options for the settings."""
