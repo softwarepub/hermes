@@ -28,3 +28,7 @@ class HermesCleanCommand(HermesCommand):
 
         # Naive implementation for now... check errors, validate directory, don't construct the path ourselves, etc.
         shutil.rmtree(args.path / '.hermes')
+
+    def load_settings(self, args: argparse.Namespace):
+        """No settings are needed for the clean command."""
+        pass
