@@ -12,8 +12,8 @@ import argparse
 import sys
 
 from hermes import logger
-from hermes.commands import (HermesHelpCommand, HermesVersionCommand, HermesCleanCommand, \
-                             HermesHarvestCommand, HermesProcessCommand, HermesCurateCommand, \
+from hermes.commands import (HermesHelpCommand, HermesVersionCommand, HermesCleanCommand,
+                             HermesHarvestCommand, HermesProcessCommand, HermesCurateCommand,
                              HermesDepositCommand, HermesPostprocessCommand, HermesInitCommand)
 from hermes.commands.base import HermesCommand
 
