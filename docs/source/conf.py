@@ -22,18 +22,49 @@
 #
 import os
 import sys
+import toml
+
 sys.path.insert(0, os.path.abspath('../../src'))
 sys.path.append(os.path.abspath('_ext'))
+
+def read_from_pyproject(file_path="../../pyproject.toml"):
+    """
+    Reads the metadata from the pyproject.toml file.
+
+    :param file_path: Path to the pyproject.toml file (default: "pyproject.toml")
+    :return: A list of authors or a message if no authors are found.
+    """
+    try:
+        # Load the pyproject.toml file
+        data = toml.load(file_path)
+
+        # Navigate to the authors metadata
+        metadata = data.get("tool", {}).get("poetry", {})
+        if not metadata:
+            return "No metadata found in pyproject.toml"
+        return metadata
+    except FileNotFoundError:
+        return f"The file {file_path} was not found."
+    except toml.TomlDecodeError:
+        return f"Failed to parse {file_path}. Ensure it is a valid TOML file."
+    except Exception as e:
+        return f"An unexpected error occurred: {e}"
+
+def read_authors_from_pyproject():
+    metadata = read_from_pyproject()
+    authors = metadata.get("authors", [])
+    if not authors:
+        return "No authors metadata found in pyproject.toml"
+    # Convert the list of authors to a comma-separated string
+    return ", ".join([a.split(" <")[0] for a in authors])
+
 
 
 # -- Project information -----------------------------------------------------
 
 project = 'HERMES Workflow'
 copyright = '2024, HERMES project'
-author = 'Oliver Bertuch, Stephan Druskat, Guido Juckeland, Jeffrey Kelling, ' + \
-         'Oliver Knodel, Michael Meinel, Tobias Schlauch, Sophie Kernchen, ' + \
-         'David Pape'
-
+author = read_authors_from_pyproject()
 
 # The full version, including alpha/beta/rc tags
 release = '2024-01-11'
