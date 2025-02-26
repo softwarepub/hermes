@@ -9,23 +9,24 @@
 [tool.poetry]
 # Reference at https://python-poetry.org/docs/pyproject/
 name = "hermes"
-version = "0.8.1"
+version = "0.9.0.dev0"
 description = "Workflow to publish research software with rich metadata"
 homepage = "https://software-metadata.pub"
 license = "Apache-2.0"
+# All natural persons doing regular contributions and equipped with write access to the repo.
+# Alphabetical order of last name. See also GOVERNANCE.md.
 authors = [
-    "Stephan Druskat <stephan.druskat@dlr.de>",
-    "Michael Meinel <michael.meinel@dlr.de>",
     "Oliver Bertuch <o.bertuch@fz-juelich.de>",
-    "Jeffrey Kelling <j.kelling@hzdr.de>",
-    "Oliver Knodel <o.knodel@hzdr.de>",
-    "David Pape <d.pape@hzdr.de>",
+    "Stephan Druskat <stephan.druskat@dlr.de>",
+    "Nitai Heeb <n.heeb@fz-juelich.de>",
     "Sophie Kernchen <sohpie.kernchen@dlr.de>",
+    "Michael Meinel <michael.meinel@dlr.de>",
+    "David Pape <d.pape@hzdr.de>"
 ]
 
 readme = "README.md"
-repository = "https://github.com/hermes-hmc/workflow"
-documentation = "https://docs.software-metadata.pub"
+repository = "https://github.com/softwarepub/hermes"
+documentation = "https://hermes.software-metadata.pub"
 keywords = ["publishing", "metadata", "automation"]
 
 include = [
@@ -106,6 +107,13 @@ docs-build = "poetry run sphinx-build -M html docs/source docs/build -W"
 docs-clean = "poetry run sphinx-build -M clean docs/source docs/build"
 docs-live = "poetry run sphinx-autobuild docs/source docs/build"
 flake8 = "poetry run flake8 ./test/ ./src/ --count --select=E9,F63,F7,F82 --statistics"
+
+[tool.pytest.ini_options]
+norecursedirs = "docs/*"
+testpaths = [
+    "test"
+]
+addopts = "--cov=hermes --cov-report term"
 
 [build-system]
 requires = ["poetry-core>=1.2.0"]

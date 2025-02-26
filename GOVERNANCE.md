@@ -57,7 +57,7 @@ German Aerospace Center (DLR),
 Helmholtz-Zentrum Dresden-Rossendorf (HZDR), 
 Forschungszentrum Jülich (FZJ).
 
-Currently the Steering Group consists of:
+Currently, the Steering Group consists of:
 
 - Stephan Druskat (DLR), stephan.druskat@dlr.de
 - David Pape (HZDR), d.pape@hzdr.de
@@ -79,3 +79,6 @@ they are asked to nominate a successor.
 If no successor is named,
 the Steering Group seeks a successor.
 One member of the Steering Group steps in as interim maintainer until a successor is found.
+
+In addition, all contributors with write access to repositories and regular activities should be added as "authors" to project and build system metadata in alphabetical order.
+They may also qualify for scholarly authorship, which is managed in citation metadata as necessary and may be ordered by other criteria.
