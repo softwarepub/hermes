@@ -136,7 +136,7 @@ class HermesCommand(abc.ABC):
             self.root_settings = HermesCommand.settings_class.model_validate(toml_data)
             self.settings = getattr(self.root_settings, self.command_name)
         except FileNotFoundError as e:
-            self.log.error("hermes.toml was not found.")
+            self.log.error("hermes.toml was not found. Try to run 'hermes init' first or create one manually.")
             raise e  # This will lead to our default error message & sys.exit
 
     def patch_settings(self, args: argparse.Namespace):
