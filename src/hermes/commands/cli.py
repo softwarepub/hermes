@@ -73,7 +73,7 @@ def main() -> None:
         log.info("Run subcommand %s", args.command.command_name)
         args.command(args)
     except Exception as e:
-        log.error("An error occurred during execution of %s (Find details in './hermes.log')", \
+        log.error("An error occurred during execution of %s (Find details in './hermes.log')",
                   args.command.command_name)
         log.debug("Original exception was: %s", e)
 
