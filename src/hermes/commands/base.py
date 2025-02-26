@@ -8,7 +8,6 @@ import abc
 import argparse
 import logging
 import pathlib
-import sys
 from importlib import metadata
 from typing import Dict, Optional, Type
 
