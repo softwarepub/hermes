@@ -3,20 +3,19 @@
 # SPDX-License-Identifier: CC0-1.0
 
 [harvest]
-sources = [ "cff" ] # ordered priority (first one is most important)
-
-[harvest.cff]
-enable_validation = false
+sources = [ "cff", "toml" ] # ordered priority (first one is most important)
 
 [deposit]
 target = "invenio_rdm"
 
 [deposit.invenio_rdm]
-site_url = "https://sandbox.zenodo.org"
+site_url = "https://zenodo.org"
 communities = []
 access_right = "open"
+record_id = 13221384
 
 [deposit.invenio_rdm.api_paths]
 depositions = "api/deposit/depositions"
 licenses = "api/vocabularies/licenses"
 communities = "api/communities"
+

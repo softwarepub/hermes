@@ -30,8 +30,8 @@ You can either download it as a zipped package or clone the whole Git repository
 You can clone the repository and enter the project directory as follows:
 
 ```shell
-git clone https://gitlab.com/hermes-hmc/workflow.git
-cd workflow
+git clone https://gitlab.com/hermes-hmc/hermes.git
+cd hermes
 ```
 
 ## Learn how our repo is structured

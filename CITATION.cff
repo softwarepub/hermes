@@ -14,9 +14,9 @@ title: hermes
 message: >-
   If you use this software, please cite it using the
   metadata from this file.
-version: "0.8.0"
+version: 0.9.0
 license: "Apache-2.0"
-abstract: "Implementation of the HERMES workflow for FAIR software publication."
+abstract: "Tool to automate software publication. Not stable yet."
 type: software
 authors:
   - given-names: Michael
@@ -29,15 +29,10 @@ authors:
     email: stephan.druskat@dlr.de
     affiliation: German Aerospace Center (DLR)
     orcid: 'https://orcid.org/0000-0003-4925-7248'
-  - given-names: Jeffrey
-    family-names: Kelling
-    email: j.kelling@hzdr.de
-    affiliation: Helmholtz-Zentrum Dresden-Rossendorf (HZDR)
-    orcid: 'https://orcid.org/0000-0003-1761-2591'
   - given-names: Oliver
     family-names: Bertuch
     email: o.bertuch@fz-juelich.de
-    affiliation: Forschungszentrum Jülich GmbH (FZJ)
+    affiliation: Forschungszentrum Jülich
     orcid: 'https://orcid.org/0000-0002-2702-3419'
   - given-names: Oliver
     family-names: Knodel
@@ -49,3 +44,17 @@ authors:
     email: d.pape@hzdr.de
     affiliation: Helmholtz-Zentrum Dresden-Rossendorf (HZDR)
     orcid: 'https://orcid.org/0000-0002-3145-9880'
+  - given-names: Kernchen
+    family-names: Sophie
+    email: sophie.kernchen@dlr.de
+    affiliation: German Aerospace Center (DLR)
+    orcid: 'https://orcid.org/0009-0005-4430-6743'
+  - given-names: Nitai
+    family-names: Heeb
+    email: n.heeb@fz-juelich.de
+    affiliation: Forschungszentrum Jülich
+    orcid: 'https://orcid.org/0009-0001-8382-4923'
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.13221384
+    description: Version 0.8.1b1

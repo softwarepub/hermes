@@ -9,23 +9,27 @@ import pytest
 from hermes.commands import cli
 
 
-def test_hermes_full(capsys):
+def test_hermes_full():
     with pytest.raises(SystemExit) as se:
         cli.main()
         assert "choose from" in se
 
 
-@pytest.mark.skip(reason="Needs update")
 def test_hermes_harvest(hermes_env):
+    hermes_env['hermes.toml'] = ""
+
     with hermes_env:
         result = hermes_env.run("harvest")
 
     assert result.returncode == 0
 
 
-@pytest.mark.skip(reason="Needs update")
 def test_hermes_process(hermes_env):
+    hermes_env['hermes.toml'] = ""
+    hermes_env['.hermes/harvest/test.json'] = ""
+
     with hermes_env:
         result = hermes_env.run("process")
+        print(result.stdout.read())
 
     assert result.returncode == 0

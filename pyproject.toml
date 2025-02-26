@@ -9,22 +9,24 @@
 [tool.poetry]
 # Reference at https://python-poetry.org/docs/pyproject/
 name = "hermes"
-version = "0.8.0"
+version = "0.9.0"
 description = "Workflow to publish research software with rich metadata"
 homepage = "https://software-metadata.pub"
 license = "Apache-2.0"
+# All natural persons doing regular contributions and equipped with write access to the repo.
+# Alphabetical order of last name. See also GOVERNANCE.md.
 authors = [
-    "Stephan Druskat <stephan.druskat@dlr.de>",
-    "Michael Meinel <michael.meinel@dlr.de>",
     "Oliver Bertuch <o.bertuch@fz-juelich.de>",
-    "Jeffrey Kelling <j.kelling@hzdr.de>",
-    "Oliver Knodel <o.knodel@hzdr.de>",
-    "David Pape <d.pape@hzdr.de>",
+    "Stephan Druskat <stephan.druskat@dlr.de>",
+    "Nitai Heeb <n.heeb@fz-juelich.de>",
+    "Sophie Kernchen <sohpie.kernchen@dlr.de>",
+    "Michael Meinel <michael.meinel@dlr.de>",
+    "David Pape <d.pape@hzdr.de>"
 ]
 
 readme = "README.md"
-repository = "https://github.com/hermes-hmc/workflow"
-documentation = "https://docs.software-metadata.pub"
+repository = "https://github.com/softwarepub/hermes"
+documentation = "https://hermes.software-metadata.pub"
 keywords = ["publishing", "metadata", "automation"]
 
 include = [
@@ -49,6 +51,8 @@ pyparsing = "^3.0.9"
 requests = "^2.28.1"
 pydantic = "^2.5.1"
 pydantic-settings = "^2.1.0"
+requests-oauthlib = "^2.0.0"
+pynacl = "^1.5.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.1.1"
@@ -77,9 +81,11 @@ sphinxext-opengraph = "^0.6.3"
 sphinxcontrib-mermaid="^0.8.1"
 sphinx-togglebutton="^0.3.2"
 reuse = "^1.1.2"
+sphinxcontrib-datatemplates = "^0.11.0"
 
 [tool.poetry.plugins.console_scripts]
 hermes = "hermes.commands.cli:main"
+hermes-marketplace = "hermes.commands.marketplace:main"
 
 [tool.poetry.plugins."hermes.harvest"]
 cff = "hermes.commands.harvest.cff:CffHarvestPlugin"
@@ -89,6 +95,7 @@ codemeta = "hermes.commands.harvest.codemeta:CodeMetaHarvestPlugin"
 file = "hermes.commands.deposit.file:FileDepositPlugin"
 invenio = "hermes.commands.deposit.invenio:InvenioDepositPlugin"
 invenio_rdm = "hermes.commands.deposit.invenio_rdm:IvenioRDMDepositPlugin"
+rodare = "hermes.commands.deposit.rodare:RodareDepositPlugin"
 
 [tool.poetry.plugins."hermes.postprocess"]
 config_invenio_record_id = "hermes.commands.postprocess.invenio:config_record_id"
@@ -100,6 +107,13 @@ docs-build = "poetry run sphinx-build -M html docs/source docs/build -W"
 docs-clean = "poetry run sphinx-build -M clean docs/source docs/build"
 docs-live = "poetry run sphinx-autobuild docs/source docs/build"
 flake8 = "poetry run flake8 ./test/ ./src/ --count --select=E9,F63,F7,F82 --statistics"
+
+[tool.pytest.ini_options]
+norecursedirs = "docs/*"
+testpaths = [
+    "test"
+]
+addopts = "--cov=hermes --cov-report term"
 
 [build-system]
 requires = ["poetry-core>=1.2.0"]

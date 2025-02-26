@@ -9,6 +9,7 @@ SPDX-FileContributor: Oliver Bertuch
 SPDX-FileContributor: Michael Meinel
 SPDX-FileContributor: Stephan Druskat
 SPDX-FileContributor: Sophie Kernchen
+SPDX-FileContributor: Nitai Heeb
 -->
 
 # Set up automatic software publishing
@@ -16,11 +17,59 @@ SPDX-FileContributor: Sophie Kernchen
 ```{note}
 This tutorial works for repositories hosted on GitHub or GitLab, and shows how to automatically publish to 
 [Zenodo Sandbox](https://sandbox.zenodo.org). Zenodo Sandbox is a "toy" repository that can be used to try things out.
-
-This tutorial should also work with the "real" [Zenodo](https://zenodo.org).
+This tutorial also works with the "real" [Zenodo](https://zenodo.org).
 ```
- 
-## Configure your .gitignore
+
+## Automated Setup using `hermes init`
+
+Following the automated initialization process will take you about 5 minutes start to finish.
+If you need to set up accounts as well, add +5 minutes.
+If you need to create a project-specific CITATIONS.cff file via [cffinit](https://citation-file-format.github.io/cff-initializer-javascript), add another +5 to +15 minutes, depending on the level of detail you require.
+Installing Python and Git might take you another +15 minutes.
+*You should be done in about 5 to 40 minutes.*
+
+```{note}
+This also works with many Jupyter Hubs, no need for a Linux computer!
+(Try using one hosted by [HIFIS](https://helmholtz.cloud/services/?filterSearchInput=Jupyter), [Google Colab](https://colab.google) or within your home institution)
+```
+
+1. To use the automated setup you need Python to be installed on your device.
+   If it is not installed, you can [download Python here](https://www.python.org/downloads/).
+2. Open a terminal or your favourite shell. Don't worry, we don't do anything fancy here.
+3. Use Git to clone a working copy of your project onto your computer or other machine with access to a shell.
+   (You can skip this if you have done this already, or you can use a GUI Git client.)
+   For example:
+   ```{code-block} bash
+     git clone https://github.com/my/project myproject
+   ```
+4. Now use `pip` to install HERMES:
+   ```{code-block} bash
+     python -m pip install hermes
+   ```
+5. Once installed, navigate to the main directory of your project.
+   ```{code-block} bash
+     cd myproject/
+   ```
+6. From here you can start the automated setup by running:
+   ```{code-block} bash
+     hermes init
+   ```
+   Now simply follow the steps through the setup.
+7. When you're done, don't forget to add, commit and push the changes and new files you just made!
+
+
+```{important}
+Be advised: during the setup, you can choose to grant access to all of your projects on your social coding platform.
+The HERMES setup requires this to speed up the automated setup process for you.
+It is perfectly safe to revoke this access once you're done.
+You can still opt out and do some of the steps manually.
+```
+
+## Manual setup
+
+If using Python is not an option, you can set up the HERMES workflow manually for your git project by following the steps below.
+
+### Configure your .gitignore
  
 The HERMES workflow (`hermes`) uses temporary caches in `.hermes/`.
 Ignore this directory in your git repository.
@@ -33,7 +82,7 @@ Add `.hermes/` to your `.gitignore` file:
 .hermes/
 ```
 
-## Provide additional metadata using CITATION.cff
+### Provide additional metadata using CITATION.cff
  
 To provide high-quality citation metadata for your project and your publication,
 provide a `CITATION.cff` file in the [Citation File Format](https://citation-file-format.github.io/).
@@ -54,7 +103,7 @@ git commit -m "Add citation file"
 git push
 ```
  
-## HERMES configuration
+### HERMES configuration
  
 The HERMES workflow is configured in a [TOML](https://toml.io) file: `hermes.toml`.
 Each step in the publication workflow has its own section.
@@ -70,7 +119,7 @@ Configure HERMES to:
 :name: hermes.toml
 
 [harvest]
-from = [ "git", "cff" ]
+sources = [ "cff" ]
 
 [deposit]
 target = "invenio_rdm"
@@ -79,8 +128,6 @@ target = "invenio_rdm"
 site_url = "https://sandbox.zenodo.org"
 access_right = "open"
 
-[postprocess]
-execute = [ "config_invenio_rdm_record_id" ]
 ```
 
 Copy this file to the root directory of your repository and add it to version control:
@@ -97,14 +144,14 @@ be sure that there is no `record_id` value defined in the `deposit.invenio_rdm` 
 Otherwise, your deposition will fail as *hermes* would try to deposit a new version for the given record.
 ```
 
-## Get a personal access token for Zenodo Sandbox
+### Get a personal access token for Zenodo (Sandbox)
 
-To allow GitHub Actions to publish your repository to Zenodo Sandbox for you,
-you need a personal access token from Zenodo Sandbox.
+To allow GitHub Actions to publish your repository to Zenodo (Sandbox) for you,
+you need a personal access token from Zenodo (Sandbox).
 
-Log in at [Zenodo Sandbox](https://sandbox.zenodo.org) (you may have to register first).
+Log in at [Zenodo Sandbox](https://sandbox.zenodo.org) or [Zenodo](https://zenodo.org) (you may have to register first).
 
-Then [create a new personal access token in your user profile](https://sandbox.zenodo.org/account/settings/applications/tokens/new/)
+Then create a new personal access token [in your Zenodo Sandbox user profile](https://sandbox.zenodo.org/account/settings/applications/tokens/new/) or [in your Zenodo user profile](https://zenodo.org/account/settings/applications/tokens/new/)
 with the scopes `deposit:actions` and `deposit:write`.
 
 ```{toggle}
@@ -113,7 +160,7 @@ with the scopes `deposit:actions` and `deposit:write`.
 
 Keep the generated token somewhere from where you can easily retrieve it later on (e.g., a password safe).
 
-## Configure continuous integration build to use `hermes`
+### Configure continuous integration build to use `hermes`
 
 The following instructions differ depending on whether you are using GitHub actions or GitLab CI for your
 development workflow.
@@ -122,7 +169,7 @@ To support this, the HERMES project provides templates for continuous integratio
 [hermes-hmc/ci-templates](https://github.com/hermes-hmc/ci-templates).
 
 
-### Configure a GitHub Action to automate publication 
+#### Configure a GitHub Action to automate publication 
 
 Copy the Zenodo sandbox token you just created into a new [GitHub Secret](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-a-repository)
 called `ZENODO_SANDBOX` in your repository.
@@ -163,7 +210,7 @@ and activate the option "Allow GitHub Actions to create and approve pull request
 ![](img/github-action-allow-pr.png)
 ```
 
-### Configure GitLab CI to automate publication
+#### Configure GitLab CI to automate publication
 
 Copy the Zenodo sandbox token you just created into a new [GitLab CI variable](https://docs.gitlab.com/ee/ci/variables/#for-a-project)
 called `ZENODO_TOKEN`.
@@ -223,8 +270,12 @@ If you haven't adapted the workflow file and push it to the branch `main`, the H
 This will create a new merge request with compiled metadata for curation. You can safely close it at this point.
 ```
 
+### Congratulations
 
-## Automatic publication workflow
+Now the HERMES workflow is ready to run.
+If you haven't adapted the workflow file, it will be triggered whenever you push to your `main` branch.
+
+## Automatic Publication Workflow Details
 
 ````{margin}
 ```{mermaid}
@@ -247,13 +298,6 @@ flowchart TD
     d -->|Close| ci3 --> e
 ```
 ````
-
-```{admonition} Congratulations!
-You can now automatically publish your repository to Zenodo Sandbox!
-```
-
-Now the HERMES workflow is ready to run.
-If you haven't adapted the workflow file, it will be triggered whenever you push to your `main` branch.
 
 The diagram to the right shows the different steps that will happen each time.
 
