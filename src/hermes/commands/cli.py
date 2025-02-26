@@ -12,8 +12,9 @@ import argparse
 import sys
 
 from hermes import logger
-from hermes.commands import HermesHelpCommand, HermesCleanCommand, HermesHarvestCommand, HermesProcessCommand, \
-                            HermesCurateCommand, HermesDepositCommand, HermesPostprocessCommand, HermesInitCommand
+from hermes.commands import (HermesHelpCommand, HermesVersionCommand, HermesCleanCommand, \
+                             HermesHarvestCommand, HermesProcessCommand, HermesCurateCommand, \
+                             HermesDepositCommand, HermesPostprocessCommand, HermesInitCommand)
 from hermes.commands.base import HermesCommand
 
 
@@ -36,6 +37,7 @@ def main() -> None:
 
     for command in (
             HermesHelpCommand(parser),
+            HermesVersionCommand(parser),
             HermesInitCommand(parser),
             HermesCleanCommand(parser),
             HermesHarvestCommand(parser),
