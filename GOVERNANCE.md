@@ -57,7 +57,7 @@ German Aerospace Center (DLR),
 Helmholtz-Zentrum Dresden-Rossendorf (HZDR), 
 Forschungszentrum Jülich (FZJ).
 
-Currently the Steering Group consists of:
+Currently, the Steering Group consists of:
 
 - Stephan Druskat (DLR), stephan.druskat@dlr.de
 - David Pape (HZDR), d.pape@hzdr.de
