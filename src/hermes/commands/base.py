@@ -206,3 +206,23 @@ class HermesHelpCommand(HermesCommand):
     def load_settings(self, args: argparse.Namespace):
         """No settings are needed for the help command."""
         pass
+
+
+class HermesVersionSettings(BaseModel):
+    """Intentionally empty settings class for the version command."""
+    pass
+
+
+class HermesVersionCommand(HermesCommand):
+    """Show HERMES version and exit."""
+
+    command_name = "version"
+    settings_class = HermesVersionSettings
+
+    def load_settings(self, args: argparse.Namespace):
+        """Pass loading settings as not necessary for this command."""
+        pass
+
+    def __call__(self, args: argparse.Namespace) -> None:
+        self.log.info(metadata.version("hermes"))
+        self.parser.exit()
