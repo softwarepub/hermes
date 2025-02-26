@@ -4,11 +4,12 @@
 
 To release a new version of HERMES when a new set of features and/or fixes have been merged, execute the following steps:
 
-1. Adjust the version number in `pyproject.toml` as necessary (major, minor or patch release).
-   Please create and merge a PR for this. Don't just push to `develop`.
-   To edit the version, you can use two ways:
+1. Adjust the version number in `pyproject.toml` and `CITATION.cff` as necessary (major, minor or patch release).
+   Please create a branch `release/v<version>` and merge it in a PR - don't just push to `develop`.
+   To edit the version in `pyproject.toml`, there are two ways:
    - Manually edit the file with an editor.
    - Use `poetry version <rule>`. See also [Poetry Docs](https://python-poetry.org/docs/cli/#version)
+   After merging, delete the "release" branch.
 2. Create a pull request from `develop` to `main`.
 3. Check if all the CI pipelines for that PR succeed.
 3. Let the named maintainer (see GOVERNANCE.md) merge the PR into `main`.
