@@ -78,7 +78,7 @@ def is_git_installed():
         return False
 
 
-def scout_current_folder(git_remote_index = 0) -> HermesInitFolderInfo:
+def scout_current_folder(git_remote_index=0) -> HermesInitFolderInfo:
     """
     This method looks at the current directory and collects all init relevant data.
     This method is not meant to contain any user interactions.
@@ -116,7 +116,7 @@ def scout_current_folder(git_remote_index = 0) -> HermesInitFolderInfo:
                     info.used_git_hoster = GitHoster.GitHub
                 elif connect_gitlab.is_url_gitlab(info.git_base_url):
                     info.used_git_hoster = GitHoster.GitLab
-            except:
+            except Exception:
                 pass
 
         # Extract current branch name information by parsing Git output
