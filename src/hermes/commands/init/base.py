@@ -56,6 +56,7 @@ class HermesInitFolderInfo:
     def __init__(self):
         self.absolute_path: str = ""
         self.has_git_folder: bool = False
+        self.has_multiple_remotes: bool = False
         self.git_remote_url: str = ""
         self.git_base_url: str = ""
         self.used_git_hoster: GitHoster = GitHoster.Empty
@@ -77,10 +78,10 @@ def is_git_installed():
         return False
 
 
-def scout_current_folder() -> HermesInitFolderInfo:
+def scout_current_folder(git_remote_index = 0) -> HermesInitFolderInfo:
     """
     This method looks at the current directory and collects all init relevant data.
-
+    This method is not meant to contain any user interactions.
     @return: HermesInitFolderInfo object containing the gathered knowledge
     """
     info = HermesInitFolderInfo()
@@ -92,30 +93,34 @@ def scout_current_folder() -> HermesInitFolderInfo:
     # git-enabled project
     if info.has_git_folder:
         # Get remote name for next command
-        # TODO: missing case of multiple configured remotes (should we make the user choose?)
-        git_remote = str(subprocess.run(['git', 'remote'], capture_output=True, text=True).stdout).strip()
+        git_remote: str = str(subprocess.run(['git', 'remote'], capture_output=True, text=True).stdout).strip()
         sc.debug_info(f"git remote = {git_remote}")
 
         # Get remote url via Git CLI and convert it to an HTTP link in case it's an SSH remote.
-        # TODO: unchecked usage of empty remote name
-        info.git_remote_url = convert_remote_url(
-            str(subprocess.run(['git', 'remote', 'get-url', git_remote], capture_output=True, text=True).stdout)
-        )
-        # TODO: missing an "else" part!
-        # TODO: can't these three pieces be stitched together to only execute when there is a remote?
-        # TODO: is the url parsing necessary of it's hosted on github?
-        if info.git_remote_url:
-            parsed_url = urlparse(info.git_remote_url)
-            info.git_base_url = f"{parsed_url.scheme}://{parsed_url.netloc}/"
-            sc.debug_info(f"git base url = {info.git_base_url}")
-        if "github.com" in info.git_remote_url:
-            info.used_git_hoster = GitHoster.GitHub
-        elif connect_gitlab.is_url_gitlab(info.git_base_url):
-            info.used_git_hoster = GitHoster.GitLab
+        if git_remote:
+            # When there are mutiple remote set a flag so user can decide in test_initialization
+            if "\n" in git_remote:
+                info.has_multiple_remotes = True
+                remotes = git_remote.split("\n")
+                git_remote = remotes[git_remote_index if git_remote_index < len(remotes) else 0].strip()
+            # An error in url parsing results into used_git_hoster not being set which is exactly what we want
+            try:
+                info.git_remote_url = convert_remote_url(
+                    str(subprocess.run(['git', 'remote', 'get-url', git_remote], capture_output=True, text=True).stdout)
+                )
+                if info.git_remote_url:
+                    parsed_url = urlparse(info.git_remote_url)
+                    info.git_base_url = f"{parsed_url.scheme}://{parsed_url.netloc}/"
+                    sc.debug_info(f"git base url = {info.git_base_url}")
+                if "github.com" in info.git_remote_url:
+                    info.used_git_hoster = GitHoster.GitHub
+                elif connect_gitlab.is_url_gitlab(info.git_base_url):
+                    info.used_git_hoster = GitHoster.GitLab
+            except:
+                pass
 
         # Extract current branch name information by parsing Git output
-        # TODO: no exception or handling in case branch is empty (e.g. detached HEAD)
-        # TODO: why not use git rev-parse --abbrev-ref HEAD ?
+        # (This branch_info is not being used currently, maybe later)
         branch_info = str(subprocess.run(['git', 'branch'], capture_output=True, text=True).stdout)
         for line in branch_info.splitlines():
             if line.startswith("*"):
@@ -224,9 +229,9 @@ class HermesInitCommand(HermesCommand):
     def load_settings(self, args: argparse.Namespace):
         pass
 
-    def refresh_folder_info(self):
+    def refresh_folder_info(self, **kwargs):
         sc.debug_info("Scanning folder...")
-        self.folder_info = scout_current_folder()
+        self.folder_info = scout_current_folder(**kwargs)
         sc.debug_info("Scan complete.")
 
     def setup_file_logging(self):
@@ -275,7 +280,7 @@ class HermesInitCommand(HermesCommand):
         sc.next_step("Connect with deposition platform")
         self.connect_deposit_platform()
 
-        sc.next_step("Connect with git project")
+        sc.next_step("Connect with git hoster")
         self.configure_git_project()
 
         sc.echo("\nHERMES is now initialized and ready to be used.\n", formatting=sc.Formats.OKGREEN+sc.Formats.BOLD)
@@ -300,10 +305,19 @@ class HermesInitCommand(HermesCommand):
             self.no_git_setup()
             sys.exit()
 
+        # Let the user choose if there are multiple remotes
+        if self.folder_info.has_multiple_remotes:
+            remote_index = sc.choose(
+                "Your git project has multiple remotes. For which remote do you want to setup HERMES?",
+                str(subprocess.run(['git', 'remote'], capture_output=True, text=True).stdout).strip().split("\n")
+            )
+            self.refresh_folder_info(git_remote_index=remote_index)
+
         # Abort if neither GitHub nor gitlab is used
         if self.folder_info.used_git_hoster == GitHoster.Empty:
-            sc.echo("Your git project ({}) is not connected to GitHub or GitLab. It is recommended for HERMES to "
-                    "use one of those hosting services.".format(self.folder_info.git_remote_url),
+            project_url = " (" + self.folder_info.git_remote_url + ")" if self.folder_info.git_remote_url else ""
+            sc.echo("Your git project{} is not connected to GitHub or GitLab. It is recommended for HERMES to "
+                    "use one of those hosting services.".format(project_url),
                     formatting=sc.Formats.WARNING)
             self.no_git_setup()
             sys.exit()
@@ -618,21 +632,18 @@ class HermesInitCommand(HermesCommand):
 
     def choose_push_branch(self):
         """User chooses the branch that should be used to activate the whole hermes process"""
-        # TODO make it possible to choose tags as well
         push_choice = sc.choose(
             "When should the automated HERMES process start?",
             [
-                f"When I push the current branch {self.folder_info.current_branch}",
-                "When I push another branch",
-                "When a push a specific tag (not implemented)",
+                "When I push a branch",
+                "When I push a specific tag (not implemented)",
             ]
         )
         if push_choice == 0:
-            self.ci_parameters["push_branch"] = self.folder_info.current_branch
+            self.ci_parameters["push_branch"] = sc.answer("Enter target branch: ")
         elif push_choice == 1:
-            self.ci_parameters["push_branch"] = sc.answer("Enter the other branch: ")
-        elif push_choice == 2:
-            sc.echo("Not implemented", formatting=sc.Formats.WARNING)
+            sc.echo("Setting up triggering by tags is currently not implemented.", formatting=sc.Formats.WARNING)
+            sc.echo(f"You can visit {TUTORIAL_URL} to set it up manually later-on.", formatting=sc.Formats.WARNING)
 
     def choose_deposit_files(self):
         """User chooses the files that should be included in the deposition"""
