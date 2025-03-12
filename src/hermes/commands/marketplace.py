@@ -95,6 +95,7 @@ class PluginMarketPlaceParser(HTMLParser):
             plugin = SchemaOrgSoftwareApplication.model_validate_json(data)
             self.plugins.append(plugin)
 
+
 @cache
 def _doi_is_version_of_concept_doi(doi: str, concept_doi: str) -> bool:
     """Check whether ``doi`` is a version of ``concept_doi``.
