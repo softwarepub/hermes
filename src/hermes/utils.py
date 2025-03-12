@@ -16,4 +16,7 @@ hermes_homepage = hermes_metadata["home-page"]
 # TODO: Fetch this from somewhere
 hermes_doi = "10.5281/zenodo.13311079"  # hermes v0.8.1
 
+hermes_concept_doi = "10.5281/zenodo.13221383"
+"""Fix "concept" DOI that always refers to the newest version."""
+
 hermes_user_agent = f"{hermes_name}/{hermes_version} ({hermes_homepage})"
