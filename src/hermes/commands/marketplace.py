@@ -63,7 +63,14 @@ class SchemaOrgSoftwareApplication(SchemaOrgModel):
     keywords: List["str"] = None
 
 
-schema_org_hermes = SchemaOrgSoftwareApplication(id_=hermes_doi, name="hermes")
+schema_org_hermes = SchemaOrgSoftwareApplication(
+    id_=(
+        hermes_doi
+        if hermes_doi.startswith("https://doi.org/")
+        else f"https://doi.org/{hermes_doi}"
+    ),
+    name="hermes",
+)
 
 
 class PluginMarketPlaceParser(HTMLParser):
