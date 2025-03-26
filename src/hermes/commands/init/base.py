@@ -109,7 +109,7 @@ def get_git_hoster_from_url(url: str) -> GitHoster:
     return GitHoster.Empty
 
 
-def download_file_from_url(url, filepath, append: bool = False):
+def download_file_from_url(url, filepath, append: bool = False) -> None:
     try:
         with requests.get(url, stream=True) as r:
             r.raise_for_status()
@@ -126,6 +126,7 @@ def string_in_file(file_path, search_string: str) -> bool:
 
 
 def get_builtin_plugins(plugin_commands: list[str]) -> dict[str: HermesPlugin]:
+    """Returns a list of installed HermesPlugins based on a list of related command names."""
     plugins = {}
     for plugin_command_name in plugin_commands:
         entry_point_group = f"hermes.{plugin_command_name}"
@@ -187,12 +188,13 @@ class HermesInitCommand(HermesCommand):
     def load_settings(self, args: argparse.Namespace):
         pass
 
-    def refresh_folder_info(self):
+    def refresh_folder_info(self) -> None:
+        """Checks the contents of the current directory and saves relevant info in self.folder_info"""
         sc.debug_info("Scanning folder...")
         self.folder_info = scout_current_folder()
         sc.debug_info("Scan complete.")
 
-    def setup_file_logging(self):
+    def setup_file_logging(self) -> None:
         # Silence old StreamHandler
         handler = get_handler_by_name("terminal")
         if handler:
@@ -243,7 +245,7 @@ class HermesInitCommand(HermesCommand):
 
         sc.echo("\nHERMES is now initialized and ready to be used.\n", formatting=sc.Formats.OKGREEN+sc.Formats.BOLD)
 
-    def test_initialization(self):
+    def test_initialization(self) -> None:
         """Test if init is possible and wanted. If not: sys.exit()"""
         # Abort if git is not installed
         if not git_info.is_git_installed():
@@ -300,7 +302,7 @@ class HermesInitCommand(HermesCommand):
                               "(Hermes config files and related project variables will be overwritten.) "):
                 sys.exit()
 
-    def create_hermes_toml(self):
+    def create_hermes_toml(self) -> None:
         """Creates the hermes.toml file based on a dictionary"""
         deposit_url = DepositPlatformUrls.get(self.deposit_platform)
         default_values = {
@@ -323,7 +325,7 @@ class HermesInitCommand(HermesCommand):
                 toml.dump(default_values, toml_file)
             sc.echo("`hermes.toml` was created.", formatting=sc.Formats.OKGREEN)
 
-    def create_citation_cff(self):
+    def create_citation_cff(self) -> None:
         """If there is no CITATION.cff, the user gets the opportunity to create one online."""
         if not self.folder_info.has_citation_cff:
             citation_cff_url = "https://citation-file-format.github.io/cff-initializer-javascript/#/"
@@ -347,7 +349,7 @@ class HermesInitCommand(HermesCommand):
         else:
             sc.echo("Your project already contains a `CITATION.cff` file. Nice!", formatting=sc.Formats.OKGREEN)
 
-    def update_gitignore(self):
+    def update_gitignore(self) -> None:
         """Creates .gitignore if there is none and adds '.hermes' to it"""
         if not self.folder_info.has_gitignore:
             open(".gitignore", 'w')
@@ -366,11 +368,12 @@ class HermesInitCommand(HermesCommand):
                 sc.echo("Added `.hermes/` to the `.gitignore` file.", formatting=sc.Formats.OKGREEN)
 
     def get_template_url(self, filename: str) -> str:
+        """Returns the full template url with a given filename."""
         return (f"{self.template_base_url}/{self.template_repo}/refs/heads/"
                 f"{self.template_branch}/{self.template_folder}/{filename}")
 
-    def create_ci_template(self):
-        """Downloads and configures the ci workflow files using templates from the chosen template branch"""
+    def create_ci_template(self) -> None:
+        """Downloads and configures the ci workflow files using templates from the chosen template branch."""
         match self.git_hoster:
             case GitHoster.GitHub:
                 # TODO Replace this later with the link to the real templates (not the feature branch)
@@ -411,7 +414,7 @@ class HermesInitCommand(HermesCommand):
 
                 sc.echo(f"GitLab CI: {hermes_ci_path} was created.", formatting=sc.Formats.OKGREEN)
 
-    def configure_ci_template(self, ci_file_path):
+    def configure_ci_template(self, ci_file_path) -> None:
         """Replaces all {%parameter%} in a ci file with values from ci_parameters dict"""
         with open(ci_file_path, 'r') as file:
             content = file.read()
@@ -425,7 +428,8 @@ class HermesInitCommand(HermesCommand):
         with open(ci_file_path, 'w') as file:
             file.write(content)
 
-    def get_zenodo_token(self):
+    def create_zenodo_token(self) -> None:
+        """Makes the user create a zenodo token and saves it in self.tokens."""
         self.tokens[self.deposit_platform] = ""
         # Deactivated Zenodo OAuth as long as the refresh token bug is not fixed.
         if self.setup_method == "a":
@@ -453,15 +457,15 @@ class HermesInitCommand(HermesCommand):
                                 "(If this error persists, you should try switching to the manual setup mode.)",
                                 formatting=sc.Formats.WARNING)
 
-    def configure_git_project(self):
-        """Adding the token to the git secrets & changing action workflow settings"""
+    def configure_git_project(self) -> None:
+        """Adds the token to the git secrets & changes action workflow settings."""
         match self.git_hoster:
             case GitHoster.GitHub:
                 self.configure_github()
             case GitHoster.GitLab:
                 self.configure_gitlab()
 
-    def configure_github(self):
+    def configure_github(self) -> None:
         oauth_success = False
         if self.setup_method == "a":
             self.tokens[GitHoster.GitHub] = connect_github.get_access_token()
@@ -495,7 +499,7 @@ class HermesInitCommand(HermesCommand):
             sc.echo("Allow GitHub Actions to create and approve pull requests")
             sc.press_enter_to_continue()
 
-    def configure_gitlab(self):
+    def configure_gitlab(self) -> None:
         # Doing it with API / OAuth
         oauth_success = False
         if self.setup_method == "a":
@@ -552,15 +556,16 @@ class HermesInitCommand(HermesCommand):
             sc.echo("(For your safety, you should set the visibility to 'Masked'.)")
             sc.press_enter_to_continue()
 
-    def choose_deposit_platform(self):
-        """User chooses his desired deposit platform"""
+    def choose_deposit_platform(self) -> None:
+        """User chooses his desired deposit platform."""
         deposit_platform_list = list(DepositPlatformNames.keys())
         deposit_platform_index = sc.choose(
             "Where do you want to publish the software?", [DepositPlatformNames[dp] for dp in deposit_platform_list]
         )
         self.deposit_platform = deposit_platform_list[deposit_platform_index]
 
-    def choose_setup_method(self):
+    def choose_setup_method(self) -> None:
+        """User chooses his desired setup method: Either preferring automatic (if available) or manual."""
         setup_method_index = sc.choose(
             f"How do you want to connect {DepositPlatformNames[self.deposit_platform]} "
             f"with your {self.git_hoster.name} CI?",
@@ -571,18 +576,18 @@ class HermesInitCommand(HermesCommand):
         )
         self.setup_method = ["a", "m"][setup_method_index]
 
-    def connect_deposit_platform(self):
-        """Acquires the access token of the chosen deposit platform"""
+    def connect_deposit_platform(self) -> None:
+        """Acquires the access token of the chosen deposit platform."""
         assert self.deposit_platform != DepositPlatform.Empty
         match self.deposit_platform:
             case DepositPlatform.Zenodo:
                 connect_zenodo.setup(using_sandbox=False)
-                self.get_zenodo_token()
+                self.create_zenodo_token()
             case DepositPlatform.ZenodoSandbox:
                 connect_zenodo.setup(using_sandbox=True)
-                self.get_zenodo_token()
+                self.create_zenodo_token()
 
-    def no_git_setup(self, start_question: str = ""):
+    def no_git_setup(self, start_question: str = "") -> None:
         """Makes the init for a gitless project (basically just creating hermes.toml)"""
         if start_question == "":
             start_question = "Do you want to initialize HERMES anyways? (No CI/CD files will be created)"
@@ -598,8 +603,8 @@ class HermesInitCommand(HermesCommand):
             sc.echo("\nHERMES is now initialized (without git integration).\n",
                     formatting=sc.Formats.OKGREEN)
 
-    def choose_push_branch(self):
-        """User chooses the branch that should be used to activate the whole hermes process"""
+    def choose_push_branch(self) -> None:
+        """User chooses the branch that should be used to activate the whole hermes process."""
         push_choice = sc.choose(
             "When should the automated HERMES process start?",
             [
@@ -613,8 +618,8 @@ class HermesInitCommand(HermesCommand):
             sc.echo("Setting up triggering by tags is currently not implemented.", formatting=sc.Formats.WARNING)
             sc.echo(f"You can visit {TUTORIAL_URL} to set it up manually later-on.", formatting=sc.Formats.WARNING)
 
-    def choose_deposit_files(self):
-        """User chooses the files that should be included in the deposition"""
+    def choose_deposit_files(self) -> None:
+        """User chooses the files that should be included in the deposition."""
         dp_name = DepositPlatformNames[self.deposit_platform]
         add_readme = False
         if self.folder_info.has_readme:

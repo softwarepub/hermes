@@ -63,7 +63,7 @@ def get_remotes() -> list[str]:
 
 def convert_remote_url(url: str) -> str:
     """
-    Takes any url produced by 'git remote get-url ...' and returns a consistent version with https & without .git
+    Takes any url produced by 'git remote get-url ...' and returns a consistent version with https & without '.git'.
     """
     url = url.strip()
     # Remove .git from the end of the url
@@ -87,7 +87,6 @@ def get_remote_url(remote: str) -> str:
 def get_current_branch() -> str:
     """
     Returns the name of the current branch.
-    :return:
     """
     branch_info = run_git_command("branch")
     for line in branch_info.splitlines():
