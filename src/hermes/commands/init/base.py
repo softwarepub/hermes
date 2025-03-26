@@ -6,7 +6,6 @@ import argparse
 import logging
 import os
 import re
-import subprocess
 import sys
 from dataclasses import dataclass
 from enum import Enum, auto
@@ -22,7 +21,7 @@ from requests import HTTPError
 import hermes.commands.init.util.slim_click as sc
 from hermes.commands.base import HermesCommand, HermesPlugin
 from hermes.commands.init.util import (connect_github, connect_gitlab,
-                                       connect_zenodo)
+                                       connect_zenodo, git_info)
 
 TUTORIAL_URL = "https://hermes.software-metadata.pub/en/latest/tutorials/automated-publication-with-ci.html"
 
@@ -53,32 +52,27 @@ DepositPlatformUrls: dict[DepositPlatform, str] = {
 
 @dataclass
 class HermesInitFolderInfo:
+    """
+    Contains information about the current state of the target project directory.
+    """
     def __init__(self):
         self.absolute_path: str = ""
         self.has_git_folder: bool = False
-        self.has_multiple_remotes: bool = False
-        self.git_remote_url: str = ""
-        self.git_base_url: str = ""
-        self.used_git_hoster: GitHoster = GitHoster.Empty
+        # self.has_multiple_remotes: bool = False
+        # self.git_remote_url: str = ""
+        # self.git_base_url: str = ""
+        # self.used_git_hoster: GitHoster = GitHoster.Empty
         self.has_hermes_toml: bool = False
         self.has_gitignore: bool = False
         self.has_citation_cff: bool = False
         self.has_readme: bool = False
-        self.current_branch: str = ""
+        # self.current_branch: str = ""
         self.current_dir: str = ""
         self.dir_list: list[str] = []
         self.dir_folders: list[str] = []
 
 
-def is_git_installed():
-    try:
-        result = subprocess.run(['git', '--version'], capture_output=True, text=True)
-        return result.returncode == 0
-    except FileNotFoundError:
-        return False
-
-
-def scout_current_folder(git_remote_index=0) -> HermesInitFolderInfo:
+def scout_current_folder() -> HermesInitFolderInfo:
     """
     This method looks at the current directory and collects all init relevant data.
     This method is not meant to contain any user interactions.
@@ -88,45 +82,7 @@ def scout_current_folder(git_remote_index=0) -> HermesInitFolderInfo:
     current_dir = os.getcwd()
     info.current_dir = current_dir
     info.absolute_path = str(current_dir)
-
     info.has_git_folder = os.path.isdir(os.path.join(current_dir, ".git"))
-    # git-enabled project
-    if info.has_git_folder:
-        # Get remote name for next command
-        git_remote: str = str(subprocess.run(['git', 'remote'], capture_output=True, text=True).stdout).strip()
-        sc.debug_info(f"git remote = {git_remote}")
-
-        # Get remote url via Git CLI and convert it to an HTTP link in case it's an SSH remote.
-        if git_remote:
-            # When there are mutiple remote set a flag so user can decide in test_initialization
-            if "\n" in git_remote:
-                info.has_multiple_remotes = True
-                remotes = git_remote.split("\n")
-                git_remote = remotes[git_remote_index if git_remote_index < len(remotes) else 0].strip()
-            # An error in url parsing results into used_git_hoster not being set which is exactly what we want
-            try:
-                info.git_remote_url = convert_remote_url(
-                    str(subprocess.run(['git', 'remote', 'get-url', git_remote], capture_output=True, text=True).stdout)
-                )
-                if info.git_remote_url:
-                    parsed_url = urlparse(info.git_remote_url)
-                    info.git_base_url = f"{parsed_url.scheme}://{parsed_url.netloc}/"
-                    sc.debug_info(f"git base url = {info.git_base_url}")
-                if "github.com" in info.git_remote_url:
-                    info.used_git_hoster = GitHoster.GitHub
-                elif connect_gitlab.is_url_gitlab(info.git_base_url):
-                    info.used_git_hoster = GitHoster.GitLab
-            except Exception:
-                pass
-
-        # Extract current branch name information by parsing Git output
-        # (This branch_info is not being used currently, maybe later)
-        branch_info = str(subprocess.run(['git', 'branch'], capture_output=True, text=True).stdout)
-        for line in branch_info.splitlines():
-            if line.startswith("*"):
-                info.current_branch = line.split()[1].strip()
-                break
-
     info.has_hermes_toml = os.path.isfile(os.path.join(current_dir, "hermes.toml"))
     info.has_gitignore = os.path.isfile(os.path.join(current_dir, ".gitignore"))
     info.has_citation_cff = os.path.isfile(os.path.join(current_dir, "CITATION.cff"))
@@ -137,8 +93,20 @@ def scout_current_folder(git_remote_index=0) -> HermesInitFolderInfo:
         if os.path.isdir(os.path.join(current_dir, f))
         and not f.startswith(".")
     ]
-
     return info
+
+
+def get_git_hoster_from_url(url: str) -> GitHoster:
+    """
+    Returns the matching GitHoster value to the given url. Returns GitHoster.Empty if none is found.
+    """
+    parsed_url = urlparse(url)
+    git_base_url = f"{parsed_url.scheme}://{parsed_url.netloc}/"
+    if "github.com" in url:
+        return GitHoster.GitHub
+    elif connect_gitlab.is_url_gitlab(git_base_url):
+        return GitHoster.GitLab
+    return GitHoster.Empty
 
 
 def download_file_from_url(url, filepath, append: bool = False):
@@ -157,19 +125,6 @@ def string_in_file(file_path, search_string: str) -> bool:
         return any(search_string in line for line in file)
 
 
-def convert_remote_url(url: str) -> str:
-    """
-    Takes any url produced by 'git remote get-url origin' and returns a unified version with https & without .git
-    """
-    url = url.strip()
-    # Remove .git from the end of the url
-    url = url.removesuffix(".git")
-    # Convert ssh url into http url
-    if re.findall(r"^.+@.+\..+:.+\/.+$", url):
-        url = re.sub(r"^.+@(.+\..+):(.+\/.+)$", r"https://\1/\2", url)
-    return url
-
-
 def get_builtin_plugins(plugin_commands: list[str]) -> dict[str: HermesPlugin]:
     plugins = {}
     for plugin_command_name in plugin_commands:
@@ -182,7 +137,7 @@ def get_builtin_plugins(plugin_commands: list[str]) -> dict[str: HermesPlugin]:
     return plugins
 
 
-def get_handler_by_name(name: str) -> logging.Handler:
+def get_handler_by_name(name: str) -> logging.Handler | None:
     """Own implementation of logging.getHandlerByName so that we don't require Python 3.12"""
     for logger_name in logging.root.manager.loggerDict:
         logger = logging.getLogger(logger_name)
@@ -208,6 +163,9 @@ class HermesInitCommand(HermesCommand):
         self.tokens: dict = {}
         self.setup_method: str = ""
         self.deposit_platform: DepositPlatform = DepositPlatform.Empty
+        self.git_remote: str = ""
+        self.git_remote_url = ""
+        self.git_hoster: GitHoster = GitHoster.Empty
         self.template_base_url: str = "https://raw.githubusercontent.com"
         self.template_branch: str = "feature/init-custom-ci"
         self.template_repo: str = "softwarepub/ci-templates"
@@ -229,9 +187,9 @@ class HermesInitCommand(HermesCommand):
     def load_settings(self, args: argparse.Namespace):
         pass
 
-    def refresh_folder_info(self, **kwargs):
+    def refresh_folder_info(self):
         sc.debug_info("Scanning folder...")
-        self.folder_info = scout_current_folder(**kwargs)
+        self.folder_info = scout_current_folder()
         sc.debug_info("Scan complete.")
 
     def setup_file_logging(self):
@@ -288,7 +246,7 @@ class HermesInitCommand(HermesCommand):
     def test_initialization(self):
         """Test if init is possible and wanted. If not: sys.exit()"""
         # Abort if git is not installed
-        if not is_git_installed():
+        if not git_info.is_git_installed():
             sc.echo("Git is currently not installed. It is recommended to use HERMES with git.",
                     formatting=sc.Formats.WARNING)
             self.no_git_setup()
@@ -305,24 +263,34 @@ class HermesInitCommand(HermesCommand):
             self.no_git_setup()
             sys.exit()
 
+        # Look at git remotes
+        remotes = git_info.get_remotes()
+        if remotes:
+            self.git_remote = remotes[0]
+
         # Let the user choose if there are multiple remotes
-        if self.folder_info.has_multiple_remotes:
+        if len(remotes) > 1:
             remote_index = sc.choose(
                 "Your git project has multiple remotes. For which remote do you want to setup HERMES?",
-                str(subprocess.run(['git', 'remote'], capture_output=True, text=True).stdout).strip().split("\n")
+                remotes
             )
-            self.refresh_folder_info(git_remote_index=remote_index)
+            self.git_remote = remotes[remote_index]
+
+        # Get url & hoster from remote
+        if self.git_remote:
+            self.git_remote_url = git_info.get_remote_url(self.git_remote)
+            self.git_hoster = get_git_hoster_from_url(self.git_remote_url)
 
         # Abort if neither GitHub nor gitlab is used
-        if self.folder_info.used_git_hoster == GitHoster.Empty:
-            project_url = " (" + self.folder_info.git_remote_url + ")" if self.folder_info.git_remote_url else ""
+        if self.git_hoster == GitHoster.Empty:
+            project_url = " (" + self.git_remote_url + ")" if self.git_remote_url else ""
             sc.echo("Your git project{} is not connected to GitHub or GitLab. It is recommended for HERMES to "
                     "use one of those hosting services.".format(project_url),
                     formatting=sc.Formats.WARNING)
             self.no_git_setup()
             sys.exit()
         else:
-            sc.echo(f"Git project using {self.folder_info.used_git_hoster.name} detected.\n")
+            sc.echo(f"Git project using {self.git_hoster.name} detected.\n")
 
         # Abort if there is already a hermes.toml
         if self.folder_info.has_hermes_toml:
@@ -403,7 +371,7 @@ class HermesInitCommand(HermesCommand):
 
     def create_ci_template(self):
         """Downloads and configures the ci workflow files using templates from the chosen template branch"""
-        match self.folder_info.used_git_hoster:
+        match self.git_hoster:
             case GitHoster.GitHub:
                 # TODO Replace this later with the link to the real templates (not the feature branch)
                 template_url = self.get_template_url("TEMPLATE_hermes_github_to_zenodo.yml")
@@ -434,7 +402,7 @@ class HermesInitCommand(HermesCommand):
                 self.configure_ci_template(hermes_ci_path)
 
                 # When using gitlab.com we need to use gitlab-org-docker as tag
-                if "gitlab.com" in self.folder_info.git_remote_url:
+                if "gitlab.com" in self.git_remote_url:
                     with open(hermes_ci_path, 'r') as file:
                         content = file.read()
                     new_content = re.sub(r'(tags:\n\s+- )docker', r'\1gitlab-org-docker', content)
@@ -487,7 +455,7 @@ class HermesInitCommand(HermesCommand):
 
     def configure_git_project(self):
         """Adding the token to the git secrets & changing action workflow settings"""
-        match self.folder_info.used_git_hoster:
+        match self.git_hoster:
             case GitHoster.GitHub:
                 self.configure_github()
             case GitHoster.GitLab:
@@ -500,10 +468,10 @@ class HermesInitCommand(HermesCommand):
             if self.tokens[GitHoster.GitHub]:
                 sc.echo("OAuth at GitHub was successful.", formatting=sc.Formats.OKGREEN)
                 sc.debug_info(github_token=self.tokens[GitHoster.GitHub])
-                connect_github.create_secret(self.folder_info.git_remote_url, "ZENODO_SANDBOX",
+                connect_github.create_secret(self.git_remote_url, "ZENODO_SANDBOX",
                                              secret_value=self.tokens[self.deposit_platform],
                                              token=self.tokens[GitHoster.GitHub])
-                connect_github.allow_actions(self.folder_info.git_remote_url,
+                connect_github.allow_actions(self.git_remote_url,
                                              token=self.tokens[GitHoster.GitHub])
                 oauth_success = True
             else:
@@ -514,14 +482,14 @@ class HermesInitCommand(HermesCommand):
                 self.deposit_platform.name,
                 f" ({self.tokens[self.deposit_platform]})" if self.tokens[self.deposit_platform] else "",
                 sc.create_console_hyperlink(
-                    self.folder_info.git_remote_url + "/settings/secrets/actions",
+                    self.git_remote_url + "/settings/secrets/actions",
                     "project's GitHub secrets"
                 )
             ))
             sc.press_enter_to_continue()
             sc.echo("Next open your {} and check the checkbox which reads:".format(
                 sc.create_console_hyperlink(
-                    self.folder_info.git_remote_url + "/settings/actions", "project settings"
+                    self.git_remote_url + "/settings/actions", "project settings"
                 )
             ))
             sc.echo("Allow GitHub Actions to create and approve pull requests")
@@ -531,14 +499,14 @@ class HermesInitCommand(HermesCommand):
         # Doing it with API / OAuth
         oauth_success = False
         if self.setup_method == "a":
-            gl = connect_gitlab.GitLabConnection(self.folder_info.git_remote_url)
+            gl = connect_gitlab.GitLabConnection(self.git_remote_url)
             token = ""
             if not gl.has_client():
                 sc.echo("Unfortunately HERMES does not support automatic authorization with your GitLab "
                         "installment.")
                 sc.echo("Go to your {} and create a new token.".format(
                     sc.create_console_hyperlink(
-                        self.folder_info.git_remote_url + "/-/settings/access_tokens",
+                        self.git_remote_url + "/-/settings/access_tokens",
                         "project's access tokens")
                 ))
                 sc.echo("It needs to have the 'developer' role and 'api' + 'write_repository' scope.")
@@ -566,13 +534,13 @@ class HermesInitCommand(HermesCommand):
         if not oauth_success:
             sc.echo("Go to your {} and create a new token.".format(
                 sc.create_console_hyperlink(
-                    self.folder_info.git_remote_url + "/-/settings/access_tokens", "project's access tokens")
+                    self.git_remote_url + "/-/settings/access_tokens", "project's access tokens")
             ))
             sc.echo("It needs to have the 'developer' role and 'write_repository' scope.")
             sc.press_enter_to_continue()
             sc.echo("Open your {} and go to 'Variables'".format(
                 sc.create_console_hyperlink(
-                    self.folder_info.git_remote_url + "/-/settings/ci_cd", "project's ci settings")
+                    self.git_remote_url + "/-/settings/ci_cd", "project's ci settings")
             ))
             sc.echo("Then, add that token as variable with key HERMES_PUSH_TOKEN.")
             sc.echo("(For your safety, you should set the visibility to 'Masked'.)")
@@ -595,7 +563,7 @@ class HermesInitCommand(HermesCommand):
     def choose_setup_method(self):
         setup_method_index = sc.choose(
             f"How do you want to connect {DepositPlatformNames[self.deposit_platform]} "
-            f"with your {self.folder_info.used_git_hoster.name} CI?",
+            f"with your {self.git_hoster.name} CI?",
             options=[
                 "Automatically (using OAuth / Device Flow)",
                 "Manually (with instructions)",
