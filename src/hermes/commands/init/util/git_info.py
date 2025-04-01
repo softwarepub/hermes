@@ -56,7 +56,7 @@ def get_remotes() -> list[str]:
     """
     Returns a list of all remotes.
     """
-    git_remote_output: str = run_git_command("remote")
+    git_remote_output: str = run_git_command("remote").strip()
     cleaned_remote_list = [s.strip() for s in git_remote_output.split("\n")]
     return cleaned_remote_list
 
@@ -100,7 +100,7 @@ def is_git_installed() -> bool:
     Uses the --version command to check whether git is installed.
     """
     try:
-        result = subprocess.run(['git', '--version'])
+        result = subprocess.run(['git', '--version'], capture_output=True)
         return result.returncode == 0
     except Exception:
         return False

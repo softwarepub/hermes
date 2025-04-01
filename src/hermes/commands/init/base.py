@@ -216,7 +216,7 @@ class HermesInitCommand(HermesCommand):
         # Test if init is valid in current folder
         self.test_initialization()
 
-        sc.echo(f"Starting to initialize HERMES in {self.folder_info.absolute_path} ...")
+        sc.echo(f"Starting to initialize HERMES in {self.folder_info.absolute_path}")
         sc.max_steps = 7
 
         sc.next_step("Configure deposition platform and setup method")
@@ -247,6 +247,8 @@ class HermesInitCommand(HermesCommand):
 
     def test_initialization(self) -> None:
         """Test if init is possible and wanted. If not: sys.exit()"""
+        sc.echo("Preparing HERMES initialization\n")
+
         # Abort if git is not installed
         if not git_info.is_git_installed():
             sc.echo("Git is currently not installed. It is recommended to use HERMES with git.",
@@ -274,7 +276,7 @@ class HermesInitCommand(HermesCommand):
         if len(remotes) > 1:
             remote_index = sc.choose(
                 "Your git project has multiple remotes. For which remote do you want to setup HERMES?",
-                remotes
+                [f"{remote} ({git_info.get_remote_url(remote)})" for remote in remotes]
             )
             self.git_remote = remotes[remote_index]
 
@@ -282,12 +284,18 @@ class HermesInitCommand(HermesCommand):
         if self.git_remote:
             self.git_remote_url = git_info.get_remote_url(self.git_remote)
             self.git_hoster = get_git_hoster_from_url(self.git_remote_url)
+        # Abort with no remote
+        else:
+            sc.echo("Your git project does not have a remote. It is recommended for HERMES to "
+                    "use either GitHub or GitLab as hosting service.", formatting=sc.Formats.WARNING)
+            self.no_git_setup()
+            sys.exit()
 
         # Abort if neither GitHub nor gitlab is used
         if self.git_hoster == GitHoster.Empty:
             project_url = " (" + self.git_remote_url + ")" if self.git_remote_url else ""
             sc.echo("Your git project{} is not connected to GitHub or GitLab. It is recommended for HERMES to "
-                    "use one of those hosting services.".format(project_url),
+                    "use one of these hosting services.".format(project_url),
                     formatting=sc.Formats.WARNING)
             self.no_git_setup()
             sys.exit()
@@ -590,7 +598,8 @@ class HermesInitCommand(HermesCommand):
     def no_git_setup(self, start_question: str = "") -> None:
         """Makes the init for a gitless project (basically just creating hermes.toml)"""
         if start_question == "":
-            start_question = "Do you want to initialize HERMES anyways? (No CI/CD files will be created)"
+            start_question = ("Do you want to initialize HERMES anyways? (CI/CD files for automated publishing will "
+                              "NOT be created)")
         if sc.confirm(start_question):
             sc.max_steps = 2
 
@@ -600,7 +609,7 @@ class HermesInitCommand(HermesCommand):
             sc.next_step("Create CITATION.cff file")
             self.create_citation_cff()
 
-            sc.echo("\nHERMES is now initialized (without git integration).\n",
+            sc.echo("\nHERMES is now initialized (without git integration or CI/CD files).\n",
                     formatting=sc.Formats.OKGREEN)
 
     def choose_push_branch(self) -> None:
