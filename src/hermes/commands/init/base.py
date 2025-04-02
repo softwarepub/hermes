@@ -19,6 +19,7 @@ from pydantic import BaseModel
 from requests import HTTPError
 
 import hermes.commands.init.util.slim_click as sc
+from hermes.commands import marketplace
 from hermes.commands.base import HermesCommand, HermesPlugin
 from hermes.commands.init.util import (connect_github, connect_gitlab,
                                        connect_zenodo, git_info)
@@ -58,15 +59,10 @@ class HermesInitFolderInfo:
     def __init__(self):
         self.absolute_path: str = ""
         self.has_git_folder: bool = False
-        # self.has_multiple_remotes: bool = False
-        # self.git_remote_url: str = ""
-        # self.git_base_url: str = ""
-        # self.used_git_hoster: GitHoster = GitHoster.Empty
         self.has_hermes_toml: bool = False
         self.has_gitignore: bool = False
         self.has_citation_cff: bool = False
         self.has_readme: bool = False
-        # self.current_branch: str = ""
         self.current_dir: str = ""
         self.dir_list: list[str] = []
         self.dir_folders: list[str] = []
@@ -180,6 +176,7 @@ class HermesInitCommand(HermesCommand):
         }
         self.plugin_relevant_commands = ["harvest", "deposit"]
         self.builtin_plugins: dict[str: HermesPlugin] = get_builtin_plugins(self.plugin_relevant_commands)
+        self.selected_plugins: list[marketplace.PluginInfo] = []
 
     def init_command_parser(self, command_parser: argparse.ArgumentParser) -> None:
         command_parser.add_argument('--template-branch', nargs=1, default="",
@@ -217,7 +214,10 @@ class HermesInitCommand(HermesCommand):
         self.test_initialization()
 
         sc.echo(f"Starting to initialize HERMES in {self.folder_info.absolute_path}")
-        sc.max_steps = 7
+        sc.max_steps = 8
+
+        sc.next_step("Configure HERMES plugins")
+        self.choose_plugins()
 
         sc.next_step("Configure deposition platform and setup method")
         self.choose_deposit_platform()
@@ -594,6 +594,38 @@ class HermesInitCommand(HermesCommand):
             case DepositPlatform.ZenodoSandbox:
                 connect_zenodo.setup(using_sandbox=True)
                 self.create_zenodo_token()
+
+    def choose_plugins(self):
+        """User chooses the plugins he wants to use."""
+        plugin_infos: list[marketplace.PluginInfo] = marketplace.get_plugin_infos()
+        plugins_builtin: list[marketplace.PluginInfo] = list(filter(lambda p: p.builtin, plugin_infos))
+        plugins_available: list[marketplace.PluginInfo] = list(filter(lambda p: not p.builtin, plugin_infos))
+        plugins_selected: list[marketplace.PluginInfo] = []
+        sc.echo("The following plugins are already builtin:")
+        for info in plugins_builtin:
+            sc.echo(str(info), formatting=sc.Formats.OKGREEN)
+        sc.echo("")
+        while True:
+            if plugins_selected:
+                sc.echo("The following plugins are going to be installed:")
+                for info in plugins_selected:
+                    sc.echo(str(info), formatting=sc.Formats.OKCYAN)
+                sc.echo("")
+            if plugins_available:
+                sc.echo("The following plugins are available for installation:")
+                for info in plugins_available:
+                    sc.echo(str(info), formatting=sc.Formats.WARNING, no_log=True)
+                sc.echo("")
+            else:
+                self.selected_plugins = plugins_selected
+                break
+            choice = sc.choose("Do you want to add a plugin?", ["No"] + [p.name for p in plugins_available])
+            if choice == 0:
+                self.selected_plugins = plugins_selected
+                break
+            else:
+                chosen_plugin = plugins_available.pop(choice - 1)
+                plugins_selected.append(chosen_plugin)
 
     def no_git_setup(self, start_question: str = "") -> None:
         """Makes the init for a gitless project (basically just creating hermes.toml)"""

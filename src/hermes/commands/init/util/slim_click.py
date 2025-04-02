@@ -62,18 +62,19 @@ class Formats(Enum):
         return default
 
 
-def echo(text: str, formatting: Formats = Formats.EMPTY, log_as: int = logging.NOTSET):
+def echo(text: str, formatting: Formats = Formats.EMPTY, log_as: int = logging.NOTSET, no_log: bool = False):
     """
     Prints the text with the given formatting. If log_as is set or AUTO_LOG_ON_ECHO is true it gets logged as well.
     :param text: The printed text.
     :param formatting: You can use the Formats Enum to give the text a special color or formatting.
     :param log_as: Creates a log entry with the given text if this is set.
+    :param no_log: Never creates a log entry if True.
     """
     # Get logging type from formatting if AUTO_LOG_ON_ECHO
     if AUTO_LOG_ON_ECHO and log_as == logging.NOTSET and text != "":
         log_as = formatting.get_log_type(logging.INFO)
     # Add text to log if there is a logger
-    if log_as != logging.NOTSET and default_file_logger:
+    if log_as != logging.NOTSET and default_file_logger and no_log == False:
         default_file_logger.log(log_as, text)
     # Format the text for the console
     if formatting != Formats.EMPTY:
