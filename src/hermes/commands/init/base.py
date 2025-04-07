@@ -7,14 +7,15 @@ import logging
 import os
 import re
 import sys
+import traceback
+import requests
+import toml
+
 from dataclasses import dataclass
 from enum import Enum, auto
 from importlib import metadata
 from pathlib import Path
 from urllib.parse import urljoin, urlparse
-
-import requests
-import toml
 from pydantic import BaseModel
 from requests import HTTPError
 
@@ -174,6 +175,18 @@ class HermesInitCommand(HermesCommand):
             "deposit_extra_files": "",
             "push_branch": "main"
         }
+        self.hermes_toml_data = {
+            "harvest": {
+                "sources": ["cff"]
+            },
+            "deposit": {
+                "target": "invenio_rdm",
+                "invenio_rdm": {
+                    "site_url": "",
+                    "access_right": "open"
+                 }
+            }
+        }
         self.plugin_relevant_commands = ["harvest", "deposit"]
         self.builtin_plugins: dict[str: HermesPlugin] = get_builtin_plugins(self.plugin_relevant_commands)
         self.selected_plugins: list[marketplace.PluginInfo] = []
@@ -210,40 +223,51 @@ class HermesInitCommand(HermesCommand):
             if args.template_branch != "":
                 self.template_branch = args.template_branch
 
-        # Test if init is valid in current folder
-        self.test_initialization()
+        try:
+            # Test if init is valid in current folder
+            self.test_initialization()
 
-        sc.echo(f"Starting to initialize HERMES in {self.folder_info.absolute_path}")
-        sc.max_steps = 8
+            sc.echo(f"Starting to initialize HERMES in {self.folder_info.absolute_path}\n")
+            sc.max_steps = 8
 
-        sc.next_step("Configure HERMES plugins")
-        self.choose_plugins()
+            sc.next_step("Configure HERMES plugins")
+            self.choose_plugins()
+            self.integrate_plugins()
 
-        sc.next_step("Configure deposition platform and setup method")
-        self.choose_deposit_platform()
-        self.choose_setup_method()
+            sc.next_step("Configure deposition platform and setup method")
+            self.choose_deposit_platform()
+            self.integrate_deposit_platform()
+            self.choose_setup_method()
 
-        sc.next_step("Configure HERMES behaviour")
-        self.choose_push_branch()
-        self.choose_deposit_files()
+            sc.next_step("Configure HERMES behaviour")
+            self.choose_push_branch()
+            self.choose_deposit_files()
 
-        sc.next_step("Create hermes.toml file")
-        self.create_hermes_toml()
+            sc.next_step("Create hermes.toml file")
+            self.create_hermes_toml()
 
-        sc.next_step("Create CITATION.cff file")
-        self.create_citation_cff()
+            sc.next_step("Create CITATION.cff file")
+            self.create_citation_cff()
 
-        sc.next_step("Create git CI files")
-        self.update_gitignore()
-        self.create_ci_template()
+            sc.next_step("Create git CI files")
+            self.update_gitignore()
+            self.create_ci_template()
 
-        sc.next_step("Connect with deposition platform")
-        self.connect_deposit_platform()
+            sc.next_step("Connect with deposition platform")
+            self.connect_deposit_platform()
 
-        sc.next_step("Connect with git hoster")
-        self.configure_git_project()
+            sc.next_step("Connect with git hoster")
+            self.configure_git_project()
 
-        sc.echo("\nHERMES is now initialized and ready to be used.\n", formatting=sc.Formats.OKGREEN+sc.Formats.BOLD)
+            sc.echo("\nHERMES is now initialized and ready to be used.\n",
+                    formatting=sc.Formats.OKGREEN+sc.Formats.BOLD)
+
+        except Exception as e:
+            # More useful message on error
+            sc.echo(f"An error occurred during execution of HERMES init: {e}",
+                    formatting=sc.Formats.FAIL+sc.Formats.BOLD)
+            sc.debug_info(traceback.format_exc())
+            sys.exit(2)
 
     def test_initialization(self) -> None:
         """Test if init is possible and wanted. If not: sys.exit()"""
@@ -284,6 +308,7 @@ class HermesInitCommand(HermesCommand):
         if self.git_remote:
             self.git_remote_url = git_info.get_remote_url(self.git_remote)
             self.git_hoster = get_git_hoster_from_url(self.git_remote_url)
+
         # Abort with no remote
         else:
             sc.echo("Your git project does not have a remote. It is recommended for HERMES to "
@@ -311,26 +336,12 @@ class HermesInitCommand(HermesCommand):
                 sys.exit()
 
     def create_hermes_toml(self) -> None:
-        """Creates the hermes.toml file based on a dictionary"""
-        deposit_url = DepositPlatformUrls.get(self.deposit_platform)
-        default_values = {
-            "harvest": {
-                "sources": ["cff"]
-            },
-            "deposit": {
-                "target": "invenio_rdm",
-                "invenio_rdm": {
-                    "site_url": deposit_url,
-                    "access_right": "open"
-                 }
-            }
-        }
-
+        """Creates the hermes.toml file based on a self.hermes_toml_data"""
         if (not self.folder_info.has_hermes_toml) \
                 or sc.confirm("Do you want to replace your `hermes.toml` with a new one?", default=True):
             with open('hermes.toml', 'w') as toml_file:
                 # noinspection PyTypeChecker
-                toml.dump(default_values, toml_file)
+                toml.dump(self.hermes_toml_data, toml_file)
             sc.echo("`hermes.toml` was created.", formatting=sc.Formats.OKGREEN)
 
     def create_citation_cff(self) -> None:
@@ -384,7 +395,6 @@ class HermesInitCommand(HermesCommand):
         """Downloads and configures the ci workflow files using templates from the chosen template branch."""
         match self.git_hoster:
             case GitHoster.GitHub:
-                # TODO Replace this later with the link to the real templates (not the feature branch)
                 template_url = self.get_template_url("TEMPLATE_hermes_github_to_zenodo.yml")
                 ci_file_folder = ".github/workflows"
                 ci_file_name = "hermes_github.yml"
@@ -429,10 +439,11 @@ class HermesInitCommand(HermesCommand):
         parameters = list(set(re.findall(r'{%(.*?)%}', content)))
         for parameter in parameters:
             if parameter in self.ci_parameters:
-                content = content.replace(f'{{%{parameter}%}}', self.ci_parameters[parameter])
+                value = str(self.ci_parameters[parameter])
+                content = content.replace(f'{{%{parameter}%}}', value)
             else:
-                sc.echo(f"Warning: CI File Parameter {{%{parameter}%}} was not set.",
-                        formatting=sc.Formats.WARNING)
+                sc.debug_info(f"CI File Parameter {{%{parameter}%}} was not set.", formatting=sc.Formats.WARNING)
+                content = content.replace(f'{{%{parameter}%}}', '')
         with open(ci_file_path, 'w') as file:
             file.write(content)
 
@@ -572,6 +583,11 @@ class HermesInitCommand(HermesCommand):
         )
         self.deposit_platform = deposit_platform_list[deposit_platform_index]
 
+    def integrate_deposit_platform(self) -> None:
+        """Makes changes to the toml data or something else based on the chosen deposit platform."""
+        deposit_url = DepositPlatformUrls.get(self.deposit_platform)
+        self.hermes_toml_data["deposit"]["invenio_rdm"]["site_url"] = deposit_url
+
     def choose_setup_method(self) -> None:
         """User chooses his desired setup method: Either preferring automatic (if available) or manual."""
         setup_method_index = sc.choose(
@@ -615,17 +631,41 @@ class HermesInitCommand(HermesCommand):
                 sc.echo("The following plugins are available for installation:")
                 for info in plugins_available:
                     sc.echo(str(info), formatting=sc.Formats.WARNING, no_log=True)
+                    if info.abstract:
+                        sc.echo("-> " + info.abstract, formatting=sc.Formats.ITALIC+sc.Formats.WARNING, no_log=True)
                 sc.echo("")
             else:
                 self.selected_plugins = plugins_selected
                 break
-            choice = sc.choose("Do you want to add a plugin?", ["No"] + [p.name for p in plugins_available])
+            no_text = "No further plugins needed"
+            choice = sc.choose("Do you want to add a plugin?",
+                               [no_text] + [f"Add {p.name}" for p in plugins_available])
             if choice == 0:
                 self.selected_plugins = plugins_selected
                 break
             else:
                 chosen_plugin = plugins_available.pop(choice - 1)
                 plugins_selected.append(chosen_plugin)
+
+    def integrate_plugins(self):
+        """
+        Plugin installation is added to the ci-parameters.
+        Also for now we use this method to do custom plugin installation steps.
+        """
+        for plugin_info in self.selected_plugins:
+            if not plugin_info.is_valid():
+                sc.echo(f"Could not install plugin: {plugin_info.name}", formatting=sc.Formats.FAIL)
+                continue
+            pip_install = plugin_info.get_pip_install_command()
+            self.ci_parameters["pip_install_plugins_github"] = \
+                self.ci_parameters.get("pip_install_plugins_github", "") + "      - run: " + pip_install + "\n"
+            self.ci_parameters["pip_install_plugins_gitlab"] = \
+                self.ci_parameters.get("pip_install_plugins_gitlab", "") + "    - " + pip_install + "\n"
+            match plugin_info.name:
+                case "hermes-plugin-python":
+                    self.hermes_toml_data["harvest"]["sources"].append("toml")
+                case "hermes-plugin-git":
+                    self.hermes_toml_data["harvest"]["sources"].append("git")
 
     def no_git_setup(self, start_question: str = "") -> None:
         """Makes the init for a gitless project (basically just creating hermes.toml)"""

@@ -11,6 +11,7 @@ import requests
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
+from hermes.commands.init.util import slim_click
 from hermes.utils import hermes_doi, hermes_user_agent
 
 MARKETPLACE_URL = "https://hermes.software-metadata.pub/marketplace"
@@ -99,14 +100,43 @@ def _sort_plugins_by_step(plugins: list[SchemaOrgSoftwareApplication]) -> dict[s
 def _plugin_loc(_plugin: SchemaOrgSoftwareApplication) -> str:
     return "builtin" if _plugin.is_part_of == schema_org_hermes else (_plugin.url or "")
 
+
 class PluginInfo:
+    """
+    This class contains all the information about a plugin which are needed for the init-Command.
+    """
     def __init__(self):
         self.name: str = ""
         self.location: str = ""
         self.step: str = ""
         self.builtin: bool = True
+        self.install_url: str = ""
+        self.abstract: str = ""
+
     def __str__(self):
-        return f"[{self.step}] {self.name} ({self.location})"
+        step_text = f"[{self.step}]"
+        return f"{step_text} {slim_click.Formats.BOLD.wrap_around(self.name)} ({self.location})"
+
+    def get_pip_install_command(self) -> str:
+        """
+        Returns the pip install command which can be used to install the plugin.
+        Tries to extract the project name from the install_url (PyPI-URL) if possible.
+        Otherwise, it tries to use the location (Git-Project-URL) for the pip install command.
+        """
+        if self.install_url and self.install_url.startswith("https://pypi.org/project/"):
+            project_name = self.install_url.rstrip("/").removeprefix("https://pypi.org/project/")
+            return f"pip install {project_name}"
+        if self.location and self.location.startswith(("https://", "git@", "ssh://")):
+            git_url = self.location.rstrip("/")
+            return f"pip install git+{git_url}"
+        return ""
+
+    def is_valid(self) -> bool:
+        """
+        Returns True if the plugin can be installed. Maybe we'll check the actual repository here later
+        to make sure that other things are valid too.
+        """
+        return self.get_pip_install_command() != ""
 
 
 def get_plugin_infos() -> list[PluginInfo]:
@@ -124,6 +154,8 @@ def get_plugin_infos() -> list[PluginInfo]:
                 info.step = step
                 info.location = _plugin_loc(plugin)
                 info.builtin = plugin.is_part_of == schema_org_hermes
+                info.install_url = plugin.install_url
+                info.abstract = plugin.abstract
                 infos.append(info)
     return infos
 
