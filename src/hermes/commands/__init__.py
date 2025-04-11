@@ -9,6 +9,7 @@
 # flake8: noqa
 
 from hermes.commands.base import HermesHelpCommand
+from hermes.commands.base import HermesVersionCommand
 from hermes.commands.clean.base import HermesCleanCommand
 from hermes.commands.init.base import HermesInitCommand
 from hermes.commands.curate.base import HermesCurateCommand

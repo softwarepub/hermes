@@ -131,10 +131,13 @@ class HermesCommand(abc.ABC):
 
     def load_settings(self, args: argparse.Namespace):
         """Load settings from the configuration file (passed in from command line)."""
-
-        toml_data = toml.load("." / args.config)
-        self.root_settings = HermesCommand.settings_class.model_validate(toml_data)
-        self.settings = getattr(self.root_settings, self.command_name)
+        try:
+            toml_data = toml.load(args.path / args.config)
+            self.root_settings = HermesCommand.settings_class.model_validate(toml_data)
+            self.settings = getattr(self.root_settings, self.command_name)
+        except FileNotFoundError as e:
+            self.log.error("hermes.toml was not found. Try to run 'hermes init' first or create one manually.")
+            raise e  # This will lead to our default error message & sys.exit
 
     def patch_settings(self, args: argparse.Namespace):
         """Process command line options for the settings."""
@@ -199,3 +202,27 @@ class HermesHelpCommand(HermesCommand):
             # Otherwise, simply show the general help and exit (cleanly).
             self.parser.print_help()
             self.parser.exit()
+
+    def load_settings(self, args: argparse.Namespace):
+        """No settings are needed for the help command."""
+        pass
+
+
+class HermesVersionSettings(BaseModel):
+    """Intentionally empty settings class for the version command."""
+    pass
+
+
+class HermesVersionCommand(HermesCommand):
+    """Show HERMES version and exit."""
+
+    command_name = "version"
+    settings_class = HermesVersionSettings
+
+    def load_settings(self, args: argparse.Namespace):
+        """Pass loading settings as not necessary for this command."""
+        pass
+
+    def __call__(self, args: argparse.Namespace) -> None:
+        self.log.info(metadata.version("hermes"))
+        self.parser.exit()

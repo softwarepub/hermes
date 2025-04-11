@@ -73,11 +73,12 @@ tutorials/*
 ```{toctree}
 :maxdepth: 1
 :caption: Developers
-dev/contribute
 Tutorial: Get started w/ development <dev/start>
+dev/contribute
 dev/data_model
 adr/index
 api/index
+dev/releasing
 ```
 
 ```{toctree}

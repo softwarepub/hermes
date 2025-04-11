@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2024 Forschungszentrum Jülich
+# SPDX-FileCopyrightText: 2024 Forschungszentrum Jülich GmbH
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-FileContributor: Nitai Heeb
 # SPDX-FileContributor: David Pape
@@ -16,7 +16,8 @@ import json
 from threading import Event
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, urlparse
-import hermes.commands.init.slim_click as sc
+
+from . import slim_click as sc
 
 PREFER_DEVICE_FLOW = True
 DEACTIVATE_BROWSER_OPENING = False
@@ -39,11 +40,16 @@ def setup_logging_for_oauthlib():
 
 
 def parse_response_to_dict(response_text: str) -> dict:
+    """
+    Tries to read the response_text as Json-String to return it as dict.
+    If that fails, it tries to read it as query string.
+    """
     try:
         response_dict = json.loads(response_text)
         return response_dict
     except json.JSONDecodeError:
-        return dict(parse_qs(response_text))
+        # Using extract_value to get the same output as json.loads since parse_qs likes to wrap every value into a list
+        return {k: extract_value(v) for k, v in parse_qs(response_text).items()}
 
 
 def extract_value(value):
@@ -90,20 +96,6 @@ class OauthProcess:
 
     def get_tokens_from_refresh_token(self, refresh_token: str) -> dict[str: str]:
         """Returns access and refresh token as dict using a refresh token"""
-        # Maybe we need this later to debug the weird Zenodo refresh token error
-        # data = {
-        #     "grant_type": "refresh_token",
-        #     "refresh_token": refresh_token,
-        #     "client_id": self.client_id,
-        #     "client_secret": self.client_secret,
-        #     "scope": self.scope
-        # }
-        # response = requests.post(self.token_url, data=data)
-        # sc.debug_info(response=response.__dict__)
-        # sc.debug_info(
-        #     client_id=self.client_id, redirect_uri=self.redirect_uri, scope=self.scope,
-        #     token_url=self.token_url, refresh_token=refresh_token, client_secret=self.client_secret
-        # )
         oa_session = requests_oauthlib.OAuth2Session(self.client_id, redirect_uri=self.redirect_uri, scope=self.scope)
         return oa_session.refresh_token(self.token_url, refresh_token=refresh_token, client_secret=self.client_secret,
                                         include_client_id=True, client_id=self.client_id)
@@ -116,10 +108,10 @@ class OauthProcess:
 
     def get_tokens_from_device_flow(self) -> dict[str: str]:
         if self.device_code_url == "" or self.token_url == "":
-            sc.echo(f"Device-Flow is not available for {self.name}", debug=True)
+            sc.debug_info(f"Device-Flow is not available for {self.name}")
             return {}
         sc.echo(f"Using Device-Flow to authorize with {self.name}")
-        sc.echo(f"Device URL = {self.device_code_url}", debug=True)
+        sc.debug_info(f"Device URL = {self.device_code_url}")
 
         # Getting the device code
         data = {
