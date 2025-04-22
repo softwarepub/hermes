@@ -4,6 +4,8 @@
 # SPDX-FileContributor: Stephan Druskat
 
 """Basic CLI to list plugins from the Hermes marketplace."""
+
+from functools import cache
 from html.parser import HTMLParser
 from typing import List, Optional
 
@@ -11,7 +13,7 @@ import requests
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
-from hermes.utils import hermes_doi, hermes_user_agent
+from hermes.utils import hermes_doi, hermes_concept_doi, hermes_user_agent
 
 MARKETPLACE_URL = "https://hermes.software-metadata.pub/marketplace"
 
@@ -63,7 +65,14 @@ class SchemaOrgSoftwareApplication(SchemaOrgModel):
     keywords: List["str"] = None
 
 
-schema_org_hermes = SchemaOrgSoftwareApplication(id_=hermes_doi, name="hermes")
+schema_org_hermes = SchemaOrgSoftwareApplication(
+    id_=(
+        hermes_doi
+        if hermes_doi.startswith("https://doi.org/")
+        else f"https://doi.org/{hermes_doi}"
+    ),
+    name="hermes",
+)
 
 
 class PluginMarketPlaceParser(HTMLParser):
@@ -85,6 +94,49 @@ class PluginMarketPlaceParser(HTMLParser):
         if self.is_json_ld:
             plugin = SchemaOrgSoftwareApplication.model_validate_json(data)
             self.plugins.append(plugin)
+
+
+@cache
+def _doi_is_version_of_concept_doi(doi: str, concept_doi: str) -> bool:
+    """Check whether ``doi`` is a version of ``concept_doi``.
+
+    The check is performed by requesting ``doi`` from the DataCite API and checking
+    whether its related identifier of type ``IsVersionOf`` points to ``concept_doi``.
+    This is the case if ``conecpt_doi`` is the concept DOI of ``doi``.
+    """
+
+    doi = doi.removeprefix("https://doi.org/")
+    concept_doi = concept_doi.removeprefix("https://doi.org/")
+
+    response = requests.get(
+        f"https://api.datacite.org/dois/{doi}",
+        headers={"User-Agent": hermes_user_agent},
+    )
+    response.raise_for_status()
+
+    for identifier in response.json()["data"]["attributes"]["relatedIdentifiers"]:
+        if (
+            identifier["relationType"] == "IsVersionOf"
+            and identifier["relatedIdentifier"] == concept_doi
+        ):
+            return True
+
+    return False
+
+
+def _is_hermes_reference(reference: Optional[SchemaOrgModel]):
+    """Figure out whether ``reference`` refers to HERMES."""
+    if reference is None:
+        return False
+
+    if reference.id_ in [
+        schema_org_hermes.id_,
+        hermes_concept_doi,
+        f"https://doi.org/{hermes_concept_doi}",
+    ]:
+        return True
+
+    return _doi_is_version_of_concept_doi(reference.id_, hermes_concept_doi)
 
 
 def _sort_plugins_by_step(plugins: list[SchemaOrgSoftwareApplication]) -> dict[str, list[SchemaOrgSoftwareApplication]]:
@@ -109,7 +161,11 @@ def main():
     )
 
     def _plugin_loc(_plugin: SchemaOrgSoftwareApplication) -> str:
-        return "builtin" if _plugin.is_part_of == schema_org_hermes else (_plugin.url or "")
+        return (
+            "builtin"
+            if _is_hermes_reference(_plugin.is_part_of)
+            else (_plugin.url or "")
+        )
 
     if parser.plugins:
         print()
