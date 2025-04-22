@@ -11,7 +11,7 @@ SPDX-License-Identifier: CC-BY-SA-4.0
 
 ## Context and Problem Statement
 
-For a smooth user experience common plugins (those which are on the marketplace) should installable via `hermes init`. That however means we need to decide on a way for the plugins to ask question during that same init process.
+For a smooth user experience common plugins (those which are on the marketplace) should be installable via `hermes init`. That however means we need to decide on a way for the plugins to ask question during that same init process.
 
 ## Considered Options
 
