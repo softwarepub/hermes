@@ -58,15 +58,10 @@ class HermesInitFolderInfo:
     def __init__(self):
         self.absolute_path: str = ""
         self.has_git_folder: bool = False
-        # self.has_multiple_remotes: bool = False
-        # self.git_remote_url: str = ""
-        # self.git_base_url: str = ""
-        # self.used_git_hoster: GitHoster = GitHoster.Empty
         self.has_hermes_toml: bool = False
         self.has_gitignore: bool = False
         self.has_citation_cff: bool = False
         self.has_readme: bool = False
-        # self.current_branch: str = ""
         self.current_dir: str = ""
         self.dir_list: list[str] = []
         self.dir_folders: list[str] = []
