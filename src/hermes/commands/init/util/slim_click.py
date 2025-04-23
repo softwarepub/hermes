@@ -101,7 +101,7 @@ def confirm(text: str, default: bool = True) -> bool:
             print("")
             return False
         elif _answer == "":
-            print("Y\n" if default else "N\n")
+            echo("Y\n" if default else "N\n", formatting=Formats.OKCYAN)
             return default
         else:
             echo("Error: invalid input", formatting=Formats.FAIL)
