@@ -158,6 +158,7 @@ class HermesInitCommand(HermesCommand):
     def __init__(self, parser: argparse.ArgumentParser):
         super().__init__(parser)
         self.folder_info: HermesInitFolderInfo = HermesInitFolderInfo()
+        self.hermes_was_already_installed: bool = False
         self.tokens: dict = {}
         self.setup_method: str = ""
         self.deposit_platform: DepositPlatform = DepositPlatform.Empty
@@ -262,8 +263,13 @@ class HermesInitCommand(HermesCommand):
             sc.echo("\nHERMES is now initialized and ready to be used.\n",
                     formatting=sc.Formats.OKGREEN+sc.Formats.BOLD)
 
+        # Nice message on Ctrl+C
+        except KeyboardInterrupt:
+            sc.echo("HERMES init was aborted.", sc.Formats.WARNING)
+            sys.exit()
+
+        # Useful message on error
         except Exception as e:
-            # More useful message on error
             sc.echo(f"An error occurred during execution of HERMES init: {e}",
                     formatting=sc.Formats.FAIL+sc.Formats.BOLD)
             sc.debug_info(traceback.format_exc())
@@ -282,6 +288,7 @@ class HermesInitCommand(HermesCommand):
 
         # Look at the current folder
         self.refresh_folder_info()
+        self.hermes_was_already_installed = self.folder_info.has_hermes_toml
 
         # Abort if there is no git
         if not self.folder_info.has_git_folder:
@@ -750,3 +757,7 @@ class HermesInitCommand(HermesCommand):
         else:
             for file in self.folder_info.dir_list:
                 sc.echo(f"\t\t{file}", formatting=sc.Formats.OKCYAN)
+
+    def clean_up_files(self):
+        if not self.hermes_was_already_installed:
+            pass
