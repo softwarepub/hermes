@@ -65,7 +65,7 @@ class Formats(Enum):
         return self.get_ansi() + text + Formats.ENDC.get_ansi()
 
 
-def echo(text: str, formatting: Formats = Formats.EMPTY, log_as: int = logging.NOTSET, no_log: bool = False):
+def echo(text: str = "", formatting: Formats = Formats.EMPTY, log_as: int = logging.NOTSET, no_log: bool = False):
     """
     Prints the text with the given formatting. If log_as is set or AUTO_LOG_ON_ECHO is true it gets logged as well.
     :param text: The printed text.

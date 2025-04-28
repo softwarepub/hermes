@@ -6,6 +6,7 @@ import argparse
 import logging
 import os
 import re
+import shutil
 import sys
 import traceback
 import requests
@@ -270,6 +271,7 @@ class HermesInitCommand(HermesCommand):
 
         # Nice message on Ctrl+C
         except KeyboardInterrupt:
+            sc.echo("")
             sc.echo("HERMES init was aborted.", sc.Formats.WARNING)
             self.clean_up_files(True)
             sys.exit()
@@ -416,10 +418,13 @@ class HermesInitCommand(HermesCommand):
                 template_url = self.get_template_url("TEMPLATE_hermes_github_to_zenodo.yml")
                 ci_file_folder = Path(".github/workflows")
                 ci_file_name = "hermes_github.yml"
+                ci_file_path = ci_file_folder / ci_file_name
+                # Adding paths to our list
+                self.mark_as_new_path(Path(".github"))
                 self.mark_as_new_path(ci_file_folder)
-                ci_file_folder.mkdir(parents=True, exist_ok=True)
-                ci_file_path = Path(ci_file_folder) / ci_file_name
                 self.mark_as_new_path(ci_file_path)
+                # Creating folder & ci file
+                ci_file_folder.mkdir(parents=True, exist_ok=True)
                 download_file_from_url(template_url, ci_file_path)
                 self.configure_ci_template(ci_file_path)
                 sc.echo(f"GitHub CI: File was created at {ci_file_path}", formatting=sc.Formats.OKGREEN)
@@ -723,7 +728,11 @@ class HermesInitCommand(HermesCommand):
             ]
         )
         if push_choice == 0:
-            self.ci_parameters["push_branch"] = sc.answer("Enter target branch: ")
+            branch = sc.answer("Enter target branch: ")
+            self.ci_parameters["push_branch"] = branch
+            sc.echo(f"The HERMES pipeline will be activated when you push on {sc.Formats.BOLD.wrap_around(branch)}",
+                    formatting=sc.Formats.OKGREEN)
+            sc.echo()
         elif push_choice == 1:
             sc.echo("Setting up triggering by tags is currently not implemented.", formatting=sc.Formats.WARNING)
             sc.echo(f"You can visit {TUTORIAL_URL} to set it up manually later-on.", formatting=sc.Formats.WARNING)
@@ -793,7 +802,10 @@ class HermesInitCommand(HermesCommand):
         This gets called when init is finished (successfully or aborted).
         It cleans up unwanted files (like .hermes folder) and everything new when aborted.
         """
-        os.remove(Path(".hermes"))
+        sc.echo("Cleaning unused files...")
+        hidden_hermes_path = Path(".hermes")
+        if hidden_hermes_path.exists() and hidden_hermes_path.is_dir():
+            shutil.rmtree(hidden_hermes_path)
         if aborted:
             if not self.hermes_was_already_installed:
                 for path in reversed(self.new_created_paths):
