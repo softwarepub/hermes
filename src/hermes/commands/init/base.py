@@ -123,7 +123,10 @@ def string_in_file(file_path, search_string: str) -> bool:
 
 
 def get_builtin_plugins(plugin_commands: list[str]) -> dict[str: HermesPlugin]:
-    """Returns a list of installed HermesPlugins based on a list of related command names."""
+    """
+    Returns a list of installed HermesPlugins based on a list of related command names.
+    This is currently not used (we use the marketplace code instead) but maybe later.
+    """
     plugins = {}
     for plugin_command_name in plugin_commands:
         entry_point_group = f"hermes.{plugin_command_name}"
@@ -159,6 +162,7 @@ class HermesInitCommand(HermesCommand):
         super().__init__(parser)
         self.folder_info: HermesInitFolderInfo = HermesInitFolderInfo()
         self.hermes_was_already_installed: bool = False
+        self.new_created_paths: list[Path] = []
         self.tokens: dict = {}
         self.setup_method: str = ""
         self.deposit_platform: DepositPlatform = DepositPlatform.Empty
@@ -260,12 +264,14 @@ class HermesInitCommand(HermesCommand):
             sc.next_step("Connect with git hoster")
             self.configure_git_project()
 
+            self.clean_up_files(False)
             sc.echo("\nHERMES is now initialized and ready to be used.\n",
                     formatting=sc.Formats.OKGREEN+sc.Formats.BOLD)
 
         # Nice message on Ctrl+C
         except KeyboardInterrupt:
             sc.echo("HERMES init was aborted.", sc.Formats.WARNING)
+            self.clean_up_files(True)
             sys.exit()
 
         # Useful message on error
@@ -273,6 +279,7 @@ class HermesInitCommand(HermesCommand):
             sc.echo(f"An error occurred during execution of HERMES init: {e}",
                     formatting=sc.Formats.FAIL+sc.Formats.BOLD)
             sc.debug_info(traceback.format_exc())
+            self.clean_up_files(True)
             sys.exit(2)
 
     def test_initialization(self) -> None:
@@ -344,9 +351,11 @@ class HermesInitCommand(HermesCommand):
 
     def create_hermes_toml(self) -> None:
         """Creates the hermes.toml file based on a self.hermes_toml_data"""
+        hermes_toml_path = Path("hermes.toml")
+        self.mark_as_new_path(hermes_toml_path)
         if (not self.folder_info.has_hermes_toml) \
                 or sc.confirm("Do you want to replace your `hermes.toml` with a new one?", default=True):
-            with open('hermes.toml', 'w') as toml_file:
+            with open(hermes_toml_path, 'w') as toml_file:
                 # noinspection PyTypeChecker
                 toml.dump(self.hermes_toml_data, toml_file)
             sc.echo("`hermes.toml` was created.", formatting=sc.Formats.OKGREEN)
@@ -377,17 +386,19 @@ class HermesInitCommand(HermesCommand):
 
     def update_gitignore(self) -> None:
         """Creates .gitignore if there is none and adds '.hermes' to it"""
+        gitignore_path = Path(".gitignore")
+        self.mark_as_new_path(gitignore_path)
         if not self.folder_info.has_gitignore:
-            open(".gitignore", 'w')
+            open(gitignore_path, 'w')
             sc.echo("A new `.gitignore` file was created.", formatting=sc.Formats.OKGREEN)
         self.refresh_folder_info()
         if self.folder_info.has_gitignore:
-            with open(".gitignore", "r") as file:
+            with open(gitignore_path, "r") as file:
                 gitignore_lines = file.readlines()
             if any([line.startswith(".hermes") for line in gitignore_lines]):
                 sc.echo("The `.gitignore` file already contains `.hermes/`")
             else:
-                with open(".gitignore", "a") as file:
+                with open(gitignore_path, "a") as file:
                     file.write("# Ignoring all HERMES cache files\n")
                     file.write(".hermes/\n")
                     file.write("hermes.log\n")
@@ -403,10 +414,12 @@ class HermesInitCommand(HermesCommand):
         match self.git_hoster:
             case GitHoster.GitHub:
                 template_url = self.get_template_url("TEMPLATE_hermes_github_to_zenodo.yml")
-                ci_file_folder = ".github/workflows"
+                ci_file_folder = Path(".github/workflows")
                 ci_file_name = "hermes_github.yml"
-                Path(ci_file_folder).mkdir(parents=True, exist_ok=True)
+                self.mark_as_new_path(ci_file_folder)
+                ci_file_folder.mkdir(parents=True, exist_ok=True)
                 ci_file_path = Path(ci_file_folder) / ci_file_name
+                self.mark_as_new_path(ci_file_path)
                 download_file_from_url(template_url, ci_file_path)
                 self.configure_ci_template(ci_file_path)
                 sc.echo(f"GitHub CI: File was created at {ci_file_path}", formatting=sc.Formats.OKGREEN)
@@ -414,8 +427,15 @@ class HermesInitCommand(HermesCommand):
                 gitlab_ci_template_url = self.get_template_url("TEMPLATE_hermes_gitlab_to_zenodo.yml")
                 hermes_ci_template_url = self.get_template_url("hermes-ci.yml")
                 gitlab_ci_path = Path(".gitlab-ci.yml")
-                Path("gitlab").mkdir(parents=True, exist_ok=True)
-                hermes_ci_path = Path("gitlab") / "hermes-ci.yml"
+                gitlab_folder_path = Path("gitlab")
+                hermes_ci_path = gitlab_folder_path / "hermes-ci.yml"
+                # Adding paths to our list
+                self.mark_as_new_path(gitlab_ci_path)
+                self.mark_as_new_path(gitlab_folder_path)
+                self.mark_as_new_path(hermes_ci_path)
+                # Creating the gitlab folder
+                gitlab_folder_path.mkdir(parents=True, exist_ok=True)
+                # Creating / updating gitlab-ci
                 if gitlab_ci_path.exists():
                     if string_in_file(gitlab_ci_path, "hermes-ci.yml"):
                         sc.echo(f"It seems like your {gitlab_ci_path} file is already configured for hermes.")
@@ -426,6 +446,7 @@ class HermesInitCommand(HermesCommand):
                     download_file_from_url(gitlab_ci_template_url, gitlab_ci_path)
                     sc.echo(f"GitLab CI: {gitlab_ci_path} was created.", formatting=sc.Formats.OKGREEN)
                 self.configure_ci_template(gitlab_ci_path)
+                # Creating hermes-ci
                 download_file_from_url(hermes_ci_template_url, hermes_ci_path)
                 self.configure_ci_template(hermes_ci_path)
 
@@ -618,7 +639,7 @@ class HermesInitCommand(HermesCommand):
                 connect_zenodo.setup(using_sandbox=True)
                 self.create_zenodo_token()
 
-    def choose_plugins(self):
+    def choose_plugins(self) -> None:
         """User chooses the plugins he wants to use."""
         plugin_infos: list[marketplace.PluginInfo] = marketplace.get_plugin_infos()
         plugins_builtin: list[marketplace.PluginInfo] = list(filter(lambda p: p.builtin, plugin_infos))
@@ -654,7 +675,7 @@ class HermesInitCommand(HermesCommand):
                 chosen_plugin = plugins_available.pop(choice - 1)
                 plugins_selected.append(chosen_plugin)
 
-    def integrate_plugins(self):
+    def integrate_plugins(self) -> None:
         """
         Plugin installation is added to the ci-parameters.
         Also for now we use this method to do custom plugin installation steps.
@@ -688,6 +709,7 @@ class HermesInitCommand(HermesCommand):
             sc.next_step("Create CITATION.cff file")
             self.create_citation_cff()
 
+            self.clean_up_files(False)
             sc.echo("\nHERMES is now initialized (without git integration or CI/CD files).\n",
                     formatting=sc.Formats.OKGREEN)
 
@@ -758,6 +780,27 @@ class HermesInitCommand(HermesCommand):
             for file in self.folder_info.dir_list:
                 sc.echo(f"\t\t{file}", formatting=sc.Formats.OKCYAN)
 
-    def clean_up_files(self):
-        if not self.hermes_was_already_installed:
-            pass
+    def mark_as_new_path(self, path: Path, avoid_existing: bool = True) -> None:
+        """
+        This method should be called directly BEFORE creating a new file in the given Path.
+        This way we can look if something already exists there to decide later-on if we want to delete it on abort.
+        """
+        if (not avoid_existing) or (not path.exists()):
+            self.new_created_paths.append(path)
+
+    def clean_up_files(self, aborted: bool) -> None:
+        """
+        This gets called when init is finished (successfully or aborted).
+        It cleans up unwanted files (like .hermes folder) and everything new when aborted.
+        """
+        os.remove(Path(".hermes"))
+        if aborted:
+            if not self.hermes_was_already_installed:
+                for path in reversed(self.new_created_paths):
+                    try:
+                        if path.is_dir():
+                            path.rmdir()
+                        else:
+                            os.remove(path)
+                    except Exception as e:
+                        sc.echo(f"Cleaning Warning: Could not remove {path}. ({e})")

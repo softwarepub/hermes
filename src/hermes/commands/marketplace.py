@@ -153,27 +153,6 @@ def _plugin_loc(_plugin: SchemaOrgSoftwareApplication) -> str:
     return "builtin" if _plugin.is_part_of == schema_org_hermes else (_plugin.url or "")
 
 
-def get_plugin_infos() -> list[PluginInfo]:
-    response = requests.get(MARKETPLACE_URL, headers={"User-Agent": hermes_user_agent})
-    response.raise_for_status()
-    parser = PluginMarketPlaceParser()
-    parser.feed(response.text)
-    infos: list[PluginInfo] = []
-    if parser.plugins:
-        plugins_sorted = _sort_plugins_by_step(parser.plugins)
-        for step in plugins_sorted.keys():
-            for plugin in plugins_sorted[step]:
-                info = PluginInfo()
-                info.name = plugin.name
-                info.step = step
-                info.location = _plugin_loc(plugin)
-                info.builtin = plugin.is_part_of == schema_org_hermes
-                info.install_url = plugin.install_url
-                info.abstract = plugin.abstract
-                infos.append(info)
-    return infos
-
-
 def main():
     response = requests.get(MARKETPLACE_URL, headers={"User-Agent": hermes_user_agent})
     response.raise_for_status()
@@ -248,3 +227,24 @@ class PluginInfo:
         to make sure that other things are valid too.
         """
         return self.get_pip_install_command() != ""
+
+
+def get_plugin_infos() -> list[PluginInfo]:
+    response = requests.get(MARKETPLACE_URL, headers={"User-Agent": hermes_user_agent})
+    response.raise_for_status()
+    parser = PluginMarketPlaceParser()
+    parser.feed(response.text)
+    infos: list[PluginInfo] = []
+    if parser.plugins:
+        plugins_sorted = _sort_plugins_by_step(parser.plugins)
+        for step in plugins_sorted.keys():
+            for plugin in plugins_sorted[step]:
+                info = PluginInfo()
+                info.name = plugin.name
+                info.step = step
+                info.location = _plugin_loc(plugin)
+                info.builtin = plugin.is_part_of == schema_org_hermes
+                info.install_url = plugin.install_url
+                info.abstract = plugin.abstract
+                infos.append(info)
+    return infos
