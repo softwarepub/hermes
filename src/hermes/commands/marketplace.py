@@ -96,6 +96,11 @@ class PluginMarketPlaceParser(HTMLParser):
             plugin = SchemaOrgSoftwareApplication.model_validate_json(data)
             self.plugins.append(plugin)
 
+    def parse_plugins_from_url(self, url: str = MARKETPLACE_URL, user_agent: str = hermes_user_agent):
+        response = requests.get(url, headers={"User-Agent": user_agent})
+        response.raise_for_status()
+        self.feed(response.text)
+
 
 @cache
 def _doi_is_version_of_concept_doi(doi: str, concept_doi: str) -> bool:
@@ -150,27 +155,21 @@ def _sort_plugins_by_step(plugins: list[SchemaOrgSoftwareApplication]) -> dict[s
 
 
 def _plugin_loc(_plugin: SchemaOrgSoftwareApplication) -> str:
-    return "builtin" if _plugin.is_part_of == schema_org_hermes else (_plugin.url or "")
+    return (
+        "builtin"
+        if _is_hermes_reference(_plugin.is_part_of)
+        else (_plugin.url or "")
+    )
 
 
 def main():
-    response = requests.get(MARKETPLACE_URL, headers={"User-Agent": hermes_user_agent})
-    response.raise_for_status()
-
     parser = PluginMarketPlaceParser()
-    parser.feed(response.text)
+    parser.parse_plugins_from_url(MARKETPLACE_URL, hermes_user_agent)
 
     print(
         "A detailed list of available plugins can be found on the HERMES website at",
         MARKETPLACE_URL + "."
     )
-
-    def _plugin_loc(_plugin: SchemaOrgSoftwareApplication) -> str:
-        return (
-            "builtin"
-            if _is_hermes_reference(_plugin.is_part_of)
-            else (_plugin.url or "")
-        )
 
     if parser.plugins:
         print()
@@ -230,10 +229,11 @@ class PluginInfo:
 
 
 def get_plugin_infos() -> list[PluginInfo]:
-    response = requests.get(MARKETPLACE_URL, headers={"User-Agent": hermes_user_agent})
-    response.raise_for_status()
+    """
+    Returns a List of PluginInfos which are meant to be used by the init-command.
+    """
     parser = PluginMarketPlaceParser()
-    parser.feed(response.text)
+    parser.parse_plugins_from_url(MARKETPLACE_URL, hermes_user_agent)
     infos: list[PluginInfo] = []
     if parser.plugins:
         plugins_sorted = _sort_plugins_by_step(parser.plugins)
@@ -243,7 +243,7 @@ def get_plugin_infos() -> list[PluginInfo]:
                 info.name = plugin.name
                 info.step = step
                 info.location = _plugin_loc(plugin)
-                info.builtin = plugin.is_part_of == schema_org_hermes
+                info.builtin = info.location == "builtin"
                 info.install_url = plugin.install_url
                 info.abstract = plugin.abstract
                 infos.append(info)
