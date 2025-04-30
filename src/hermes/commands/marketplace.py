@@ -13,6 +13,7 @@ import requests
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
+from hermes.commands.init.util import slim_click
 from hermes.utils import hermes_doi, hermes_concept_doi, hermes_user_agent
 
 MARKETPLACE_URL = "https://hermes.software-metadata.pub/marketplace"
@@ -95,6 +96,11 @@ class PluginMarketPlaceParser(HTMLParser):
             plugin = SchemaOrgSoftwareApplication.model_validate_json(data)
             self.plugins.append(plugin)
 
+    def parse_plugins_from_url(self, url: str = MARKETPLACE_URL, user_agent: str = hermes_user_agent):
+        response = requests.get(url, headers={"User-Agent": user_agent})
+        response.raise_for_status()
+        self.feed(response.text)
+
 
 @cache
 def _doi_is_version_of_concept_doi(doi: str, concept_doi: str) -> bool:
@@ -148,24 +154,22 @@ def _sort_plugins_by_step(plugins: list[SchemaOrgSoftwareApplication]) -> dict[s
     return sorted_plugins
 
 
-def main():
-    response = requests.get(MARKETPLACE_URL, headers={"User-Agent": hermes_user_agent})
-    response.raise_for_status()
+def _plugin_loc(_plugin: SchemaOrgSoftwareApplication) -> str:
+    return (
+        "builtin"
+        if _is_hermes_reference(_plugin.is_part_of)
+        else (_plugin.url or "")
+    )
 
+
+def main():
     parser = PluginMarketPlaceParser()
-    parser.feed(response.text)
+    parser.parse_plugins_from_url(MARKETPLACE_URL, hermes_user_agent)
 
     print(
         "A detailed list of available plugins can be found on the HERMES website at",
         MARKETPLACE_URL + "."
     )
-
-    def _plugin_loc(_plugin: SchemaOrgSoftwareApplication) -> str:
-        return (
-            "builtin"
-            if _is_hermes_reference(_plugin.is_part_of)
-            else (_plugin.url or "")
-        )
 
     if parser.plugins:
         print()
@@ -184,3 +188,63 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+class PluginInfo:
+    """
+    This class contains all the information about a plugin which are needed for the init-Command.
+    """
+    def __init__(self):
+        self.name: str = ""
+        self.location: str = ""
+        self.step: str = ""
+        self.builtin: bool = True
+        self.install_url: str = ""
+        self.abstract: str = ""
+
+    def __str__(self):
+        step_text = f"[{self.step}]"
+        return f"{step_text} {slim_click.Formats.BOLD.wrap_around(self.name)} ({self.location})"
+
+    def get_pip_install_command(self) -> str:
+        """
+        Returns the pip install command which can be used to install the plugin.
+        Tries to extract the project name from the install_url (PyPI-URL) if possible.
+        Otherwise, it tries to use the location (Git-Project-URL) for the pip install command.
+        """
+        if self.install_url and self.install_url.startswith("https://pypi.org/project/"):
+            project_name = self.install_url.rstrip("/").removeprefix("https://pypi.org/project/")
+            return f"pip install {project_name}"
+        if self.location and self.location.startswith(("https://", "git@", "ssh://")):
+            git_url = self.location.rstrip("/")
+            return f"pip install git+{git_url}"
+        return ""
+
+    def is_valid(self) -> bool:
+        """
+        Returns True if the plugin can be installed. Maybe we'll check the actual repository here later
+        to make sure that other things are valid too.
+        """
+        return self.get_pip_install_command() != ""
+
+
+def get_plugin_infos() -> list[PluginInfo]:
+    """
+    Returns a List of PluginInfos which are meant to be used by the init-command.
+    """
+    parser = PluginMarketPlaceParser()
+    parser.parse_plugins_from_url(MARKETPLACE_URL, hermes_user_agent)
+    infos: list[PluginInfo] = []
+    if parser.plugins:
+        plugins_sorted = _sort_plugins_by_step(parser.plugins)
+        for step in plugins_sorted.keys():
+            for plugin in plugins_sorted[step]:
+                info = PluginInfo()
+                info.name = plugin.name
+                info.step = step
+                info.location = _plugin_loc(plugin)
+                info.builtin = info.location == "builtin"
+                info.install_url = plugin.install_url
+                info.abstract = plugin.abstract
+                infos.append(info)
+    return infos

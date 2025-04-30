@@ -61,22 +61,28 @@ class Formats(Enum):
             return logging.INFO
         return default
 
+    def wrap_around(self, text: str) -> str:
+        return self.get_ansi() + text + Formats.ENDC.get_ansi()
 
-def echo(text: str, formatting: Formats = Formats.EMPTY, log_as: int = logging.NOTSET):
+
+def echo(text: str = "", formatting: Formats = Formats.EMPTY, log_as: int = logging.NOTSET, no_log: bool = False):
     """
     Prints the text with the given formatting. If log_as is set or AUTO_LOG_ON_ECHO is true it gets logged as well.
     :param text: The printed text.
     :param formatting: You can use the Formats Enum to give the text a special color or formatting.
     :param log_as: Creates a log entry with the given text if this is set.
+    :param no_log: Never creates a log entry if True.
     """
     # Get logging type from formatting if AUTO_LOG_ON_ECHO
     if AUTO_LOG_ON_ECHO and log_as == logging.NOTSET and text != "":
         log_as = formatting.get_log_type(logging.INFO)
     # Add text to log if there is a logger
-    if log_as != logging.NOTSET and default_file_logger:
+    if log_as != logging.NOTSET and default_file_logger and not no_log:
         default_file_logger.log(log_as, text)
     # Format the text for the console
     if formatting != Formats.EMPTY:
+        if Formats.ENDC.get_ansi() in text:
+            text = text.replace(Formats.ENDC.get_ansi(), Formats.ENDC.get_ansi() + formatting.get_ansi())
         text = f"{formatting.get_ansi()}{text}{Formats.ENDC.get_ansi()}"
     # Print it
     if (log_as != logging.DEBUG) or PRINT_DEBUG:
@@ -164,7 +170,9 @@ def next_step(description: str):
 
 def create_console_hyperlink(url: str, word: str) -> str:
     """Use this to have a consistent display of hyperlinks."""
-    return f"\033]8;;{url}\033\\{word}\033]8;;\033\\" if USE_FANCY_HYPERLINKS else f"{word} ({url})"
+    if USE_FANCY_HYPERLINKS:
+        return f"\033]8;;{url}\033\\{word}\033]8;;\033\\"
+    return f"{word} ({url})"
 
 
 class ColorLogHandler(logging.Handler):
