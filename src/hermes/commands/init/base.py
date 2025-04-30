@@ -9,14 +9,14 @@ import re
 import shutil
 import sys
 import traceback
-import requests
-import toml
-
 from dataclasses import dataclass
 from enum import Enum, auto
 from importlib import metadata
 from pathlib import Path
 from urllib.parse import urljoin, urlparse
+
+import requests
+import toml
 from pydantic import BaseModel
 from requests import HTTPError
 
