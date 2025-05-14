@@ -13,7 +13,7 @@ import typing as t
 from hermes.commands.harvest.base import HermesHarvestCommand, HermesHarvestPlugin
 from hermes.commands.harvest.util.validate_codemeta import validate_codemeta
 from hermes.model.errors import HermesValidationError
-from hermes.commands.harvest.util.remote_harvesting import normalize_url, fetch_metadata_from_repo, remove_temp_file
+from hermes.commands.harvest.util.remote_harvesting import normalize_url, fetch_metadata_from_repo
 
 class CodeMetaHarvestPlugin(HermesHarvestPlugin):
     def __call__(self, command: HermesHarvestCommand) -> t.Tuple[t.Dict, t.Dict]:
@@ -25,7 +25,7 @@ class CodeMetaHarvestPlugin(HermesHarvestPlugin):
         :param ctx: The harvesting context that should contain the provided metadata.
         """
         # Get source files
-        codemeta_file = self._get_single_codemeta(command.args.path)
+        codemeta_file, temp_dir_obj = self._get_single_codemeta(command.args.path)
         if not codemeta_file:
             raise HermesValidationError(
                 f"{command.args.path} contains either no or more than 1 codemeta.json file. Aborting harvesting "
@@ -38,7 +38,9 @@ class CodeMetaHarvestPlugin(HermesHarvestPlugin):
         if not self._validate(codemeta_file):
             raise HermesValidationError(codemeta_file)
 
-        remove_temp_file(codemeta_file)
+        if temp_dir_obj:
+            temp_dir_obj.cleanup()
+
         codemeta = json.loads(codemeta_str)
         return codemeta, {'local_path': str(codemeta_file)}
 
@@ -60,15 +62,16 @@ class CodeMetaHarvestPlugin(HermesHarvestPlugin):
         if str(path).startswith("http:") or str(path).startswith("https:"):
             # Find CodeMeta files from the provided URL repository
             normalized_url = normalize_url(str(path))
-            return fetch_metadata_from_repo(normalized_url, "codemeta.json")
+            file_info = fetch_metadata_from_repo(normalized_url, "codemeta.json")
+            return file_info
         else:
             # Find CodeMeta files in directories and subdirectories
             # TODO: Do we really want to search recursive? Maybe add another option to enable pointing to a single file?
             #       (So this stays "convention over configuration")
             files = glob.glob(str(path / "**" / "codemeta.json"), recursive=True)
             if len(files) == 1:
-                return pathlib.Path(files[0])
+                return pathlib.Path(files[0]), None
             # TODO: Shouldn't we log/echo the found CFF files so a user can debug/cleanup?
             # TODO: Do we want to hand down a logging instance via Hermes context or just encourage
             #       peeps to use the Click context?
-            return None
+            return None, None

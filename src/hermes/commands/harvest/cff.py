@@ -19,7 +19,7 @@ from cffconvert import Citation
 from hermes.model.context import ContextPath
 from hermes.model.errors import HermesValidationError
 from hermes.commands.harvest.base import HermesHarvestPlugin, HermesHarvestCommand
-from hermes.commands.harvest.util.remote_harvesting import normalize_url, fetch_metadata_from_repo, remove_temp_file
+from hermes.commands.harvest.util.remote_harvesting import normalize_url, fetch_metadata_from_repo
 
 
 # TODO: should this be configurable via a CLI option?
@@ -38,7 +38,9 @@ class CffHarvestPlugin(HermesHarvestPlugin):
 
     def __call__(self, command: HermesHarvestCommand) -> t.Tuple[t.Dict, t.Dict]:
         # Get source files
-        cff_file = self._get_single_cff(command.args.path)
+        
+        cff_file, temp_dir_obj = self._get_single_cff(command.args.path)
+
         if not cff_file:
             raise HermesValidationError(f'{command.args.path} contains either no or more than 1 CITATION.cff file. '
                                         'Aborting harvesting for this metadata source.')
@@ -46,7 +48,10 @@ class CffHarvestPlugin(HermesHarvestPlugin):
         # Read the content
         cff_data = cff_file.read_text()
 
-        remove_temp_file(cff_file)
+        # clean up the temp
+        if temp_dir_obj:
+            temp_dir_obj.cleanup()
+        
         # Validate the content to be correct CFF
         cff_dict = self._load_cff_from_file(cff_data)
 
@@ -114,20 +119,21 @@ class CffHarvestPlugin(HermesHarvestPlugin):
         if str(path).startswith("http:") or str(path).startswith("https:"):
             # Find CFF files from the provided URL repository
             normalized_url = normalize_url(str(path))
-            return fetch_metadata_from_repo(normalized_url, "CITATION.cff")
+            file_info = fetch_metadata_from_repo(normalized_url, "CITATION.cff")
+            return file_info
         else:
             # Find CFF files in directories and subdirectories
             cff_file = path / 'CITATION.cff'
             if cff_file.exists():
-                return cff_file
+                return cff_file, None
 
             # TODO: Do we really want to search recursive? CFF convention is the file should be at the topmost dir,
             #       which is given via the --path arg. Maybe add another option to enable pointing to a single file?
             #       (So this stays "convention over configuration")
             files = list(path.rglob('**/CITATION.cff'))
             if len(files) == 1:
-                return pathlib.Path(files[0])
+                return pathlib.Path(files[0]), None
             # TODO: Shouldn't we log/echo the found CFF files so a user can debug/cleanup?
             # TODO: Do we want to hand down a logging instance via Hermes context or just encourage
             #       peeps to use the Click context?
-            return None
+            return None, None
