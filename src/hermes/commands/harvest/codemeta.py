@@ -63,7 +63,10 @@ class CodeMetaHarvestPlugin(HermesHarvestPlugin):
             # Find CodeMeta files from the provided URL repository
             normalized_url = normalize_url(str(path))
             file_info = fetch_metadata_from_repo(normalized_url, "codemeta.json")
-            return file_info
+            if not file_info:
+                return None, None 
+            else:
+                return file_info
         else:
             # Find CodeMeta files in directories and subdirectories
             # TODO: Do we really want to search recursive? Maybe add another option to enable pointing to a single file?

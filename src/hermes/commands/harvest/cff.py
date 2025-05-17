@@ -120,7 +120,10 @@ class CffHarvestPlugin(HermesHarvestPlugin):
             # Find CFF files from the provided URL repository
             normalized_url = normalize_url(str(path))
             file_info = fetch_metadata_from_repo(normalized_url, "CITATION.cff")
-            return file_info
+            if not file_info:
+                return {}
+            else:
+                return file_info
         else:
             # Find CFF files in directories and subdirectories
             cff_file = path / 'CITATION.cff'
