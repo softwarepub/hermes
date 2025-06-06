@@ -14,9 +14,13 @@ from hermes.commands.harvest.base import HermesHarvestCommand, HermesHarvestPlug
 from hermes.commands.harvest.util.validate_codemeta import validate_codemeta
 from hermes.model.errors import HermesValidationError
 from hermes.commands.harvest.util.remote_harvesting import normalize_url, fetch_metadata_from_repo
+from hermes.commands.harvest.util.token import load_token_from_toml
 
 class CodeMetaHarvestPlugin(HermesHarvestPlugin):
     def __call__(self, command: HermesHarvestCommand) -> t.Tuple[t.Dict, t.Dict]:
+        
+        self.token = load_token_from_toml('hermes.toml')
+        
         """
         Implementation of a harvester that provides data from a codemeta.json file format.
 
@@ -33,7 +37,7 @@ class CodeMetaHarvestPlugin(HermesHarvestPlugin):
             )
 
         # Read the content
-        codemeta_str = codemeta_file.read_text()
+        codemeta_str = codemeta_file.read_text(encoding='utf-8')
 
         if not self._validate(codemeta_file):
             raise HermesValidationError(codemeta_file)
@@ -62,7 +66,7 @@ class CodeMetaHarvestPlugin(HermesHarvestPlugin):
         if str(path).startswith("http:") or str(path).startswith("https:"):
             # Find CodeMeta files from the provided URL repository
             normalized_url = normalize_url(str(path))
-            file_info = fetch_metadata_from_repo(normalized_url, "codemeta.json")
+            file_info = fetch_metadata_from_repo(normalized_url, "codemeta.json", token=self.token)
             if not file_info:
                 return None, None 
             else:

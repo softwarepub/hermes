@@ -20,6 +20,7 @@ from hermes.model.context import ContextPath
 from hermes.model.errors import HermesValidationError
 from hermes.commands.harvest.base import HermesHarvestPlugin, HermesHarvestCommand
 from hermes.commands.harvest.util.remote_harvesting import normalize_url, fetch_metadata_from_repo
+from hermes.commands.harvest.util.token import load_token_from_toml
 
 
 # TODO: should this be configurable via a CLI option?
@@ -31,12 +32,16 @@ _log = logging.getLogger('cli.harvest.cff')
 class CffHarvestSettings(BaseModel):
     """Custom settings for CFF harvester."""
     enable_validation: bool = True
+    token: str = ''
 
 
 class CffHarvestPlugin(HermesHarvestPlugin):
     settings_class = CffHarvestSettings
 
     def __call__(self, command: HermesHarvestCommand) -> t.Tuple[t.Dict, t.Dict]:
+
+        self.token = load_token_from_toml('hermes.toml')
+        
         # Get source files
         
         cff_file, temp_dir_obj = self._get_single_cff(command.args.path)
@@ -46,7 +51,7 @@ class CffHarvestPlugin(HermesHarvestPlugin):
                                         'Aborting harvesting for this metadata source.')
 
         # Read the content
-        cff_data = cff_file.read_text()
+        cff_data = cff_file.read_text(encoding='utf-8')
 
         # clean up the temp
         if temp_dir_obj:
@@ -119,7 +124,7 @@ class CffHarvestPlugin(HermesHarvestPlugin):
         if str(path).startswith("http:") or str(path).startswith("https:"):
             # Find CFF files from the provided URL repository
             normalized_url = normalize_url(str(path))
-            file_info = fetch_metadata_from_repo(normalized_url, "CITATION.cff")
+            file_info = fetch_metadata_from_repo(normalized_url, "CITATION.cff", token=self.token)
             if not file_info:
                 return {}
             else:
