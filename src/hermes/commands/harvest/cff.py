@@ -32,7 +32,6 @@ _log = logging.getLogger('cli.harvest.cff')
 class CffHarvestSettings(BaseModel):
     """Custom settings for CFF harvester."""
     enable_validation: bool = True
-    token: str = ''
 
 
 class CffHarvestPlugin(HermesHarvestPlugin):
