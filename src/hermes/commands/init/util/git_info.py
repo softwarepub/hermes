@@ -2,11 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-FileContributor: Nitai Heeb
 
-import re
 import os
+import re
 import subprocess
 from pathlib import Path
-
 
 default_cwd = ""
 

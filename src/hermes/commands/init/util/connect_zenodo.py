@@ -3,8 +3,9 @@
 # SPDX-FileContributor: Nitai Heeb
 
 import time
-import requests
+
 import oauthlib.oauth2.rfc6749.errors
+import requests
 
 from . import slim_click as sc
 from .oauth_process import OauthProcess

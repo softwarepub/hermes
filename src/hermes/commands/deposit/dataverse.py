@@ -4,16 +4,16 @@
 
 import json
 import logging
-import requests
 from pathlib import Path
+
+import requests
+from easyDataverse import Dataset, Dataverse, License
+from pydantic import BaseModel
 
 from hermes.commands.deposit.base import BaseDepositPlugin
 from hermes.commands.deposit.error import DepositionUnauthorizedError
 from hermes.model.path import ContextPath
-from pydantic import BaseModel
-from easyDataverse import Dataverse, License, Dataset
 from hermes.utils import hermes_doi
-
 
 _log = logging.getLogger("cli.deposit.dataverse")
 

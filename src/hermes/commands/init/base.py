@@ -27,6 +27,7 @@ from hermes.commands.init.util import (connect_github, connect_gitlab,
                                        connect_zenodo, git_info)
 
 TUTORIAL_URL = "https://hermes.software-metadata.pub/en/latest/tutorials/automated-publication-with-ci.html"
+REPOSITORY_URL = "https://github.com/softwarepub/hermes"
 
 
 class GitHoster(Enum):
@@ -130,6 +131,8 @@ def get_git_hoster_from_url(url: str) -> GitHoster:
 
 
 def download_file_from_url(url, filepath, append: bool = False) -> None:
+    if not append and os.path.exists(filepath):
+        os.remove(filepath)
     try:
         with requests.get(url, stream=True) as r:
             r.raise_for_status()
@@ -197,6 +200,7 @@ class HermesInitCommand(HermesCommand):
         self.template_repo: str = "softwarepub/ci-templates"
         self.template_folder: str = "init"
         self.ci_parameters: dict = {
+            "pip_install_hermes": "pip install hermes",
             "deposit_zip_name": "artifact.zip",
             "deposit_zip_files": "",
             "deposit_initial": "--initial",
@@ -220,6 +224,8 @@ class HermesInitCommand(HermesCommand):
     def init_command_parser(self, command_parser: argparse.ArgumentParser) -> None:
         command_parser.add_argument('--template-branch', nargs=1, default="",
                                     help="Branch or tag of the ci-templates repository.")
+        command_parser.add_argument('--hermes-branch', nargs=1, default="",
+                                    help="Branch of the hermes repository which will be used in the pipeline.")
 
     def load_settings(self, args: argparse.Namespace):
         pass
@@ -244,10 +250,17 @@ class HermesInitCommand(HermesCommand):
         # Setup logging
         self.setup_file_logging()
 
-        # Save command parameter (template branch)
+        # Process command parameters (ci-templates branch & hermes branch)
         if hasattr(args, "template_branch"):
             if args.template_branch != "":
                 self.template_branch = args.template_branch
+        if hasattr(args, "hermes_branch"):
+            if args.hermes_branch:
+                branch_name = args.hermes_branch[0]
+                if branch_name != "":
+                    sc.echo(f"Using Hermes branch: {branch_name}")
+                    self.ci_parameters["pip_install_hermes"] = \
+                        f"pip install git+{REPOSITORY_URL}.git@{branch_name}"
 
         try:
             # Test if init is valid in current folder
