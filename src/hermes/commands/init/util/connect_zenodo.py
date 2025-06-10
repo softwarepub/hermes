@@ -30,7 +30,7 @@ scope = 'deposit:write deposit:actions'
 client_id = client_secret = base_url = authorize_url = token_url = api_list_url = name = ""
 
 
-def setup(zenodo_url = "https://sandbox.zenodo.org/", display_name = ""):
+def setup(zenodo_url="https://sandbox.zenodo.org/", display_name=""):
     global client_id
     global client_secret
     global base_url

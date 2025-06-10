@@ -155,4 +155,3 @@ class DataverseDepositPlugin(BaseDepositPlugin):
         res = requests.post(url, headers=headers, params=params, data={"persistentId": persistent_id})
         if not res.ok:
             raise RuntimeError(f"Publish failed: {res.status_code}: {res.text}")
-

@@ -664,7 +664,6 @@ class HermesInitCommand(HermesCommand):
             host_dataverse = sc.answer("Enter the name of the dataverse where you want to publish: ")
             self.hermes_toml_data["deposit"][deposit_plugin]["host_dataverse"] = host_dataverse
 
-
     def choose_setup_method(self) -> None:
         """User chooses his desired setup method: Either preferring automatic (if available) or manual."""
         setup_method_index = sc.choose(
