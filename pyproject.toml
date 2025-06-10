@@ -53,6 +53,7 @@ pydantic = "^2.5.1"
 pydantic-settings = "^2.1.0"
 requests-oauthlib = "^2.0.0"
 pynacl = "^1.5.0"
+easydataverse = "^0.4.4"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.1.1"
@@ -93,6 +94,7 @@ codemeta = "hermes.commands.harvest.codemeta:CodeMetaHarvestPlugin"
 
 [tool.poetry.plugins."hermes.deposit"]
 file = "hermes.commands.deposit.file:FileDepositPlugin"
+dataverse = "hermes.commands.deposit.dataverse:DataverseDepositPlugin"
 invenio = "hermes.commands.deposit.invenio:InvenioDepositPlugin"
 invenio_rdm = "hermes.commands.deposit.invenio_rdm:IvenioRDMDepositPlugin"
 rodare = "hermes.commands.deposit.rodare:RodareDepositPlugin"

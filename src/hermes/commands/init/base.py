@@ -35,22 +35,44 @@ class GitHoster(Enum):
     GitLab = auto()
 
 
-class DepositPlatform(Enum):
+class DepositId(Enum):
+    """
+    Enum as additional identifier for DepositPlatforms so we have something persistent to code with.
+    """
     Empty = auto()
     Zenodo = auto()
     ZenodoSandbox = auto()
+    JuelichData = auto()
+    DemoDataverse = auto()
 
 
-DepositPlatformNames: dict[DepositPlatform, str] = {
-        DepositPlatform.ZenodoSandbox: "Zenodo (Sandbox)",
-        DepositPlatform.Zenodo: "Zenodo",
-    }
+@dataclass
+class DepositPlatform:
+    """
+    This dataclass contains all relevant data to set up hermes for a given platform.
+    """
+    def __init__(self, name: str = "", url: str = "", plugin_name: str = "", deposit_id: DepositId = DepositId.Empty):
+        self.name: str = name
+        self.url: str = url
+        """Base url of the deposit platform"""
+        self.plugin_name: str = plugin_name
+        """Internal name of our related hermes deposit plugin"""
+        self.id: DepositId = deposit_id
+        """Non changing enum-based ID to keep the consistency"""
+        self.internal_name: str = deposit_id.name
+        self.token: str = ""
+        """This is the access token which will get filled in connect_deposit_platform"""
+        self.token_name: str = re.sub(r'(?<!^)(?=[A-Z])', '_', self.internal_name).upper() + "_TOKEN"
+        """This is the internal name in uppercase, with underscores and ending with _TOKEN.
+           This is used as name for the secret variable on the GitHoster."""
 
 
-DepositPlatformUrls: dict[DepositPlatform, str] = {
-        DepositPlatform.Zenodo: "https://zenodo.org/",
-        DepositPlatform.ZenodoSandbox: "https://sandbox.zenodo.org/"
-    }
+DepositOptions: list[DepositPlatform] = [
+    DepositPlatform("Zenodo Sandbox", "https://sandbox.zenodo.org/", "invenio_rdm", DepositId.ZenodoSandbox),
+    DepositPlatform("Zenodo", "https://zenodo.org/", "invenio_rdm", DepositId.Zenodo),
+    DepositPlatform("Demo Dataverse", "https://demo.dataverse.org/", "dataverse", DepositId.DemoDataverse),
+    DepositPlatform("Jülich Data", "https://data.fz-juelich.de/", "dataverse", DepositId.JuelichData),
+]
 
 
 @dataclass
@@ -166,12 +188,12 @@ class HermesInitCommand(HermesCommand):
         self.new_created_paths: list[Path] = []
         self.tokens: dict = {}
         self.setup_method: str = ""
-        self.deposit_platform: DepositPlatform = DepositPlatform.Empty
+        self.deposit_platform: DepositPlatform = DepositPlatform()
         self.git_remote: str = ""
         self.git_remote_url = ""
         self.git_hoster: GitHoster = GitHoster.Empty
         self.template_base_url: str = "https://raw.githubusercontent.com"
-        self.template_branch: str = "feature/init-custom-ci"
+        self.template_branch: str = "feature/init-with-dataverse"
         self.template_repo: str = "softwarepub/ci-templates"
         self.template_folder: str = "init"
         self.ci_parameters: dict = {
@@ -179,18 +201,16 @@ class HermesInitCommand(HermesCommand):
             "deposit_zip_files": "",
             "deposit_initial": "--initial",
             "deposit_extra_files": "",
-            "push_branch": "main"
+            "deposit_parameter_token": "-O ???.auth_token",
+            "deposit_token_name": "???_TOKEN",
+            "push_branch": "main",
         }
         self.hermes_toml_data = {
             "harvest": {
                 "sources": ["cff"]
             },
             "deposit": {
-                "target": "invenio_rdm",
-                "invenio_rdm": {
-                    "site_url": "",
-                    "access_right": "open"
-                 }
+                "target": "",
             }
         }
         self.plugin_relevant_commands = ["harvest", "deposit"]
@@ -425,6 +445,7 @@ class HermesInitCommand(HermesCommand):
                 self.mark_as_new_path(ci_file_path)
                 # Creating folder & ci file
                 ci_file_folder.mkdir(parents=True, exist_ok=True)
+                sc.debug_info(f"Downloading github template from {template_url}")
                 download_file_from_url(template_url, ci_file_path)
                 self.configure_ci_template(ci_file_path)
                 sc.echo(f"GitHub CI: File was created at {ci_file_path}", formatting=sc.Formats.OKGREEN)
@@ -470,24 +491,24 @@ class HermesInitCommand(HermesCommand):
         with open(ci_file_path, 'r') as file:
             content = file.read()
         parameters = list(set(re.findall(r'{%(.*?)%}', content)))
+        sc.debug_info(f"Replacing template params {parameters} with {self.ci_parameters}")
         for parameter in parameters:
             if parameter in self.ci_parameters:
                 value = str(self.ci_parameters[parameter])
                 content = content.replace(f'{{%{parameter}%}}', value)
             else:
-                sc.debug_info(f"CI File Parameter {{%{parameter}%}} was not set.", formatting=sc.Formats.WARNING)
+                sc.debug_info(f"CI File Parameter {{%{parameter}%}} was not set.")
                 content = content.replace(f'{{%{parameter}%}}', '')
         with open(ci_file_path, 'w') as file:
             file.write(content)
 
     def create_zenodo_token(self) -> None:
-        """Makes the user create a zenodo token and saves it in self.tokens."""
-        self.tokens[self.deposit_platform] = ""
+        """Makes the user create a zenodo token and saves it in self.deposit_platform.token."""
         # Deactivated Zenodo OAuth as long as the refresh token bug is not fixed.
         if self.setup_method == "a":
             sc.echo("Doing OAuth with Zenodo is currently not available.")
-        if self.setup_method == "m" or self.tokens[self.deposit_platform] == '':
-            zenodo_token_url = urljoin(DepositPlatformUrls[self.deposit_platform],
+        if self.setup_method == "m" or self.deposit_platform.token == '':
+            zenodo_token_url = urljoin(self.deposit_platform.url,
                                        "account/settings/applications/tokens/new/")
             sc.echo("{} and create an access token.".format(
                 sc.create_console_hyperlink(zenodo_token_url, "Open this link")
@@ -497,17 +518,29 @@ class HermesInitCommand(HermesCommand):
                 sc.press_enter_to_continue()
             else:
                 while True:
-                    self.tokens[self.deposit_platform] = sc.answer("Enter the token here: ")
-                    valid = connect_zenodo.test_if_token_is_valid(self.tokens[self.deposit_platform])
+                    self.deposit_platform.token = sc.answer("Enter the token here: ")
+                    valid = connect_zenodo.test_if_token_is_valid(self.deposit_platform.token)
                     if valid:
-                        sc.echo(f"The token was validated by {connect_zenodo.name}.",
+                        sc.echo(f"The token was validated by {self.deposit_platform.name}.",
                                 formatting=sc.Formats.OKGREEN)
                         break
                     else:
-                        sc.echo(f"The token could not be validated by {connect_zenodo.name}. "
+                        sc.echo(f"The token could not be validated by {self.deposit_platform.name}. "
                                 "Make sure to enter the complete token.\n"
                                 "(If this error persists, you should try switching to the manual setup mode.)",
                                 formatting=sc.Formats.WARNING)
+
+    def create_dataverse_token(self):
+        # TODO Try dataverse oauth
+        token_url = urljoin(self.deposit_platform.url, "dataverseuser.xhtml?selectTab=apiTokenTab")
+        sc.echo("{} and create an access token.".format(
+            sc.create_console_hyperlink(token_url, "Open this link")
+        ))
+        if self.setup_method == "m":
+            sc.press_enter_to_continue()
+        else:
+            # TODO try to validate the token
+            self.deposit_platform.token = sc.answer("Enter the token here: ")
 
     def configure_git_project(self) -> None:
         """Adds the token to the git secrets & changes action workflow settings."""
@@ -524,8 +557,8 @@ class HermesInitCommand(HermesCommand):
             if self.tokens[GitHoster.GitHub]:
                 sc.echo("OAuth at GitHub was successful.", formatting=sc.Formats.OKGREEN)
                 sc.debug_info(github_token=self.tokens[GitHoster.GitHub])
-                connect_github.create_secret(self.git_remote_url, "ZENODO_SANDBOX",
-                                             secret_value=self.tokens[self.deposit_platform],
+                connect_github.create_secret(self.git_remote_url, self.deposit_platform.token_name,
+                                             secret_value=self.deposit_platform.token,
                                              token=self.tokens[GitHoster.GitHub])
                 connect_github.allow_actions(self.git_remote_url,
                                              token=self.tokens[GitHoster.GitHub])
@@ -534,13 +567,14 @@ class HermesInitCommand(HermesCommand):
                 sc.echo("Something went wrong while doing OAuth. You'll have to do it manually instead.",
                         formatting=sc.Formats.WARNING)
         if not oauth_success:
-            sc.echo("Add the {} token{} to your {} under the name ZENODO_SANDBOX.".format(
+            sc.echo("Add the {} token{} to your {} under the name {}.".format(
                 self.deposit_platform.name,
-                f" ({self.tokens[self.deposit_platform]})" if self.tokens[self.deposit_platform] else "",
+                f" ({self.deposit_platform.token})" if self.deposit_platform.token else "",
                 sc.create_console_hyperlink(
                     self.git_remote_url + "/settings/secrets/actions",
                     "project's GitHub secrets"
-                )
+                ),
+                self.deposit_platform.token_name
             ))
             sc.press_enter_to_continue()
             sc.echo("Next open your {} and check the checkbox which reads:".format(
@@ -569,7 +603,7 @@ class HermesInitCommand(HermesCommand):
                 token = sc.answer("Then paste the token here: ")
             if gl.authorize(token):
                 vars_created = gl.create_variable(
-                    "ZENODO_TOKEN", self.tokens[self.deposit_platform],
+                    self.deposit_platform.token_name, self.deposit_platform.token,
                     f"This token is used by Hermes to publish on {self.deposit_platform.name}."
                 )
                 if vars_created:
@@ -601,30 +635,40 @@ class HermesInitCommand(HermesCommand):
             sc.echo("Then, add that token as variable with key HERMES_PUSH_TOKEN.")
             sc.echo("(For your safety, you should set the visibility to 'Masked'.)")
             sc.press_enter_to_continue()
-            sc.echo("Next, add the {} token{} as variable with key ZENODO_TOKEN.".format(
+            sc.echo("Next, add the {} token{} as variable with key {}.".format(
                 self.deposit_platform.name,
-                f" ({self.tokens[self.deposit_platform]})" if self.tokens[self.deposit_platform] else ""
+                f" ({self.deposit_platform.token})" if self.deposit_platform.token else "",
+                self.deposit_platform.token_name
             ))
             sc.echo("(For your safety, you should set the visibility to 'Masked'.)")
             sc.press_enter_to_continue()
 
     def choose_deposit_platform(self) -> None:
         """User chooses his desired deposit platform."""
-        deposit_platform_list = list(DepositPlatformNames.keys())
         deposit_platform_index = sc.choose(
-            "Where do you want to publish the software?", [DepositPlatformNames[dp] for dp in deposit_platform_list]
+            "Where do you want to publish the software?", [do.name for do in DepositOptions]
         )
-        self.deposit_platform = deposit_platform_list[deposit_platform_index]
+        self.deposit_platform = DepositOptions[deposit_platform_index]
 
     def integrate_deposit_platform(self) -> None:
         """Makes changes to the toml data or something else based on the chosen deposit platform."""
-        deposit_url = DepositPlatformUrls.get(self.deposit_platform)
-        self.hermes_toml_data["deposit"]["invenio_rdm"]["site_url"] = deposit_url
+        deposit_plugin: str = self.deposit_platform.plugin_name
+        self.hermes_toml_data["deposit"]["target"] = deposit_plugin
+        self.hermes_toml_data["deposit"][deposit_plugin] = {}
+        self.hermes_toml_data["deposit"][deposit_plugin]["site_url"] = self.deposit_platform.url
+        self.ci_parameters["deposit_parameter_token"] = f"-O {deposit_plugin}.auth_token"
+        self.ci_parameters["deposit_token_name"] = self.deposit_platform.token_name
+        if deposit_plugin.startswith("invenio"):
+            self.hermes_toml_data["deposit"][deposit_plugin]["access_right"] = "open"
+        elif deposit_plugin == "dataverse":
+            host_dataverse = sc.answer("Enter the name of the dataverse where you want to publish: ")
+            self.hermes_toml_data["deposit"][deposit_plugin]["host_dataverse"] = host_dataverse
+
 
     def choose_setup_method(self) -> None:
         """User chooses his desired setup method: Either preferring automatic (if available) or manual."""
         setup_method_index = sc.choose(
-            f"How do you want to connect {DepositPlatformNames[self.deposit_platform]} "
+            f"How do you want to connect {self.deposit_platform.name} "
             f"with your {self.git_hoster.name} CI?",
             options=[
                 "Automatically (using OAuth / Device Flow)",
@@ -635,14 +679,18 @@ class HermesInitCommand(HermesCommand):
 
     def connect_deposit_platform(self) -> None:
         """Acquires the access token of the chosen deposit platform."""
-        assert self.deposit_platform != DepositPlatform.Empty
-        match self.deposit_platform:
-            case DepositPlatform.Zenodo:
-                connect_zenodo.setup(using_sandbox=False)
-                self.create_zenodo_token()
-            case DepositPlatform.ZenodoSandbox:
-                connect_zenodo.setup(using_sandbox=True)
-                self.create_zenodo_token()
+        used_deposit_plugin = self.deposit_platform.plugin_name
+        deposit_url = self.deposit_platform
+        deposit_name = self.deposit_platform.name
+        if used_deposit_plugin == "invenio_rdm":
+            connect_zenodo.setup(zenodo_url=self.deposit_platform.url, display_name=self.deposit_platform.name)
+            self.create_zenodo_token()
+        elif used_deposit_plugin == "dataverse":
+            self.create_dataverse_token()
+        else:
+            sc.echo(f"Unknown deposit plugin: {used_deposit_plugin}", formatting=sc.Formats.WARNING)
+            sc.echo(f"Getting an access token from {deposit_name} ({deposit_url}) is not supported by hermes init."
+                    "You might have to do it manually instead.", formatting=sc.Formats.WARNING)
 
     def choose_plugins(self) -> None:
         """User chooses the plugins he wants to use."""
@@ -739,7 +787,7 @@ class HermesInitCommand(HermesCommand):
 
     def choose_deposit_files(self) -> None:
         """User chooses the files that should be included in the deposition."""
-        dp_name = DepositPlatformNames[self.deposit_platform]
+        dp_name = self.deposit_platform.name
         add_readme = False
         if self.folder_info.has_readme:
             if sc.confirm(f"Do you want to append your README.md to the {dp_name} upload?"):
