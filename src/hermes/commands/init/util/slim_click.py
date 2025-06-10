@@ -10,7 +10,7 @@ so we don't need to add another large dependency for simple console questions an
 import logging
 from enum import Enum
 
-PRINT_DEBUG = False
+PRINT_DEBUG = True
 """If true, echo() will print debug texts."""
 
 AUTO_LOG_ON_ECHO = True
