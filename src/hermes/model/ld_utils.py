@@ -35,6 +35,7 @@ def bundled_document_loader(
         _load_schema('http://schema.org', 'schemaorg-current-http'),
         _load_schema('https://doi.org/10.5063/schema/codemeta-2.0', 'codemeta'),
         _load_schema('https://schema.software-metadata.pub/hermes-git/1.0', 'hermes-git')
+        _load_schema('https://schema.software-metadata.pub/hermes-content/1.0', 'hermes-content')
 
     def _load_bundled_document(url, options={}):
         for schema in loaded_schemas:
@@ -48,6 +49,26 @@ def bundled_document_loader(
 
 jsonld.set_document_loader(bundled_document_loader(preload=True))
 
+class jsonld_dict_proxy:
+    COMMON_CONTEXT = [
+        'https://doi.org/10.5063/schema/codemeta-2.0',
+    ]
+
+    def __init__(self, data):
+        self._data = data
+
+        if not '@context' in self._data:
+            self._data['@context'] = self.COMMON_CONTEXT[:]
+        self._context = self._data['@context']
+
+    def __getitem__(self, iri):
+        item, *tail = self._data.get(iri, [None])
+
+        if item is None:
+            raise KeyError(iri)
+
+        if '@value' in item:
+            pass
 
 class jsonld_dict(dict):
     COMMON_CONTEXT = [
@@ -91,13 +112,18 @@ class jsonld_dict(dict):
             return item
 
     def __getitem__(self, item):
-        iri, mode = item
+        if isinstance(item, str):
+            iri, mode = item, 'dict'
+        else:
+            iri, mode = item
 
         value = self.get(iri, None)
         if mode == 'jsonld':
             return self._wrap(value)
         elif mode == 'value':
             return self._unmap(value)
+        else:
+            return value
 
     def add_context(self, context):
         if not isinstance(self._context, list):
@@ -167,3 +193,5 @@ if __name__ == '__main__':
 
     access = JSONLDAccess(data)
     print(access["http://schema.org/author"][0]["@list"][0]["http://schema.org/affiliation"][0]["http://schema.org/name"][0]["@value"])
+
+
