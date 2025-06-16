@@ -6,21 +6,21 @@
 # SPDX-FileContributor: Michael Meinel
 # SPDX-FileContributor: David Pape
 
-[tool.poetry]
+[project]
 # Reference at https://python-poetry.org/docs/pyproject/
 name = "hermes"
-version = "0.8.1"
+version = "0.10.0dev0"
 description = "Workflow to publish research software with rich metadata"
 homepage = "https://software-metadata.pub"
 license = "Apache-2.0"
 authors = [
-    "Stephan Druskat <stephan.druskat@dlr.de>",
-    "Michael Meinel <michael.meinel@dlr.de>",
-    "Oliver Bertuch <o.bertuch@fz-juelich.de>",
-    "Jeffrey Kelling <j.kelling@hzdr.de>",
-    "Oliver Knodel <o.knodel@hzdr.de>",
-    "David Pape <d.pape@hzdr.de>",
-    "Sophie Kernchen <sohpie.kernchen@dlr.de>",
+    {name="Stephan Druskat", email="stephan.druskat@dlr.de"},
+    {name="Michael Meinel", email="michael.meinel@dlr.de"},
+    {name="Oliver Bertuch", email="o.bertuch@fz-juelich.de"},
+    {name="Jeffrey Kelling", email="j.kelling@hzdr.de"},
+    {name="Oliver Knodel", email="o.knodel@hzdr.de"},
+    {name="David Pape", email="d.pape@hzdr.de"},
+    {name="Sophie Kernchen", email="sophie.kernchen@dlr.de"},
 ]
 
 readme = "README.md"
@@ -39,48 +39,53 @@ packages = [
     { include = "hermes", from = "src" }
 ]
 
-[tool.poetry.dependencies]
-python = "^3.10"
-"ruamel.yaml" = "^0.17.21"
-jsonschema = "^3.0.0"
-pyld = "^2.0.3"
-cffconvert = "^2.0.0"
-toml = "^0.10.2"
-pyparsing = "^3.0.9"
-requests = "^2.28.1"
-pydantic = "^2.5.1"
-pydantic-settings = "^2.1.0"
-requests-oauthlib = "^2.0.0"
-pynacl = "^1.5.0"
+requires-python = "3.10"
 
-[tool.poetry.group.dev.dependencies]
-pytest = "^7.1.1"
-pytest-cov = "^3.0.0"
-taskipy = "^1.10.3"
-flake8 = "^5.0.4"
-requests-mock = "^1.10.0"
+dependencies = [
+    "ruamel.yaml>=0.17.21",
+    "jsonschema>=3.0.0",
+    "pyld>=2.0.3",
+    "cffconvert>=2.0.0",
+    "toml>=0.10.2",
+    "pyparsing>=3.0.9",
+    "requests>=2.28.1",
+    "pydantic>=2.5.1",
+    "pydantic-settings>=2.1.0",
+    "requests-oauthlib>=2.0.0",
+    "pynacl>=1.5.0",
+    "schemaorg>=0.1.1",
+    "jsonpath-ng>=1.7.0",
+]
+
+[project.optional-dependecies]
+dev = [
+    "pytest>=7.1.1",
+    "pytest-cov>=3.0.0",
+    "taskipy>=1.10.3",
+    "flake8>=5.0.4",
+    "requests-mock>=1.10.0",
+]
+
+docs = [
+    "Sphin>=6.2.1",
+    # Sphinx - Additional modules
+    "myst-parser>=2.0.0",
+    "sphinx-book-theme>=1.0.1",
+    "sphinx-favicon>=0.2",
+    "sphinxcontrib-contentui>=^0.2.5",
+    "sphinxcontrib-images>=0.9.4",
+    "sphinx-icon>=0.1.2",
+    "sphinx-autobuild>=2021.3.14",
+    "sphinx-autoapi>=3.0.0",
+    "sphinxemoji>=0.2.0",
+    "sphinxext-opengraph>=0.6.3",
+    "sphinxcontrib-mermaid>=0.8.1",
+    "sphinx-togglebutton>=0.3.2",
+    "reuse>=1.1.2",
+    "sphinxcontrib-datatemplates>=0.11.0",
+]
 
 # Packages for developers for creating documentation
-[tool.poetry.group.docs]
-optional = true
-
-[tool.poetry.group.docs.dependencies]
-Sphinx = "^6.2.1"
-# Sphinx - Additional modules
-myst-parser = "^2.0.0"
-sphinx-book-theme = "^1.0.1"
-sphinx-favicon = "^0.2"
-sphinxcontrib-contentui = "^0.2.5"
-sphinxcontrib-images = "^0.9.4"
-sphinx-icon = "^0.1.2"
-sphinx-autobuild = "^2021.3.14"
-sphinx-autoapi = "^3.0.0"
-sphinxemoji = "^0.2.0"
-sphinxext-opengraph = "^0.6.3"
-sphinxcontrib-mermaid="^0.8.1"
-sphinx-togglebutton="^0.3.2"
-reuse = "^1.1.2"
-sphinxcontrib-datatemplates = "^0.11.0"
 
 [tool.poetry.plugins.console_scripts]
 hermes = "hermes.commands.cli:main"
@@ -89,6 +94,7 @@ hermes-marketplace = "hermes.commands.marketplace:main"
 [tool.poetry.plugins."hermes.harvest"]
 cff = "hermes.commands.harvest.cff:CffHarvestPlugin"
 codemeta = "hermes.commands.harvest.codemeta:CodeMetaHarvestPlugin"
+pyproject = "hermes.commands.harvest.pyproject:PyprojectHarvestPlugin"
 
 [tool.poetry.plugins."hermes.deposit"]
 file = "hermes.commands.deposit.file:FileDepositPlugin"
