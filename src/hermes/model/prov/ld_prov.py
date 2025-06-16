@@ -102,24 +102,3 @@ class _ld_prov_child(ld_prov):
 
     def finish(self):
         self.parent_prov.item_list.extend(self.item_list)
-
-
-if __name__ == '__main__':
-    from pprint import pprint
-
-    harvest_cache = Path.cwd() / ".hermes" / "harvest"
-
-    loader = BundledLoader(preload=True)
-    jsonld.set_document_loader(loader)
-    cff_prov_doc = ld_prov()
-
-    ld_record_call.prov_doc = cff_prov_doc
-    cff_file_path = harvest_cache / "cff" / "data.json"
-
-    cff_codemeta = ld_dict.from_file(cff_file_path)
-    cff_prov_doc.attach(cff_codemeta)
-
-    result = cff_codemeta.compact()
-
-    for node in cff_prov_doc.data:
-        pprint(node.to_python())

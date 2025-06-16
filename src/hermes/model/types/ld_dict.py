@@ -87,11 +87,6 @@ class ld_dict(ld_container):
         return ld_value
 
     @classmethod
-    def from_file(cls, path):
-        json_data = json.load(path.open('rb'))
-        return cls.from_dict(json_data)
-
-    @classmethod
     def is_ld_dict(cls, ld_value):
         return cls.is_ld_node(ld_value) and cls.is_json_dict(ld_value[0])
 
