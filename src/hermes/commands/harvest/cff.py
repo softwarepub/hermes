@@ -16,12 +16,10 @@ from ruamel.yaml import YAML
 import jsonschema
 from cffconvert import Citation
 
-from hermes.commands.harvest.base import HermesHarvestPlugin, HermesHarvestCommand
-from hermes.model.context import ContextPath
 from hermes.model.errors import HermesValidationError
 from hermes.commands.harvest.base import HermesHarvestPlugin, HermesHarvestCommand
-from hermes.model.ld_utils import jsonld_dict
-
+from hermes.model.types.ld_dict import ld_dict
+from hermes.model.types import ld_context
 
 # TODO: should this be configurable via a CLI option?
 _CFF_VERSION = '1.2.0'
@@ -38,29 +36,44 @@ class CffHarvestPlugin(HermesHarvestPlugin):
     settings_class = CffHarvestSettings
 
     def __call__(self, command: HermesHarvestCommand) -> t.Tuple[t.Dict, t.Dict]:
+        with self.prov_doc.make_node(
+                "Activity", {"schema:name": "load file", "prov:wasStartedBy": self.plugin_node.ref}
+        ) as load_activity:
+
         # Get source files
-        cff_file = self._get_single_cff(command.args.path)
-        if not cff_file:
-            raise HermesValidationError(f'{command.args.path} contains either no or more than 1 CITATION.cff file. '
-                                        'Aborting harvesting for this metadata source.')
+            cff_file = self._get_single_cff(command.args.path)
+            if not cff_file:
+                raise HermesValidationError(f'{command.args.path} contains either no or more than 1 CITATION.cff file. '
+                                            'Aborting harvesting for this metadata source.')
 
-        # Read the content
-        cff_data = cff_file.read_text()
+            # Read the content
+            cff_data = cff_file.read_text()
+            cff_file_entity = load_activity.add_related(
+                "prov:used", "Entity", {"url": cff_file.absolute().as_uri(), "schema:text": cff_data})
 
-        # Validate the content to be correct CFF
-        cff_dict = self._load_cff_from_file(cff_data)
+            cff_dict = self._load_cff_from_file(cff_data)
 
-        if command.settings.cff.enable_validation and not self._validate(cff_file, cff_dict):
-            raise HermesValidationError(cff_file)
+        if command.settings.cff.enable_validation:
+            with self.prov_doc.make_node(
+                    "Activity", {
+                        "schema:name": "validate file",
+                        "prov:wasStartedBy": self.plugin_node.ref,
+                        "prov:used": cff_file_entity.ref,
+                    }
+            ) as validate_activity:
+                # Validate the content to be correct CFF
+                if not self._validate(cff_file, cff_dict):
+                    raise HermesValidationError(cff_file)
 
-        # Convert to CodeMeta using cffconvert
+            # Convert to CodeMeta using cffconvert
         codemeta_dict = self._convert_cff_to_codemeta(cff_data)
-        # TODO Replace the following temp patch for #112 once there is a new cffconvert version with cffconvert#309
-        codemeta_dict = jsonld_dict(self._patch_author_emails(cff_dict, codemeta_dict))
-        codemeta_dict.add_context({'legalName': {'@id': "schema:name"}})
         if "version" in codemeta_dict:
             codemeta_dict["version"] = str(codemeta_dict["version"])   # Convert Version to string
-        return codemeta_dict, {'local_path': str(cff_file)}
+
+            # TODO Replace the following temp patch for #112 once there is a new cffconvert version with cffconvert#309
+        codemeta_dict = self._patch_author_emails(cff_dict, codemeta_dict)
+        ld_codemeta = ld_dict.from_dict(codemeta_dict, context=[{'legalName': {'@id': "http://schema.org/name"}}])
+        return ld_codemeta
 
     def _load_cff_from_file(self, cff_data: str) -> t.Any:
         yaml = YAML(typ='safe')
@@ -95,7 +108,7 @@ class CffHarvestPlugin(HermesHarvestPlugin):
             audit_log.warning('!!! warning "%s is not valid according to <%s>"', cff_file, cff_schema_url)
 
             for error in errors:
-                path = ContextPath.make(error.absolute_path or ['root'])
+                path = error.absolute_path or ['root']
                 audit_log.info('    Invalid input for `%s`.', str(path))
                 audit_log.info('    !!! message "%s"', error.message)
                 audit_log.debug('    !!! value "%s"', error.instance)

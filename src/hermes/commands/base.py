@@ -15,6 +15,10 @@ import toml
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from hermes import utils
+from hermes.model.prov.ld_prov import ld_prov, ld_prov_node
+from hermes.model.types import ld_context
+
 
 class HermesSettings(BaseSettings):
     """Root class for HERMES configuration model."""
@@ -33,14 +37,52 @@ class HermesCommand(abc.ABC):
     command_name: str = ""
     settings_class: Type = HermesSettings
 
+    class prov:
+        @classmethod
+        def hermes_software(cls):
+            return {
+                "@type": "schema:SoftwareApplication",
+                "schema:name": utils.hermes_name,
+                "schema:version": utils.hermes_version,
+                "schema:url": utils.hermes_homepage,
+            }
+
+        @classmethod
+        def hermes_command(cls, cmd, app):
+            return {
+                "@type": "schema:SoftwareApplication",
+                "schema:name": cmd.command_name,
+                "schema:isPartOf": app.ref,
+            }
+
+        @classmethod
+        def hermes_plugin_run(cls, plugin, command):
+            return {
+                "prov:wasStaredBy": command.ref,
+            }
+
+        @classmethod
+        def hermes_json_data(cls, name, data):
+            return {
+                "@type": "schema:PropertyValue",
+                "schema:name": name,
+                "schema:value": {"@type": "@json", "@value": data.compact()},
+            }
+
+
     def __init__(self, parser: argparse.ArgumentParser):
         """Initialize a new instance of any HERMES command.
 
         :param parser: The command line parser used for reading command line arguments.
         """
+        self.prov_doc = ld_prov(context=ld_context.ALL_CONTEXTS)
+        self.app_entity = self.prov_doc.make_node('Entity', self.prov.hermes_software())
+
         self.parser = parser
         self.plugins = self.init_plugins()
         self.settings = None
+
+        self.app_entity.commit()
 
         self.log = logging.getLogger(f"hermes.{self.command_name}")
         self.errors = []
@@ -50,17 +92,20 @@ class HermesCommand(abc.ABC):
 
         # Collect all entry points for this group (i.e., all valid plug-ins for the step)
         entry_point_group = f"hermes.{self.command_name}"
-        group_plugins = {
-            entry_point.name: entry_point.load()
-            for entry_point in metadata.entry_points(group=entry_point_group)
-        }
+        group_plugins = {}
+        group_settings = {}
 
-        # Collect the plug-in specific configurations
-        self.derive_settings_class({
-            plugin_name: plugin_class.settings_class
-            for plugin_name, plugin_class in group_plugins.items()
-            if hasattr(plugin_class, "settings_class") and plugin_class.settings_class is not None
-        })
+        for entry_point in metadata.entry_points(group=entry_point_group):
+            plugin_cls = entry_point.load()
+            ep_metadata = plugin_cls.get_metadata(entry_point)
+
+            plugin_cls.plugin_node = self.app_entity.add_related("schema:hasPart", "Entity", ep_metadata)
+
+            group_plugins[entry_point.name] = plugin_cls
+            if hasattr(plugin_cls, 'settings_class') and plugin_cls.settings_class is not None:
+                group_settings[entry_point.name] = plugin_cls.settings_class
+
+        self.derive_settings_class(group_settings)
 
         return group_plugins
 
@@ -160,7 +205,21 @@ class HermesCommand(abc.ABC):
 class HermesPlugin(abc.ABC):
     """Base class for all HERMES plugins."""
 
+    pluing_node = None
+
     settings_class: Optional[Type] = None
+
+    @classmethod
+    def get_metadata(cls, entry_point):
+        cls.entry_point = entry_point
+
+        return {
+            "@type": "schema:EntryPoint",
+            "schema:name": entry_point.name,
+        }
+
+    def __init__(self, plugin_prov):
+        self.prov_doc = plugin_prov
 
     @abc.abstractmethod
     def __call__(self, command: HermesCommand) -> None:

@@ -10,17 +10,19 @@ import logging
 
 import toml
 
+from .base import HermesPostprocessPlugin
 
 _log = logging.getLogger('deposit.invenio_rdm')
 
 
-def config_record_id(ctx):
-    deposition_path = ctx.get_cache('deposit', 'deposit')
-    with deposition_path.open("r") as deposition_file:
-        deposition = json.load(deposition_file)
-    conf = ctx.config.hermes
-    try:
-        conf['deposit']['invenio_rdm']['record_id'] = deposition['record_id']
-        toml.dump(conf, open('hermes.toml', 'w'))
-    except KeyError:
-        raise RuntimeError("No deposit.invenio_rdm configuration available to store record id in")
+class config_record_id(HermesPostprocessPlugin):
+    def __call__(self, ctx):
+        deposition_path = ctx.get_cache('deposit', 'deposit')
+        with deposition_path.open("r") as deposition_file:
+            deposition = json.load(deposition_file)
+        conf = ctx.config.hermes
+        try:
+            conf['deposit']['invenio_rdm']['record_id'] = deposition['record_id']
+            toml.dump(conf, open('hermes.toml', 'w'))
+        except KeyError:
+            raise RuntimeError("No deposit.invenio_rdm configuration available to store record id in")

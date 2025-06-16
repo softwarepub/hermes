@@ -27,4 +27,6 @@ class HermesCleanCommand(HermesCommand):
         self.log.info("Removing HERMES caches...")
 
         # Naive implementation for now... check errors, validate directory, don't construct the path ourselves, etc.
-        shutil.rmtree(args.path / '.hermes')
+        cache_path = args.path / '.hermes'
+        if cache_path.exists():
+            shutil.rmtree(cache_path)

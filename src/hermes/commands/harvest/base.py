@@ -11,8 +11,7 @@ from pydantic import BaseModel
 
 from hermes.commands.base import HermesCommand, HermesPlugin
 from hermes.model.context_manager import HermesContext
-from hermes.model.errors import HermesValidationError, MergeError
-from hermes.model.ld_utils import bundled_document_loader, jsonld_dict
+from hermes.model.errors import HermesValidationError
 
 
 class HermesHarvestPlugin(HermesPlugin):
@@ -44,35 +43,38 @@ class HermesHarvestCommand(HermesCommand):
         ctx = HermesContext()
         ctx.prepare_step('harvest')
 
+        cmd_entity = self.prov_doc.make_node('Entity', self.prov.hermes_command(self, self.app_entity))
+        cmd_entity.commit()
+
         for plugin_name in self.settings.sources:
+            plugin_cls = self.plugins[plugin_name]
+            plugin_doc, plugin_activity = self.prov_doc.push(
+                self.prov.hermes_plugin_run(plugin_cls.pluing_node, cmd_entity))
+
             try:
-                # Load plugin and run the harvester
-                plugin_func = self.plugins[plugin_name]()
-                harvested_data, tags = plugin_func(self)
-
-                # Ensure we have a jsonld_dict here to allow expansion
-                if not isinstance(harvested_data, jsonld_dict):
-                    harvested_data = jsonld_dict(**harvested_data)
-
-                # Transform the graph into a canoncial form
-                expanded_data, jsonld_context = harvested_data.expand()
+                with plugin_activity.timer:
+                    # Load plugin and run the harvester
+                    plugin_func = plugin_cls(plugin_doc)
+                    harvested_data = plugin_func(self)
+                    result_entity = plugin_activity.add_related(
+                        "prov:generated", "Entity",
+                        self.prov.hermes_json_data("codemeta data", harvested_data))
 
                 with ctx[plugin_name] as plugin_ctx:
-                    plugin_ctx['data'] = harvested_data
-                    plugin_ctx['jsonld'] = expanded_data
-                    plugin_ctx['context'] = jsonld_context
-                    plugin_ctx['tags'] = tags
+                    plugin_ctx["codemeta"] = harvested_data.compact()
+                    plugin_ctx["context"] = {"@context": harvested_data.full_context}
 
-            except KeyError as e:
-                self.log.error("Plugin '%s' not found.", plugin_name)
-                self.errors.append(e)
-
-            #except HermesHarvestError as e:
-            #    self.log.error("Harvesting %s failed: %s", plugin_name, e)
-            #    self.errors.append(e)
+                    plugin_ctx["expanded"] = harvested_data.ld_value
 
             except HermesValidationError as e:
                 self.log.error("Error while executing %s: %s", plugin_name, e)
                 self.errors.append(e)
+
+            finally:
+                plugin_activity.commit()
+                plugin_doc.finish()
+
+        with ctx["result"] as all_ctx:
+            all_ctx["prov"] = self.prov_doc.compact()
 
         ctx.finalize_step('harvest')
