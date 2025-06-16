@@ -33,14 +33,6 @@ _logging_config = {
             'level': "DEBUG",
             'filename': "./hermes.log",
         },
-
-        'auditfile': {
-            'class': "logging.FileHandler",
-            'formatter': "plain",
-            'level': "DEBUG",
-            'filename': "./.hermes/audit.log",
-            'mode': "w",
-        },
     },
 
     'loggers': {
@@ -59,7 +51,6 @@ def init_logging():
 
     # Make sure the directories to hold the log files exists (or else create)
     pathlib.Path(_logging_config['handlers']['logfile']['filename']).parent.mkdir(exist_ok=True, parents=True)
-    pathlib.Path(_logging_config['handlers']['auditfile']['filename']).parent.mkdir(exist_ok=True, parents=True)
 
     # Inintialize logging system
     import logging.config
