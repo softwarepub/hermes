@@ -1,7 +1,7 @@
 import uuid
 
 from hermes.model.prov.ld_prov_node import ld_prov_node
-from hermes.model.types.pyld_util import jsonld, bundled_loader
+from hermes.model.types.pyld_util import bundled_loader
 
 from hermes.model.types import ld_list, ld_context, iri_map as iri
 

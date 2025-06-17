@@ -104,7 +104,8 @@ class ld_container:
             if ':' in short_key:
                 prefix, short_key = short_key.split(':', 1)
                 ctx_value = self.ld_proc.get_context_value(self.active_ctx, prefix, "@id")
-                active_ctx = self.ld_proc.process_context(self.active_ctx, [ctx_value], {"documentLoader": bundled_loader})
+                active_ctx = self.ld_proc.process_context(self.active_ctx, [ctx_value],
+                                                          {"documentLoader": bundled_loader})
             else:
                 active_ctx = self.active_ctx
             ld_type = self.ld_proc.get_context_value(active_ctx, short_key, "@type")
@@ -112,9 +113,11 @@ class ld_container:
                 ld_value = [{"@id": value}]
                 ld_output = "expanded_json"
             else:
-                ld_value, ld_output = self.ld_proc.apply_typemap(value, "expanded_json", "json", parent=self, key=key)
+                ld_value, ld_output = self.ld_proc.apply_typemap(value, "expanded_json", "json",
+                                                                 parent=self, key=key)
             if ld_output == "json":
-                ld_value = self.ld_proc.expand(ld_value, {"expandContext": self.full_context, "documentLoader": bundled_loader})
+                ld_value = self.ld_proc.expand(ld_value, {"expandContext": self.full_context,
+                                                          "documentLoader": bundled_loader})
             elif ld_output != "expanded_json":
                 raise TypeError(f"Cannot convert {type(value)}")
 
