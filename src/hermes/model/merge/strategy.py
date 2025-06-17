@@ -1,3 +1,9 @@
+# SPDX-FileCopyrightText: 2025 German Aerospace Center (DLR)
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# SPDX-FileContributor: Michael Meinel
+
 from hermes.model.types.ld_context import iri_map as iri
 
 from .action import Reject, Replace, Collect, Concat, MergeSet

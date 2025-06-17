@@ -1,3 +1,9 @@
+# SPDX-FileCopyrightText: 2025 German Aerospace Center (DLR)
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# SPDX-FileContributor: Michael Meinel
+
 from datetime import datetime
 
 from hermes.model.types import ld_dict, ld_list, ld_context

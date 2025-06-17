@@ -1,3 +1,10 @@
+# SPDX-FileCopyrightText: 2025 German Aerospace Center (DLR)
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# SPDX-FileContributor: Michael Meinel
+
+
 CODEMETA_PREFIX = "https://doi.org/10.5063/schema/codemeta-2.0"
 CODEMETA_CONTEXT = [CODEMETA_PREFIX]
 

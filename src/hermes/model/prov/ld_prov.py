@@ -1,3 +1,9 @@
+# SPDX-FileCopyrightText: 2025 German Aerospace Center (DLR)
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# SPDX-FileContributor: Michael Meinel
+
 import uuid
 
 from hermes.model.prov.ld_prov_node import ld_prov_node
