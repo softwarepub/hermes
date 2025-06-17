@@ -45,6 +45,8 @@ class DepositId(Enum):
     ZenodoSandbox = auto()
     JuelichData = auto()
     DemoDataverse = auto()
+    Rodare = auto()
+    RodareTest = auto()
 
 
 @dataclass
@@ -73,6 +75,8 @@ DepositOptions: list[DepositPlatform] = [
     DepositPlatform("Zenodo", "https://zenodo.org/", "invenio_rdm", DepositId.Zenodo),
     DepositPlatform("Demo Dataverse", "https://demo.dataverse.org/", "dataverse", DepositId.DemoDataverse),
     DepositPlatform("Jülich Data", "https://data.fz-juelich.de/", "dataverse", DepositId.JuelichData),
+    DepositPlatform("Rodare", "https://rodare.hzdr.de/", "rodare", DepositId.Rodare),
+    DepositPlatform("Rodare Test", "https://rodare-test.hzdr.de/", "rodare", DepositId.RodareTest),
 ]
 
 
@@ -555,6 +559,18 @@ class HermesInitCommand(HermesCommand):
             # TODO try to validate the token
             self.deposit_platform.token = sc.answer("Enter the token here: ")
 
+    def create_rodare_token(self):
+        token_url = urljoin(self.deposit_platform.url, "account/settings/applications/tokens/new/")
+        sc.echo("{} and create an access token.".format(
+            sc.create_console_hyperlink(token_url, "Open this link")
+        ))
+        sc.echo("It needs the scopes \"deposit:actions\" and \"deposit:write\".")
+        if self.setup_method == "m":
+            sc.press_enter_to_continue()
+        else:
+            # TODO try to validate the token
+            self.deposit_platform.token = sc.answer("Enter the token here: ")
+
     def configure_git_project(self) -> None:
         """Adds the token to the git secrets & changes action workflow settings."""
         match self.git_hoster:
@@ -671,11 +687,17 @@ class HermesInitCommand(HermesCommand):
         self.hermes_toml_data["deposit"][deposit_plugin]["site_url"] = self.deposit_platform.url
         self.ci_parameters["deposit_parameter_token"] = f"-O {deposit_plugin}.auth_token"
         self.ci_parameters["deposit_token_name"] = self.deposit_platform.token_name
+        # Invenio needs access_right = "open" (no idea what that does, might be outdated)
         if deposit_plugin.startswith("invenio"):
             self.hermes_toml_data["deposit"][deposit_plugin]["access_right"] = "open"
-        elif deposit_plugin == "dataverse":
+        # Dataverse needs a host_dataverse name as some sort of directory where the publication will appear
+        elif deposit_plugin.startswith("dataverse"):
             host_dataverse = sc.answer("Enter the name of the dataverse where you want to publish: ")
             self.hermes_toml_data["deposit"][deposit_plugin]["host_dataverse"] = host_dataverse
+        # Rodare needs the robis_pub_id
+        elif deposit_plugin.startswith("rodare"):
+            robis_pub_id = sc.answer("Enter the corresponding Robis Publication ID: ")
+            self.hermes_toml_data["deposit"][deposit_plugin]["robis_pub_id"] = robis_pub_id
 
     def choose_setup_method(self) -> None:
         """User chooses his desired setup method: Either preferring automatic (if available) or manual."""
@@ -694,11 +716,13 @@ class HermesInitCommand(HermesCommand):
         used_deposit_plugin = self.deposit_platform.plugin_name
         deposit_url = self.deposit_platform
         deposit_name = self.deposit_platform.name
-        if used_deposit_plugin == "invenio_rdm":
+        if used_deposit_plugin.startswith("invenio"):
             connect_zenodo.setup(zenodo_url=self.deposit_platform.url, display_name=self.deposit_platform.name)
             self.create_zenodo_token()
-        elif used_deposit_plugin == "dataverse":
+        elif used_deposit_plugin.startswith("dataverse"):
             self.create_dataverse_token()
+        elif used_deposit_plugin.startswith("rodare"):
+            self.create_rodare_token()
         else:
             sc.echo(f"Unknown deposit plugin: {used_deposit_plugin}", formatting=sc.Formats.WARNING)
             sc.echo(f"Getting an access token from {deposit_name} ({deposit_url}) is not supported by hermes init."
