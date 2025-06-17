@@ -27,7 +27,7 @@ _TYPEMAP = [
     (ld_dict.is_ld_dict, dict(ld_container=ld_dict)),
 
     # Expand and access JSON data
-    (ld_container.is_json_id, dict(python=lambda c: c["@id"], expanded_json= lambda c, **_: [c])),
+    (ld_container.is_json_id, dict(python=lambda c: c["@id"], expanded_json=lambda c, **_: [c])),
     (ld_container.is_typed_json_value, dict(python=ld_container.typed_ld_to_py)),
     (ld_container.is_json_value, dict(python=lambda c, **_: c["@value"], expanded_json=lambda c, **_: [c])),
     (ld_list.is_container, dict(ld_container=lambda c, **kw: ld_list([c], **kw))),
@@ -38,9 +38,12 @@ _TYPEMAP = [
     # Wrap internal data types
     (lambda v: isinstance(v, (int, float, str, bool)), dict(expanded_json=lambda v, **_: [{"@value": v}])),
 
-    (lambda v: isinstance(v, datetime), dict(expanded_json=lambda v, **_: [{"@value": v.isoformat(), "@type": iri_map["schema:DateTime"]}])),
-    (lambda v: isinstance(v, date), dict(expanded_json=lambda v, **_: [{"@value": v.isoformat(), "@type": iri_map["schema:Date"]}])),
-    (lambda v: isinstance(v, time), dict(expanded_json=lambda v, **_: [{"@value": v.isoformat(), "@type": iri_map["schema:Time"]}])),
+    (lambda v: isinstance(v, datetime),
+     dict(expanded_json=lambda v, **_: [{"@value": v.isoformat(), "@type": iri_map["schema:DateTime"]}])),
+    (lambda v: isinstance(v, date),
+     dict(expanded_json=lambda v, **_: [{"@value": v.isoformat(), "@type": iri_map["schema:Date"]}])),
+    (lambda v: isinstance(v, time),
+     dict(expanded_json=lambda v, **_: [{"@value": v.isoformat(), "@type": iri_map["schema:Time"]}])),
 ]
 
 

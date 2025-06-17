@@ -1,4 +1,3 @@
-from . import ld_list
 from .ld_container import ld_container
 
 from .pyld_util import bundled_loader
@@ -74,12 +73,15 @@ class ld_dict(ld_container):
         ld_data = value.copy()
 
         ld_type = ld_container.merge_to_list(ld_type or [], ld_data.get('@type', []))
-        if ld_type: ld_data["@type"] = ld_type
+        if ld_type:
+            ld_data["@type"] = ld_type
 
         data_context = ld_data.pop('@context', [])
         full_context = ld_container.merge_to_list(context or [], data_context)
-        if parent is None and data_context: ld_data["@context"] = data_context
-        elif parent is not None: full_context[:0] = parent.full_context
+        if parent is None and data_context:
+            ld_data["@context"] = data_context
+        elif parent is not None:
+            full_context[:0] = parent.full_context
 
         ld_value = cls.ld_proc.expand(ld_data, {"expandContext": full_context, "documentLoader": bundled_loader})
         ld_value = cls(ld_value, parent=parent, key=key, context=data_context)

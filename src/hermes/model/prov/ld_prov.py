@@ -1,10 +1,9 @@
 import uuid
-from pathlib import Path
 
 from hermes.model.prov.ld_prov_node import ld_prov_node
 from hermes.model.types.pyld_util import jsonld, bundled_loader
 
-from hermes.model.types import ld_container, ld_dict, ld_list, ld_context, iri_map as iri
+from hermes.model.types import ld_list, ld_context, iri_map as iri
 
 
 class ld_record_call:
@@ -64,7 +63,8 @@ class ld_prov(ld_list):
             self.item_list.clear()
 
             self.parent = ld_data
-            self.active_ctx = self.ld_proc.process_context(self.parent.active_ctx, self.full_context, {"documentLoader": bundled_loader})
+            self.active_ctx = self.ld_proc.process_context(self.parent.active_ctx, self.full_context,
+                                                           {"documentLoader": bundled_loader})
             ld_data.add_context(self.ld_base_ctx)
             ld_data[self.key] = self
 

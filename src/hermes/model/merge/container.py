@@ -1,6 +1,6 @@
 from hermes.model.types import ld_dict, ld_list, ld_context
 
-from .strategy import REPLACE_STRATEGY, REJECT_STRATEGY, CODEMETA_STRATEGY, PROV_STRATEGY
+from .strategy import REPLACE_STRATEGY, CODEMETA_STRATEGY, PROV_STRATEGY
 from ..types.pyld_util import bundled_loader
 
 
@@ -80,9 +80,11 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
         for index, item in enumerate(self[key]):
             if match(item, value):
                 if isinstance(item, ld_dict) and not isinstance(item, ld_merge_dict):
-                    item = ld_merge_dict(item.ld_value, parent=item.parent, key=item.key, index=index, context=item.context)
+                    item = ld_merge_dict(item.ld_value, self.prov_doc,
+                                         parent=item.parent, key=item.key, index=index, context=item.context)
                 elif isinstance(item, ld_list) and not isinstance(item, ld_merge_list):
-                    item = ld_merge_list(item.ld_value, parent=item.parent, key=item.key, index=index, context=item.context)
+                    item = ld_merge_list(item.ld_value, self.prov_doc,
+                                         parent=item.parent, key=item.key, index=index, context=item.context)
                 return item
 
     def _merge_item(self, key, value):
@@ -100,7 +102,7 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
             "schema:name": str(key),
             "schema:value": str(value),
         }) as entity_node:
-            if not rel in self:
+            if rel not in self:
                 rel_iri = self.ld_proc.expand_iri(self.active_ctx, rel)
                 self[rel] = ld_list.from_list([entity_node.ref], container="@set", parent=self, key=rel_iri)
             else:

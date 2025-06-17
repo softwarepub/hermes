@@ -16,7 +16,7 @@ from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from hermes import utils
-from hermes.model.prov.ld_prov import ld_prov, ld_prov_node
+from hermes.model.prov.ld_prov import ld_prov
 from hermes.model.types import ld_context
 
 
@@ -68,7 +68,6 @@ class HermesCommand(abc.ABC):
                 "schema:name": name,
                 "schema:value": {"@type": "@json", "@value": data.compact()},
             }
-
 
     def __init__(self, parser: argparse.ArgumentParser):
         """Initialize a new instance of any HERMES command.

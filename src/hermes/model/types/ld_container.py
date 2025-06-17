@@ -82,10 +82,12 @@ class ld_container:
                 self.ld_proc.compact_iri(self.active_ctx, ld_type)
                 for ld_type in ld_value
             ]
-            if len(value) == 1: value = value[0]
+            if len(value) == 1:
+                value = value[0]
         else:
-            value, ld_output = self.ld_proc.apply_typemap(ld_value, "python", "ld_container", parent=self, key=full_iri)
-            if ld_output == None:
+            value, ld_output = self.ld_proc.apply_typemap(ld_value, "python", "ld_container",
+                                                          parent=self, key=full_iri)
+            if ld_output is None:
                 raise TypeError(full_iri, ld_value)
 
         return value
@@ -94,7 +96,8 @@ class ld_container:
         if key == "@id":
             ld_value = self.ld_proc.expand_iri(self.active_ctx, value)
         elif key == "@type":
-            if not isinstance(value, list): value = [value]
+            if not isinstance(value, list):
+                value = [value]
             ld_value = [self.ld_proc.expand_iri(self.active_ctx, ld_type) for ld_type in value]
         else:
             short_key = self.ld_proc.compact_iri(self.active_ctx, key)
@@ -174,7 +177,6 @@ class ld_container:
 
     @classmethod
     def typed_ld_to_py(cls, data, **kwargs):
-        ld_type = data[0]["@type"]
         ld_value = data[0]['@value']
 
         return ld_value

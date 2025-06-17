@@ -11,9 +11,8 @@ from pydantic import BaseModel
 from hermes.commands.base import HermesCommand, HermesPlugin
 from hermes.model.context_manager import HermesContext
 from hermes.model.merge.container import ld_merge_dict
-from hermes.model.types import ld_list, ld_dict, ld_context
+from hermes.model.types import ld_dict, ld_context
 
-from jsonpath_ng import ext as jsonpath
 
 iri = ld_context.iri_map
 

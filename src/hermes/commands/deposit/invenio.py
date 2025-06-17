@@ -17,7 +17,7 @@ from urllib.parse import urlparse
 import requests
 from pydantic import BaseModel
 
-from hermes.commands.deposit.base import BaseDepositPlugin, HermesDepositCommand
+from hermes.commands.deposit.base import BaseDepositPlugin
 from hermes.commands.deposit.error import DepositionUnauthorizedError
 from hermes.error import MisconfigurationError
 from hermes.model.context_manager import HermesContext

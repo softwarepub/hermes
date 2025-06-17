@@ -1,5 +1,4 @@
 import json
-import logging
 import typing as t
 import uuid
 from pathlib import Path
@@ -55,14 +54,14 @@ class BundledLoader:
         }
 
     def load_schema(self, url):
-        for t in self.toc:
-            if t['url'] == url:
+        for entry in self.toc:
+            if entry['url'] == url:
                 break
         else:
             return None
 
-        source = self.schema_path / t['file']
-        load_func = self.loaders[t.get("loader", "json")]
+        source = self.schema_path / entry['file']
+        load_func = self.loaders[entry.get("loader", "json")]
         cache_entry = load_func(source.open('rb'), url)
         self.cache.append(cache_entry)
 

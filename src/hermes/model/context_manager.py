@@ -17,7 +17,7 @@ class HermesCache:
         return self
 
     def __getitem__(self, item: str) -> dict:
-        if not item in self._cached_data:
+        if item not in self._cached_data:
             filepath = self._cache_dir / f'{item}.json'
             if filepath.is_file():
                 self._cached_data[item] = json.load(filepath.open('r'))

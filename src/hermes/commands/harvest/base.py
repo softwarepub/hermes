@@ -56,7 +56,7 @@ class HermesHarvestCommand(HermesCommand):
                     # Load plugin and run the harvester
                     plugin_func = plugin_cls(plugin_doc)
                     harvested_data = plugin_func(self)
-                    result_entity = plugin_activity.add_related(
+                    plugin_activity.add_related(
                         "prov:generated", "Entity",
                         self.prov.hermes_json_data("codemeta data", harvested_data))
 

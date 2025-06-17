@@ -47,8 +47,10 @@ class Collect(MergeAction):
         self.match = match
 
     def merge(self, target, key, value, update):
-        if not isinstance(value, list): value = [value]
-        if not isinstance(update, list): update = [update]
+        if not isinstance(value, list):
+            value = [value]
+        if not isinstance(update, list):
+            update = [update]
 
         for update_item in update:
             if not any(self.match(item, update_item) for item in value):

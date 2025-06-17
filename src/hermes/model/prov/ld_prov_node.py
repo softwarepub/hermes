@@ -1,7 +1,6 @@
 from datetime import datetime
 
-from hermes.model.types import ld_container, ld_dict, ld_list, ld_context
-from hermes.model.types.ld_context import iri_map as iri
+from hermes.model.types import ld_dict, ld_list, ld_context
 
 
 class ld_prov_node(ld_dict):
@@ -51,7 +50,7 @@ class ld_prov_node(ld_dict):
 
         rel_iri = self.ld_proc.expand_iri(self.active_ctx, rel)
         with self.parent.make_node(prov_type, value) as entity_node:
-            if not rel in self:
+            if rel not in self:
                 self[rel] = ld_list.from_list([entity_node.ref], container="@set", parent=self, key=rel_iri)
             else:
                 self[rel].append(entity_node.ref)
