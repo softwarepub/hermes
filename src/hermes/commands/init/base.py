@@ -196,6 +196,7 @@ class HermesInitCommand(HermesCommand):
         self.tokens: dict = {}
         self.setup_method: str = ""
         self.deposit_platform: DepositPlatform = DepositPlatform()
+        self.git_branch: str = ""
         self.git_remote: str = ""
         self.git_remote_url = ""
         self.git_hoster: GitHoster = GitHoster.Empty
@@ -344,7 +345,8 @@ class HermesInitCommand(HermesCommand):
             self.no_git_setup()
             sys.exit()
 
-        # Look at git remotes
+        # Look at git branch & remotes
+        self.git_branch = git_info.get_current_branch()
         remotes = git_info.get_remotes()
         if remotes:
             self.git_remote = remotes[0]
@@ -544,7 +546,7 @@ class HermesInitCommand(HermesCommand):
                     else:
                         sc.echo(f"The token could not be validated by {self.deposit_platform.name}. "
                                 "Make sure to enter the complete token.\n"
-                                "(If this error persists, you should try switching to the manual setup mode.)",
+                                "(If this error persists, you should restart and switch to the manual setup mode.)",
                                 formatting=sc.Formats.WARNING)
 
     def create_dataverse_token(self):
@@ -556,8 +558,20 @@ class HermesInitCommand(HermesCommand):
         if self.setup_method == "m":
             sc.press_enter_to_continue()
         else:
-            # TODO try to validate the token
-            self.deposit_platform.token = sc.answer("Enter the token here: ")
+            while True:
+                token = sc.answer("Enter the token here: ")
+                token_valid_url = f"{self.deposit_platform.url}/api/users/token"
+                token_valid_response = requests.get(token_valid_url, headers={"X-Dataverse-key": token})
+                if token_valid_response.ok:
+                    sc.echo(f"The token was validated by {self.deposit_platform.name}.",
+                            formatting=sc.Formats.OKGREEN)
+                    self.deposit_platform.token = token
+                    break
+                else:
+                    sc.echo(f"The token could not be validated by {self.deposit_platform.name}. "
+                            "Make sure to enter the complete token.\n"
+                            "(If this error persists, you should restart and switch to the manual setup mode.)",
+                            formatting=sc.Formats.WARNING)
 
     def create_rodare_token(self):
         token_url = urljoin(self.deposit_platform.url, "account/settings/applications/tokens/new/")
@@ -807,7 +821,8 @@ class HermesInitCommand(HermesCommand):
         push_choice = sc.choose(
             "When should the automated HERMES process start?",
             [
-                "When I push a branch",
+                "When I push on custom branch",
+                f"When I push on current branch ({self.git_branch})",
                 "When I push a specific tag (not implemented)",
             ]
         )
@@ -818,6 +833,12 @@ class HermesInitCommand(HermesCommand):
                     formatting=sc.Formats.OKGREEN)
             sc.echo()
         elif push_choice == 1:
+            self.ci_parameters["push_branch"] = self.git_branch
+            bold_branch = sc.Formats.BOLD.wrap_around(self.git_branch)
+            sc.echo(f"The HERMES pipeline will be activated when you push on {bold_branch}",
+                    formatting=sc.Formats.OKGREEN)
+            sc.echo()
+        elif push_choice == 2:
             sc.echo("Setting up triggering by tags is currently not implemented.", formatting=sc.Formats.WARNING)
             sc.echo(f"You can visit {TUTORIAL_URL} to set it up manually later-on.", formatting=sc.Formats.WARNING)
 
