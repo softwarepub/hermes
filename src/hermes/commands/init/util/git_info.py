@@ -30,7 +30,7 @@ def get_valid_cwd(cwd="") -> str:
     return str(path)
 
 
-def run_git_command(command: str, cwd="") -> str:
+def run_git_command(command: str, cwd="", throw_exception=False) -> str:
     """
     Runs any git command using subprocess. Raises Exception when returncode != 0.
     :param command: The command as string with or without the 'git' main command.
@@ -44,7 +44,7 @@ def run_git_command(command: str, cwd="") -> str:
     if command_list[0] != "git":
         command_list.insert(0, "git")
     # Run subprocess
-    result = subprocess.run(command_list, cwd=cwd, capture_output=True, text=True)
+    result = subprocess.run(command_list, cwd=cwd, capture_output=True, text=True, check=throw_exception)
     # Return output or error
     if result.returncode != 0:
         raise Exception(result.stderr)
@@ -87,11 +87,11 @@ def get_current_branch() -> str:
     """
     Returns the name of the current branch.
     """
-    branch_info = run_git_command("branch")
-    for line in branch_info.splitlines():
-        if line.startswith("*"):
-            return line.split()[1].strip()
-    raise Exception("Current branch not found.")
+    try:
+        branch_name = run_git_command("rev-parse --abbrev-ref HEAD", throw_exception=True)
+        return branch_name.strip()
+    except subprocess.CalledProcessError:
+        return ""
 
 
 def is_git_installed() -> bool:
