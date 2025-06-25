@@ -44,6 +44,7 @@ class DepositId(Enum):
     Zenodo = auto()
     ZenodoSandbox = auto()
     JuelichData = auto()
+    JuelichDataBeta = auto()
     DemoDataverse = auto()
     Rodare = auto()
     RodareTest = auto()
@@ -74,7 +75,8 @@ DepositOptions: list[DepositPlatform] = [
     DepositPlatform("Zenodo Sandbox", "https://sandbox.zenodo.org/", "invenio_rdm", DepositId.ZenodoSandbox),
     DepositPlatform("Zenodo", "https://zenodo.org/", "invenio_rdm", DepositId.Zenodo),
     DepositPlatform("Demo Dataverse", "https://demo.dataverse.org/", "dataverse", DepositId.DemoDataverse),
-    DepositPlatform("Jülich Data", "https://data.fz-juelich.de/", "dataverse", DepositId.JuelichData),
+    DepositPlatform("Jülich DATA", "https://data.fz-juelich.de/", "dataverse", DepositId.JuelichData),
+    DepositPlatform("Jülich DATA Beta", "https://data-beta.fz-juelich.de/", "dataverse", DepositId.JuelichDataBeta),
     DepositPlatform("Rodare", "https://rodare.hzdr.de/", "rodare", DepositId.Rodare),
     DepositPlatform("Rodare Test", "https://rodare-test.hzdr.de/", "rodare", DepositId.RodareTest),
 ]
@@ -704,10 +706,10 @@ class HermesInitCommand(HermesCommand):
         # Invenio needs access_right = "open" (no idea what that does, might be outdated)
         if deposit_plugin.startswith("invenio"):
             self.hermes_toml_data["deposit"][deposit_plugin]["access_right"] = "open"
-        # Dataverse needs a host_dataverse name as some sort of directory where the publication will appear
+        # Dataverse needs a target_collection name as some sort of directory where the publication will appear
         elif deposit_plugin.startswith("dataverse"):
-            host_dataverse = sc.answer("Enter the name of the dataverse where you want to publish: ")
-            self.hermes_toml_data["deposit"][deposit_plugin]["host_dataverse"] = host_dataverse
+            target_collection = sc.answer("Enter the name of the collection where you want to publish: ")
+            self.hermes_toml_data["deposit"][deposit_plugin]["target_collection"] = target_collection
         # Rodare needs the robis_pub_id
         elif deposit_plugin.startswith("rodare"):
             robis_pub_id = sc.answer("Enter the corresponding Robis Publication ID: ")

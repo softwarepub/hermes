@@ -21,9 +21,10 @@ _log = logging.getLogger("cli.deposit.dataverse")
 class DataverseDepositSettings(BaseModel):
     """Settings required to deposit into Dataverse."""
     site_url: str = ""
-    host_dataverse: str = ""
-    auth_token: str = ""
-    dataset_pid: str = None
+    target_collection: str = ""
+    api_token: str = ""
+    target_pid: str = None
+    publication_type: str = "software"
     files: list[Path] = []
 
 
@@ -34,10 +35,10 @@ class DataverseDepositPlugin(BaseDepositPlugin):
     def __init__(self, command, ctx) -> None:
         super().__init__(command, ctx)
         self.config = getattr(self.command.settings, self.platform_name)
-        auth_token = self.config.auth_token
-        if not auth_token:
+        api_token = self.config.api_token
+        if not api_token:
             raise DepositionUnauthorizedError("No valid auth token given for deposition platform")
-        self.client = Dataverse(server_url=self.config.site_url, api_token=self.config.auth_token)
+        self.client = Dataverse(server_url=self.config.site_url, api_token=api_token)
         self.ctx_path = ContextPath.parse(f"deposit.{self.platform_name}")
 
     def map_metadata(self) -> None:
@@ -51,7 +52,7 @@ class DataverseDepositPlugin(BaseDepositPlugin):
             json.dump(metadata, f, indent=2)
 
     def is_initial_publication(self) -> bool:
-        return self.config.dataset_pid is None
+        return self.config.target_pid is None
 
     def update_metadata_on_dataset(self, dataset: Dataset):
         """
@@ -78,7 +79,7 @@ class DataverseDepositPlugin(BaseDepositPlugin):
             dataset.citation.date_of_deposit = date_published
         # TODO look for "version" or something similar in dataverse
         # if version := metadata.get("version"):
-        #     dataset.citation.version = version <- does not exist
+        #     dataset.citation.softwareVersion = version
         if keywords := metadata.get("keywords", []):
             if keywords is list:
                 for keyword in keywords:
@@ -88,7 +89,7 @@ class DataverseDepositPlugin(BaseDepositPlugin):
                 dataverse_license = License.fetch_by_name(deposition_license, server_url=self.client.server_url)
                 dataset.citation.license = dataverse_license
             except Exception as e:
-                _log.warning(f"Could not match license '{deposition_license}' to Dataverse vocabulary: {e}")
+                _log.warning(f"Could not match license '{deposition_license}' to allowed licenses for deposition: {e}")
         dataset.citation.other_references = [f"Compiled by HERMES ({hermes_doi})"]
 
     def create_initial_version(self) -> None:
@@ -102,7 +103,7 @@ class DataverseDepositPlugin(BaseDepositPlugin):
             raise RuntimeError("Please use `--initial` to make an initial deposition.")
         dataset = self.client.create_dataset()
         self.update_metadata_on_dataset(dataset)
-        persistent_id = dataset.upload(dataverse_name=self.config.host_dataverse)
+        persistent_id = dataset.upload(dataverse_name=self.config.target_collection)
         self.ctx.update(self.ctx_path["persistentId"], persistent_id)
 
     def create_new_version(self) -> None:
@@ -151,7 +152,7 @@ class DataverseDepositPlugin(BaseDepositPlugin):
         persistent_id = self.ctx[self.ctx_path["persistentId"]]
         url = f"{self.config.site_url}/api/datasets/:persistentId/actions/:publish"
         params = {"type": "major"}
-        headers = {"X-Dataverse-key": self.config.auth_token}
+        headers = {"X-Dataverse-key": self.config.api_token}
         res = requests.post(url, headers=headers, params=params, data={"persistentId": persistent_id})
         if not res.ok:
             raise RuntimeError(f"Publish failed: {res.status_code}: {res.text}")
