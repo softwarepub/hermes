@@ -49,37 +49,26 @@ class RodareDepositPlugin(InvenioDepositPlugin):
     robis_publication_url = "https://www.hzdr.de/publications/Publ-{pub_id}"
 
     def prepare(self) -> None:
-        """Update the context with the Robis identifier from the config."""
+        """Update the context with the Robis identifier from the config.
+
+        All HZDR publications must be registered in Robis (https://www.hzdr.de/robis).
+        The first release of a software may only be performed when the registration in
+        Robis is finalized and approved, and a publication form was added.
+        """
         super().prepare()
 
         if not self.config.robis_pub_id:
             raise MisconfigurationError(
                 f"deposit.{self.platform_name}.robis_pub_id is not configured. "
-                "You can get a robis_pub_id by publishing the software via Robis. "
-                f"HERMES may be used for subsequent releases. {self.robis_url}"
+                "You can get a robis_pub_id by registering the planned publication in "
+                'Robis and adding a "Software Publication" as publication form. '
+                "After approval of the publication, you may add the Robis Publ-Id to "
+                "the HERMES config file and proceed with the publication. "
+                f"{self.robis_url}"
             )
 
         self.ctx.update(
             self.invenio_context_path["robis_pub_id"], self.config.robis_pub_id
-        )
-
-    def create_initial_version(self) -> None:
-        """Disallow creation of initial versions using HERMES.
-
-        HZDR publications must all be registered in Robis (https://www.hzdr.de/robis).
-        There is a workflow in place that guides users from Robis to Rodare and
-        automatically transfers metadata for them. Starting the publication workflow in
-        Rodare is discouraged.
-
-        Subsequent releases of the software may be published on Rodare directly as the
-        connection to Robis is in place by then.
-
-        This code should never be reached. So, raising a ``RuntimeError`` is just a
-        precaution.
-        """
-        raise RuntimeError(
-            "Please initiate the publication process in Robis. "
-            f"HERMES may be used for subsequent releases. {self.robis_url}"
         )
 
     def related_identifiers(self):
