@@ -703,15 +703,31 @@ class HermesInitCommand(HermesCommand):
         self.hermes_toml_data["deposit"][deposit_plugin]["site_url"] = self.deposit_platform.url
         self.ci_parameters["deposit_parameter_token"] = f"-O {deposit_plugin}.auth_token"
         self.ci_parameters["deposit_token_name"] = self.deposit_platform.token_name
-        # Invenio needs access_right = "open" (no idea what that does, might be outdated)
-        if deposit_plugin.startswith("invenio"):
-            self.hermes_toml_data["deposit"][deposit_plugin]["access_right"] = "open"
-        # Dataverse needs a target_collection name as some sort of directory where the publication will appear
-        elif deposit_plugin.startswith("dataverse"):
+
+        if deposit_plugin.startswith("invenio") or deposit_plugin.startswith("rodare"):
+            # Invenio & rodare need access_right
+            # For possible customization we ask the user here
+            target_access_right = sc.choose(
+                text="Select an access right for your publication",
+                options=["open", "closed", "restricted", "embargoed"]
+            )
+            self.hermes_toml_data["deposit"][deposit_plugin]["access_right"] = target_access_right
+            if target_access_right == "restricted":
+                conditions = sc.answer("Enter the access conditions of the restriction: ")
+                self.hermes_toml_data["deposit"][deposit_plugin]["access_conditions"] = conditions
+            elif target_access_right == "embargoed":
+                embargo_date = sc.answer("Enter the embargo date (YYYY-MM-DD): ")
+                self.hermes_toml_data["deposit"][deposit_plugin]["embargo_date"] = embargo_date
+
+        if deposit_plugin.startswith("dataverse"):
+            # Dataverse needs a target_collection name as some sort of directory where the publication will appear
             target_collection = sc.answer("Enter the name of the collection where you want to publish: ")
             self.hermes_toml_data["deposit"][deposit_plugin]["target_collection"] = target_collection
-        # Rodare needs the robis_pub_id
-        elif deposit_plugin.startswith("rodare"):
+            # To be decided: Should we call it api_token in the other deposit plugins or just in dataverse?
+            self.ci_parameters["deposit_parameter_token"] = f"-O {deposit_plugin}.api_token"
+
+        if deposit_plugin.startswith("rodare"):
+            # Rodare needs the robis_pub_id
             robis_pub_id = sc.answer("Enter the corresponding Robis Publication ID: ")
             self.hermes_toml_data["deposit"][deposit_plugin]["robis_pub_id"] = robis_pub_id
 

@@ -33,13 +33,87 @@ class DataverseDepositPlugin(BaseDepositPlugin):
     settings_class = DataverseDepositSettings
 
     def __init__(self, command, ctx) -> None:
+        """
+        Sets up the DataverseDepositPlugin with data from the hermes toml.
+        Tests if everything is valid and creates an easyDataverse client.
+        """
         super().__init__(command, ctx)
         self.config = getattr(self.command.settings, self.platform_name)
+        self.check_if_all_valid()
+        self.client = Dataverse(server_url=self.config.site_url, api_token=self.config.api_token)
+        self.ctx_path = ContextPath.parse(f"deposit.{self.platform_name}")
+
+    def check_if_all_valid(self) -> None:
+        """
+        Tests if all conditions are met before starting the rest of the deposit.
+        """
+        self.check_version()
+        self.check_api_token()
+        self.check_target_collection()
+        self.check_target_pid()
+        self.check_publication_type()
+
+    def check_version(self) -> None:
+        """
+        Tests if the site_url is reachable as dataverse instance.
+        Also saves the dataverse version in the context incase we want to use it later on.
+        """
+        url = f"{self.config.site_url}/api/info/version"
+        res = requests.get(url)
+        if not res.ok:
+            raise RuntimeError(f"Dataverse ({self.config.site_url}) not reachable.")
+        version_info = res.json().get("data", {}).get("version", "")
+        self.ctx.update(self.ctx_path["dataverse_version"], version_info)
+
+    def check_api_token(self) -> None:
         api_token = self.config.api_token
         if not api_token:
-            raise DepositionUnauthorizedError("No valid auth token given for deposition platform")
-        self.client = Dataverse(server_url=self.config.site_url, api_token=api_token)
-        self.ctx_path = ContextPath.parse(f"deposit.{self.platform_name}")
+            raise DepositionUnauthorizedError("No api-token given for deposition platform (dataverse).")
+        token_valid_url = f"{self.config.site_url}/api/users/token"
+        token_valid_response = requests.get(token_valid_url, headers={"X-Dataverse-key": api_token})
+        if not token_valid_response.ok:
+            raise DepositionUnauthorizedError("Given api-token for deposition platform (dataverse) is not valid.")
+
+    def check_target_collection(self) -> None:
+        """
+        Tests if the target collection exists.
+        """
+        target_collection = self.config.target_collection
+        url = f"{self.config.site_url}/api/dataverses/{target_collection}"
+        res = requests.get(url)
+        if not res.ok:
+            raise RuntimeError(f"Dataverse collection '{target_collection}' not found.")
+
+    def check_target_pid(self) -> None:
+        """
+        Tests if the given pid is valid.
+        """
+        if not self.config.target_pid:
+            return
+        url = f"{self.config.site_url}/api/datasets/:persistentId/?persistentId={self.config.target_pid}"
+        res = requests.get(url)
+        if not res.ok:
+            raise RuntimeError(f"Dataset {self.config.target_pid} not found.")
+        data = res.json().get("data", {})
+        if self.config.target_collection and not data.get("ownerAlias") == self.config.target_collection:
+            _log.warning("Dataset is not located inside the target collection.")
+
+    def check_publication_type(self) -> None:
+        """
+        Tests if the given publication type (most likely "software") is supported by the target dataverse.
+        """
+        url = f"{self.config.site_url}/api/datasets/datasetTypes"
+        res = requests.get(url)
+        if res.ok:
+            types = res.json().get("data", [])
+            type_names = [t["name"] for t in types]
+            if self.config.publication_type not in type_names:
+                raise RuntimeError(
+                    f"Publication type '{self.config.publication_type}' not supported on target Dataverse.")
+        else:
+            # TBD what to do when showing supported datasetTypes does not work?
+            # This is currently the case for https://data.fz-juelich.de/ & https://data-beta.fz-juelich.de/
+            pass
 
     def map_metadata(self) -> None:
         """
@@ -54,7 +128,7 @@ class DataverseDepositPlugin(BaseDepositPlugin):
     def is_initial_publication(self) -> bool:
         return self.config.target_pid is None
 
-    def update_metadata_on_dataset(self, dataset: Dataset):
+    def update_metadata_on_dataset(self, dataset: Dataset) -> None:
         """
         Sets metadata on an easyDataverse.Dataset using the depositionMetadata
         """
