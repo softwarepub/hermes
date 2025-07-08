@@ -38,10 +38,10 @@ class DataverseDepositPlugin(BaseDepositPlugin):
         Tests if everything is valid and creates an easyDataverse client.
         """
         super().__init__(command, ctx)
+        self.ctx_path = ContextPath.parse(f"deposit.{self.platform_name}")
         self.config = getattr(self.command.settings, self.platform_name)
         self.check_if_all_valid()
         self.client = Dataverse(server_url=self.config.site_url, api_token=self.config.api_token)
-        self.ctx_path = ContextPath.parse(f"deposit.{self.platform_name}")
 
     def check_if_all_valid(self) -> None:
         """
