@@ -16,7 +16,7 @@ def test_context_hermes_dir_default():
 
 
 def test_context_hermes_dir_custom():
-    ctx = HermesContext('spam')     # TODO: #367
+    ctx = HermesContext(Path('spam'))
     assert ctx.cache_dir == Path('spam') / '.hermes'
 
 
