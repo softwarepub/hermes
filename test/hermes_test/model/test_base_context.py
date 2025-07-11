@@ -1,8 +1,9 @@
-# SPDX-FileCopyrightText: 2022 German Aerospace Center (DLR)
+# SPDX-FileCopyrightText: 2025 German Aerospace Center (DLR)
 #
 # SPDX-License-Identifier: Apache-2.0
 
 # SPDX-FileContributor: Michael Meinel
+# SPDX-FileContributor: Sophie Kernchen
 import pytest
 from pathlib import Path
 
@@ -44,18 +45,18 @@ def test_finalize_context_error():
     ctx = HermesContext()
     ctx.prepare_step("ham")
     ctx.prepare_step("eggs")
-    with pytest.raises(ValueError, match=f"Cannot end step spam while in eggs."):    # TODO: #373 format string and error message
+    # TODO: #373 format string and error message
+    with pytest.raises(ValueError, match=f"Cannot end step spam while in eggs."):
         ctx.finalize_step("spam")
 
-@pytest.mark.dev
+
 def test_cache(tmpdir):
     ctx = HermesContext(Path(tmpdir))
     ctx.prepare_step("ham")
     with ctx["spam"] as c:
         c["bacon"] = {"data": "goose", "num": 2}
 
-    path = Path('tmpdir/.hermes') / 'ham' / 'spam' / 'bacon.json'
-
+    path = tmpdir / Path('.hermes') / 'ham' / 'spam' / 'bacon.json'
     assert path.exists()
     assert c._cached_data["bacon"] == {"data": "goose", "num": 2}
 
@@ -66,10 +67,7 @@ def test_hermes_cache_set(tmpdir):
     assert cache._cached_data == {"bacon": "eggs"}
 
 
-@pytest.mark.dev
-def test_context_get_cache_create(tmpdir):
-    ctx = HermesContext(tmpdir)
-    subdir = Path(tmpdir) / '.hermes' / 'spam'
-
-    assert ctx.get_cache('spam', 'eggs', create=True) == subdir / 'eggs.json'
-    assert subdir.exists()
+def test_hermes_cache_get(tmpdir):
+    cache = HermesCache(Path(tmpdir))
+    cache._cached_data = {"bacon": "eggs"}
+    assert cache["bacon"] == "eggs"
