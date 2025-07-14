@@ -46,7 +46,7 @@ def test_finalize_context_error():
     ctx.prepare_step("ham")
     ctx.prepare_step("eggs")
     # TODO: #373 format string and error message
-    with pytest.raises(ValueError, match=f"Cannot end step spam while in eggs."):
+    with pytest.raises(ValueError, match="Cannot end step spam while in eggs."):
         ctx.finalize_step("spam")
 
 
@@ -58,6 +58,7 @@ def test_cache(tmpdir):
 
     path = tmpdir / Path('.hermes') / 'ham' / 'spam' / 'bacon.json'
     assert path.exists()
+    assert path.read() == '{"data": "goose", "num": 2}'
     assert c._cached_data["bacon"] == {"data": "goose", "num": 2}
 
 
