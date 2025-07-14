@@ -1,3 +1,9 @@
+# SPDX-FileCopyrightText: 2025 German Aerospace Center (DLR)
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# SPDX-FileContributor: Sophie Kernchen
+
 from hermes.model.types.ld_container import ld_container
 
 '''we expect user of this class to give the right input data types
