@@ -54,7 +54,8 @@ class HermesContext:
     def prepare_step(self, step: str, *depends: str) -> None:
         self._current_step.append(step)
 
-    ''' @FIXME #373:
+    '''
+    FIXME: Implement this to fix #373
 
     def finalize_step(self, step: str) -> None:
         current_step = self._current_step[-1]
