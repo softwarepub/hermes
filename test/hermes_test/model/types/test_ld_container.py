@@ -19,47 +19,53 @@ example extended json ld:
 '''
 
 
-def test_container_basic():
-    cont = ld_container({"spam": [{"@value": "bacon"}]})
+class TestLdContainer:
+    @classmethod
+    @pytest.fixture(autouse=True)
+    def setup_class(cls, httpserver):
+        content = {
+            "@context": {"type": "@type", "id": "@id", "schema": "http://schema.org/", "ham": "https://fake.site/",
+                         "Organization": {"@id": "schema:Organization"}}}
 
-    assert cont.key is None
-    assert cont.context == []
-    assert cont._data == {"spam": [{"@value": "bacon"}]}
+        cls.url = httpserver.url_for("/url")
+
+        httpserver.expect_request("/url").respond_with_json(content)
+
+    def test_container_basic(self):
+        cont = ld_container({"spam": [{"@value": "bacon"}]})
+
+        assert cont.key is None
+        assert cont.context == []
+        assert cont._data == {"spam": [{"@value": "bacon"}]}
+
+    def test_container_ld_value(self):
+        cont = ld_container({"spam": [{"@value": "bacon"}]})
+
+        assert cont.ld_value == {"spam": [{"@value": "bacon"}]}
+
+    def test_container_add_context(self):
+
+        cont = ld_container({"spam": [{"@value": "bacon"}]})
+        cont.add_context([self.url])
+
+        assert cont.context == [self.url]
+        assert cont.full_context == [self.url]
+
+    def test_container_parent(self):
 
 
-def test_container_ld_value():
-    cont = ld_container({"spam": [{"@value": "bacon"}]})
+        cont_parent = ld_container({"ham": [{"@value": "eggs"}]})
+        cont = ld_container({"spam": [{"@value": "bacon"}]}, parent=cont_parent)
+        assert cont.full_context == []
 
-    assert cont.ld_value == {"spam": [{"@value": "bacon"}]}
+        cont_parent.add_context([self.url])
 
+        assert cont.parent == cont_parent
+        assert cont.full_context == [self.url]
 
-def test_container_add_context(httpserver):
-    content = {"@context": {"type": "@type", "id": "@id", "schema": "http://schema.org/", "ham": "https://fake.site/",
-                            "Organization": {"@id": "schema:Organization"}}}
+    def test_container_full_context(self):
+        cont_grand_parent = ld_container({"ham": [{"@value": "eggs"}]}, context=[self.url])
+        cont_parent = ld_container({"ham": [{"@value": "eggs"}]},parent=cont_grand_parent)
+        cont = ld_container({"spam": [{"@value": "bacon"}]}, parent=cont_parent)
 
-    url = httpserver.url_for("/url")
-
-    httpserver.expect_request("/url").respond_with_json(content)
-    cont = ld_container({"spam": [{"@value": "bacon"}]})
-    cont.add_context([url])
-
-    assert cont.context == [url]
-    assert cont.full_context == [url]
-
-
-def test_container_parent(httpserver):
-    content = {"@context": {"type": "@type", "id": "@id", "schema": "http://schema.org/", "ham": "https://fake.site/",
-                            "Organization": {"@id": "schema:Organization"}}}
-
-    url = httpserver.url_for("/url")
-
-    httpserver.expect_request("/url").respond_with_json(content)
-
-    cont_parent = ld_container({"ham": [{"@value": "eggs"}]})
-    cont = ld_container({"spam": [{"@value": "bacon"}]}, parent=cont_parent)
-    assert cont.full_context == []
-
-    cont_parent.add_context([url])
-
-    assert cont.parent == cont_parent
-    assert cont.full_context == [url]
+        assert cont.full_context == [self.url]
