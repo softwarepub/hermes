@@ -8,8 +8,6 @@ import pytest
 from hermes.model.types.ld_context import (
     ContextPrefix,
     ALL_CONTEXTS,
-    CODEMETA_CONTEXT,
-    PROV_CONTEXT,
 )
 
 
