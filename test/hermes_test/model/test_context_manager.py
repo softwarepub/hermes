@@ -7,7 +7,7 @@
 import pytest
 from pathlib import Path
 
-from hermes.model.context_manager import HermesContext, HermesCache
+from hermes.model.context_manager import HermesContext, HermesCache, HermesContexError
 
 
 def test_context_hermes_dir_default():
@@ -26,27 +26,40 @@ def test_get_context_default():
     assert ctx["spam"]._cache_dir == Path('./.hermes/ham/spam').absolute()
 
 
+def test_context_get_error():
+    ctx = HermesContext()
+    ctx.prepare_step("ham")
+    ctx.finalize_step("ham")
+    with pytest.raises(HermesContexError, match="Prepare a step first."):
+        ctx["spam"]._cache_dir == Path('./.hermes/spam').absolute()
+
+
+def test_finalize_context_one_item():
+    ctx = HermesContext()
+    ctx.prepare_step("ham")
+    ctx.finalize_step("ham")
+    assert ctx._current_step == []
+
+
 def test_finalize_context():
     ctx = HermesContext()
-    ctx.prepare_step("ham")  # FIXME: #373 to fix, then you can delete one prepare_step
+    ctx.prepare_step("ham")
     ctx.prepare_step("spam")
     ctx.finalize_step("spam")
     assert ctx["spam"]._cache_dir == Path('./.hermes/ham/spam').absolute()
+    assert ctx._current_step == ["ham"]
 
 
-def test_finalize_context_error_list_one_element():
+def test_finalize_context_error_no_item():
     ctx = HermesContext()
-    ctx.prepare_step("ham")
-    with pytest.raises(ValueError):     # FIXME: #373 to fix, index out of range
+    with pytest.raises(ValueError, match="There is no step to end."):
         ctx.finalize_step("spam")
 
 
 def test_finalize_context_error():
     ctx = HermesContext()
     ctx.prepare_step("ham")
-    ctx.prepare_step("eggs")
-    # FIXME: #373 format string and error message
-    with pytest.raises(ValueError, match="Cannot end step spam while in eggs."):
+    with pytest.raises(ValueError, match="Cannot end step spam while in ham."):
         ctx.finalize_step("spam")
 
 

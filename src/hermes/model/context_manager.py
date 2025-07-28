@@ -54,22 +54,20 @@ class HermesContext:
     def prepare_step(self, step: str, *depends: str) -> None:
         self._current_step.append(step)
 
-    '''
-    FIXME: Implement this to fix #373
-
     def finalize_step(self, step: str) -> None:
+        if len(self._current_step) < 1:
+            raise ValueError("There is no step to end.")
         current_step = self._current_step[-1]
         if current_step != step:
             raise ValueError(f"Cannot end step {step} while in {self._current_step[-1]}.")
         self._current_step.pop()
-    '''
-    def finalize_step(self, step: str) -> None:
-        current_step = self._current_step.pop()
-        if current_step != step:
-            raise ValueError("Cannot end step %s while in %s.", step, self._current_step[-1])
-
-
 
     def __getitem__(self, source_name: str) -> HermesCache:
+        if len(self._current_step) < 1:
+            raise HermesContexError("Prepare a step first.")
         subdir = self.cache_dir / self._current_step[-1] / source_name
         return HermesCache(subdir)
+
+
+class HermesContexError(Exception):
+    pass
