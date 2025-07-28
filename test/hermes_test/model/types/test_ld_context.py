@@ -29,15 +29,21 @@ def test_get_codemeta_item(ctx):
     assert item == "https://codemeta.github.io/terms/maintainer"
 
 
-def test_get_prefixed_items(ctx):
+@pytest.mark.parametrize(
+    "compacted,expanded",
+    [
+        ("schema:Organization", "http://schema.org/Organization"),
+        (
+            "hermes:semanticVersion",
+            "https://schema.software-metadata.pub/hermes-content/1.0/semanticVersion",  # TODO: Change on #393 fix
+        ),
+    ],
+)
+def test_get_prefixed_items(ctx, compacted, expanded):
     """Context returns fully expanded terms for prefixed vocabularies in the context."""
-    item = ctx["schema:Organization"]
-    assert item == "http://schema.org/Organization"
-    item = ctx["hermes:semanticVersion"]
-    assert (
-        item
-        == "https://schema.software-metadata.pub/hermes-content/1.0/semanticVersion"
-    )  # TODO: Change on #393 fix
+    item = ctx[compacted]
+    assert item == expanded
+
 
 
 @pytest.mark.parametrize(
@@ -60,10 +66,12 @@ def test_get_non_str_item_fail(ctx, non_str, error_type):
         {"foo": "bar", "baz": "foo"},
         "schema:fooBar",
         "hermes:fooBar",
-        "codemeta:maintainer"  # Prefixed CodeMeta doesn't exist in context
+        "codemeta:maintainer",  # Prefixed CodeMeta doesn't exist in context
     ],
 )
 def test_get_item_validate_fail(ctx, item):
     """Context raises on terms that don't exist in the context."""
-    with pytest.raises(Exception):  # FIXME: Replace with custom error, e.g., hermes.model.errors.InvalidTermException
+    with pytest.raises(
+        Exception
+    ):  # FIXME: Replace with custom error, e.g., hermes.model.errors.InvalidTermException
         ctx[item]
