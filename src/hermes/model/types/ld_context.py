@@ -41,6 +41,9 @@ class ContextPrefix:
         """
         @param context: A two-item list, where the first item is the default vocabulary's IRI string, and the second
         is a dict mapping vocabulary prefixes to their respective IRI string.
+
+        # FIXME: Rename context and prefix to context_lst (or similar) and context respectively,
+        # FIXME: as currently, prefix represents the actual context more precisely than the throwaway value of context.
         """
         self.context = context
         self.prefix = {}
@@ -56,16 +59,22 @@ class ContextPrefix:
             })
 
 
-    def __getitem__(self, item):  # FIXME Rename parameter to 'key'
+    def __getitem__(self, item):
         """
         FIXME: Document in class, not here
         FIXME: Add type hints for params and return
 
         Gets the fully qualified IRI for a term from a vocabulary inside the initialized context.
         The vocabulary must have been added to the context at initialization.
+
+        @param item: A term from a vocabulary in the context; terms from the default vocabulary are passed with a prefix
+        of None, or as an unprefixed string, terms from non-default vocabularies are prefixed with the defined prefix
+        for the vocabulary. The term can either be passed in as string <term> if prefix is None, or "prefix:term", or
+        as a two-element list ["prefix": "term"] or tuple ("prefix", "term")
+        @return: The fully qualified IRI for the passed term
         """
-        if not isinstance(item, str):
-            prefix, name = item
+        if not isinstance(item, str):  # FIXME: Rename to compressed_term
+            prefix, name = item  # FIXME: "name" should be "term", "prefix" should be "base_iri"
         elif ':' in item:
             prefix, name = item.split(':', 1)
             if name.startswith('://'):
@@ -74,7 +83,7 @@ class ContextPrefix:
             prefix, name = None, item
 
         if prefix in self.prefix:
-            item = self.prefix[prefix] + name
+            item = self.prefix[prefix] + name  # FIXME: Rename "item" to "iri"
 
         return item
 
