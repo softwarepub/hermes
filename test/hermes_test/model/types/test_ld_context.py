@@ -45,6 +45,19 @@ def test_get_prefixed_items(ctx, compacted, expanded):
     assert item == expanded
 
 
+@pytest.mark.parametrize(
+    "compacted,expanded",
+    [
+        ([None, "maintainer"], "https://codemeta.github.io/terms/maintainer"),
+        (["schema", "Organization"], "http://schema.org/Organization"),
+        ((None, "maintainer"), "https://codemeta.github.io/terms/maintainer"),
+        (("schema", "Organization"), "http://schema.org/Organization"),
+    ],
+)
+def test_get_valid_non_str_items(ctx, compacted, expanded):
+    """Context returns fully expanded terms for valid non-string inputs."""
+    assert ctx[compacted] == expanded
+
 
 @pytest.mark.parametrize(
     "non_str,error_type",
