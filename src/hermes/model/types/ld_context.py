@@ -59,33 +59,30 @@ class ContextPrefix:
             })
 
 
-    def __getitem__(self, item):
+    def __getitem__(self, compressed_term: str | tuple | list) -> str:
         """
-        FIXME: Document in class, not here
-        FIXME: Add type hints for params and return
-
         Gets the fully qualified IRI for a term from a vocabulary inside the initialized context.
         The vocabulary must have been added to the context at initialization.
 
-        @param item: A term from a vocabulary in the context; terms from the default vocabulary are passed with a prefix
+        @param compressed_term: A term from a vocabulary in the context; terms from the default vocabulary are passed with a prefix
         of None, or as an unprefixed string, terms from non-default vocabularies are prefixed with the defined prefix
         for the vocabulary. The term can either be passed in as string <term> if prefix is None, or "prefix:term", or
         as a two-element list ["prefix": "term"] or tuple ("prefix", "term")
         @return: The fully qualified IRI for the passed term
         """
-        if not isinstance(item, str):  # FIXME: Rename to compressed_term
-            prefix, name = item  # FIXME: "name" should be "term", "prefix" should be "base_iri"
-        elif ':' in item:
-            prefix, name = item.split(':', 1)
-            if name.startswith('://'):
-                prefix, name = True, item
+        if not isinstance(compressed_term, str):
+            prefix, term = compressed_term
+        elif ':' in compressed_term:
+            prefix, term = compressed_term.split(':', 1)
+            if term.startswith('://'):
+                prefix, term = True, compressed_term
         else:
-            prefix, name = None, item
+            prefix, term = None, compressed_term
 
         if prefix in self.prefix:
-            item = self.prefix[prefix] + name  # FIXME: Rename "item" to "iri"
+            iri = self.prefix[prefix] + term
 
-        return item
+        return iri
 
 
 iri_map = ContextPrefix(ALL_CONTEXTS)
