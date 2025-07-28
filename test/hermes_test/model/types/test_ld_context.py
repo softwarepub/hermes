@@ -57,8 +57,7 @@ def test_get_protocol_items_pass(ctx):
 def test_get_protocol_items_fail(ctx):
     with pytest.raises(Exception) as e:
         ctx["https://foo.bar/baz"]
-    print(str(e.value))
-    assert "cannot access local variable" not in str(e.value)
+    assert "cannot access local variable" not in str(e.value)  # FIXME: Replace with custom error
 
 
 @pytest.mark.parametrize(
