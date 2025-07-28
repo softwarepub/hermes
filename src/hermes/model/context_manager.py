@@ -57,8 +57,7 @@ class HermesContext:
     def finalize_step(self, step: str) -> None:
         if len(self._current_step) < 1:
             raise ValueError("There is no step to end.")
-        current_step = self._current_step[-1]
-        if current_step != step:
+        if self._current_step[-1] != step:
             raise ValueError(f"Cannot end step {step} while in {self._current_step[-1]}.")
         self._current_step.pop()
 
