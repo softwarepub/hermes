@@ -16,6 +16,11 @@ def ctx():
     return ContextPrefix(ALL_CONTEXTS)
 
 
+def test_ctx():
+    ctx = ContextPrefix(["u1", {"2": "u2"}])
+    assert ctx.prefix[None] == "u1"
+    assert ctx.prefix["2"] == "u2"
+
 def test_codemeta_prefix(ctx):
     """Default vocabulary in context has the correct base IRI."""
     assert ctx.prefix[None] == "https://codemeta.github.io/terms/"
