@@ -80,6 +80,8 @@ def test_get_non_str_item_fail(ctx, non_str, error_type):
         "schema:fooBar",
         "hermes:fooBar",
         "codemeta:maintainer",  # Prefixed CodeMeta doesn't exist in context
+        # Even a dict with valid terms should fail, as it is unclear what to expect
+        {None: "maintainer", "schema": "Organization"},
     ],
 )
 def test_get_item_validate_fail(ctx, item):
