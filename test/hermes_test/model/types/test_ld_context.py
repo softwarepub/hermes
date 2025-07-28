@@ -21,6 +21,7 @@ def test_ctx():
     assert ctx.prefix[None] == "u1"
     assert ctx.prefix["2"] == "u2"
 
+
 def test_codemeta_prefix(ctx):
     """Default vocabulary in context has the correct base IRI."""
     assert ctx.prefix[None] == "https://codemeta.github.io/terms/"
@@ -46,6 +47,18 @@ def test_get_prefixed_items(ctx, compacted, expanded):
     """Context returns fully expanded terms for prefixed vocabularies in the context."""
     item = ctx[compacted]
     assert item == expanded
+
+
+def test_get_protocol_items_pass(ctx):
+    item = ctx["https://schema.org/Organisation"]
+    assert item == "https://schema.org/Organisation"
+
+
+def test_get_protocol_items_fail(ctx):
+    with pytest.raises(Exception) as e:
+        ctx["https://foo.bar/baz"]
+    print(str(e.value))
+    assert "cannot access local variable" not in str(e.value)
 
 
 @pytest.mark.parametrize(
