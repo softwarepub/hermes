@@ -139,7 +139,7 @@ class ld_container:
         return ld_value
 
     def __repr__(self):
-        return f'{type(self).__name__}({self._data[0]})'    #FIXME: #397 KeyError, maybe removing the index
+        return f'{type(self).__name__}({self._data[0]})'
 
     def __str__(self):
         return str(self.to_python())
