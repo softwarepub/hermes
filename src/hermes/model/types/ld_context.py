@@ -62,15 +62,26 @@ class ContextPrefix:
             })
 
 
-    def __getitem__(self, compressed_term: str | tuple | list) -> str:
+    def __getitem__(self, compressed_term: str | tuple) -> str:
         """
         Gets the fully qualified IRI for a term from a vocabulary inside the initialized context.
         The vocabulary must have been added to the context at initialization.
 
-        @param compressed_term: A term from a vocabulary in the context; terms from the default vocabulary are passed with a prefix
-        of None, or as an unprefixed string, terms from non-default vocabularies are prefixed with the defined prefix
-        for the vocabulary. The term can either be passed in as string <term> if prefix is None, or "prefix:term", or
-        as a two-element list ["prefix": "term"] or tuple ("prefix", "term")
+        Example uses:
+
+            context = <self>(["iri_default", {"prefix1": "iri1"}])
+            # access qualified term via str
+            term = context["term_in_default_vocabulary"]
+            term = context["prefix1:term"]
+            # access qualified term via tuple
+            term = context["prefix1", "term"]
+            term = context[None, "term_in_default_vocabulary"]
+
+        @param compressed_term: A term from a vocabulary in the context; terms from the default vocabulary are passed
+        with a prefix of None, or as an unprefixed string, terms from non-default vocabularies are prefixed with the
+        defined prefix for the vocabulary. The term can either be passed in as string <term> if prefix is None, or
+        "<prefix>:<term>", or as a tuple.
+
         @return: The fully qualified IRI for the passed term
         """
         if not isinstance(compressed_term, str):
