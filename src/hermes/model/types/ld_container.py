@@ -70,15 +70,6 @@ class ld_container:
     @property
     def path(self):
         """ Create a path representation for this item. """
-        '''
-        FIXME: #381 Decision if the path should look like this. Other option:
-        
-        if self.parent:
-            return self.parent.path + [self.key if self.index is None else self.index]
-        else:
-            return ["(self.key if self.index is None else self.index)"] braces to show you are here.
-        
-        '''
         if self.parent:
             return self.parent.path + [self.key if self.index is None else self.index]
         else:
