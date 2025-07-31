@@ -99,8 +99,17 @@ class TestLdContainer:
         assert cont._to_python("@type", ["@id"]) == '@id'
 
     def test_to_expanded(self):
-        cont = ld_container([{"spam": [{"@value": "bacon", "@id": "ham", "@type": "@id"}]}])
-        cont.active_ctx['_uuid'] = str(uuid.uuid1())    # FIXME: 406
+        # Define a mock vocabulary to work with
+        mock_context = {
+            "ham": {"@id": "http://ham.eggs/ham", "@type": "@id"},
+            "spam": {"@id": "http://ham.eggs/spam"},
+            "Eggs": {"@id": "http://ham.eggs/Eggs"},
+        }
+
+        # Create container with mock context
+        cont = ld_container([{}], context=[mock_context])
+
+        # Try simple cases of expansion
         assert cont._to_expanded_json("spam", "bacon") == [{"@value": "bacon"}]
-        assert cont._to_expanded_json("@id", "ham") == "ham"
+        assert cont._to_expanded_json("@id", "ham") == "http://ham.eggs/ham"
         assert cont._to_expanded_json("@type", "@id") == ["@id"]
