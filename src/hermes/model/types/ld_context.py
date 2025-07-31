@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: 2025 German Aerospace Center (DLR)
 #
 # SPDX-License-Identifier: Apache-2.0
-import typing
 
 # SPDX-FileContributor: Michael Meinel
 # SPDX-FileContributor: Stephan Druskat <stephan.druskat@dlr.de>
@@ -40,9 +39,9 @@ class ContextPrefix:
     """
     def __init__(self, vocabularies: list[str | dict]):
         """
-        @param vocabularies: A list of linked data vocabularies. Items can be vocabulary base IRI strings and/or dictionaries
-        mapping arbitrary strings used to prefix terms from a specific vocabulary to their respective vocabulary IRI
-        strings.
+        @param vocabularies: A list of linked data vocabularies. Items can be vocabulary base IRI strings and/or
+        dictionaries mapping arbitrary strings used to prefix terms from a specific vocabulary to their respective
+        vocabulary IRI strings.
 
         If the list contains more than one string item, the last one will be used as the default vocabulary. If a prefix
         string is used more than once across all dictionaries in the list, the last item with this key will be included
@@ -60,7 +59,6 @@ class ContextPrefix:
                 for prefix, base_iri in vocab.items()
                 if isinstance(base_iri, str)
             })
-
 
     def __getitem__(self, compressed_term: str | tuple) -> str:
         """
