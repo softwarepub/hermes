@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2025 German Aerospace Center (DLR)
 #
 # SPDX-License-Identifier: Apache-2.0
+import typing
 
 # SPDX-FileContributor: Michael Meinel
 # SPDX-FileContributor: Stephan Druskat <stephan.druskat@dlr.de>
@@ -33,29 +34,31 @@ class ContextPrefix:
     FIXME: as this class represents JSON-LD contexts.
     Represents the context of the hermes JSON-LD data model and provides two views on the model:
 
-    - as a two-item list, of which the first item is the default, unprefixed vocabulary IRI, and the second is a dict
-    mapping prefixes to vocabulary IRIs;
+    - as a list of linked data vocabularies, where items can be vocabulary base IRI strings and/or dictionaries mapping
+    arbitrary strings used to prefix terms from a specific vocabulary to their respective vocabulary IRI strings.;
     - as a dict mapping prefixes to vocabulary IRIs, where the default vocabulary has a prefix of None.
     """
-    def __init__(self, context):
+    def __init__(self, vocabularies: list[str | dict]):
         """
-        @param context: A two-item list, where the first item is the default vocabulary's IRI string, and the second
-        is a dict mapping vocabulary prefixes to their respective IRI string.
+        @param vocabularies: A list of linked data vocabularies. Items can be vocabulary base IRI strings and/or dictionaries
+        mapping arbitrary strings used to prefix terms from a specific vocabulary to their respective vocabulary IRI
+        strings.
 
-        # FIXME: Rename context and prefix to context_lst (or similar) and context respectively,
-        # FIXME: as currently, prefix represents the actual context more precisely than the throwaway value of context.
+        If the list contains more than one string item, the last one will be used as the default vocabulary. If a prefix
+        string is used more than once across all dictionaries in the list, the last item with this key will be included
+        in the context.
         """
-        self.context = context
-        self.prefix = {}
+        self.vocabularies = vocabularies
+        self.context = {}
 
-        for ctx in self.context:
-            if isinstance(ctx, str):
-                ctx = {None: ctx}
+        for vocab in self.vocabularies:
+            if isinstance(vocab, str):
+                vocab = {None: vocab}
 
-            self.prefix.update({
-                prefix: base_url
-                for prefix, base_url in ctx.items()
-                if isinstance(base_url, str)
+            self.context.update({
+                prefix: base_iri
+                for prefix, base_iri in vocab.items()
+                if isinstance(base_iri, str)
             })
 
 
@@ -79,8 +82,8 @@ class ContextPrefix:
         else:
             prefix, term = None, compressed_term
 
-        if prefix in self.prefix:
-            iri = self.prefix[prefix] + term
+        if prefix in self.context:
+            iri = self.context[prefix] + term
 
         return iri
 
