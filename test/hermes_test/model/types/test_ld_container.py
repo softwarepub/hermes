@@ -5,7 +5,7 @@ import re
 
 # SPDX-FileContributor: Sophie Kernchen
 
-import pytest
+import pytest, uuid
 from hermes.model.types.ld_container import ld_container
 
 '''we expect user of this class to give the right input data types
@@ -38,6 +38,7 @@ class TestLdContainer:
         assert cont.context == []
         assert cont._data == [{"spam": [{"@value": "bacon"}]}]
         assert cont.path == ["$"]
+        assert cont.active_ctx == {'mappings': {}}
 
     def test_container_ld_value(self):
         cont = ld_container([{"spam": [{"@value": "bacon"}]}])
@@ -88,3 +89,18 @@ class TestLdContainer:
         assert repr(cont) == "ld_container({'spam': [{'@value': 'bacon'}]})"
         with pytest.raises(NotImplementedError):
             str(cont)
+
+    def test_to_python(self):
+        cont = ld_container([{"spam": [{"@value": "bacon", "@id": "ham", "@type": ["@id"]}]}])
+        assert cont._to_python("spam", [{"@value": "bacon"}]) == 'bacon'
+        assert cont._to_python("@id", "ham") == "ham"
+
+        cont.active_ctx['_uuid'] = str(uuid.uuid1())    # FIXME: 406
+        assert cont._to_python("@type", ["@id"]) == '@id'
+
+    def test_to_expanded(self):
+        cont = ld_container([{"spam": [{"@value": "bacon", "@id": "ham", "@type": "@id"}]}])
+        cont.active_ctx['_uuid'] = str(uuid.uuid1())    # FIXME: 406
+        assert cont._to_expanded_json("spam", "bacon") == [{"@value": "bacon"}]
+        assert cont._to_expanded_json("@id", "ham") == "ham"
+        assert cont._to_expanded_json("@type", "@id") == ["@id"]
