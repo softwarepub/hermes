@@ -22,14 +22,9 @@ example extended json ld:
 class TestLdContainer:
     @classmethod
     @pytest.fixture(autouse=True)
-    def setup_class(cls, httpserver):
-        content = {
-            "@context": {"type": "@type", "id": "@id", "schema": "http://schema.org/", "ham": "https://fake.site/",
-                         "Organization": {"@id": "schema:Organization"}}}
-
-        cls.url = httpserver.url_for("/url")
-
-        httpserver.expect_request("/url").respond_with_json(content)
+    def setup_class(cls, httpserver, mock_document):
+        cls.url = httpserver.url_for("/")
+        httpserver.expect_request("/").respond_with_json({"@context": mock_document.vocabulary(cls.url)})
 
     def test_container_basic(self):
         cont = ld_container([{"spam": [{"@value": "bacon"}]}])
