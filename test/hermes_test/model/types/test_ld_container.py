@@ -89,15 +89,40 @@ class TestLdContainer:
         # Try simple cases of conversion
         assert cont._to_python("@id", "ham") == "ham"
         assert cont._to_python("@type", ["@id"]) == '@id'
+        assert cont._to_python("@type", ["@id", "http://spam.eggs/Egg"]) == ["@id", "Egg"]
+
+        # Try type conversions
+        assert cont._to_python("http://spam.eggs/ham", [{"@id": "spam"}]) == 'spam'
+
+        assert cont._to_python("http://soam.eggs/spam", [{"@value": "bacon"}]) == 'bacon'
+        assert cont._to_python("http://spam.eggs/spam", [{"@value": True}]) == True
+        assert cont._to_python("http://spam.eggs/spam", [{"@value": 123}]) == 123
+
+        assert cont._to_python("http://spam.eggs/eggs", [{
+            "@value": "2022-02-22T00:00:00", "@type": "https://schema.org/DateTime"
+        }]) == "2022-02-22T00:00:00"
 
     def test_to_python_list(self, mock_context):
         cont = ld_container([{}], context=[mock_context])
         list_data = [{"@list": [{"@id": "spam"}, {"@id": "eggs"}]}]
 
+        assert cont._to_python("ham", list_data).to_python() == ["spam", "eggs"]
+
+    def test_to_expanded(self, mock_context):
         # Create container with mock context
         cont = ld_container([{}], context=[mock_context])
 
         # Try simple cases of expansion
+        assert cont._to_expanded_json("@id", "ham") == "ham"
+        assert cont._to_expanded_json("@type", "Egg") == ["http://spam.eggs/Egg"]
+
+        # Type conversions
+        assert cont._to_expanded_json("ham", "spam") == [{"@id": "spam"}]
+
         assert cont._to_expanded_json("spam", "bacon") == [{"@value": "bacon"}]
-        assert cont._to_expanded_json("@id", "ham") == "http://ham.eggs/ham"
-        assert cont._to_expanded_json("@type", "@id") == ["@id"]
+        assert cont._to_expanded_json("spam", 123) == [{"@value": 123}]
+        assert cont._to_expanded_json("spam", True) == [{"@value": True}]
+
+        assert cont._to_expanded_json("eggs", datetime(2022, 2,22)) == [
+            {"@value": "2022-02-22T00:00:00", "@type": "http://schema.org/DateTime"}
+        ]
