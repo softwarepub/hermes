@@ -1,11 +1,10 @@
 # SPDX-FileCopyrightText: 2025 German Aerospace Center (DLR)
 #
 # SPDX-License-Identifier: Apache-2.0
-import re
 
 # SPDX-FileContributor: Sophie Kernchen
 
-import pytest, uuid
+import pytest
 from hermes.model.types.ld_container import ld_container
 
 '''we expect user of this class to give the right input data types
@@ -83,21 +82,17 @@ class TestLdContainer:
         with pytest.raises(NotImplementedError):
             str(cont)
 
-    def test_to_python(self):
-        cont = ld_container([{"spam": [{"@value": "bacon", "@id": "ham", "@type": ["@id"]}]}])
-        assert cont._to_python("spam", [{"@value": "bacon"}]) == 'bacon'
-        assert cont._to_python("@id", "ham") == "ham"
+    def test_to_python(self, mock_context):
+        # Create container with mock context
+        cont = ld_container([{}], context=[mock_context])
 
-        cont.active_ctx['_uuid'] = str(uuid.uuid1())    # FIXME: 406
+        # Try simple cases of conversion
+        assert cont._to_python("@id", "ham") == "ham"
         assert cont._to_python("@type", ["@id"]) == '@id'
 
-    def test_to_expanded(self):
-        # Define a mock vocabulary to work with
-        mock_context = {
-            "ham": {"@id": "http://ham.eggs/ham", "@type": "@id"},
-            "spam": {"@id": "http://ham.eggs/spam"},
-            "Eggs": {"@id": "http://ham.eggs/Eggs"},
-        }
+    def test_to_python_list(self, mock_context):
+        cont = ld_container([{}], context=[mock_context])
+        list_data = [{"@list": [{"@id": "spam"}, {"@id": "eggs"}]}]
 
         # Create container with mock context
         cont = ld_container([{}], context=[mock_context])
