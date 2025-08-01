@@ -3,14 +3,22 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from importlib import metadata
+import toml
 
+from importlib.resources import files
 from hermes.utils import hermes_user_agent
 
-expected_name = "hermes"
-expected_homepage = "https://hermes.software-metadata.pub"
-dist_version = metadata.version("hermes")
+pyproject = toml.loads(files("hermes").joinpath("../../pyproject.toml").read_text())
+expected_name = pyproject["project"]["name"]
+expected_version = pyproject["project"]["version"]
+expected_homepage = pyproject["project"]["urls"]["homepage"]
 
 
 def test_hermes_user_agent():
-    assert hermes_user_agent == f"{expected_name}/{dist_version} ({expected_homepage})"
+    """
+    This assumes that no other version of `hermes` than the current one is installed
+    in the workspace from which the tests are run.
+    """
+    assert (
+        hermes_user_agent == f"{expected_name}/{expected_version} ({expected_homepage})"
+    )
