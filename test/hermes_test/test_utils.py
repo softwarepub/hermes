@@ -6,7 +6,6 @@
 import toml
 
 from importlib.resources import files
-from hermes.utils import hermes_user_agent
 
 pyproject = toml.loads(files("hermes").joinpath("../../pyproject.toml").read_text())
 expected_name = pyproject["project"]["name"]
@@ -19,6 +18,7 @@ def test_hermes_user_agent():
     This assumes that no other version of `hermes` than the current one is installed
     in the workspace from which the tests are run.
     """
+    from hermes.utils import hermes_user_agent
     assert (
         hermes_user_agent == f"{expected_name}/{expected_version} ({expected_homepage})"
     )
