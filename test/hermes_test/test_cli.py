@@ -4,11 +4,12 @@
 
 # SPDX-FileContributor: Michael Meinel
 
+# flake8: noqa
+
 import pytest
 
 pytest.skip("FIXME: Re-enable test after data model refactoring is done.", allow_module_level=True)
 
-# noqa: E402
 from hermes.commands import cli
 
 
