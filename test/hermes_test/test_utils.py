@@ -4,10 +4,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import toml
+from pathlib import Path
 
-from importlib.resources import files
-
-pyproject = toml.load(pathlib.Path(__file__).parent.parent.parent / "pyproject.toml")
+pyproject = toml.load(Path(__file__).parent.parent.parent / "pyproject.toml")
 expected_name = pyproject["project"]["name"]
 expected_version = pyproject["project"]["version"]
 expected_homepage = pyproject["project"]["urls"]["homepage"]
