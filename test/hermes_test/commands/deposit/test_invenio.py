@@ -5,8 +5,6 @@
 # SPDX-FileContributor: Michael Meinel
 # SPDX-FileContributor: David Pape
 
-# flake8: noqa
-
 from unittest import mock
 
 import click
@@ -14,6 +12,7 @@ import pytest
 
 pytest.skip("FIXME: Re-enable test after data model refactoring is done.", allow_module_level=True)
 
+# noqa: E402
 from hermes.commands.deposit import invenio
 from hermes.error import MisconfigurationError
 
