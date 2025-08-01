@@ -3,8 +3,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # SPDX-FileContributor: Sophie Kernchen
+# SPDX-FileContributor: Michael Meinel
+
+from datetime import datetime
 
 import pytest
+
 from hermes.model.types.ld_container import ld_container
 
 '''we expect user of this class to give the right input data types
@@ -82,47 +86,68 @@ class TestLdContainer:
         with pytest.raises(NotImplementedError):
             str(cont)
 
-    def test_to_python(self, mock_context):
-        # Create container with mock context
+    def test_to_python_id(self, mock_context):
         cont = ld_container([{}], context=[mock_context])
+        assert cont._to_python("@id", "http://spam.eggs/ham") == "http://spam.eggs/ham"
 
-        # Try simple cases of conversion
-        assert cont._to_python("@id", "ham") == "ham"
+    def test_to_python_id_with_prefix(self, mock_context):
+        cont = ld_container([{}], context=[mock_context, {"prefix": self.url}])
+        assert cont._to_python("@id", f"{self.url}identifier") == "prefix:identifier"
+
+    def test_to_python_type(self, mock_context):
+        cont = ld_container([{}], context=[mock_context])
         assert cont._to_python("@type", ["@id"]) == '@id'
         assert cont._to_python("@type", ["@id", "http://spam.eggs/Egg"]) == ["@id", "Egg"]
 
-        # Try type conversions
-        assert cont._to_python("http://spam.eggs/ham", [{"@id": "spam"}]) == 'spam'
+    def test_to_python_id_value(self, mock_context):
+        cont = ld_container([{}], context=[mock_context])
+        assert cont._to_python("http://spam.eggs/ham", [{"@id": "http://spam.eggs/spam"}]) == "http://spam.eggs/spam"
+        assert cont._to_python("http://spam.eggs/ham", [{"@id": "http://spam.eggs/identifier"}]) == "http://spam.eggs/identifier"
 
+    def test_to_python_basic_value(self, mock_context):
+        cont = ld_container([{}], context=[mock_context])
         assert cont._to_python("http://soam.eggs/spam", [{"@value": "bacon"}]) == 'bacon'
         assert cont._to_python("http://spam.eggs/spam", [{"@value": True}]) == True
         assert cont._to_python("http://spam.eggs/spam", [{"@value": 123}]) == 123
 
+    def test_to_python_datetime_value(self, mock_context):
+        cont = ld_container([{}], context=[mock_context])
         assert cont._to_python("http://spam.eggs/eggs", [{
             "@value": "2022-02-22T00:00:00", "@type": "https://schema.org/DateTime"
         }]) == "2022-02-22T00:00:00"
 
-    def test_to_python_list(self, mock_context):
+    def test_to_expanded_id(self, mock_context):
         cont = ld_container([{}], context=[mock_context])
-        list_data = [{"@list": [{"@id": "spam"}, {"@id": "eggs"}]}]
+        assert cont._to_expanded_json("@id", f"{self.url}identifier") == f"{self.url}identifier"
 
-        assert cont._to_python("ham", list_data).to_python() == ["spam", "eggs"]
-
-    def test_to_expanded(self, mock_context):
-        # Create container with mock context
-        cont = ld_container([{}], context=[mock_context])
-
-        # Try simple cases of expansion
+        # Regression test: "ham" is vocabulary and must not be expanded.
         assert cont._to_expanded_json("@id", "ham") == "ham"
-        assert cont._to_expanded_json("@type", "Egg") == ["http://spam.eggs/Egg"]
 
-        # Type conversions
+    def test_to_expanded_id_with_prefix(self, mock_context):
+        cont = ld_container([{}], context=[mock_context, {"prefix": self.url}])
+        assert cont._to_expanded_json("@id", "prefix:identifier") == f"{self.url}identifier"
+
+        # Regression test: "ham" should still not be expaned, but "prefix:ham" should be.
+        assert cont._to_expanded_json("@id", "ham") == "ham"
+        assert cont._to_expanded_json("@id", "prefix:ham") == f"{self.url}ham"
+
+    def test_to_expanded_type(self, mock_context):
+        cont = ld_container([{}], context=[mock_context])
+        assert cont._to_expanded_json("@type", "Egg") == ["http://spam.eggs/Egg"]
+        assert cont._to_expanded_json("@type", ["Egg", "@id"]) == ["http://spam.eggs/Egg", "@id"]
+
+    def test_to_expanded_id_value(self, mock_context):
+        cont = ld_container([{}], context=[mock_context])
         assert cont._to_expanded_json("ham", "spam") == [{"@id": "spam"}]
 
+    def test_to_expanded_basic_value(self, mock_context):
+        cont = ld_container([{}], context=[mock_context])
         assert cont._to_expanded_json("spam", "bacon") == [{"@value": "bacon"}]
         assert cont._to_expanded_json("spam", 123) == [{"@value": 123}]
         assert cont._to_expanded_json("spam", True) == [{"@value": True}]
 
+    def test_to_expanded_datetime_value(self, mock_context):
+        cont = ld_container([{}], context=[mock_context])
         assert cont._to_expanded_json("eggs", datetime(2022, 2,22)) == [
             {"@value": "2022-02-22T00:00:00", "@type": "http://schema.org/DateTime"}
         ]
