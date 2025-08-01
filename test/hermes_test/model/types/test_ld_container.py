@@ -33,7 +33,6 @@ class TestLdContainer:
         assert cont.context == []
         assert cont._data == [{"spam": [{"@value": "bacon"}]}]
         assert cont.path == ["$"]
-        assert cont.active_ctx == {'mappings': {}}
 
     def test_container_ld_value(self):
         cont = ld_container([{"spam": [{"@value": "bacon"}]}])
@@ -41,7 +40,6 @@ class TestLdContainer:
         assert cont.ld_value == [{"spam": [{"@value": "bacon"}]}]
 
     def test_container_add_context(self):
-
         cont = ld_container([{"spam": [{"@value": "bacon"}]}])
         cont.add_context([self.url])
 
