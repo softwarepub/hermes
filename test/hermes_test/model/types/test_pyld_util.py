@@ -9,7 +9,7 @@ def ld_proc():
 
 
 def test_mock_document_compact(ld_proc, mock_document):
-    compact_document = ld_proc.compact(mock_document.expanded(), [mock_document.vocabulary], {})
+    compact_document = ld_proc.compact(mock_document.expanded(), [mock_document.vocabulary()], {})
     assert compact_document == mock_document.compact()
 
 
