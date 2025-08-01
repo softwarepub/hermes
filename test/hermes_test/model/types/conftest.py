@@ -40,7 +40,7 @@ class MockDocument:
         :returns: The rendered compact document.
         """
         return {
-            "@context": [cls.vocabulary(base_url) if embed_vocabulary else base_url],
+            "@context": cls.vocabulary(base_url) if embed_vocabulary else base_url,
 
             "spam": "bacon",
             "ham": f"{base_url}identifier",
