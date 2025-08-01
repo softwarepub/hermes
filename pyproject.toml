@@ -52,18 +52,15 @@ issues = "https://github.com/softwarepub/hermes/issues"
 hermes = "hermes.commands.cli:main"
 hermes-marketplace = "hermes.commands.marketplace:main"
 
-
-[dependency-groups]
+[project.optional-dependencies]
 dev = [
     "pytest>=7.1.1, <8.0.0",
     "pytest-cov>=3.0.0, <4.0.0",
     "taskipy>=1.10.3, <2.0.0",
     "flake8>=5.0.4, <6.0.0",
     "requests-mock>=1.10.0, <2.0.0"
+    "reuse>=1.1.2, <2.0.0",
 ]
-
-
-[project.optional-dependencies]
 docs = [
     "Sphinx>=6.2.1, <7.0.0",
     "myst-parser>=2.0.0, <3.0.0",
@@ -78,7 +75,6 @@ docs = [
     "sphinxext-opengraph>=0.6.3, <1.0.0",
     "sphinxcontrib-mermaid>=0.8.1, <1.0.0",
     "sphinx-togglebutton>=0.3.2, <1.0.0",
-    "reuse>=1.1.2, <2.0.0",
     "sphinxcontrib-datatemplates>=0.11.0, <1.0.0",
 ]
 
