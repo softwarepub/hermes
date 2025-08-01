@@ -8,8 +8,18 @@ import pytest
 
 
 class MockDocument:
+    """
+    Helper that provides valid JSON-LD data.
+    """
+
     @classmethod
-    def vocabulary(cls, base_url="http://spam.eggs/"):
+    def vocabulary(cls, base_url: str = "http://spam.eggs/") -> dict:
+        """
+        Retrieve the vocabulary used for the document.
+
+        :param base_url: Optional base URL to use for IRIs in the vocabulary.
+        :returns: A JSON-LD vocabulary usable in as document context.
+        """
         return {
             "spam": {"@id": f"{base_url}spam"},
             "ham": {"@id": f"{base_url}ham", "@type": "@id"},
@@ -20,9 +30,17 @@ class MockDocument:
         }
 
     @classmethod
-    def compact(cls, base_url="http://spam.eggs/"):
+    def compact(cls, base_url: str = "http://spam.eggs/", embed_vocabulary: bool = True) -> dict:
+        """
+        Get compact representation of the example document.
+
+        :param base_url: Optional base URL used to generate the context.
+        :param embed_vocabulary: Optional switch to indicate whether the vocabulary should be embedded in the context
+                                 or only refrenced by the base url.
+        :returns: The rendered compact document.
+        """
         return {
-            "@context": cls.vocabulary(base_url),
+            "@context": [cls.vocabulary(base_url) if embed_vocabulary else base_url],
 
             "spam": "bacon",
             "ham": f"{base_url}identifier",
@@ -33,7 +51,13 @@ class MockDocument:
         }
 
     @classmethod
-    def expanded(cls, base_url="http://spam.eggs/"):
+    def expanded(cls, base_url: str = "http://spam.eggs/") -> list[dict]:
+        """
+        Get expanded representation of the example document.
+
+        :param base_url: Optional base URL to use for IRIs.
+        :returns: The rendered expanded document.
+        """
         return [{
             f"{base_url}spam": [{"@value": "bacon"}],
             f"{base_url}ham": [{"@id": f"{base_url}identifier"}],
