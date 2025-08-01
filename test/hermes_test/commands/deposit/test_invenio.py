@@ -10,8 +10,6 @@ from unittest import mock
 import click
 import pytest
 
-pytest.skip("FIXME: Re-enable test after data model refactoring is done.", allow_module_level=True)
-
 from hermes.commands.deposit import invenio
 from hermes.error import MisconfigurationError
 
