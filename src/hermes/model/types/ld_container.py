@@ -82,7 +82,7 @@ class ld_container:
 
     def _to_python(self, full_iri, ld_value):
         if full_iri == "@id":
-            value = ld_value
+            value = self.ld_proc.compact_iri(self.active_ctx, ld_value, vocab=False)
         elif full_iri == "@type":
             value = [
                 self.ld_proc.compact_iri(self.active_ctx, ld_type)
@@ -100,7 +100,7 @@ class ld_container:
 
     def _to_expanded_json(self, key, value):
         if key == "@id":
-            ld_value = self.ld_proc.expand_iri(self.active_ctx, value)
+            ld_value = self.ld_proc.expand_iri(self.active_ctx, value, vocab=False)
         elif key == "@type":
             if not isinstance(value, list):
                 value = [value]

@@ -100,11 +100,11 @@ class JsonLdProcessor(jsonld.JsonLdProcessor):
         'mappings': {}
     })
 
-    def expand_iri(self, active_ctx: t.Any, short_iri: str) -> str:
-        return self._expand_iri(active_ctx, short_iri, vocab=True)
+    def expand_iri(self, active_ctx: t.Any, short_iri: str, vocab: bool = True) -> str:
+        return self._expand_iri(active_ctx, short_iri, vocab=vocab)
 
-    def compact_iri(self, active_ctx: t.Any, long_iri: str) -> str:
-        return self._compact_iri(active_ctx, long_iri, vocab=True)
+    def compact_iri(self, active_ctx: t.Any, long_iri: str, vocab: bool = True) -> str:
+        return self._compact_iri(active_ctx, long_iri, vocab=vocab)
 
     def inital_ctx(self, local_ctx, options=None):
         return self.process_context(self._INITIAL_CONTEXT, local_ctx, options or {})
