@@ -7,6 +7,7 @@ import pytest
 
 pytest.skip("FIXME: Re-enable test after data model refactoring is done.", allow_module_level=True)
 
+# noqa: E402
 from hermes.commands.init.base import string_in_file, download_file_from_url
 from unittest.mock import patch, MagicMock
 import hermes.commands.init.util.oauth_process as oauth_process
