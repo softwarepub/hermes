@@ -52,32 +52,6 @@ issues = "https://github.com/softwarepub/hermes/issues"
 hermes = "hermes.commands.cli:main"
 hermes-marketplace = "hermes.commands.marketplace:main"
 
-[project.optional-dependencies]
-dev = [
-    "pytest>=7.1.1, <8.0.0",
-    "pytest-cov>=3.0.0, <4.0.0",
-    "taskipy>=1.10.3, <2.0.0",
-    "flake8>=5.0.4, <6.0.0",
-    "requests-mock>=1.10.0, <2.0.0"
-    "reuse>=1.1.2, <2.0.0",
-]
-docs = [
-    "Sphinx>=6.2.1, <7.0.0",
-    "myst-parser>=2.0.0, <3.0.0",
-    "sphinx-book-theme>=1.0.1, <2.0.0",
-    "sphinx-favicon>=0.2, <1.0.0",
-    "sphinxcontrib-contentui>=0.2.5, <1.0.0",
-    "sphinxcontrib-images>=0.9.4, <1.0.0",
-    "sphinx-icon>=0.1.2, <1.0.0",
-    "sphinx-autobuild>=2021.3.14",
-    "sphinx-autoapi>=3.0.0, <4.0.0",
-    "sphinxemoji>=0.2.0, <1.0.0",
-    "sphinxext-opengraph>=0.6.3, <1.0.0",
-    "sphinxcontrib-mermaid>=0.8.1, <1.0.0",
-    "sphinx-togglebutton>=0.3.2, <1.0.0",
-    "sphinxcontrib-datatemplates>=0.11.0, <1.0.0",
-]
-
 
 [project.entry-points."hermes.harvest"]
 cff = "hermes.commands.harvest.cff:CffHarvestPlugin"
@@ -93,6 +67,36 @@ rodare = "hermes.commands.deposit.rodare:RodareDepositPlugin"
 config_invenio_record_id = "hermes.commands.postprocess.invenio:config_record_id"
 config_invenio_rdm_record_id = "hermes.commands.postprocess.invenio_rdm:config_record_id"
 cff_doi = "hermes.commands.postprocess.invenio:cff_doi"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.1.1"
+pytest-cov = "^3.0.0"
+taskipy = "^1.10.3"
+flake8 = "^5.0.4"
+requests-mock = "^1.10.0"
+
+# Packages for developers for creating documentation
+[tool.poetry.group.docs]
+optional = true
+
+[tool.poetry.group.docs.dependencies]
+Sphinx = "^6.2.1"
+# Sphinx - Additional modules
+myst-parser = "^2.0.0"
+sphinx-book-theme = "^1.0.1"
+sphinx-favicon = "^0.2"
+sphinxcontrib-contentui = "^0.2.5"
+sphinxcontrib-images = "^0.9.4"
+sphinx-icon = "^0.1.2"
+sphinx-autobuild = "^2021.3.14"
+sphinx-autoapi = "^3.0.0"
+sphinxemoji = "^0.2.0"
+sphinxext-opengraph = "^0.6.3"
+sphinxcontrib-mermaid="^0.8.1"
+sphinx-togglebutton="^0.3.2"
+reuse = "^1.1.2"
+sphinxcontrib-datatemplates = "^0.11.0"
 
 
 [tool.taskipy.tasks]
