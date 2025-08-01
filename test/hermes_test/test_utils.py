@@ -7,7 +7,7 @@ import toml
 
 from importlib.resources import files
 
-pyproject = toml.loads(files("hermes").joinpath("../../pyproject.toml").read_text())
+pyproject = toml.load(pathlib.Path(__file__).parent.parent.parent / "pyproject.toml")
 expected_name = pyproject["project"]["name"]
 expected_version = pyproject["project"]["version"]
 expected_homepage = pyproject["project"]["urls"]["homepage"]
