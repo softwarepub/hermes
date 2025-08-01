@@ -13,6 +13,6 @@ def test_mock_document_compact(ld_proc, mock_document):
     assert compact_document == mock_document.compact()
 
 
-def test_mock_document_compact(ld_proc, mock_document):
+def test_mock_document_expanded(ld_proc, mock_document):
     expanded_document = ld_proc.expand(mock_document.compact(), {})
     assert expanded_document == mock_document.expanded()

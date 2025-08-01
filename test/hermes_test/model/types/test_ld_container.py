@@ -101,13 +101,15 @@ class TestLdContainer:
 
     def test_to_python_id_value(self, mock_context):
         cont = ld_container([{}], context=[mock_context])
-        assert cont._to_python("http://spam.eggs/ham", [{"@id": "http://spam.eggs/spam"}]) == "http://spam.eggs/spam"
-        assert cont._to_python("http://spam.eggs/ham", [{"@id": "http://spam.eggs/identifier"}]) == "http://spam.eggs/identifier"
+        assert cont._to_python("http://spam.eggs/ham",
+                               [{"@id": "http://spam.eggs/spam"}]) == "http://spam.eggs/spam"
+        assert cont._to_python("http://spam.eggs/ham",
+                               [{"@id": "http://spam.eggs/identifier"}]) == "http://spam.eggs/identifier"
 
     def test_to_python_basic_value(self, mock_context):
         cont = ld_container([{}], context=[mock_context])
         assert cont._to_python("http://soam.eggs/spam", [{"@value": "bacon"}]) == 'bacon'
-        assert cont._to_python("http://spam.eggs/spam", [{"@value": True}]) == True
+        assert cont._to_python("http://spam.eggs/spam", [{"@value": True}]) is True
         assert cont._to_python("http://spam.eggs/spam", [{"@value": 123}]) == 123
 
     def test_to_python_datetime_value(self, mock_context):
@@ -148,6 +150,6 @@ class TestLdContainer:
 
     def test_to_expanded_datetime_value(self, mock_context):
         cont = ld_container([{}], context=[mock_context])
-        assert cont._to_expanded_json("eggs", datetime(2022, 2,22)) == [
+        assert cont._to_expanded_json("eggs", datetime(2022, 2, 22)) == [
             {"@value": "2022-02-22T00:00:00", "@type": "http://schema.org/DateTime"}
         ]
