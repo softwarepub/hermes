@@ -14,9 +14,10 @@ license = "Apache-2.0 AND LicenseRef-BSD-Caltech"
 authors = [
     { name = "Michael Meinel", email = "michael.meinel@dlr.de" },
     { name = "Stephan Druskat", email = "stephan.druskat@dlr.de" },
+    { name = "Oliver Bertuch", email = "o.bertuch@fz-juelich.de" },
+    { name = "Oliver Knodel", email = "o.knodel@hzdr.de" },
     { name = "David Pape", email = "d.pape@hzdr.de" },
     { name = "Sophie Kernchen", email = "sohpie.kernchen@dlr.de" },
-    { name = "Oliver Bertuch", email = "o.bertuch@fz-juelich.de" },
     { name = "Nitai Heeb", email = "n.heeb@fz-juelich.de" },
 ]
 maintainers = [
