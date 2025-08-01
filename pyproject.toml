@@ -8,7 +8,7 @@
 
 [project]
 name = "hermes"
-version = "0.10.0.dev0"
+version = "0.10.0.dev1"
 description = "Workflow to publish research software with rich metadata"
 license = "Apache-2.0 AND LicenseRef-BSD-Caltech"
 authors = [
@@ -97,18 +97,6 @@ rodare = "hermes.commands.deposit.rodare:RodareDepositPlugin"
 config_invenio_record_id = "hermes.commands.postprocess.invenio:config_record_id"
 config_invenio_rdm_record_id = "hermes.commands.postprocess.invenio_rdm:config_record_id"
 cff_doi = "hermes.commands.postprocess.invenio:cff_doi"
-
-
-[poetry.tool]
-include = [
-    "hermes/schema/*.json",
-]
-# Stating our package explicitely here to enable
-#     a) including contrib packages in the future and
-#     b) rename the package for development snapshot releases to TestPyPI
-packages = [
-    { include = "hermes", from = "src" }
-]
 
 
 [tool.taskipy.tasks]
