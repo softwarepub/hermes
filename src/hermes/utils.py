@@ -7,15 +7,21 @@
 from importlib.metadata import metadata
 
 
-def retrieve_project_urls(urls: list[str]) -> dict[str, str]:
+def retrieve_project_urls(metadata_urls: list[str]) -> dict[str, str]:
     """
     Extracts the keys and values from the project.urls section in distribution package metadata
     and converts them into a dictionary.
 
-    :param urls: The list of urls to extract from (from distribution metadata)
+    :param metadata_urls: The list of urls to extract from (from distribution metadata)
     :return: A dictionary mapping URL names to URLs
     """
-    return {url_lst[0].lower(): url_lst[1] for url_lst in [h.split(", ", maxsplit=1) for h in urls]}
+    return {
+        url_lst[0].lower(): url_lst[1]
+        for url_lst in [
+            metadata_url_item.split(", ", maxsplit=1)
+            for metadata_url_item in metadata_urls
+        ]
+    }
 
 
 hermes_metadata = metadata("hermes")

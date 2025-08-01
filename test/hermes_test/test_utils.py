@@ -18,6 +18,7 @@ def test_hermes_user_agent():
     in the workspace from which the tests are run.
     """
     from hermes.utils import hermes_user_agent
+
     assert (
         hermes_user_agent == f"{expected_name}/{expected_version} ({expected_homepage})"
     )
