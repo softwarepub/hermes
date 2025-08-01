@@ -15,7 +15,7 @@ def retrieve_project_urls(urls: list[str]) -> dict[str, str]:
     :param urls: The list of urls to extract from (from distribution metadata)
     :return: A dictionary mapping URL names to URLs
     """
-    return {l[0].lower(): l[1] for l in [h.split(", ", maxsplit=1) for h in urls]}
+    return {url_lst[0].lower(): url_lst[1] for url_lst in [h.split(", ", maxsplit=1) for h in urls]}
 
 
 hermes_metadata = metadata("hermes")
