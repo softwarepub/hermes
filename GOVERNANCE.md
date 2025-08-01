@@ -80,4 +80,5 @@ If no successor is named,
 the Steering Group seeks a successor.
 One member of the Steering Group steps in as interim maintainer until a successor is found.
 
-Authorship is defined by the [steering group](#hermes-steering-group) and declared in [`CITATION.cff`](CITATION.cff).
+Authorship is defined by the [steering group](#hermes-steering-group) and declared in
+[`CITATION.cff`](https://github.com/softwarepub/hermes/blob/main/CITATION.cff).
