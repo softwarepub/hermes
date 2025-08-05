@@ -1,0 +1,26 @@
+[
+  {"url": "https://schema.org", "file": "schemaorg-current-https.jsonld"},
+  {"url": "http://schema.org", "file": "schemaorg-current-http.jsonld"},
+
+  {"url": "https://doi.org/10.5063/schema/codemeta-2.0", "file": "codemeta.jsonld"},
+
+  {"url": "https://schema.software-metadata.pub/hermes-git/1.0", "file": "hermes-git.jsonld"},
+  {"url": "https://schema.software-metadata.pub/hermes-content/1.0", "file": "hermes-content.jsonld"},
+  {"url": "https://schema.software-metadata.pub/hermes-runtime/1.0", "file": "hermes-runtime.jsonld"},
+
+  {
+    "url": "http://www.w3.org/ns/prov#",
+    "file":"w3c-prov.ttl",
+    "loader": "rdflib",
+    "context": [
+      "http://www.w3.org/ns/prov#",
+      {
+        "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+        "prov": "http://www.w3.org/ns/prov#",
+        "owl": "http://www.w3.org/2002/07/owl#",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      }
+    ]
+  }
+]
