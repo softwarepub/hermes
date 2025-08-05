@@ -112,7 +112,7 @@ norecursedirs = "docs/*"
 testpaths = [
     "test"
 ]
-addopts = "--cov=hermes --cov-report term"
+addopts = "-r s --cov=hermes --cov-report term"
 
 
 [build-system]
