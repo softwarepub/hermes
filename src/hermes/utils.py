@@ -1,8 +1,9 @@
-# SPDX-FileCopyrightText: 2023 Helmholtz-Zentrum Dresden-Rossendorf (HZDR)
+# SPDX-FileCopyrightText: 2023 Helmholtz-Zentrum Dresden-Rossendorf (HZDR), German Aerospace Center (DLR)
 #
 # SPDX-License-Identifier: Apache-2.0
 
 # SPDX-FileContributor: David Pape
+# SPDX-FileContributor: Stephan Druskat <stephan.druskat@dlr.de>
 
 from importlib.metadata import metadata
 
