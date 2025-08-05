@@ -9,7 +9,6 @@ from datetime import date, time, datetime
 from .ld_container import ld_container
 from .ld_list import ld_list
 from .ld_dict import ld_dict
-from .ld_context import iri_map
 from .pyld_util import JsonLdProcessor
 
 
@@ -45,11 +44,11 @@ _TYPEMAP = [
     (lambda v: isinstance(v, (int, float, str, bool)), dict(expanded_json=lambda v, **_: [{"@value": v}])),
 
     (lambda v: isinstance(v, datetime),
-     dict(expanded_json=lambda v, **_: [{"@value": v.isoformat(), "@type": iri_map["schema:DateTime"]}])),
+     dict(expanded_json=lambda v, **_: [{"@value": v.isoformat(), "@type": ["https://schema.org/DateTime"]}])),
     (lambda v: isinstance(v, date),
-     dict(expanded_json=lambda v, **_: [{"@value": v.isoformat(), "@type": iri_map["schema:Date"]}])),
+     dict(expanded_json=lambda v, **_: [{"@value": v.isoformat(), "@type": ["https://schema.org/Date"]}])),
     (lambda v: isinstance(v, time),
-     dict(expanded_json=lambda v, **_: [{"@value": v.isoformat(), "@type": iri_map["schema:Time"]}])),
+     dict(expanded_json=lambda v, **_: [{"@value": v.isoformat(), "@type": ["https://schema.org/Time"]}])),
 ]
 
 
