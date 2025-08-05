@@ -1,9 +1,0 @@
-{
-  "@context": {
-    "schema": "https://schema.org/",
-    "hermes-git": "https://schema.software-metadata.pub/hermes-git/1.0/",
-
-    "branch": { "@id": "hermes-git:branch" },
-    "contributionRole": { "@id": "hermes-git:contributionRole", "@type": "schema:Role" }
-  }
-}
