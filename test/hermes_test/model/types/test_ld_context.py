@@ -93,28 +93,35 @@ def test_get_item_from_prefixed_vocabulary_raises_on_prefix_not_exist(
 
 
 @pytest.mark.parametrize(
-    "not_exist",
+    "term,not_exist",
     [
-        "baz",
-        "hermes:baz",
-        "schema:baz",
-        (None, "baz"),
-        ("hermes", "baz"),
-        ("schema", "baz"),
+        ("baz", item)
+        for item in [
+            "baz",
+            "hermes:baz",
+            "schema:baz",
+            (None, "baz"),
+            ("hermes", "baz"),
+            ("schema", "baz"),
+        ]
     ],
 )
-def test_get_item_from_prefixed_vocabulary_raises_on_term_not_exist(ctx, not_exist):
+@pytest.mark.xfail(
+    raises=NotImplementedError,
+    reason="Not yet implemented/decided: Check if terms exist in given vocabulary.",
+)
+def test_get_item_from_prefixed_vocabulary_raises_on_term_not_exist(
+    ctx, term, not_exist
+):
     """
     Tests that an exception is raised when trying to get compacted items for which the vocabulary exists,
-    but doesn't contain the requested term, and that the raised exception is not raised due to side effects.
+    but doesn't contain the requested term.
     """
-    with pytest.raises(Exception) as e:  # FIXME: Replace with custom error
-        ctx[not_exist]
-    if any(
-        s in str(e.value)
-        for s in ["cannot access local variable", "referenced before assignment"]
-    ):
-        pytest.fail(f"Unexpected exception raised not due to the expected cause: {e.value}.")
+    with pytest.raises(HermesContextError) as hce:
+        _ = ctx[not_exist]
+        with pytest.raises(Exception):
+            assert str(hce.value) == term
+        raise NotImplementedError
 
 
 @pytest.mark.parametrize(
@@ -128,7 +135,7 @@ def test_get_item_from_prefixed_vocabulary_raises_on_term_not_exist(ctx, not_exi
 @pytest.mark.xfail(
     raises=NotImplementedError,
     reason="Passing back expanded terms on their input if they are valid in the context "
-           "is not yet implemented (or decided).",
+    "is not yet implemented (or decided).",
 )
 def test_get_item_from_expanded_pass(ctx, expanded):
     """
