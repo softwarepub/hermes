@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2025 German Aerospace Center (DLR)
+# SPDX-FileContributor: Michael Meinel
+#
+# SPDX-License-Identifier: Apache-2.0
+
 import pytest
 
 from hermes.model.types import pyld_util
