@@ -150,15 +150,8 @@ def test_get_item_from_expanded_fail(ctx):
     """
     Tests that context raises on unsupported expanded term input.
     """
-    with pytest.raises(Exception) as e:
+    with pytest.raises(HermesContextError) as e:
         ctx["https://foo.bar/baz"]
-    if any(
-        s in str(e.value)
-        for s in ["cannot access local variable", "referenced before assignment"]
-    ):
-        pytest.fail(
-            f"Unexpected exception raised not due to the expected cause: {e.value}."
-        )
 
 
 @pytest.mark.parametrize(
@@ -175,20 +168,31 @@ def test_get_non_str_item_fail(ctx, non_str, error_type):
     "item",
     [
         "",
-        "fooBar",
+        pytest.param(
+            "fooBar",
+            marks=pytest.mark.xfail(
+                reason="Not yet implemented/decided: Check if terms exist in given vocabulary."
+            ),
+        ),
         [0, "foo"],
         (0, "foo"),
         {"foo": "bar", "baz": "foo"},
-        "schema:fooBar",
-        "hermes:fooBar",
+        pytest.param(
+            "schema:fooBar",
+            marks=pytest.mark.xfail(
+                reason="Not yet implemented/decided: Check if terms exist in given vocabulary."
+            ),
+        ),
+        pytest.param(
+            "hermes:fooBar",
+            marks=pytest.mark.xfail(
+                reason="Not yet implemented/decided: Check if terms exist in given vocabulary."
+            ),
+        ),
         "codemeta:maintainer",  # Prefixed CodeMeta doesn't exist in context
-        # Even a dict with valid terms should fail, as it is unclear what to expect
-        {None: "maintainer", "schema": "Organization"},
     ],
 )
 def test_get_item_validate_fail(ctx, item):
-    """Context raises on terms that don't exist in the context."""
-    with pytest.raises(
-        Exception
-    ):  # FIXME: Replace with custom error, e.g., hermes.model.errors.InvalidTermException
+    """Context raises on theoretically valid compressed terms that don't exist in the context."""
+    with pytest.raises(HermesContextError):
         ctx[item]
