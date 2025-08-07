@@ -11,9 +11,9 @@ class ld_container:
     """
     Base class for Linked Data containers.
 
-    A linked data container impelements a view on the expanded form of an JSON-LD document.
-    It allows to easily interacts them by hinding all the nesting and automatically mapping
-    between different forms.
+    A linked data container implements a view on the expanded form of an JSON-LD document.
+    It allows to easily interact with such documents by hiding all the nesting and
+    automatically mapping between different forms.
     """
 
     ld_proc = JsonLdProcessor()
