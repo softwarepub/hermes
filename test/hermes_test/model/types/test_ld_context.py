@@ -86,7 +86,7 @@ def test_get_item_from_prefixed_vocabulary_raises_on_prefix_not_exist(ctx, not_e
         s in str(e.value)
         for s in ["cannot access local variable", "referenced before assignment"]
     ):
-        pytest.fail("Unexpected exception raised not due to the expected cause.")
+        pytest.fail(f"Unexpected exception raised not due to the expected cause: {e.value}.")
 
 
 @pytest.mark.parametrize(
@@ -111,7 +111,7 @@ def test_get_item_from_prefixed_vocabulary_raises_on_term_not_exist(ctx, not_exi
         s in str(e.value)
         for s in ["cannot access local variable", "referenced before assignment"]
     ):
-        pytest.fail("Unexpected exception raised not due to the expected cause.")
+        pytest.fail(f"Unexpected exception raised not due to the expected cause: {e.value}.")
 
 
 @pytest.mark.parametrize(
@@ -146,7 +146,7 @@ def test_get_item_from_expanded_fail(ctx):
         s in str(e.value)
         for s in ["cannot access local variable", "referenced before assignment"]
     ):
-        pytest.fail("Unexpected exception raised not due to the expected cause.")
+        pytest.fail(f"Unexpected exception raised not due to the expected cause: {e.value}.")
 
 
 @pytest.mark.parametrize(
