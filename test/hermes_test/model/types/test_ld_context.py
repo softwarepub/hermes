@@ -22,19 +22,25 @@ def test_ctx():
     assert ctx.context["2"] == "u2"
 
 
-@pytest.mark.xfail(raises=AssertionError, reason="Currently, the wrong CodeMeta IRI is used in the implementation: "
-                                                 "https://github.com/softwarepub/hermes/issues/419")
+@pytest.mark.xfail(
+    raises=AssertionError,
+    reason="Currently, the wrong CodeMeta IRI is used in the implementation: "
+    "https://github.com/softwarepub/hermes/issues/419",
+)
 def test_codemeta_prefix(ctx):
     """Default vocabulary in context has the correct base IRI."""
     assert ctx.context[None] == "https://codemeta.github.io/terms/"
 
 
-@pytest.mark.xfail(raises=AssertionError, reason="Currently, the wrong CodeMeta IRI is used in the implementation,"
-                                                 "so expanding terms doesn't work correctly, see "
-                                                 "https://github.com/softwarepub/hermes/issues/419")
-def test_get_codemeta_item(ctx):
+@pytest.mark.xfail(
+    raises=AssertionError,
+    reason="Currently, the wrong CodeMeta IRI is used in the implementation, so expanding terms doesn't work correctly, "
+           "see https://github.com/softwarepub/hermes/issues/419",
+)
+@pytest.mark.parametrize("compacted", ["maintainer", (None, "maintainer")])
+def test_get_item_from_default_vocabulary_pass(ctx, compacted):
     """Context returns fully expanded terms for default vocabulary in the context."""
-    item = ctx["maintainer"]
+    item = ctx[compacted]
     assert item == "https://codemeta.github.io/terms/maintainer"
 
 
