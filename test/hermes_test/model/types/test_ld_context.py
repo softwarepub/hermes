@@ -88,10 +88,27 @@ def test_get_item_from_prefixed_vocabulary_raises_on_prefix_not_exist(ctx, not_e
     )
 
 
-def test_get_protocol_items_fail(ctx):
-    with pytest.raises(Exception) as e:
-        ctx["https://foo.bar/baz"]
-    assert "cannot access local variable" not in str(e.value)  # FIXME: Replace with custom error
+@pytest.mark.parametrize(
+    "not_exist",
+    [
+        "baz",
+        "hermes:baz",
+        "schema:baz",
+        (None, "baz"),
+        ("hermes", "baz"),
+        ("schema", "baz"),
+    ],
+)
+def test_get_item_item_from_prefixed_vocabulary_raises_on_term_not_exist(ctx, not_exist):
+    """
+    Tests that an exception is raised when trying to get compacted items for which the vocabulary exists,
+    but doesn't contain the requested term, and that the raised exception is not raised due to side effects.
+    """
+    with pytest.raises(Exception) as e:  # FIXME: Replace with custom error
+        ctx[not_exist]
+    assert "cannot access local variable" not in str(
+        e.value
+    )
 
 
 @pytest.mark.parametrize(
