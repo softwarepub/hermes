@@ -47,7 +47,7 @@ class ld_container:
             else:
                 self.active_ctx = parent.active_ctx
         else:
-            self.active_ctx = self.ld_proc.inital_ctx(
+            self.active_ctx = self.ld_proc.initial_ctx(
                 self.full_context,
                 {"documentLoader": bundled_loader}
             )

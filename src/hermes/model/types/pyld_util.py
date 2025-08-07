@@ -106,7 +106,7 @@ class JsonLdProcessor(jsonld.JsonLdProcessor):
     def compact_iri(self, active_ctx: t.Any, long_iri: str) -> str:
         return self._compact_iri(active_ctx, long_iri, vocab=True)
 
-    def inital_ctx(self, local_ctx, options=None):
+    def initial_ctx(self, local_ctx, options=None):
         return self.process_context(self._INITIAL_CONTEXT, local_ctx, options or {})
 
     @classmethod
