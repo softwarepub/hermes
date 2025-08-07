@@ -68,9 +68,24 @@ def test_get_item_from_prefixed_vocabulary_pass(ctx, compacted, expanded):
     assert item == expanded
 
 
-def test_get_protocol_items_pass(ctx):
-    item = ctx["https://schema.org/Organisation"]
-    assert item == "https://schema.org/Organisation"
+@pytest.mark.parametrize(
+    "not_exist",
+    [
+        "https://foo.bar/baz",
+        "foobar:baz",
+        ("foobar", "baz"),
+    ],
+)
+def test_get_item_from_prefixed_vocabulary_raises_on_prefix_not_exist(ctx, not_exist):
+    """
+    Tests that an exception is raised when trying to get compacted items for which there is no
+    prefixed vocabulary in the context, and that the raised exception is not raised due to side effects.
+    """
+    with pytest.raises(Exception) as e:  # FIXME: Replace with custom error
+        ctx[not_exist]
+    assert "cannot access local variable" not in str(
+        e.value
+    )
 
 
 def test_get_protocol_items_fail(ctx):
