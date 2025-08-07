@@ -10,6 +10,8 @@ from hermes.model.types.ld_context import (
     ALL_CONTEXTS,
 )
 
+from hermes.model.error import HermesContextError
+
 
 @pytest.fixture
 def ctx():
@@ -69,24 +71,25 @@ def test_get_item_from_prefixed_vocabulary_pass(ctx, compacted, expanded):
 
 
 @pytest.mark.parametrize(
-    "not_exist",
+    "prefix,not_exist",
     [
-        "foobar:baz",
-        ("foobar", "baz"),
+        ("foobar", item)
+        for item in [
+            "foobar:baz",
+            ("foobar", "baz"),
+        ]
     ],
 )
-def test_get_item_from_prefixed_vocabulary_raises_on_prefix_not_exist(ctx, not_exist):
+def test_get_item_from_prefixed_vocabulary_raises_on_prefix_not_exist(
+    ctx, prefix, not_exist
+):
     """
     Tests that an exception is raised when trying to get compacted items for which there is no
-    prefixed vocabulary in the context, and that the raised exception is not raised due to side effects.
+    prefixed vocabulary in the context.
     """
-    with pytest.raises(Exception) as e:  # FIXME: Replace with custom error
-        ctx[not_exist]
-    if any(
-        s in str(e.value)
-        for s in ["cannot access local variable", "referenced before assignment"]
-    ):
-        pytest.fail(f"Unexpected exception raised not due to the expected cause: {e.value}.")
+    with pytest.raises(HermesContextError) as hce:
+        _ = ctx[not_exist]
+    assert str(hce.value) == prefix
 
 
 @pytest.mark.parametrize(
@@ -146,7 +149,9 @@ def test_get_item_from_expanded_fail(ctx):
         s in str(e.value)
         for s in ["cannot access local variable", "referenced before assignment"]
     ):
-        pytest.fail(f"Unexpected exception raised not due to the expected cause: {e.value}.")
+        pytest.fail(
+            f"Unexpected exception raised not due to the expected cause: {e.value}."
+        )
 
 
 @pytest.mark.parametrize(
