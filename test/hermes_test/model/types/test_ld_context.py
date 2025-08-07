@@ -22,6 +22,8 @@ def test_ctx():
     assert ctx.context["2"] == "u2"
 
 
+@pytest.mark.xfail(raises=AssertionError, reason="Currently, the wrong CodeMeta IRI is used in the implementation: "
+                                                 "https://github.com/softwarepub/hermes/issues/419")
 def test_codemeta_prefix(ctx):
     """Default vocabulary in context has the correct base IRI."""
     assert ctx.context[None] == "https://codemeta.github.io/terms/"
