@@ -612,7 +612,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
         This function gets the communities to be used for the deposition on an Invenio-based
         site from the config and checks their validity against the site's API. If one of the
-        identifiers can not be found on the site, a :class:`MisconfigurationError` is
+        identifiers can not be found on the site, a :class:`HermesMisconfigurationError` is
         raised.
         """
 

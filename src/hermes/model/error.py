@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # SPDX-FileContributor: Michael Meinel
+# SPDX-FileContributor: Stephan Druskat <stephan.druskat@dlr.de>
 
 import typing as t
 
@@ -20,15 +21,31 @@ class HermesValidationError(Exception):
         except ValueError as e:
             raise HermesValidationError(src_file) from e
     """
-
     pass
 
 
-class MergeError(Exception):
+class HermesContextError(Exception):
+    """
+    This exception should be thrown when interacting with the model context.
+    # TODO Change class name and docstring if we decide to call it differently
+    # TODO in https://github.com/softwarepub/hermes/issues/392.
+
+    To be able to track and fix the error, you should use this in conjunction with the original exception if applicable:
+
+    .. code:: python
+        try:
+             context[term]
+        except ValueError as e:
+            raise HermesContextError(term) from e
+    """
+    pass
+
+
+class HermesMergeError(Exception):
     """
     This exception should be raised when there is an error during a merge / set operation.
     """
-    def __init__(self, path: t.List[str | int], old_Value: t.Any, new_value: t.Any, **kwargs):
+    def __init__(self, path: t.List[str | int], old_value: t.Any, new_value: t.Any, **kwargs):
         """
         Create a new merge incident.
 
@@ -38,7 +55,7 @@ class MergeError(Exception):
         :param kwargs: Tag data for the new value.
         """
         self.path = path
-        self.old_value = old_Value
+        self.old_value = old_value
         self.new_value = new_value
         self.tag = kwargs
         super().__init__(f'Error merging {self.path} (ambiguous values "{self.old_value}" and "{self.new_value}")')

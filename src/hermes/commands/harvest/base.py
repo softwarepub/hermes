@@ -12,7 +12,7 @@ from pydantic import BaseModel
 
 from hermes.commands.base import HermesCommand, HermesPlugin
 from hermes.model.context import HermesContext, HermesHarvestContext
-from hermes.model.errors import HermesValidationError, MergeError
+from hermes.model.error import HermesValidationError, HermesMergeError
 
 
 class HermesHarvestPlugin(HermesPlugin):
@@ -55,7 +55,7 @@ class HermesHarvestCommand(HermesCommand):
                                             timestamp=datetime.now().isoformat(), **tags)
                     for _key, ((_value, _tag), *_trace) in harvest_ctx._data.items():
                         if any(v != _value and t == _tag for v, t in _trace):
-                            raise MergeError(_key, None, _value)
+                            raise HermesMergeError(_key, None, _value)
 
             except KeyError as e:
                 self.log.error("Plugin '%s' not found.", plugin_name)
