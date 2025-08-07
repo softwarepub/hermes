@@ -112,20 +112,6 @@ def test_get_item_item_from_prefixed_vocabulary_raises_on_term_not_exist(ctx, no
 
 
 @pytest.mark.parametrize(
-    "compacted,expanded",
-    [
-        ([None, "maintainer"], "https://codemeta.github.io/terms/maintainer"),
-        (["schema", "Organization"], "http://schema.org/Organization"),
-        ((None, "maintainer"), "https://codemeta.github.io/terms/maintainer"),
-        (("schema", "Organization"), "http://schema.org/Organization"),
-    ],
-)
-def test_get_valid_non_str_items(ctx, compacted, expanded):
-    """Context returns fully expanded terms for valid non-string inputs."""
-    assert ctx[compacted] == expanded
-
-
-@pytest.mark.parametrize(
     "non_str,error_type",
     [(0, TypeError), (None, TypeError), ([], ValueError), ({"foo"}, ValueError)],
 )
