@@ -5,6 +5,7 @@
 # SPDX-FileContributor: Michael Meinel
 # SPDX-FileContributor: Stephan Druskat <stephan.druskat@dlr.de>
 
+from hermes.model.error import HermesContextError
 
 CODEMETA_PREFIX = "https://doi.org/10.5063/schema/codemeta-2.0"
 CODEMETA_CONTEXT = [CODEMETA_PREFIX]
@@ -91,10 +92,12 @@ class ContextPrefix:
         else:
             prefix, term = None, compressed_term
 
-        if prefix in self.context:
-            iri = self.context[prefix] + term
+        try:
+            base_iri = self.context[prefix]
+        except KeyError as ke:
+            raise HermesContextError(prefix) from ke
 
-        return iri
+        return base_iri + term
 
 
 iri_map = ContextPrefix(ALL_CONTEXTS)
