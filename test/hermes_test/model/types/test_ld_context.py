@@ -36,8 +36,8 @@ def test_codemeta_prefix(ctx):
 
 @pytest.mark.xfail(
     raises=AssertionError,
-    reason="Currently, the wrong CodeMeta IRI is used in the implementation, so expanding terms doesn't work correctly, "
-    "see https://github.com/softwarepub/hermes/issues/419",
+    reason="Currently, the wrong CodeMeta IRI is used in the implementation, so expanding terms doesn't work correctly,"
+    " see https://github.com/softwarepub/hermes/issues/419",
 )
 @pytest.mark.parametrize("compacted", ["maintainer", (None, "maintainer")])
 def test_get_item_from_default_vocabulary_pass(ctx, compacted):
@@ -141,7 +141,7 @@ def test_get_item_from_expanded_pass(ctx, expanded):
     """
     Tests that getting items via their fully expanded terms works as expected.
     """
-    with pytest.raises(Exception) as e:
+    with pytest.raises(Exception):
         assert ctx[expanded] == expanded
     raise NotImplementedError
 
@@ -150,7 +150,7 @@ def test_get_item_from_expanded_fail(ctx):
     """
     Tests that context raises on unsupported expanded term input.
     """
-    with pytest.raises(HermesContextError) as e:
+    with pytest.raises(HermesContextError):
         ctx["https://foo.bar/baz"]
 
 
