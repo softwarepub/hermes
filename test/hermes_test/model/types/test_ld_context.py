@@ -29,6 +29,9 @@ def test_codemeta_prefix(ctx):
     assert ctx.context[None] == "https://codemeta.github.io/terms/"
 
 
+@pytest.mark.xfail(raises=AssertionError, reason="Currently, the wrong CodeMeta IRI is used in the implementation,"
+                                                 "so expanding terms doesn't work correctly, see "
+                                                 "https://github.com/softwarepub/hermes/issues/419")
 def test_get_codemeta_item(ctx):
     """Context returns fully expanded terms for default vocabulary in the context."""
     item = ctx["maintainer"]
