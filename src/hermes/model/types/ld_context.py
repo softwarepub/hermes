@@ -16,16 +16,26 @@ SCHEMA_ORG_CONTEXT = [{"schema": SCHEMA_ORG_PREFIX}]
 PROV_PREFIX = "http://www.w3.org/ns/prov#"
 PROV_CONTEXT = [{"prov": PROV_PREFIX}]
 
-HERMES_RT_PREFIX = 'https://schema.software-metadata.pub/hermes-runtime/1.0/'
-HERMES_RT_CONTEXT = [{'hermes-rt': HERMES_RT_PREFIX}]
-HERMES_CONTENT_CONTEXT = [{'hermes': 'https://schema.software-metadata.pub/hermes-content/1.0/'}]
+HERMES_RT_PREFIX = "https://schema.software-metadata.pub/hermes-runtime/1.0/"
+HERMES_RT_CONTEXT = [{"hermes-rt": HERMES_RT_PREFIX}]
+HERMES_CONTENT_CONTEXT = [
+    {"hermes": "https://schema.software-metadata.pub/hermes-content/1.0/"}
+]
 
 HERMES_CONTEXT = [{**HERMES_RT_CONTEXT[0], **HERMES_CONTENT_CONTEXT[0]}]
 
-HERMES_BASE_CONTEXT = [*CODEMETA_CONTEXT, {**SCHEMA_ORG_CONTEXT[0], **HERMES_CONTENT_CONTEXT[0]}]
-HERMES_PROV_CONTEXT = [{**SCHEMA_ORG_CONTEXT[0], **HERMES_RT_CONTEXT[0], **PROV_CONTEXT[0]}]
+HERMES_BASE_CONTEXT = [
+    *CODEMETA_CONTEXT,
+    {**SCHEMA_ORG_CONTEXT[0], **HERMES_CONTENT_CONTEXT[0]},
+]
+HERMES_PROV_CONTEXT = [
+    {**SCHEMA_ORG_CONTEXT[0], **HERMES_RT_CONTEXT[0], **PROV_CONTEXT[0]}
+]
 
-ALL_CONTEXTS = [*CODEMETA_CONTEXT, {**SCHEMA_ORG_CONTEXT[0], **PROV_CONTEXT[0], **HERMES_CONTEXT[0]}]
+ALL_CONTEXTS = [
+    *CODEMETA_CONTEXT,
+    {**SCHEMA_ORG_CONTEXT[0], **PROV_CONTEXT[0], **HERMES_CONTEXT[0]},
+]
 
 
 class ContextPrefix:
@@ -38,6 +48,7 @@ class ContextPrefix:
     arbitrary strings used to prefix terms from a specific vocabulary to their respective vocabulary IRI strings.;
     - as a dict mapping prefixes to vocabulary IRIs, where the default vocabulary has a prefix of None.
     """
+
     def __init__(self, vocabularies: list[str | dict]):
         """
         @param vocabularies: A list of linked data vocabularies. Items can be vocabulary base IRI strings and/or
@@ -55,11 +66,13 @@ class ContextPrefix:
             if isinstance(vocab, str):
                 vocab = {None: vocab}
 
-            self.context.update({
-                prefix: base_iri
-                for prefix, base_iri in vocab.items()
-                if isinstance(base_iri, str)
-            })
+            self.context.update(
+                {
+                    prefix: base_iri
+                    for prefix, base_iri in vocab.items()
+                    if isinstance(base_iri, str)
+                }
+            )
 
     def __getitem__(self, compressed_term: str | tuple) -> str:
         """
@@ -85,12 +98,14 @@ class ContextPrefix:
         """
         if not isinstance(compressed_term, str):
             prefix, term = compressed_term
-        elif ':' in compressed_term:
-            prefix, term = compressed_term.split(':', 1)
-            if term.startswith('://'):
+        elif ":" in compressed_term:
+            prefix, term = compressed_term.split(":", 1)
+            if term.startswith("://"):
                 prefix, term = True, compressed_term
-        else:
+        elif compressed_term != "":
             prefix, term = None, compressed_term
+        else:
+            raise HermesContextError(compressed_term)
 
         try:
             base_iri = self.context[prefix]
