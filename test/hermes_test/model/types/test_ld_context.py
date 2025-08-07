@@ -71,7 +71,6 @@ def test_get_item_from_prefixed_vocabulary_pass(ctx, compacted, expanded):
 @pytest.mark.parametrize(
     "not_exist",
     [
-        "https://foo.bar/baz",
         "foobar:baz",
         ("foobar", "baz"),
     ],
@@ -83,9 +82,8 @@ def test_get_item_from_prefixed_vocabulary_raises_on_prefix_not_exist(ctx, not_e
     """
     with pytest.raises(Exception) as e:  # FIXME: Replace with custom error
         ctx[not_exist]
-    assert "cannot access local variable" not in str(
-        e.value
-    )
+    if any(s in str(e.value) for s in ["cannot access local variable", "referenced before assignment"]):
+        pytest.fail("Unexpected exception raised not due to the expected cause.")
 
 
 @pytest.mark.parametrize(
@@ -99,16 +97,33 @@ def test_get_item_from_prefixed_vocabulary_raises_on_prefix_not_exist(ctx, not_e
         ("schema", "baz"),
     ],
 )
-def test_get_item_item_from_prefixed_vocabulary_raises_on_term_not_exist(ctx, not_exist):
+def test_get_item_from_prefixed_vocabulary_raises_on_term_not_exist(ctx, not_exist):
     """
     Tests that an exception is raised when trying to get compacted items for which the vocabulary exists,
     but doesn't contain the requested term, and that the raised exception is not raised due to side effects.
     """
     with pytest.raises(Exception) as e:  # FIXME: Replace with custom error
         ctx[not_exist]
-    assert "cannot access local variable" not in str(
-        e.value
-    )
+    if any(s in str(e.value) for s in ["cannot access local variable", "referenced before assignment"]):
+        pytest.fail("Unexpected exception raised not due to the expected cause.")
+
+@pytest.mark.parametrize("expanded", ["https://schema.org/Organisation", "https://schema.software-metadata.pub/hermes-content/1.0/semanticVersion"])
+def test_get_item_from_expanded_pass(ctx, expanded):
+    """
+    Tests that getting items via their fully expanded terms works as expected.
+    """
+    assert ctx[expanded] == expanded
+
+
+def test_get_item_from_expanded_fail(ctx):
+    """
+    Tests that context raises on unsupported expanded term input.
+    """
+    with pytest.raises(Exception) as e:
+        ctx["https://foo.bar/baz"]
+    if any(s in str(e.value) for s in ["cannot access local variable", "referenced before assignment"]):
+        pytest.fail("Unexpected exception raised not due to the expected cause.")
+
 
 
 @pytest.mark.parametrize(
