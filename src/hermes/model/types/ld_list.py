@@ -27,7 +27,7 @@ class ld_list(ld_container):
                 self.container = container
                 break
         else:
-            raise ValueError(f"Unexpected dict: {self.data}")
+            raise ValueError(f"Unexpected dict: {data}")
 
     def __getitem__(self, index):
         if isinstance(index, slice):
