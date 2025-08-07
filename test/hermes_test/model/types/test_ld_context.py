@@ -52,10 +52,18 @@ def test_get_item_from_default_vocabulary_pass(ctx, compacted):
             "hermes:semanticVersion",
             "https://schema.software-metadata.pub/hermes-content/1.0/semanticVersion",  # TODO: Change on #393 fix
         ),
+        (("schema", "Organization"), "http://schema.org/Organization"),
+        (
+            ("hermes", "semanticVersion"),
+            "https://schema.software-metadata.pub/hermes-content/1.0/semanticVersion",
+        ),  # TODO: Change on #393 fix
     ],
 )
-def test_get_prefixed_items(ctx, compacted, expanded):
-    """Context returns fully expanded terms for prefixed vocabularies in the context."""
+def test_get_item_from_prefixed_vocabulary_pass(ctx, compacted, expanded):
+    """
+    Context returns fully expanded terms for prefixed vocabularies in the context,
+    for all accepted parameter formats.
+    """
     item = ctx[compacted]
     assert item == expanded
 
