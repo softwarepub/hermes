@@ -155,6 +155,12 @@ def test_from_dict():
     assert di.active_ctx == {"mappings": {}} and di.context == di.full_context == []
     assert di.index is di.key is di.parent is None
 
+    di = ld_dict.from_dict({"http://xmlns.com/foaf/0.1/name": [{"@value": "foo"}],
+                            "http://xmlns.com/foaf/0.1/foo": [{"http://xmlns.com/foaf/0.1/barfoo": [{"@id": "foo"}],
+                                                               "http://xmlns.com/foaf/0.1/fooba": [{"@value": "ba"}]}]})
+    assert di.active_ctx == {"mappings": {}} and di.context == di.full_context == []
+    assert di.index is di.key is di.parent is None
+
     di = ld_dict.from_dict({"@type": "xmlns:hompage", "@id": "foo"}, ld_type="xmlns:webpage")
     assert di.data_dict == {"@type": ["xmlns:webpage", "xmlns:hompage"], "@id": "foo"}
     assert di.active_ctx == {"mappings": {}} and di.context == di.full_context == []
@@ -170,8 +176,16 @@ def test_from_dict():
                             "schema:name": "foo"},
                            parent=outer_di, key="schema:result")
     assert di.data_dict == {"@type": ["https://schema.org/Action"], "https://schema.org/name": [{"@value": "foo"}]}
-    assert di.full_context == [{"schema": "https://schema.org/"}, {"schema": "https://schema.org/"}]
-    assert di.context == {"schema": "https://schema.org/"} and di.index is None and di.key == "schema:result"
+    assert di.full_context == 2 * [{"schema": "https://schema.org/"}]
+    assert di.context == {"schema": "https://schema.org/"} and di.key == "schema:result" and di.index is None
+
+    outer_di = di
+    di = ld_dict.from_dict({"@context": {"schema": "https://schema.org/"}, "@type": "schema:Thing",
+                            "schema:name": "foo"},
+                           parent=outer_di, key="schema:error")
+    assert di.data_dict == {"@type": ["https://schema.org/Thing"], "https://schema.org/name": [{"@value": "foo"}]}
+    assert di.full_context == 3 * [{"schema": "https://schema.org/"}]
+    assert di.context == {"schema": "https://schema.org/"} and di.key == "schema:error" and di.index is None
 
 
 def test_is_ld_dict():
