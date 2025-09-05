@@ -37,7 +37,8 @@ def test_build_in_get():
 
 
 def test_build_in_set():
-    li = ld_list([{"@list": [{"@value": "foo"}, {"@value": "bar"}, {"@value": "foobar"}]}], key="https://schema.org/name", context={"schema": "https://schema.org/"})
+    li = ld_list([{"@list": [{"@value": "foo"}, {"@value": "bar"}, {"@value": "foobar"}]}],
+                 key="https://schema.org/name", context={"schema": "https://schema.org/"})
     li[0] = "bar"
     li[-1] = "barfoo"
     assert li.item_list[0] == {"@value": "bar"} and li.item_list[-1] == {"@value": "barfoo"}
