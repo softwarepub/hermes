@@ -33,7 +33,7 @@ class ld_list(ld_container):
         if isinstance(index, slice):
             return [self[i] for i in [*range(len(self))][index]]
 
-        item = self._to_python(self.key, self.item_list[index:index + 1])
+        item = self._to_python(self.key, temp if isinstance(temp := self.item_list[index], ld_container) else [temp])
         if isinstance(item, ld_container):
             item.index = index
         return item
