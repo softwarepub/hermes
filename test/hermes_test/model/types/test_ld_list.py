@@ -117,10 +117,11 @@ def test_is_container():
 def test_from_list():
     li = ld_list.from_list([])
     assert li.container == "@list" and li.item_list == li.context == [] and li.parent is li.key is li.index is None
-    li = ld_list.from_list([], parent=li, key="schema:name", context={"schema":"https://schema.org/"}, container="@set")
+    li = ld_list.from_list([], parent=li, key="schema:name", context={"schema": "https://schema.org/"},
+                           container="@set")
     assert li.container == "@set" and li.item_list == [] and li.parent is not None and li.key == "schema:name"
-    assert li.index is None and li.context == {"schema":"https://schema.org/"}
+    assert li.index is None and li.context == {"schema": "https://schema.org/"}
     li = ld_list.from_list(["a", {"@value": "b"}], parent=None, key="https://schema.org/name",
-                           context={"schema":"https://schema.org/"}, container="@graph")
+                           context={"schema": "https://schema.org/"}, container="@graph")
     assert li.container == "@graph" and li.item_list == [{"@value": "a"}, {"@value": "b"}] and li.parent is None
-    assert li.key == "https://schema.org/name" and li.index is None and li.context == {"schema":"https://schema.org/"}
+    assert li.key == "https://schema.org/name" and li.index is None and li.context == {"schema": "https://schema.org/"}

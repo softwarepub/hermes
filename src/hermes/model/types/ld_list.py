@@ -68,6 +68,24 @@ class ld_list(ld_container):
             self.append(item)
 
     def to_python(self):
+        # FIXME:
+        # why is item not converted to it's python equivalent?
+        #
+        # ld_list([{"@list": [{"@value": "a"}]}])[0]
+        #     == "a"
+        # ld_list([{"@list": [{"@value": "a"}]}]).to_python()[0]
+        #     == {"@value": "a"}                                                          why not "a"?
+        # ld_list([{"@list": [ld_dict([{"@type": "Person", "name": "a"}])]}])[0]
+        #     == ld_dict([{"@type": "Person", "name": "a"}])
+        # ld_list([{"@list": [ld_dict([{"@type": "Person", "name": "a"}])]}]).to_python()[0]
+        #     == {"@type": "Person", "name": "a"}
+        #
+        # ld_dict([{"name": [{"@value": "a"}]}])["name"] == "a"
+        # ld_dict([{"name": [{"@value": "a"}]}]).to_python()["name"] == "a"               why not {"@value": "a"}?
+        # ld_dict([{"person": [ld_dict([{"@type": "Person", "name": "a"}])]}])["person"]
+        #     == ld_dict([{"@type": "Person", "name": "a"}])
+        # ld_dict([{"person": [ld_dict([{"@type": "Person", "name": "a"}])]}]).to_python()["person"]
+        #     == {"@type": "Person", "name": "a"}
         return [
             item.to_python() if isinstance(item, ld_container) else item
             for item in self
