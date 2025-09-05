@@ -39,7 +39,15 @@ class ld_list(ld_container):
         return item
 
     def __setitem__(self, index, value):
-        self.item_list[index:index + 1] = self._to_expanded_json(self.key, value)
+        if not isinstance(index, slice):
+            self.item_list[index] = temp[0] if isinstance(temp := self._to_expanded_json(self.key, value), list) else temp
+            return
+        try:
+            iter(value)
+        except TypeError as exc:
+            raise TypeError("must assign iterable to extended slice")
+        expanded_value = [self._to_expanded_json(self.key, val) for val in value]
+        self.item_list[index] = [val[0] if isinstance(val, list) else val for val in expanded_value]
 
     def __len__(self):
         return len(self.item_list)
