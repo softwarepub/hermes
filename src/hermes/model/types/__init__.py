@@ -37,6 +37,25 @@ _TYPEMAP = [
     (ld_container.is_typed_json_value, dict(python=ld_container.typed_ld_to_py)),
     (ld_container.is_json_value, dict(python=lambda c, **_: c["@value"], expanded_json=lambda c, **_: [c])),
     (ld_list.is_container, dict(ld_container=lambda c, **kw: ld_list([c], **kw))),
+    # FIXME: add conversion from list and json dict to expanded_json
+    # to parse nested dicts and lists when using for example __setitem__(key, value) from ld_dict
+    # where value is converted to expanded_json bevor adding it to data_dict
+    # Suggested:
+    #(
+    #    ld_dict.is_json_dict,
+    #    {
+    #        "ld_container": ld_dict.from_dict,
+    #        "expanded_json": lambda c, **kw: kw["parent"]._to_expanded_json(kw["key"], ld_dict.from_dict(c, **kw))
+    #    }
+    #),
+    #
+    #(
+    #    lambda c: isinstance(c, list),
+    #    {
+    #        "ld_container": ld_list.from_list,
+    #        "expanded_json": lambda c, **kw: kw["parent"]._to_expanded_json(kw["key"], ld_list.from_list(c, **kw))
+    #    }
+    #),
     (ld_dict.is_json_dict, dict(ld_container=ld_dict.from_dict)),
 
     (lambda c: isinstance(c, list), dict(ld_container=ld_list.from_list)),
