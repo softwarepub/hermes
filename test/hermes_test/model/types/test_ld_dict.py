@@ -58,6 +58,17 @@ def test_build_in_set():
 
     di = ld_dict([{}], context={"schema": "https://schema.org/"})
     di["@type"] = "schema:Thing"
+    di["schema:result"] = {"@type": "schema:Action", "schema:name": "Test"}
+    assert di.data_dict == {
+        "@type": ["https://schema.org/Thing"],
+        "https://schema.org/result": [{
+            "@type": ["https://schema.org/Action"],
+            "https://schema.org/name": [{"@value": "Test"}]
+        }]
+    }
+
+    di = ld_dict([{}], context={"schema": "https://schema.org/"})
+    di["@type"] = "schema:Thing"
     di["schema:result"] = {"@type": "schema:Action", "schema:error": {"@type": "schema:Thing", "schema:name": "foo"}}
     assert di.data_dict == {
         "@type": ["https://schema.org/Thing"],
@@ -100,17 +111,14 @@ def test_build_in_contains():
     di = ld_dict([{"http://xmlns.com/foaf/0.1/name": [{"@value": "Manu Sporny"}],
                    "http://xmlns.com/foaf/0.1/homepage": [{"@id": "http://manu.sporny.org/"}]}],
                  context={"xmlns": "http://xmlns.com/foaf/0.1/"})
-    assert "http://xmlns.com/foaf/0.1/name" in di
-    assert "xmlns:homepage" in di
-    assert "xmlns:foo" not in di
-    assert "foo" not in di
+    assert "http://xmlns.com/foaf/0.1/name" in di and "xmlns:homepage" in di
+    assert "xmlns:foo" not in di and "homepage" not in di and "foo" not in di
 
 
 def test_get():
-    di = ld_dict([{"name": [{"@value": "Manu Sporny"}],
-                   "homepage": [{"@id": "http://manu.sporny.org/"}],
-                   "foo": [{"foobar": "bar", "barfoo": "foo"}]}])
-    assert di.get("name") == "Manu Sporny"
+    di = ld_dict([{"https://schema.org/name": [{"@value": "Manu Sporny"}]}], context={"schema": "https://schema.org/"})
+    assert di.get("https://schema.org/name") == "Manu Sporny"
+    assert di.get("schema:name") == "Manu Sporny"
     assert di.get("bar", None) is None
     with pytest.raises(KeyError):
         di.get("bar")
@@ -173,8 +181,7 @@ def test_ref():
     di.update({"@id": "http://xmlns.com/foaf/0.1/homepage", "xmlns:name": "homepage"})
     assert di.ref == {"@id": "http://xmlns.com/foaf/0.1/homepage"}
 
-    di = ld_dict([{}], context={"xmlns": "http://xmlns.com/foaf/0.1/"})
-    di.update({"http://xmlns.com/foaf/0.1/name": "foo"})
+    di = ld_dict([{"http://xmlns.com/foaf/0.1/name": "foo"}], context={"xmlns": "http://xmlns.com/foaf/0.1/"})
     with pytest.raises(KeyError):
         di.ref
 
@@ -225,6 +232,16 @@ def test_from_dict():
     assert di.data_dict == {"@type": ["https://schema.org/Thing"], "https://schema.org/name": [{"@value": "foo"}]}
     assert di.full_context == 3 * [{"schema": "https://schema.org/"}]
     assert di.context == {"schema": "https://schema.org/"} and di.key == "schema:error" and di.index is None
+
+    di = ld_dict.from_dict({"@type": "schema:Thing", "schema:name": "foo"}, parent=outer_di, key="schema:error")
+    assert di.data_dict == {"@type": ["https://schema.org/Thing"], "https://schema.org/name": [{"@value": "foo"}]}
+    assert di.full_context == 2 * [{"schema": "https://schema.org/"}]
+    assert di.context == [] and di.key == "schema:error" and di.index is None
+
+    di = ld_dict.from_dict({"@context": {"schema": "https://schema.org/"}, "@type": "schema:Thing", "xmlns:name": "fo"},
+                           context={"xmlns": "http://xmlns.com/foaf/0.1/"})
+    assert di["http://xmlns.com/foaf/0.1/name"] == di["xmlns:name"] == "fo"
+    assert di.context == {"schema": "https://schema.org/", "xmlns": "http://xmlns.com/foaf/0.1/"}
 
 
 def test_is_ld_dict():
