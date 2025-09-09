@@ -98,6 +98,9 @@ class ld_dict(ld_container):
 
     @classmethod
     def is_ld_dict(cls, ld_value):
+        # FIXME: maybe rename to is_expanded_ld_dict
+        # because this functions tests if ld_value could be an expanded json ld dict
+        # (is_ld_node returns False for every compacted json ld dictionary)
         return cls.is_ld_node(ld_value) and cls.is_json_dict(ld_value[0])
 
     @classmethod
