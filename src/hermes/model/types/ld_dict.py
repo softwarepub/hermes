@@ -13,6 +13,8 @@ class ld_dict(ld_container):
     _NO_DEFAULT = type("NO DEFAULT")
 
     def __init__(self, data, *, parent=None, key=None, index=None, context=None):
+        if not self.is_ld_dict(data):
+            raise ValueError("The given data does not represent a ld_dict.")
         super().__init__(data, parent=parent, key=key, index=index, context=context)
 
         self.data_dict = data[0]
