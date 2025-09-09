@@ -7,6 +7,7 @@
 import pytest
 
 from hermes.model.types.ld_dict import ld_dict
+from hermes.model.types.ld_list import ld_list
 
 
 def test_dict_basics():
@@ -17,10 +18,10 @@ def test_dict_basics():
 
 
 def test_malformed_input():
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         ld_dict([])
 
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         ld_dict([{"foo": "bar"}, {"bar": "foo"}])
 
 
@@ -50,6 +51,41 @@ def test_build_in_set():
     assert di.data_dict == {"http://xmlns.com/foaf/0.1/name": [{"@value": "Manu Sporny"}],
                             "http://xmlns.com/foaf/0.1/homepage": [{"@id": "http://manu.sporny.org/"}]}
 
+    di = ld_dict([{}], context={"xmlns": "http://xmlns.com/foaf/0.1/"})
+    di["xmlns:name"] = ["Manu Sporny", "foo"]
+    assert di.data_dict == {"http://xmlns.com/foaf/0.1/name": [{"@list": [{"@value": "Manu Sporny"},
+                                                                          {"@value": "foo"}]}]}
+
+    di = ld_dict([{}], context={"schema": "https://schema.org/"})
+    di["@type"] = "schema:Thing"
+    di["schema:result"] = {"@type": "schema:Action", "schema:error": {"@type": "schema:Thing", "schema:name": "foo"}}
+    assert di.data_dict == {
+        "@type": ["https://schema.org/Thing"],
+        "https://schema.org/result": [{
+            "@type": ["https://schema.org/Action"],
+            "https://schema.org/error": [{
+                "@type": ["https://schema.org/Thing"],
+                "https://schema.org/name": [{"@value": "foo"}]
+            }]
+        }]
+    }
+
+    di = ld_dict([{}], context={"schema": "https://schema.org/"})
+    di["@type"] = "schema:Thing"
+    di["schema:result"] = {"@type": "schema:Action", "schema:error": {"@type": "schema:Thing", "schema:name": ["foo",
+                                                                                                               "bar"]}}
+    assert di.data_dict == {
+        "@type": ["https://schema.org/Thing"],
+        "https://schema.org/result": [{
+            "@type": ["https://schema.org/Action"],
+            "https://schema.org/error": [{
+                "@type": ["https://schema.org/Thing"],
+                "https://schema.org/name": [{"@value": "foo"}, {"@value": "bar"}]
+            }]
+        }]
+    }
+    assert isinstance(di["schema:result"]["schema:error"]["schema:name"], ld_list)
+
 
 def test_build_in_delete():
     di = ld_dict([{"http://xmlns.com/foaf/0.1/name": [{"@value": "Manu Sporny"}],
@@ -66,6 +102,8 @@ def test_build_in_contains():
                  context={"xmlns": "http://xmlns.com/foaf/0.1/"})
     assert "http://xmlns.com/foaf/0.1/name" in di
     assert "xmlns:homepage" in di
+    assert "xmlns:foo" not in di
+    assert "foo" not in di
 
 
 def test_get():
@@ -123,11 +161,11 @@ def test_items():
     inner_di = ld_dict([{}], parent=di)
     inner_di.update({"xmlns:foobar": "bar", "http://xmlns.com/foaf/0.1/barfoo": {"@id": "foo"}})
     di.update({"http://xmlns.com/foaf/0.1/name": "foo", "xmlns:homepage": {"@id": "bar"}, "xmlns:foo": inner_di})
-    assert [*di.items()] == [
-        ("http://xmlns.com/foaf/0.1/name", "foo"), ("http://xmlns.com/foaf/0.1/homepage", "bar"),
-        ("http://xmlns.com/foaf/0.1/foo", {"http://xmlns.com/foaf/0.1/foobar": inner_di["xmlns:foobar"],
-                                           "http://xmlns.com/foaf/0.1/barfoo": inner_di["xmlns:barfoo"]})
-    ]
+    assert [*di.items()][0:2] == [("http://xmlns.com/foaf/0.1/name", "foo"),
+                                  ("http://xmlns.com/foaf/0.1/homepage", "bar")]
+    assert [*di.items()][2][0] == "http://xmlns.com/foaf/0.1/foo"
+    assert [*di.items()][2][1].data_dict == {"http://xmlns.com/foaf/0.1/foobar": [{"@value": "bar"}],
+                                             "http://xmlns.com/foaf/0.1/barfoo": [{"@id": "foo"}]}
 
 
 def test_ref():
@@ -137,7 +175,8 @@ def test_ref():
 
     di = ld_dict([{}], context={"xmlns": "http://xmlns.com/foaf/0.1/"})
     di.update({"http://xmlns.com/foaf/0.1/name": "foo"})
-    assert di.ref == di.data_dict  # or KeyError depends on interpretation of what should happen in this case
+    with pytest.raises(KeyError):
+        di.ref
 
 
 def test_to_python():
@@ -191,7 +230,6 @@ def test_from_dict():
 def test_is_ld_dict():
     assert not any(ld_dict.is_ld_dict(item) for item in [{}, {"foo": "bar"}, {"@id": "foo"}])
     assert not any(ld_dict.is_ld_dict(item) for item in [[{"@id": "foo"}], [{"@set": "foo"}], [{}, {}], [], [""]])
-    assert not ld_dict.is_ld_dict([{}])
     assert all(ld_dict.is_ld_dict([item]) for item in [{"@id": "foo", "foobar": "bar"}, {"foo": "bar"}])
 
 
