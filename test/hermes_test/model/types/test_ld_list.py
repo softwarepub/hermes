@@ -35,7 +35,7 @@ def test_build_in_get():
     assert li[:2] == ["foo", "bar"] and li[1:-1] == ["bar"]
     assert li[::2] == ["foo", "foobar"] and li[::-1] == ["foobar", "bar", "foo"]
 
-    li = ld_list([{"@list": [ld_dict([{"@type": "A", "schema:name": "a"}])]}])
+    li = ld_list([{"@list": [{"@type": "A", "schema:name": "a"}]}])
     assert isinstance(li[0], ld_dict) and li[0].data_dict == {"@type": "A", "schema:name": "a"} and li[0].index == 0
 
 
@@ -65,7 +65,7 @@ def test_build_in_len():
 
 
 def test_build_in_iter():
-    li = ld_list([{"@list": [{"@value": "foo"}, ld_dict([{"@type": "A", "schema:name": "a"}])]}],
+    li = ld_list([{"@list": [{"@value": "foo"}, {"@type": "A", "schema:name": "a"}]}],
                  key="https://schema.org/name", context={"schema": "https://schema.org/"})
     li = [val for val in li]
     assert li[0] == "foo" and li[1].data_dict == {"@type": "A", "schema:name": "a"} and li[1].index == 1
