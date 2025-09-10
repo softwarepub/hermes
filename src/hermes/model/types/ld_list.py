@@ -15,8 +15,11 @@ class ld_list(ld_container):
     def __init__(self, data, *, parent=None, key=None, index=None, context=None):
         """ Create a new ld_list.py container.
 
+        # FIXME: there is no parameter container
         :param container: The container type for this list.
         """
+        # FIXME: A set container does not contain "@set" in the expected data format (expanded json ld)
+        # Instead it is just a list of dicts and therefor would raise a ValueError here (and fail ld_list.is_ld_list)
 
         super().__init__(data, parent=parent, key=key, index=index, context=context)
 

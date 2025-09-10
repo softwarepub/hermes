@@ -13,12 +13,15 @@ from hermes.model.types.ld_dict import ld_dict
 
 def test_undefined_list():
     with pytest.raises(ValueError):
+        ld_list([{}])
+    with pytest.raises(ValueError):
         ld_list([{"spam": [{"@value": "bacon"}]}])
     with pytest.raises(ValueError):
         ld_list([{"@list": ["a", "b"], "@set": ["foo", "bar"]}])
+    with pytest.raises(ValueError):
+        ld_list([{"@list": ["a", "b"]}, {"@set": ["foo", "bar"]}])
 
 
-@pytest.mark.dev
 def test_list_basics():
     li = ld_list([{"@list": [0], "spam": [{"@value": "bacon"}]}])
     assert li._data == [{"@list": [0], "spam": [{"@value": "bacon"}]}]
