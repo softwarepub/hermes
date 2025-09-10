@@ -35,8 +35,10 @@ def test_build_in_get():
     assert li[:2] == ["foo", "bar"] and li[1:-1] == ["bar"]
     assert li[::2] == ["foo", "foobar"] and li[::-1] == ["foobar", "bar", "foo"]
 
-    li = ld_list([{"@list": [{"@type": "A", "schema:name": "a"}]}])
+    li = ld_list([{"@list": [{"@type": "A", "schema:name": "a"}, {"@list": [{"@type": "A", "schema:name": "a"}]}]}])
     assert isinstance(li[0], ld_dict) and li[0].data_dict == {"@type": "A", "schema:name": "a"} and li[0].index == 0
+    assert isinstance(li[1], ld_list) and li[1].item_list == [{"@type": "A", "schema:name": "a"}] and li[1].index == 1
+    assert li[1].key == li.key
 
 
 def test_build_in_set():
@@ -57,6 +59,14 @@ def test_build_in_set():
         li[::2] = "foo"
     with pytest.raises(TypeError):
         li[:2] = 1
+    li[0] = ld_dict([{"@type": "schema:Thing", "schema:name": "a"}], parent=li, key=li.key)
+    assert isinstance(li[0], ld_dict) and li[0].data_dict == {"@type": "schema:Thing", "schema:name": "a"}
+    li[0] = {"@type": "schema:Thing", "schema:name": "a"}
+    assert isinstance(li[0], ld_dict) and li[0].data_dict == {"@type": "schema:Thing", "schema:name": "a"}
+    li[0] = ld_list([{"@set": [{"@type": "schema:Thing", "schema:name": "a"}]}], parent=li, key=li.key)
+    assert isinstance(li[0], ld_list) and li[0].item_list == [{"@type": "schema:Thing", "schema:name": "a"}]
+    li[0] = {"@set": [{"@type": "schema:Thing", "schema:name": "a"}]}
+    assert isinstance(li[0], ld_list) and li[0].item_list == [{"@type": "schema:Thing", "schema:name": "a"}]
 
 
 def test_build_in_len():
@@ -65,10 +75,12 @@ def test_build_in_len():
 
 
 def test_build_in_iter():
-    li = ld_list([{"@list": [{"@value": "foo"}, {"@type": "A", "schema:name": "a"}]}],
+    li = ld_list([{"@list": [{"@value": "foo"}, {"@type": "A", "schema:name": "a"}, {"@list": [{"@value": "bar"}]}]}],
                  key="https://schema.org/name", context={"schema": "https://schema.org/"})
     li = [val for val in li]
     assert li[0] == "foo" and li[1].data_dict == {"@type": "A", "schema:name": "a"} and li[1].index == 1
+    assert isinstance(li[2], ld_list) and li[2].item_list == [{"@value": "bar"}] and li[2].index == 2
+    assert li[2].key == "https://schema.org/name"
 
 
 def test_append():
@@ -78,7 +90,13 @@ def test_append():
     li.append("bar")
     assert li[0:2] == ["foo", "bar"] and li.item_list[1] == {"@value": "bar"} and len(li) == 2
     li.append(ld_dict([{"@type": "A", "schema:name": "a"}]))
-    assert li[-1].data_dict == {"@type": "A", "schema:name": "a"} and len(li) == 3
+    assert li.item_list[2] == {"@type": "A", "schema:name": "a"} and len(li) == 3
+    li.append({"@type": "A", "schema:name": "a"})
+    assert li.item_list[2] == li.item_list[3]
+    li.append(ld_list([{"@list": [{"@type": "A", "schema:name": "a"}]}]))
+    li.append([{"@type": "A", "schema:name": "a"}])
+    li.append(2 * [{"@type": "A", "schema:name": "a"}])
+    assert 2 * li.item_list[4] == 2 * li.item_list[5] == li.item_list[6]
 
 
 def test_extend():

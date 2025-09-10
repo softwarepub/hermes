@@ -42,6 +42,18 @@ class ld_list(ld_container):
         return item
 
     def __setitem__(self, index, value):
+        # FIXME: what should your_ld_list[index] = [{"@type": "foo", "name": "bar"}] mean?
+        # set your_ld_list[index] to the dict {"@type": "foo", "name": "bar"} given in expanded form        or
+        # set your_ld_list[index] to the list [{"@type": "foo", "name": "bar"}] given in non expanded form  or
+        # set your_ld_list[index] to the set [{"@type": "foo", "name": "bar"}] given in expanded form
+        #   (ld_list.fromlist([{"@type": "foo", "name": "bar"}]) defaults to container type list
+        #    which would have the object as an expanded form whereas the expanded form of a list would be
+        #    ["@list": [{"@type": "foo", "name": "bar"}]]
+        #    This is relevent because nested sets get unnested when being expanded and lists not.
+        #    Moreover a set inside a list gets automaticaly converted to a list when expanded)
+
+        # FIXME: what happens when a ld_list is put inside another also depends on their container types
+
         if not isinstance(index, slice):
             self.item_list[index] = val[0] if isinstance(val := self._to_expanded_json(self.key, value), list) else val
             return
@@ -96,10 +108,12 @@ class ld_list(ld_container):
 
     @classmethod
     def is_ld_list(cls, ld_value):
+        # FIXME: every python list that contains at least one dict can be considerd a set in expanded json form
         return cls.is_ld_node(ld_value) and cls.is_container(ld_value[0])
 
     @classmethod
     def is_container(cls, value):
+        # FIXME: "@set" will never be inside a dictionary of an expanded json ld object
         return isinstance(value, dict) and any(ct in value for ct in cls.container_types)
 
     @classmethod
