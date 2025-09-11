@@ -16,7 +16,7 @@ from pydantic.alias_generators import to_camel
 from hermes.commands.init.util import slim_click
 from hermes.utils import hermes_doi, hermes_concept_doi, hermes_user_agent
 
-MARKETPLACE_URL = "https://hermes.software-metadata.pub/marketplace"
+MARKETPLACE_URL = "https://docs.software-metadata.pub/en/latest/plugins/marketplace.html"
 
 
 class SchemaOrgModel(BaseModel):
