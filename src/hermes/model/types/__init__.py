@@ -33,7 +33,7 @@ _TYPEMAP = [
     (ld_dict.is_ld_dict, dict(ld_container=ld_dict)),
 
     # Expand and access JSON data
-    (ld_container.is_json_id, dict(python=lambda c: c["@id"], expanded_json=lambda c, **_: [c])),
+    (ld_container.is_json_id, dict(python=lambda c, **_: c["@id"], expanded_json=lambda c, **_: [c])),
     (ld_container.is_typed_json_value, dict(python=ld_container.typed_ld_to_py)),
     (ld_container.is_json_value, dict(python=lambda c, **_: c["@value"], expanded_json=lambda c, **_: [c])),
     (ld_list.is_container, dict(ld_container=lambda c, **kw: ld_list([c], **kw))),
