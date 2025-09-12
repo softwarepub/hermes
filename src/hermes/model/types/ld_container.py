@@ -186,6 +186,7 @@ class ld_container:
 
     @classmethod
     def typed_ld_to_py(cls, data, **kwargs):
+        # FIXME: dates are not returned as datetime/ date/ time but as string
         ld_value = data[0]['@value']
 
         return ld_value
