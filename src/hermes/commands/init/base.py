@@ -214,7 +214,9 @@ class HermesInitCommand(HermesCommand):
             "deposit_extra_files": "",
             "deposit_parameter_token": "-O ???.auth_token",
             "deposit_token_name": "???_TOKEN",
-            "push_branch": "main",
+            "gh_push_branches_or_tags": "branches",
+            "gh_push_target": "main",
+            "gl_push_condition": "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
         }
         self.hermes_toml_data = {
             "harvest": {
@@ -286,7 +288,7 @@ class HermesInitCommand(HermesCommand):
             self.choose_setup_method()
 
             sc.next_step("Configure HERMES behaviour")
-            self.choose_push_branch()
+            self.choose_push_trigger()
             self.choose_deposit_files()
 
             sc.next_step("Create hermes.toml file")
@@ -707,10 +709,12 @@ class HermesInitCommand(HermesCommand):
         if deposit_plugin.startswith("invenio") or deposit_plugin.startswith("rodare"):
             # Invenio & rodare need access_right
             # For possible customization we ask the user here
-            target_access_right = sc.choose(
+            options = ["open", "closed", "restricted", "embargoed"]
+            target_access_right_index = sc.choose(
                 text="Select an access right for your publication",
-                options=["open", "closed", "restricted", "embargoed"]
+                options=options
             )
+            target_access_right = options[target_access_right_index]
             self.hermes_toml_data["deposit"][deposit_plugin]["access_right"] = target_access_right
             if target_access_right == "restricted":
                 conditions = sc.answer("Enter the access conditions of the restriction: ")
@@ -834,31 +838,59 @@ class HermesInitCommand(HermesCommand):
             sc.echo("\nHERMES is now initialized (without git integration or CI/CD files).\n",
                     formatting=sc.Formats.OKGREEN)
 
-    def choose_push_branch(self) -> None:
-        """User chooses the branch that should be used to activate the whole hermes process."""
+    def choose_push_trigger(self) -> None:
+        """User chooses the branch / tag that should be used to trigger the whole hermes pipeline."""
         push_choice = sc.choose(
             "When should the automated HERMES process start?",
             [
-                "When I push on custom branch",
+                "When I push on target branch",
                 f"When I push on current branch ({self.git_branch})",
-                "When I push a specific tag (not implemented)",
+                "When I push any tag",
+                "When I push a tag with target pattern"
             ]
         )
         if push_choice == 0:
             branch = sc.answer("Enter target branch: ")
-            self.ci_parameters["push_branch"] = branch
-            sc.echo(f"The HERMES pipeline will be activated when you push on {sc.Formats.BOLD.wrap_around(branch)}",
-                    formatting=sc.Formats.OKGREEN)
-            sc.echo()
+            self.set_push_trigger_to_branch(branch)
         elif push_choice == 1:
-            self.ci_parameters["push_branch"] = self.git_branch
-            bold_branch = sc.Formats.BOLD.wrap_around(self.git_branch)
-            sc.echo(f"The HERMES pipeline will be activated when you push on {bold_branch}",
-                    formatting=sc.Formats.OKGREEN)
-            sc.echo()
+            self.set_push_trigger_to_branch(self.git_branch)
         elif push_choice == 2:
-            sc.echo("Setting up triggering by tags is currently not implemented.", formatting=sc.Formats.WARNING)
-            sc.echo(f"You can visit {TUTORIAL_URL} to set it up manually later-on.", formatting=sc.Formats.WARNING)
+            self.set_push_trigger_to_tag()
+        elif push_choice == 3:
+            pattern_hint = ""
+            if self.git_hoster == GitHoster.GitHub:
+                pattern_hint = " (GitHub uses glob patterns)"
+            elif self.git_hoster == GitHoster.GitLab:
+                pattern_hint = " (Gitlab uses regex)"
+            pattern = sc.answer(f"Enter the target tag-pattern{pattern_hint}: ")
+            self.set_push_trigger_to_tag(pattern)
+
+    def set_push_trigger_to_branch(self, branch: str) -> None:
+        """Sets the CI parameters, so that the pipeline gets triggered when the branch gets pushed."""
+        self.ci_parameters["gh_push_branches_or_tags"] = "branches"
+        self.ci_parameters["gh_push_target"] = branch
+        self.ci_parameters["gl_push_condition"] = f"$CI_COMMIT_BRANCH == \"{branch}\""
+        bold_branch = sc.Formats.BOLD.wrap_around(branch)
+        sc.echo(f"The HERMES pipeline will be activated when you push on {bold_branch}.",
+                formatting=sc.Formats.OKGREEN)
+        sc.echo()
+
+    def set_push_trigger_to_tag(self, tag_pattern:str="") -> None:
+        """
+        Sets the CI parameters, so that the pipeline gets triggered when a tag that matches the pattern gets pushed.
+        """
+        self.ci_parameters["gh_push_branches_or_tags"] = "tags"
+        if tag_pattern:
+            self.ci_parameters["gh_push_target"] = f"\"{tag_pattern}\""
+            self.ci_parameters["gl_push_condition"] = f"$CI_COMMIT_TAG =~ {tag_pattern}"
+            bold_pattern = sc.Formats.BOLD.wrap_around(tag_pattern)
+            sc.echo(f"The HERMES pipeline will be activated when you push a tag that fits '{bold_pattern}'.",
+                    formatting=sc.Formats.OKGREEN)
+        else:
+            self.ci_parameters["gh_push_target"] = "\"*\""
+            self.ci_parameters["gl_push_condition"] = "$CI_COMMIT_TAG"
+            sc.echo(f"The HERMES pipeline will be activated when you push a tag.", formatting=sc.Formats.OKGREEN)
+        sc.echo()
 
     def choose_deposit_files(self) -> None:
         """User chooses the files that should be included in the deposition."""
