@@ -33,7 +33,7 @@ def test_init_with_data(metadata, full_context, request):
     assert metadata["funding"] == "foo"
 
 
-def test_init_full_object():
+def test_init_nested_object():
     my_software = {"foo:softwareName": "MySoftware", "foo:egg": "spam", "foo:ham": "eggs",
                    "maintainer": {"name": "Some Name", "email": "maintainer@example.com"},
                    "author": [{"name": "Foo"}, {"name": "Bar"}]}
@@ -42,3 +42,15 @@ def test_init_full_object():
     assert data["maintainer"]["name"] == "Some Name"
     for author in data["author"]:
         assert author["name"] in ["Foo", "Bar"]
+
+
+def test_append():
+    data = SoftwareMetadata(extra_vocabs={"foo": "https://foo.bar"})
+    author1 = {"name": "Foo"}
+    data["author"] = author1
+    author2 = {"name": "Bar"}
+    data["author"].append(author2)
+    assert len(data["author"]) == 2
+    assert data["author"][0]["name"] == "Foo"
+    assert data["author"][1]["name"] == "Bar"
+
