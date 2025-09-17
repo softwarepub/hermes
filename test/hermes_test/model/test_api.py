@@ -45,12 +45,29 @@ def test_init_nested_object():
 
 
 def test_append():
-    data = SoftwareMetadata(extra_vocabs={"foo": "https://foo.bar"})
+    data = SoftwareMetadata()
     author1 = {"name": "Foo"}
     data["author"] = author1
+    assert type(data["author"]) is list
     author2 = {"name": "Bar"}
     data["author"].append(author2)
     assert len(data["author"]) == 2
     assert data["author"][0]["name"] == "Foo"
     assert data["author"][1]["name"] == "Bar"
 
+
+def test_iterative_assignment():
+    # This tests iterative assignments/traversals to edit/appending values
+    # This requires SoftwareMetadata.__getitem__ to return a plain dict. SoftwareMetadata.__setitem__ can then
+    # implement the isinstanceof checks that @notactuallyfinn suggested.
+    data = SoftwareMetadata(extra_vocabs={"foo": "https://foo.bar"})
+    data["author"] = {"name": "Foo"}
+    # Look, a squirrel!
+    authors = data["author"]
+    assert type(authors) is list
+    author1 = authors[0]
+    author1["email"] = "author@example.com"
+    authors[0] = author1
+    assert len(authors) == 1
+    authors.append({"name": "Bar", "email": "author2@example.com"})
+    data["author"] = authors
