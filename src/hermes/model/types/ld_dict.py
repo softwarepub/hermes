@@ -89,7 +89,7 @@ class ld_dict(ld_container):
         if parent is None and data_context:
             ld_data["@context"] = data_context
         elif parent is not None:
-            full_context[:0] = [temp] if isinstance(temp := parent.full_context, dict) else temp
+            full_context[:0] = parent.full_context
 
         ld_value = cls.ld_proc.expand(ld_data, {"expandContext": full_context, "documentLoader": bundled_loader})
         ld_value = cls(ld_value, parent=parent, key=key, context=data_context)
