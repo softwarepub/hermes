@@ -81,6 +81,7 @@ class ld_container:
         return self._data
 
     def _to_python(self, full_iri, ld_value):
+        # FIXME: #434 dates are not returned as datetime/ date/ time but as string
         if full_iri == "@id":
             value = ld_value
         elif full_iri == "@type":
@@ -151,6 +152,7 @@ class ld_container:
             return []
 
         head, *tail = args
+        # FIXME: #435 Context is not merged
         if isinstance(head, list):
             return [*head, *cls.merge_to_list(*tail)]
         else:
@@ -186,7 +188,7 @@ class ld_container:
 
     @classmethod
     def typed_ld_to_py(cls, data, **kwargs):
-        # FIXME: dates are not returned as datetime/ date/ time but as string
+        # FIXME: #434 dates are not returned as datetime/ date/ time but as string
         ld_value = data[0]['@value']
 
         return ld_value
