@@ -1,6 +1,7 @@
 import pytest
 
 from hermes.model import SoftwareMetadata
+from hermes.model.types import ld_list, ld_dict
 
 from hermes.model.types.ld_context import ALL_CONTEXTS
 
@@ -10,6 +11,7 @@ EXTRA_VOCABS = {"foo": "https://bar.net/schema"}
 @pytest.fixture
 def default_context():
     return {"@context": ALL_CONTEXTS}
+
 
 @pytest.fixture
 def custom_context():
@@ -44,16 +46,22 @@ def test_init_nested_object():
         assert author["name"] in ["Foo", "Bar"]
 
 
-def test_append():
+def test_add():
     data = SoftwareMetadata()
-    author1 = {"name": "Foo"}
-    data["author"] = author1
-    assert type(data["author"]) is list
-    author2 = {"name": "Bar"}
-    data["author"].append(author2)
-    assert len(data["author"]) == 2
-    assert data["author"][0]["name"] == "Foo"
-    assert data["author"][1]["name"] == "Bar"
+    data.add("foo", "a")
+    assert data["foo"] == "a"
+    data.add("foo", "b")
+    assert type(data["foo"]) is ld_list and data["foo"].item_list == [{"@value": "a"}, {"@value": "b"}]
+    data.add("foo", "c")
+    assert data["foo"].item_list == [{"@value": "a"}, {"@value": "b"}, {"@value": "c"}]
+    data = SoftwareMetadata()
+    # FIXME: #433 will fix this
+    data.add("foo", {"bar": "foo"})
+    assert type(data["foo"]) is ld_dict and data["foo"].data_dict == {"bar": "foo"}
+    data.add("foo", {"bar": "foo"})
+    assert type(data["foo"]) is ld_list and data["foo"].item_list == 2 * [{"bar": "foo"}]
+    data.add("foo", {"bar": "foo"})
+    assert data["foo"].item_list == 3 * [{"bar": "foo"}]
 
 
 def test_iterative_assignment():
