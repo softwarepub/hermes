@@ -39,6 +39,16 @@ def test_build_in_get():
                  context=[{"xmlns": "http://xmlns.com/foaf/0.1/"}])
     assert di["xmlns:name"] == "Manu Sporny"
 
+    # FIXME: fixing #433 would fix this
+    # get -> list to python -> create empty list -> to fill dicts -> expand them -> no expansion method for dicts
+    di = ld_dict([{"http://xmlns.com/foaf/0.1/name": [{"@value": "foo"}],
+                   "http://xmlns.com/foaf/0.1/foo": [{"http://xmlns.com/foaf/0.1/barfoo": [{"@id": "foo"}],
+                                                      "http://xmlns.com/foaf/0.1/fooba": [{"@value": "ba"}]},
+                                                     {"http://xmlns.com/foaf/0.1/barfoo": [{"@id": "foo"}],
+                                                    "http://xmlns.com/foaf/0.1/fooba": [{"@value": "ba"}]}]}],
+                 context=[{"xmlns": "http://xmlns.com/foaf/0.1/"}])
+    assert isinstance(di["http://xmlns.com/foaf/0.1/foo"], ld_list)
+
 
 def test_build_in_set():
     di = ld_dict([{}], context=[{"xmlns": "http://xmlns.com/foaf/0.1/"}])
@@ -51,7 +61,7 @@ def test_build_in_set():
     assert di.data_dict == {"http://xmlns.com/foaf/0.1/name": [{"@value": "Manu Sporny"}],
                             "http://xmlns.com/foaf/0.1/homepage": [{"@id": "http://manu.sporny.org/"}]}
 
-    # FIXME: TypeError for nested ld_container or mind in api
+    # FIXME: #435 TypeError for nested ld_container or mind in api
     di = ld_dict([{}], context=[{"xmlns": "http://xmlns.com/foaf/0.1/"}])
     di2 = ld_list([{"@list": [{"@value": "Manu Sporny"}, {"@value": "foo"}]}], parent=di,
                   key="http://xmlns.com/foaf/0.1/name")
@@ -59,7 +69,7 @@ def test_build_in_set():
     di["xmlns:name"] = di2
     assert di.data_dict == {"http://xmlns.com/foaf/0.1/name": [{"@list": [{"@value": "Manu Sporny"},
                                                                           {"@value": "foo"}]}]}
-    # FIXME: context is not applied on value side
+    # FIXME: #435 context is not applied on value side
     di = ld_dict([{}], context=[{"schema": "https://schema.org/"}])
     di2 = ld_dict([{"@type": ["https://schema.org/Action"], "https://schema.org/name": [{"@value": "Test"}]}],
                   context=[{"schema": "https://schema.org/"}], parent=di, key="https://schema.org/result")
@@ -73,7 +83,7 @@ def test_build_in_set():
             "https://schema.org/name": [{"@value": "Test"}]
         }]
     }
-    # FIXME: nesting in defintion is very long but with intermediate steps you need to define with None
+    # FIXME: #435 nesting in defintion is very long but with intermediate steps you need to define with None
     di = ld_dict([{}], context=[{"schema": "https://schema.org/"}])
 
     di2 = ld_dict([{"@type": ["https://schema.org/Action"], "https://schema.org/error": None}],
