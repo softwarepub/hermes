@@ -40,10 +40,10 @@ def test_init_nested_object():
                    "maintainer": {"name": "Some Name", "email": "maintainer@example.com"},
                    "author": [{"name": "Foo"}, {"name": "Bar"}]}
     data = SoftwareMetadata(my_software, extra_vocabs={"foo": "https://foo.bar"})
-    assert data["foo:softwareName"] == "MySoftware"
-    assert data["maintainer"]["name"] == "Some Name"
+    assert data["foo:softwareName"] == ["MySoftware"]
+    assert data["maintainer"]["name"] == ["Some Name"]
     for author in data["author"]:
-        assert author["name"] in ["Foo", "Bar"]
+        assert author["name"] in [["Foo"], ["Bar"]]
 
 
 def test_add():
@@ -72,10 +72,10 @@ def test_iterative_assignment():
     data["author"] = {"name": "Foo"}
     # Look, a squirrel!
     authors = data["author"]
-    assert type(authors) is list
+    assert isinstance(authors, list)
     author1 = authors[0]
     author1["email"] = "author@example.com"
     authors[0] = author1
-    assert len(authors) == 1
     authors.append({"name": "Bar", "email": "author2@example.com"})
     data["author"] = authors
+    assert len(authors) == 2
