@@ -81,11 +81,7 @@ def test_iterative_assignment():
     assert len(authors) == 2
 
 
-### Application scenarios
-
-## Harvesting
-
-def test_harvest():
+def test_usage():
     data = SoftwareMetadata()
     data["author"] = {"name": "Foo"}
     data["author"].append({"name": "Bar"})
@@ -114,3 +110,11 @@ def test_harvest():
     assert baz["affiliation"] == ["Lab E"]
     assert baz["schema:knowsAbout"] is None
     assert baz["email"] is None
+    assert data["@type"] == "SoftwareSourceCode"
+    assert data["@context"] == ALL_CONTEXTS
+    for author in data["author"]:
+        assert "name" in author
+        assert "email" in author
+        if "schema:knowsAbout" not in author:
+            author["schema:knowsAbout"] = None
+        author["schema:pronouns"] = "they/them"
