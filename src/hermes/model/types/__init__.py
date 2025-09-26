@@ -38,6 +38,22 @@ _TYPEMAP = [
     # Convert internal data types to expanded_json
     (lambda c: ld_container.is_json_id(c) or ld_container.is_json_value(c), dict(expanded_json=lambda c, **_: [c])),
     (ld_dict.is_json_dict, dict(expanded_json=lambda c, **kw: ld_dict.from_dict(c, **kw).ld_value)),
+    (ld_dict.is_ld_dict, dict(expanded_json=lambda c, **kw: ld_dict.from_dict(c[0], **kw).ld_value)),
+    (
+        ld_list.is_container,
+        dict(
+            expanded_json=lambda c, **kw: ld_list.from_list(
+                ld_list([c]).item_list, container=ld_list([c]).container, **kw
+            ).ld_value
+        ),
+    ),
+    (
+        ld_list.is_ld_list,
+        dict(
+            expanded_json=lambda c, **kw: ld_list.from_list(
+                ld_list(c).item_list, container=ld_list(c).container, **kw
+            ).ld_value
+        ),    ),
     (lambda c: isinstance(c, list), dict(expanded_json=lambda c, **kw: ld_list.from_list(c, **kw).ld_value)),
     (lambda v: isinstance(v, (int, float, str, bool)), dict(expanded_json=lambda v, **_: [{"@value": v}])),
     (
