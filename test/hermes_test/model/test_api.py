@@ -32,40 +32,42 @@ def test_init_no_data(metadata, full_context, request):
 ])
 def test_init_with_data(metadata, full_context, request):
     assert metadata.full_context == request.getfixturevalue(full_context)["@context"]
-    assert metadata["funding"] == "foo"
+    assert metadata["funding"][0] == "foo"
 
 
 def test_init_nested_object():
     my_software = {
-        "foo:softwareName": "MySoftware",
+        "schema:softwareName": "MySoftware",
         "foo:egg": "spam",
         "foo:ham": "eggs",
         "maintainer": {"name": "Some Name", "email": "maintainer@example.com"},
         "author": [{"name": "Foo"}, {"name": "Bar"}],
     }
     data = SoftwareMetadata(my_software, extra_vocabs={"foo": "https://foo.bar"})
-    assert data["foo:softwareName"] == ["MySoftware"]
-    assert data["maintainer"]["name"] == ["Some Name"]
+    assert data["schema:softwareName"][0] == "MySoftware"
+    assert data["maintainer"][0]["name"][0] == "Some Name"
     for author in data["author"]:
-        assert author["name"] in [["Foo"], ["Bar"]]
+        for name in author["name"]:
+            assert name in ["Foo", "Bar"]
 
 
-def test_add():
+def test_append():
     data = SoftwareMetadata()
-    data.add("foo", "a")
-    assert data["foo"] == "a"
-    data.add("foo", "b")
+    data["foo"].append("a")
+    assert type(data["foo"]) is ld_list and data["foo"][0] == "a" and data["foo"].item_list == [{"@value": "a"}]
+    data["foo"].append("b")
     assert type(data["foo"]) is ld_list and data["foo"].item_list == [{"@value": "a"}, {"@value": "b"}]
-    data.add("foo", "c")
+    data["foo"].append("c")
     assert data["foo"].item_list == [{"@value": "a"}, {"@value": "b"}, {"@value": "c"}]
     data = SoftwareMetadata()
     # FIXME: #433 will fix this
-    data.add("foo", {"bar": "foo"})
-    assert type(data["foo"]) is ld_dict and data["foo"].data_dict == {"bar": "foo"}
-    data.add("foo", {"bar": "foo"})
-    assert type(data["foo"]) is ld_list and data["foo"].item_list == 2 * [{"bar": "foo"}]
-    data.add("foo", {"bar": "foo"})
-    assert data["foo"].item_list == 3 * [{"bar": "foo"}]
+    data["foo"].append({"schema:name": "foo"})
+    assert type(data["foo"]) is ld_list and type(data["foo"][0]) is ld_dict
+    assert data["foo"][0].data_dict == {"http://schema.org/name": [{"@value": "foo"}]}
+    data["foo"].append({"schema:name": "foo"})
+    assert type(data["foo"]) is ld_list and data["foo"].item_list == 2*[{"http://schema.org/name": [{"@value": "foo"}]}]
+    data["foo"].append({"schema:name": "foo"})
+    assert data["foo"].item_list == 3 * [{"http://schema.org/name": [{"@value": "foo"}]}]
 
 
 def test_iterative_assignment():
@@ -76,7 +78,7 @@ def test_iterative_assignment():
     data["author"] = {"name": "Foo"}
     # Look, a squirrel!
     authors = data["author"]
-    assert isinstance(authors, list)
+    assert isinstance(authors, ld_list)
     author1 = authors[0]
     author1["email"] = "author@example.com"
     authors[0] = author1
@@ -92,36 +94,41 @@ def test_usage():
     data["author"][0]["email"] = "foo@bar.net"
     data["author"][0]["email"].append("foo@baz.com")
     assert len(data["author"]) == 2
-    assert len(data["author"][1]["email"]) == 2
-    assert len(data["author"][0]["email"]) == 0
+    assert len(data["author"][0]["email"]) == 2
+    assert len(data["author"][1]["email"]) == 0
     harvest = {
         "authors": [
-            {"name": "Foo", "affiliations": ["Uni A", "Lab B"], "kw": ["a", "b", "c"]},
-            {"name": "Bar", "affiliations": ["Uni C"], "email": "bar@c.edu"},
-            {"name": "Baz", "affiliations": ["Lab E"]},
+            {"name": "Foo", "affiliation": ["Uni A", "Lab B"], "kw": ["a", "b", "c"]},
+            {"name": "Bar", "affiliation": ["Uni C"], "email": "bar@c.edu"},
+            {"name": "Baz", "affiliation": ["Lab E"]},
         ]
     }
     for author in harvest["authors"]:
         for exist_author in data["author"]:
-            if author["name"] == exist_author["name"]:
-                exist_author["affiliation"] = author["affiliations"]
-                exist_author["email"].append(author["email"])
-                exist_author["schema:knowsAbout"].append(kw for kw in author["kw"])
+            if author["name"] == exist_author["name"][0]:
+                exist_author["affiliation"] = author["affiliation"]
+                if "email" in author:
+                    exist_author["email"].append(author["email"])
+                if "kw" in author:
+                    exist_author["schema:knowsAbout"].extend(author["kw"])
+                break
+        else:
+            data["author"].append(author)
     assert len(data["author"]) == 3
     foo, bar, baz = data["author"]
-    assert foo["name"] == "Foo"
-    assert foo["affiliation"] == ["Uni A", "Lab B"]
-    assert foo["schema:knowsAbout"] == ["a", "b", "c"]
-    assert foo["email"] == ["foo@bar.net", "foo@baz.com"]
-    assert bar["name"] == "Bar"
-    assert bar["affiliation"] == ["Uni C"]
-    assert bar["email"] == ["bar@c.edu"]
-    assert baz["name"] == "Baz"
-    assert baz["affiliation"] == ["Lab E"]
-    assert baz["schema:knowsAbout"] is None
-    assert baz["email"] is None
+    assert foo["name"][0] == "Foo"
+    assert foo["affiliation"].to_python() == ["Uni A", "Lab B"]
+    assert foo["schema:knowsAbout"].to_python() == ["a", "b", "c"]
+    assert foo["email"].to_python() == ["foo@bar.net", "foo@baz.com"]
+    assert bar["name"][0] == "Bar"
+    assert bar["affiliation"].to_python() == ["Uni C"]
+    assert bar["email"].to_python() == ["bar@c.edu"]
+    assert baz["name"][0] == "Baz"
+    assert baz["affiliation"].to_python() == ["Lab E"]
+    assert len(baz["schema:knowsAbout"]) == 0
+    assert len(baz["email"]) == 0
     assert data["@type"] == "SoftwareSourceCode"
-    assert data["@context"] == ALL_CONTEXTS
+    assert data["@context"] == ALL_CONTEXTS # FIXME: #435 will solve this issue
     for author in data["author"]:
         assert "name" in author
         assert "email" in author
