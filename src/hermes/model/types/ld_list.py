@@ -36,7 +36,7 @@ class ld_list(ld_container):
         if isinstance(index, slice):
             return [self[i] for i in [*range(len(self))][index]]
 
-        item = self._to_python(self.key, [self.item_list[index]])
+        item = self._to_python(self.key, self.item_list[index])
         if isinstance(item, ld_container):
             item.index = index
         return item
@@ -69,7 +69,7 @@ class ld_list(ld_container):
 
     def __iter__(self):
         for index, value in enumerate(self.item_list):
-            item = self._to_python(self.key, [value])
+            item = self._to_python(self.key, value)
             if isinstance(item, ld_container):
                 item.index = index
             yield item
@@ -96,7 +96,10 @@ class ld_list(ld_container):
     @classmethod
     def is_container(cls, value):
         # FIXME: "@set" will never be inside a dictionary of an expanded json ld object
-        return isinstance(value, dict) and any(ct in value for ct in cls.container_types)
+        return (
+            isinstance(value, dict)
+            and len([1 for ct in cls.container_types if isinstance(value.get(ct, None), list)]) == 1
+        )
 
     @classmethod
     def from_list(cls, value, *, parent=None, key=None, context=None, container=None):

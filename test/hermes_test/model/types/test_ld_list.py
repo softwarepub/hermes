@@ -30,9 +30,9 @@ def test_list_basics():
 
 
 def test_build_in_get():
-    li = ld_list([{"@list": [{"@value": "foo"}, {"@value": "bar"}, {"@value": "foobar"}]}])
+    li = ld_list([{"@list": [{"@value": "foo"}, {"@value": "bar"}, {"@value": "foobar"}]}], key="name")
     assert li[0] == "foo" and li[-1] == "foobar"
-    assert li[:2] == ["foo", "bar"] and li[1:-1] == ["bar"]
+    assert li[:2] == ["foo", "bar"] and li[1:-1] == ["bar"]  # FIXME: maybe ld_list instead?
     assert li[::2] == ["foo", "foobar"] and li[::-1] == ["foobar", "bar", "foo"]
 
     li = ld_list([{"@list": [{"@type": "A", "schema:name": "a"}, {"@list": [{"@type": "A", "schema:name": "a"}]}]}])
@@ -43,7 +43,7 @@ def test_build_in_get():
 
 def test_build_in_set():
     li = ld_list([{"@list": [{"@value": "foo"}, {"@value": "bar"}, {"@value": "foobar"}]}],
-                 key="https://schema.org/name", context={"schema": "https://schema.org/"})
+                 key="https://schema.org/name", context=[{"schema": "https://schema.org/"}])
     li[0] = "bar"
     li[-1] = "barfoo"
     assert li.item_list[0] == {"@value": "bar"} and li.item_list[-1] == {"@value": "barfoo"}
@@ -59,14 +59,19 @@ def test_build_in_set():
         li[::2] = "foo"
     with pytest.raises(TypeError):
         li[:2] = 1
-    li[0] = ld_dict([{"@type": "schema:Thing", "schema:name": "a"}], parent=li, key=li.key)
-    assert isinstance(li[0], ld_dict) and li[0].data_dict == {"@type": "schema:Thing", "schema:name": "a"}
-    li[0] = {"@type": "schema:Thing", "schema:name": "a"}
-    assert isinstance(li[0], ld_dict) and li[0].data_dict == {"@type": "schema:Thing", "schema:name": "a"}
-    li[0] = ld_list([{"@set": [{"@type": "schema:Thing", "schema:name": "a"}]}], parent=li, key=li.key)
-    assert isinstance(li[0], ld_list) and li[0].item_list == [{"@type": "schema:Thing", "schema:name": "a"}]
-    li[0] = {"@set": [{"@type": "schema:Thing", "schema:name": "a"}]}
-    assert isinstance(li[0], ld_list) and li[0].item_list == [{"@type": "schema:Thing", "schema:name": "a"}]
+    li[0] = ld_dict([{"@type": ["https://schema.org/Thing"], "https://schema.org/name": [{"@value": "a"}]}], parent=li,
+                    key=li.key)
+    assert isinstance(li[0], ld_dict)
+    assert li[0].data_dict == {"@type": ["https://schema.org/Thing"], "https://schema.org/name": [{"@value": "a"}]}
+    li[0] = {"@type": "schema:Thing", "schema:name": "b"}
+    assert isinstance(li[0], ld_dict)
+    assert li[0].data_dict == {"@type": ["https://schema.org/Thing"], "https://schema.org/name": [{"@value": "b"}]}
+    li[0] = ld_list.from_list([{"@type": "schema:Thing", "schema:name": "a"}], parent=li, key=li.key, container="@set")
+    assert isinstance(li[0], ld_list)
+    assert li[0].item_list == [{"@type": ["https://schema.org/Thing"], "https://schema.org/name": [{"@value": "a"}]}]
+    li[0] = {"@set": [{"@type": "schema:Thing", "schema:name": "b"}]}
+    assert isinstance(li[0], ld_list)
+    assert li[0].item_list == [{"@type": ["https://schema.org/Thing"], "https://schema.org/name": [{"@value": "b"}]}]
 
 
 def test_build_in_len():
@@ -75,51 +80,54 @@ def test_build_in_len():
 
 
 def test_build_in_iter():
-    li = ld_list([{"@list": [{"@value": "foo"}, {"@type": "A", "schema:name": "a"}, {"@list": [{"@value": "bar"}]}]}],
-                 key="https://schema.org/name", context={"schema": "https://schema.org/"})
+    li = ld_list([{"@list": [{"@value": "foo"}, {"@type": ["A"], "https://schema.org/name": [{"@value": "a"}]},
+                             {"@list": [{"@value": "bar"}]}]}], key="https://schema.org/name",
+                 context=[{"schema": "https://schema.org/"}])
     li = [val for val in li]
-    assert li[0] == "foo" and li[1].data_dict == {"@type": "A", "schema:name": "a"} and li[1].index == 1
+    assert li[0] == "foo"
+    assert li[1].data_dict == {"@type": ["A"], "https://schema.org/name": [{"@value": "a"}]} and li[1].index == 1
     assert isinstance(li[2], ld_list) and li[2].item_list == [{"@value": "bar"}] and li[2].index == 2
     assert li[2].key == "https://schema.org/name"
 
 
 def test_append():
-    li = ld_list([{"@list": []}], key="https://schema.org/name", context={"schema": "https://schema.org/"})
+    li = ld_list([{"@list": []}], key="https://schema.org/name", context=[{"schema": "https://schema.org/"}])
     li.append("foo")
     assert li[0] == "foo" and li.item_list[0] == {"@value": "foo"} and len(li) == 1
     li.append("bar")
     assert li[0:2] == ["foo", "bar"] and li.item_list[1] == {"@value": "bar"} and len(li) == 2
-    li.append(ld_dict([{"@type": "A", "schema:name": "a"}]))
-    assert li.item_list[2] == {"@type": "A", "schema:name": "a"} and len(li) == 3
+    li.append(ld_dict.from_dict({"@type": "A", "schema:name": "a"}, parent=li, key=li.key))
+    assert li.item_list[2] == {"@type": ["A"], "https://schema.org/name": [{"@value": "a"}]} and len(li) == 3
     li.append({"@type": "A", "schema:name": "a"})
     assert li.item_list[2] == li.item_list[3]
-    li.append(ld_list([{"@list": [{"@type": "A", "schema:name": "a"}]}]))
-    li.append([{"@type": "A", "schema:name": "a"}])
+    li.append(ld_list([{"@list": [{"@type": ["A"], "https://schema.org/name": [{"@value": "a"}]}]}], parent=li,
+                      key=li.key))
+    li.append([{"@type": "A", "schema:name": "a"}])  # FIXME: should that be interpreted as a list or expanded dict?
     li.append(2 * [{"@type": "A", "schema:name": "a"}])
-    assert 2 * li.item_list[4] == 2 * li.item_list[5] == li.item_list[6]
+    assert 2 * li[4].item_list == 2 * [li[5].data_dict] == li[6].item_list
 
 
 def test_extend():
-    li = ld_list([{"@list": []}], key="https://schema.org/name", context={"schema": "https://schema.org/"})
+    li = ld_list([{"@list": []}], key="https://schema.org/name", context=[{"schema": "https://schema.org/"}])
     li.extend([])
     assert len(li) == 0
     li.extend(["foo"])
     assert li[0] == "foo" and li.item_list[0] == {"@value": "foo"} and len(li) == 1
     li.extend(["bar"])
     assert li[0:2] == ["foo", "bar"] and li.item_list[1] == {"@value": "bar"} and len(li) == 2
-    li.extend([ld_dict([{"@type": "A", "schema:name": "a"}])])
-    assert li[-1].data_dict == {"@type": "A", "schema:name": "a"} and len(li) == 3
+    li.extend([ld_dict([{"@type": ["A"], "https://schema.org/name": [{"@value": "a"}]}])])
+    assert li[-1].data_dict == {"@type": ["A"], "https://schema.org/name": [{"@value": "a"}]} and len(li) == 3
 
-    li = ld_list([{"@list": []}], key="https://schema.org/name", context={"schema": "https://schema.org/"})
-    li.extend(["foo", "bar", ld_dict([{"@type": "A", "schema:name": "a"}])])
+    li = ld_list([{"@list": []}], key="https://schema.org/name", context=[{"schema": "https://schema.org/"}])
+    li.extend(["foo", "bar", ld_dict([{"@type": ["A"], "https://schema.org/name": [{"@value": "a"}]}])])
     assert li[0:2] == ["foo", "bar"] and li.item_list[0:2] == [{"@value": "foo"}, {"@value": "bar"}]
-    assert li[-1].data_dict == {"@type": "A", "schema:name": "a"} and len(li) == 3
+    assert li[-1].data_dict == {"@type": ["A"], "https://schema.org/name": [{"@value": "a"}]} and len(li) == 3
 
-    li = ld_list([{"@list": []}], key="https://schema.org/name", context={"schema": "https://schema.org/"})
+    li = ld_list([{"@list": []}], key="https://schema.org/name", context=[{"schema": "https://schema.org/"}])
     li.append("foo")
-    li.extend(["bar", ld_dict([{"@type": "A", "schema:name": "a"}])])
+    li.extend(["bar", ld_dict([{"@type": ["A"], "https://schema.org/name": [{"@value": "a"}]}])])
     assert li[0:2] == ["foo", "bar"] and li.item_list[0:2] == [{"@value": "foo"}, {"@value": "bar"}]
-    assert li[-1].data_dict == {"@type": "A", "schema:name": "a"} and len(li) == 3
+    assert li[-1].data_dict == {"@type": ["A"], "https://schema.org/name": [{"@value": "a"}]} and len(li) == 3
 
 
 def test_is_ld_list():
@@ -138,11 +146,12 @@ def test_is_container():
 def test_from_list():
     li = ld_list.from_list([])
     assert li.container == "@list" and li.item_list == li.context == [] and li.parent is li.key is li.index is None
-    li = ld_list.from_list([], parent=li, key="schema:name", context={"schema": "https://schema.org/"},
+    li = ld_list.from_list([], parent=li, key="schema:name", context=[{"schema": "https://schema.org/"}],
                            container="@set")
     assert li.container == "@set" and li.item_list == [] and li.parent is not None and li.key == "schema:name"
-    assert li.index is None and li.context == {"schema": "https://schema.org/"}
+    assert li.index is None and li.context == [{"schema": "https://schema.org/"}]
     li = ld_list.from_list(["a", {"@value": "b"}], parent=None, key="https://schema.org/name",
-                           context={"schema": "https://schema.org/"}, container="@graph")
+                           context=[{"schema": "https://schema.org/"}], container="@graph")
     assert li.container == "@graph" and li.item_list == [{"@value": "a"}, {"@value": "b"}] and li.parent is None
-    assert li.key == "https://schema.org/name" and li.index is None and li.context == {"schema": "https://schema.org/"}
+    assert li.key == "https://schema.org/name" and li.index is None
+    assert li.context == [{"schema": "https://schema.org/"}]
