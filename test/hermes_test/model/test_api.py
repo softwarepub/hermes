@@ -79,3 +79,38 @@ def test_iterative_assignment():
     authors.append({"name": "Bar", "email": "author2@example.com"})
     data["author"] = authors
     assert len(authors) == 2
+
+
+### Application scenarios
+
+## Harvesting
+
+def test_harvest():
+    data = SoftwareMetadata()
+    data["author"] = {"name": "Foo"}
+    data["author"].append({"name": "Bar"})
+    data["author"][0]["email"] = "foo@bar.net"
+    data["author"][0]["email"].append("foo@baz.com")
+    assert len(data["author"]) == 2
+    assert len(data["author"][1]["email"]) == 2
+    assert len(data["author"][0]["email"]) == 0
+    harvest = {"authors": [{"name": "Foo", "affiliations": ["Uni A", "Lab B"], "kw": ["a", "b", "c"]}, {"name": "Bar", "affiliations": ["Uni C"], "email": "bar@c.edu"}, {"name": "Baz", "affiliations": ["Lab E"]}]}
+    for author in harvest["authors"]:
+        for exist_author in data["author"]:
+            if author["name"] == exist_author["name"]:
+                exist_author["affiliation"] = author["affiliations"]
+                exist_author["email"].append(author["email"])
+                exist_author["schema:knowsAbout"].append(kw for kw in author["kw"])
+    assert len(data["author"]) == 3
+    foo, bar, baz = data["author"]
+    assert foo["name"] == "Foo"
+    assert foo["affiliation"] == ["Uni A", "Lab B"]
+    assert foo["schema:knowsAbout"] == ["a", "b", "c"]
+    assert foo["email"] == ["foo@bar.net", "foo@baz.com"]
+    assert bar["name"] == "Bar"
+    assert bar["affiliation"] == ["Uni C"]
+    assert bar["email"] == ["bar@c.edu"]
+    assert baz["name"] == "Baz"
+    assert baz["affiliation"] == ["Lab E"]
+    assert baz["schema:knowsAbout"] is None
+    assert baz["email"] is None
