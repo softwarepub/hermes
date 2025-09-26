@@ -36,9 +36,13 @@ def test_init_with_data(metadata, full_context, request):
 
 
 def test_init_nested_object():
-    my_software = {"foo:softwareName": "MySoftware", "foo:egg": "spam", "foo:ham": "eggs",
-                   "maintainer": {"name": "Some Name", "email": "maintainer@example.com"},
-                   "author": [{"name": "Foo"}, {"name": "Bar"}]}
+    my_software = {
+        "foo:softwareName": "MySoftware",
+        "foo:egg": "spam",
+        "foo:ham": "eggs",
+        "maintainer": {"name": "Some Name", "email": "maintainer@example.com"},
+        "author": [{"name": "Foo"}, {"name": "Bar"}],
+    }
     data = SoftwareMetadata(my_software, extra_vocabs={"foo": "https://foo.bar"})
     assert data["foo:softwareName"] == ["MySoftware"]
     assert data["maintainer"]["name"] == ["Some Name"]
@@ -90,7 +94,13 @@ def test_usage():
     assert len(data["author"]) == 2
     assert len(data["author"][1]["email"]) == 2
     assert len(data["author"][0]["email"]) == 0
-    harvest = {"authors": [{"name": "Foo", "affiliations": ["Uni A", "Lab B"], "kw": ["a", "b", "c"]}, {"name": "Bar", "affiliations": ["Uni C"], "email": "bar@c.edu"}, {"name": "Baz", "affiliations": ["Lab E"]}]}
+    harvest = {
+        "authors": [
+            {"name": "Foo", "affiliations": ["Uni A", "Lab B"], "kw": ["a", "b", "c"]},
+            {"name": "Bar", "affiliations": ["Uni C"], "email": "bar@c.edu"},
+            {"name": "Baz", "affiliations": ["Lab E"]},
+        ]
+    }
     for author in harvest["authors"]:
         for exist_author in data["author"]:
             if author["name"] == exist_author["name"]:
