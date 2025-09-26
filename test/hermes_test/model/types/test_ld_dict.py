@@ -28,7 +28,8 @@ def test_malformed_input():
 def test_build_in_get():
     di = ld_dict([{"http://schema.org/name": [{"@value": "Manu Sporny"}],
                    "http://schema.org/homepage": [{"@id": "http://manu.sporny.org/"}],
-                   "http://schema.org/foo": [{"http://schema.org/foobar": "bar", "http://schema.org/barfoo": "foo"}]}],
+                   "http://schema.org/foo": [{"http://schema.org/foobar": [{"@value": "bar"}],
+                                              "http://schema.org/barfoo": [{"@value": "foo"}]}]}],
                  context=[{"schema": "http://schema.org/"}])
     assert isinstance(di["schema:name"], ld_list) and di["schema:name"].item_list == [{"@value": "Manu Sporny"}]
     assert isinstance(di["schema:homepage"], ld_list)
@@ -36,8 +37,7 @@ def test_build_in_get():
     assert isinstance(di["http://schema.org/foo"], ld_list) and isinstance(di["http://schema.org/foo"][0], ld_dict)
     assert di["http://schema.org/foo"][0].data_dict == {"http://schema.org/foobar": [{"@value": "bar"}],
                                                         "http://schema.org/barfoo": [{"@value": "foo"}]}
-    with pytest.raises(KeyError):
-        di["bar"]
+    assert isinstance(di["bar"], ld_list) and len(di["bar"]) == 0
 
     di = ld_dict([{"http://xmlns.com/foaf/0.1/name": [{"@value": "Manu Sporny"}]}],
                  context={"xmlns": "http://xmlns.com/foaf/0.1/"})
@@ -124,8 +124,7 @@ def test_get():
     assert di.get("https://schema.org/name").item_list == [{"@value": "Manu Sporny"}]
     assert di.get("schema:name").item_list == [{"@value": "Manu Sporny"}]
     assert di.get("bar", None) is None
-    with pytest.raises(KeyError):
-        di.get("bar")
+    assert isinstance(di["bar"], ld_list) and len(di["bar"]) == 0
 
 
 def test_update():

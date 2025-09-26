@@ -21,7 +21,11 @@ class ld_dict(ld_container):
 
     def __getitem__(self, key):
         full_iri = self.ld_proc.expand_iri(self.active_ctx, key)
-        ld_value = self.data_dict[full_iri]
+        try:
+            ld_value = self.data_dict[full_iri]
+        except KeyError:
+            self.data_dict.update({full_iri: [{"@list": []}]})
+            ld_value = self.data_dict[full_iri]
         return self._to_python(full_iri, ld_value)
 
     def __setitem__(self, key, value):
@@ -35,16 +39,12 @@ class ld_dict(ld_container):
 
     def __contains__(self, key):
         full_iri = self.ld_proc.expand_iri(self.active_ctx, key)
-        return full_iri in self.data_dict
+        return len(self[full_iri]) != 0
 
     def get(self, key, default=_NO_DEFAULT):
-        try:
-            value = self[key]
-            return value
-        except KeyError as e:
-            if default is not ld_dict._NO_DEFAULT:
-                return default
-            raise e
+        if key not in self and default is not ld_dict._NO_DEFAULT:
+            return default
+        return self[key]
 
     def update(self, other):
         for key, value in other.items():
