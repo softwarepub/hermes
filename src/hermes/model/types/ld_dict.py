@@ -85,22 +85,20 @@ class ld_dict(ld_container):
             ld_data["@type"] = ld_type
 
         data_context = ld_data.pop('@context', [])
-        full_context = ld_container.merge_to_list(context or [], data_context)
-        if parent is None and data_context:
-            ld_data["@context"] = data_context
+        merged_contexts = ld_container.merge_to_list(data_context, context or [])
+        full_context = []
+        if parent is None and merged_contexts:
+            ld_data["@context"] = merged_contexts
         elif parent is not None:
-            full_context[:0] = parent.full_context
+            full_context = parent.full_context + merged_contexts
 
         ld_value = cls.ld_proc.expand(ld_data, {"expandContext": full_context, "documentLoader": bundled_loader})
-        ld_value = cls(ld_value, parent=parent, key=key, context=data_context)
+        ld_value = cls(ld_value, parent=parent, key=key, context=merged_contexts)
 
         return ld_value
 
     @classmethod
     def is_ld_dict(cls, ld_value):
-        # FIXME: #435 maybe rename to is_expanded_ld_dict
-        # because this functions tests if ld_value could be an expanded json ld dict
-        # (is_ld_node returns False for every compacted json ld dictionary)
         return cls.is_ld_node(ld_value) and cls.is_json_dict(ld_value[0])
 
     @classmethod

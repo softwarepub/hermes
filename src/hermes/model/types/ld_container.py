@@ -152,7 +152,6 @@ class ld_container:
             return []
 
         head, *tail = args
-        # FIXME: #435 Context is not merged
         if isinstance(head, list):
             return [*head, *cls.merge_to_list(*tail)]
         else:
