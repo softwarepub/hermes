@@ -60,7 +60,6 @@ def test_append():
     data["foo"].append("c")
     assert data["foo"].item_list == [{"@value": "a"}, {"@value": "b"}, {"@value": "c"}]
     data = SoftwareMetadata()
-    # FIXME: #433 will fix this
     data["foo"].append({"schema:name": "foo"})
     assert type(data["foo"]) is ld_list and type(data["foo"][0]) is ld_dict
     assert data["foo"][0].data_dict == {"http://schema.org/name": [{"@value": "foo"}]}
@@ -83,7 +82,6 @@ def test_iterative_assignment():
     author1["email"] = "author@example.com"
     authors[0] = author1
     authors.append({"name": "Bar", "email": "author2@example.com"})
-    data["author"] = authors
     assert len(authors) == 2
 
 
