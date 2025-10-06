@@ -107,6 +107,31 @@ def test_append():
     assert 2 * li[4].item_list == 2 * [li[5].data_dict] == li[6].item_list
 
 
+def test_build_in_contains():
+    li = ld_list([{"@list": []}], key="https://schema.org/name", context=[{"schema": "https://schema.org/"}])
+    li.append("foo")
+    li.append({"@type": "A", "schema:name": "a"})
+    assert "foo" in li and {"@type": "A", "schema:name": "a"} in li
+    assert {"@value": "foo"} in li and {"@type": "A", "https://schema.org/name": "a"} in li
+
+
+def test_build_in_comparison():
+    li = ld_list([{"@list": []}], key="https://schema.org/name", context=[{"schema": "https://schema.org/"}])
+    li2 = ld_list([{"@set": []}], key="https://schema.org/name", context=[{"schema": "https://schema.org/"}])
+    li3 = ld_list([{"@list": []}], key="https://schema.org/name", context=[{"schema2": "https://schema.org/"}])
+    assert li == [] and li2 == [] and [] == li and [] == li2
+    assert li != li2 and li == li3
+    li.append("foo")
+    li.append({"@type": "A", "schema:name": "a"})
+    assert li != li3 and ["foo", {"@type": "A", "schema:name": "a"}] == li and ["foo"] != li3
+    assert ["foo", {"@type": "A", "https://schema.org/name": "a"}] == li
+    li3.extend(["foo", {"@type": "A", "schema2:name": "a"}])
+    assert li == li3
+    li4 = ld_list([{"@list": []}], key="https://schema.org/name", context=[{"schema": "https://schema.org/"}])
+    li4.extend([{"@type": "A", "schema:name": "a"}, "foo"])
+    assert li != li4
+
+
 def test_extend():
     li = ld_list([{"@list": []}], key="https://schema.org/name", context=[{"schema": "https://schema.org/"}])
     li.extend([])
