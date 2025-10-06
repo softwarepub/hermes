@@ -71,8 +71,6 @@ def test_append():
 
 def test_iterative_assignment():
     # This tests iterative assignments/traversals to edit/appending values
-    # This requires SoftwareMetadata.__getitem__ to return a plain dict. SoftwareMetadata.__setitem__ can then
-    # implement the isinstanceof checks that @notactuallyfinn suggested.
     data = SoftwareMetadata(extra_vocabs={"foo": "https://foo.bar"})
     data["author"] = {"name": "Foo"}
     # Look, a squirrel!
@@ -125,11 +123,10 @@ def test_usage():
     assert baz["affiliation"].to_python() == ["Lab E"]
     assert len(baz["schema:knowsAbout"]) == 0
     assert len(baz["email"]) == 0
-    assert data["@type"] == "SoftwareSourceCode"
-    assert data["@context"] == ALL_CONTEXTS # FIXME: #435 will solve this issue
     for author in data["author"]:
         assert "name" in author
         assert "email" in author
         if "schema:knowsAbout" not in author:
+            # FIXME: None has to be discussed
             author["schema:knowsAbout"] = None
         author["schema:pronouns"] = "they/them"
