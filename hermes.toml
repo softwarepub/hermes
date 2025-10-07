@@ -5,6 +5,9 @@
 [harvest]
 sources = [ "cff", "toml" ] # ordered priority (first one is most important)
 
+[curate]
+method = "accept"
+
 [deposit]
 target = "invenio_rdm"
 
@@ -18,4 +21,3 @@ record_id = 13221384
 depositions = "api/deposit/depositions"
 licenses = "api/vocabularies/licenses"
 communities = "api/communities"
-

@@ -58,6 +58,9 @@ hermes-marketplace = "hermes.commands.marketplace:main"
 cff = "hermes.commands.harvest.cff:CffHarvestPlugin"
 codemeta = "hermes.commands.harvest.codemeta:CodeMetaHarvestPlugin"
 
+[project.entry-points."hermes.curate"]
+accept = "hermes.commands.curate.accept:AcceptCuratePlugin"
+
 [project.entry-points."hermes.deposit"]
 file = "hermes.commands.deposit.file:FileDepositPlugin"
 invenio = "hermes.commands.deposit.invenio:InvenioDepositPlugin"
