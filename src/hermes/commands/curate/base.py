@@ -25,11 +25,23 @@ class _CurateSettings(BaseModel):
 
 
 class BaseCuratePlugin(HermesPlugin):
+    """Base class for curation plugins.
+
+    Objects of this class are callables.
+    """
+
     def __init__(self, command, ctx):
         self.command = command
         self.ctx = ctx
 
     def __call__(self, command: HermesCommand) -> None:
+        """Entry point of the callable.
+
+        This method runs the main logic of the plugin. It calls the other methods of the
+        object in the correct order. Depending on the result of ``get_decision`` the
+        corresponding ``process_decision_*()`` method is called, based on the curation
+        decision.
+        """
         self.prepare()
         self.validate()
         self.create_report()
@@ -39,21 +51,51 @@ class BaseCuratePlugin(HermesPlugin):
             self.process_decision_negative()
 
     def prepare(self):
+        """Prepare the plugin.
+
+        This method may be used to perform preparatory tasks such as configuration
+        checks, token permission checks, loading of resources, etc.
+        """
         pass
 
     def validate(self):
+        """Validate the metadata.
+
+        This method performs the validation of the metadata from the data model.
+        """
         pass
 
     def create_report(self):
+        """Create a curation report.
+
+        This method is responsible for creating any number of reports about the curation
+        process. These reports may be machine-readable, human-readable, or both.
+        """
         pass
 
     def get_decision(self) -> bool:
+        """Return the publication decision made through the curation process.
+
+        If publication is allowed, this method must return ``True``. By default,
+        ``False`` is returned.
+        """
         return False
 
     def process_decision_positive(self):
+        """Process a positive curation decision.
+
+        This method is called if a positive publication decision was made in the
+        curation process.
+        """
         pass
 
     def process_decision_negative(self):
+        """Process a negative curation decision.
+
+        This method is called if a negative publication decision was made in the
+        curation process. By default, a ``RuntimeError`` is raised, halting the
+        execution.
+        """
         raise RuntimeError("Curation declined further processing")
 
 
