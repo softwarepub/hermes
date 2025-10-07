@@ -13,7 +13,19 @@ from hermes.model.context import CodeMetaContext
 
 
 class AcceptCuratePlugin(BaseCuratePlugin):
-    def __call__(self, command):
+    """Accept plugin for the curation step.
+
+    This plugin creates a positive curation result, i.e. it accepts the produced
+    metadata as correct and lets the execution continue without human intervention. It
+    also copies the metadata produced in the process step to the "curate" directory.
+    """
+
+    def get_decision(self):
+        """Simulate positive curation result."""
+        return True
+
+    def process_decision_positive(self):
+        """In case of positive curation result, copy files to next step."""
         ctx = CodeMetaContext()
         process_output = ctx.hermes_dir / "process" / (ctx.hermes_name + ".json")
 

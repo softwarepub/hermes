@@ -20,6 +20,7 @@ from hermes.model.path import ContextPath
 class _CurateSettings(BaseModel):
     """Generic curation settings."""
 
+    #: Parameter by which the plugin is selected. By default, the accept plugin is used.
     method: str = "accept"
 
 
@@ -29,7 +30,31 @@ class BaseCuratePlugin(HermesPlugin):
         self.ctx = ctx
 
     def __call__(self, command: HermesCommand) -> None:
+        self.prepare()
+        self.validate()
+        self.create_report()
+        if self.get_decision():
+            self.process_decision_positive()
+        else:
+            self.process_decision_negative()
+
+    def prepare(self):
         pass
+
+    def validate(self):
+        pass
+
+    def create_report(self):
+        pass
+
+    def get_decision(self) -> bool:
+        return False
+
+    def process_decision_positive(self):
+        pass
+
+    def process_decision_negative(self):
+        raise RuntimeError("Curation declined further processing")
 
 
 class HermesCurateCommand(HermesCommand):
