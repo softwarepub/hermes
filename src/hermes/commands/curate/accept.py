@@ -9,7 +9,6 @@ import os
 import shutil
 
 from hermes.commands.curate.base import BaseCuratePlugin
-from hermes.model.context import CodeMetaContext
 
 
 class AcceptCuratePlugin(BaseCuratePlugin):
@@ -26,10 +25,12 @@ class AcceptCuratePlugin(BaseCuratePlugin):
 
     def process_decision_positive(self):
         """In case of positive curation result, copy files to next step."""
-        ctx = CodeMetaContext()
-        process_output = ctx.hermes_dir / "process" / (ctx.hermes_name + ".json")
+        process_output = (
+            self.ctx.hermes_dir / "process" / (self.ctx.hermes_name + ".json")
+        )
 
-        os.makedirs(ctx.hermes_dir / "curate", exist_ok=True)
+        os.makedirs(self.ctx.hermes_dir / "curate", exist_ok=True)
         shutil.copy(
-            process_output, ctx.hermes_dir / "curate" / (ctx.hermes_name + ".json")
+            process_output,
+            self.ctx.hermes_dir / "curate" / (self.ctx.hermes_name + ".json"),
         )
