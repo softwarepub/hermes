@@ -48,7 +48,7 @@ automatic submission to publication repositories.
 
 Hermes is built to be extensible for your needs.
 The list of available plugins for the different steps in the Hermes workflow can be found 
-[here](https://hermes.software-metadata.pub/marketplace).
+[here](./plugins/marketplace.md).
 
 ## Documentation
 
