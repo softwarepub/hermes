@@ -9,6 +9,7 @@ SPDX-FileContributor: Oliver Bertuch
 SPDX-FileContributor: Stephan Druskat
 SPDX-FileContributor: Michael Meinel
 SPDX-FileContributor: David Pape
+SPDX-FileContributor: Michael Fritzsche
 -->
 
 ![](_static/img/header.png)
@@ -45,15 +46,9 @@ automatic submission to publication repositories.
 
 ## Plugins
 
-```{plugin-markup} plugins.json plugins-schema.json
-```
-
 Hermes is built to be extensible for your needs.
-This is a list of available plugins for the different steps in the Hermes workflow:
-
-```{datatemplate:json} plugins.json
-:template: plugins.md
-```
+The list of available plugins for the different steps in the Hermes workflow can be found 
+[here](./plugins/marketplace.md).
 
 ## Documentation
 
@@ -68,6 +63,12 @@ This is a list of available plugins for the different steps in the Hermes workfl
 :maxdepth: 1
 :caption: Tutorials
 tutorials/*
+```
+
+```{toctree}
+:maxdepth: 1
+:caption: Plugins Marketplace
+plugins/marketplace
 ```
 
 ```{toctree}
