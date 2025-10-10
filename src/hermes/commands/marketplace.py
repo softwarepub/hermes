@@ -16,7 +16,9 @@ from pydantic.alias_generators import to_camel
 from hermes.commands.init.util import slim_click
 from hermes.utils import hermes_doi, hermes_concept_doi, hermes_user_agent
 
-MARKETPLACE_URL = "https://docs.software-metadata.pub/en/latest/plugins/marketplace.html"
+# This URL must not be changed (to not break the command for older hermes versions)!
+# If the marketplace site changes. The redirect on Read The Docs has to be changed instead.
+MARKETPLACE_URL = "https://hermes.software-metadata.pub/marketplace"
 
 
 class SchemaOrgModel(BaseModel):
