@@ -165,7 +165,7 @@ To fill the plugin with code, you can check our [hermes-plugin-git](https://gith
 There is the code to check the local git history and extract contributors of the given branch.
 
 Now that you have created your own plugin consider publishing it to the 
-[HERMES Marketplace](https://docs.software-metadata.pub/en/latest/plugins/marketplace.html) so that others can use it as
+[HERMES Marketplace](https://hermes.software-metadata.pub/marketplace) so that others can use it as
 well and the HERMES project gets more versatile.
 
 If you have any questions, wishes or requests, feel free to contact us.
