@@ -47,7 +47,7 @@ class ld_container:
             else:
                 self.active_ctx = parent.active_ctx
         else:
-            self.active_ctx = self.ld_proc.inital_ctx(
+            self.active_ctx = self.ld_proc.initial_ctx(
                 self.full_context,
                 {"documentLoader": bundled_loader}
             )
@@ -83,7 +83,7 @@ class ld_container:
     def _to_python(self, full_iri, ld_value):
         # FIXME: #434 dates are not returned as datetime/ date/ time but as string
         if full_iri == "@id":
-            value = ld_value
+            value = self.ld_proc.compact_iri(self.active_ctx, ld_value, vocab=False)
         elif full_iri == "@type":
             value = [
                 self.ld_proc.compact_iri(self.active_ctx, ld_type)
@@ -101,7 +101,7 @@ class ld_container:
 
     def _to_expanded_json(self, key, value):
         if key == "@id":
-            ld_value = self.ld_proc.expand_iri(self.active_ctx, value)
+            ld_value = self.ld_proc.expand_iri(self.active_ctx, value, vocab=False)
         elif key == "@type":
             if not isinstance(value, list):
                 value = [value]
