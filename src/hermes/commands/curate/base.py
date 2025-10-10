@@ -100,7 +100,7 @@ class BaseCuratePlugin(HermesPlugin):
 
 
 class HermesCurateCommand(HermesCommand):
-    """Curate the unified metadata before deposition."""
+    """Curate the processed metadata before deposition."""
 
     command_name = "curate"
     settings_class = _CurateSettings
