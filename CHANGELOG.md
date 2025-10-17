@@ -22,6 +22,14 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
 - Broken HERMES DOI in marketplace plugin metadata (#326)
 - hermes init fails with cryptic error message in non-git directory (#308)
 - Make --initial deposits work on Rodare (#348)
+- Fix GitHub link in docs (#319)
+- `hermes init` cancellation should remove created files (#328)
+- `pyproject.toml` compliance with PEP 621 (#347)
+- Improve marketplace visibility (#426)
+
+### Changed
+
+- Update poetry to more recent version. (#347)
 
 ## [0.9.0] - 2025-02-26
 
