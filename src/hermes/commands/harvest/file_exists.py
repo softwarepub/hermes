@@ -28,18 +28,21 @@ class URL:
 
 @dataclass
 class TextObject:
+    content_size: str
     encoding_format: str
     url: URL
 
     @classmethod
     def from_path(cls, path: Path) -> Self:
+        size = str(path.stat().st_size)  # string!
         type_, _encoding = guess_type(path)
         url = URL.from_path(path)
-        return cls(encoding_format=type_, url=url)
+        return cls(content_size=size, encoding_format=type_, url=url)
 
     def as_codemeta(self) -> dict:
         return {
             "@type": "schema:TextObject",
+            "schema:contentSize": self.content_size,
             "schema:encodingFormat": self.encoding_format,
             "schema:url": self.url.as_codemeta(),
         }
