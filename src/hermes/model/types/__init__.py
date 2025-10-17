@@ -21,14 +21,14 @@ _TYPEMAP = [
             "ld_container": lambda c, **_: c,
             "json": lambda c, **_: c.compact(),
             "expanded_json": lambda c, **_: c.ld_value,
-        },
+        }
     ),
 
     # Wrap item from ld_dict in ld_list
     (ld_list.is_ld_list, dict(ld_container=ld_list)),
     (
-     lambda c: isinstance(c, list) and all(isinstance(item, dict) for item in c),
-     dict(ld_container=lambda c, **kw: ld_list([{"@list": c}], **kw))
+        lambda c: isinstance(c, list) and all(isinstance(item, dict) for item in c),
+        dict(ld_container=lambda c, **kw: ld_list([{"@list": c}], **kw))
     ),
 
     # pythonize items from lists (expanded set is already handled above)
@@ -44,33 +44,25 @@ _TYPEMAP = [
     (ld_dict.is_ld_dict, dict(expanded_json=lambda c, **kw: ld_dict.from_dict(c[0], **kw).ld_value)),
     (
         ld_list.is_container,
-        dict(
-            expanded_json=lambda c, **kw: ld_list.from_list(
-                ld_list([c]).item_list, container=ld_list([c]).container, **kw
-            ).ld_value
-        ),
+        dict(expanded_json=lambda c, **kw: ld_list.from_list(ld_list.get_item_list_from_container(c), **kw).ld_value)
     ),
     (
         ld_list.is_ld_list,
-        dict(
-            expanded_json=lambda c, **kw: ld_list.from_list(
-                ld_list(c).item_list, container=ld_list(c).container, **kw
-            ).ld_value
-        ),
+        dict(expanded_json=lambda c, **kw: ld_list.from_list(ld_list.get_item_list_from_container(c[0]), **kw).ld_value)
     ),
     (lambda c: isinstance(c, list), dict(expanded_json=lambda c, **kw: ld_list.from_list(c, **kw).ld_value)),
     (lambda v: isinstance(v, (int, float, str, bool)), dict(expanded_json=lambda v, **_: [{"@value": v}])),
     (
         lambda v: isinstance(v, datetime),
-        dict(expanded_json=lambda v, **_: [{"@value": v.isoformat(), "@type": iri_map["schema:DateTime"]}]),
+        dict(expanded_json=lambda v, **_: [{"@value": v.isoformat(), "@type": iri_map["schema:DateTime"]}])
     ),
     (
         lambda v: isinstance(v, date),
-        dict(expanded_json=lambda v, **_: [{"@value": v.isoformat(), "@type": iri_map["schema:Date"]}]),
+        dict(expanded_json=lambda v, **_: [{"@value": v.isoformat(), "@type": iri_map["schema:Date"]}])
     ),
     (
         lambda v: isinstance(v, time),
-        dict(expanded_json=lambda v, **_: [{"@value": v.isoformat(), "@type": iri_map["schema:Time"]}]),
+        dict(expanded_json=lambda v, **_: [{"@value": v.isoformat(), "@type": iri_map["schema:Time"]}])
     ),
 ]
 
