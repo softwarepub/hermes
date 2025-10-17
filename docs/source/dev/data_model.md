@@ -126,7 +126,11 @@ i.e., metadata that describes software:
 ```{code-block} python
 :caption: Setting data values
 data["name"] = "My Research Software"  # A simple "Text"-type value
+# → Simplified model representation : { "name": [ "My Research Software" ] }
+# Cf. "Accessing data" below
 data["author"] = {"name": "Foo"}  # An object value that uses terms available in the defined context
+# → Simplified model representation : { "name": [ "My Research Software" ], "author": [ { "name": "Foo" } ] }
+# Cf. "Accessing data" below
 ```
 
 ##### Accessing data
