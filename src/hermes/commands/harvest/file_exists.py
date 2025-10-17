@@ -5,7 +5,8 @@
 from dataclasses import dataclass
 from mimetypes import guess_type
 from pathlib import Path
-from typing import List, Self
+from typing import List
+from typing_extensions import Self
 
 from hermes.commands.harvest.base import HermesHarvestCommand, HermesHarvestPlugin
 
