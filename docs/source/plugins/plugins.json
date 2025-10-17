@@ -16,6 +16,14 @@
         "builtin": true
     },
     {
+        "name": "'file_exists' Harvester",
+        "description": "Harvest plugin that figures out whether certain frequently used files (README, LICENSE, ...) exist.",
+        "author": "Hermes team",
+        "steps": ["harvest"],
+        "harvested_files": ["  ???  "],
+        "builtin": true
+    },
+    {
         "name": "hermes-plugin-git",
         "description": "Harvest plugin for Git repository metadata.",
         "author": "Hermes team",

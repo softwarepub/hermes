@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: CC0-1.0
 
 [harvest]
-sources = [ "cff", "toml" ] # ordered priority (first one is most important)
+sources = [ "cff", "toml", "file_exists" ] # ordered priority (first one is most important)
 
 [deposit]
 target = "invenio_rdm"
