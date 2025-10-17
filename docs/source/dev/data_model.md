@@ -22,12 +22,16 @@ The cache is purely for internal purposes, its data should not be interacted wit
 Depending on whether you develop a plugin for `hermes`, or you develop `hermes` itself, you need to know either [_some_](#json-ld-for-plugin-developers),
 or _quite a few_ things about JSON-LD.
 
+The following sections provide documentation of the data model.
+They aim to help you get started with `hermes` plugin and core development,
+even if you have no previous experience with JSON-LD.
+
 ## The data model for plugin developers
 
 If you develop a plugin for `hermes`, you will only need to work with a single Python class and the public API 
 it provides: {class}`hermes.model.SoftwareMetadata`.
 
-Nevertheless, it is still necessary that you know _some_ things about JSON-LD.
+To work with this class, it is necessary that you know _some_ things about JSON-LD.
 
 ### JSON-LD for plugin developers
 
@@ -39,10 +43,10 @@ Work in progress.
 ### Working with the `hermes` data model in plugins 
 
 > **Goal**  
-> Understand how plugins access and interact with the `hermes` data model.
+> Understand how plugins access the `hermes` data model and interact with it.
 
 `hermes` aims to hide as much of the data model as possible behind a public API
-to avoid that plugin developers have to deal with the complexities and intricacies of JSON-LD.
+to avoid that plugin developers have to deal with some of the more complex features of JSON-LD.
 
 #### Model instances in different types of plugin
 
@@ -152,11 +156,11 @@ data["name"] = "My Research Software"  # → [ "My Research Software" ]
 data["author"] = {"name": "Foo"}       # → [ { "name": [ "Foo" ] } ]
 ```
 
-The fact that you will always be returned a list-like object has consequences for accessing and creating data:
+Therefore, you access data in the same way you would access data from a Python `list`:
 
-1. You need to access single values using indices, e.g., `data["name"][0]`.
-2. You can use list-like API to interact with data objects, e.g.,
-`data["name"].append("Bar")`, `data["name"].extend(["Bar", "Baz"])`.
+1. You access single values using indices, e.g., `data["name"][0]`.
+2. You can use a list-like API to interact with data objects, e.g.,
+`data["name"].append("Bar")`, `data["name"].extend(["Bar", "Baz"])`, `for name in data["name"]: ...`, etc.
 
 ##### Interacting with data
 
@@ -166,6 +170,7 @@ The following longer example shows different ways that you can interact with `So
 :caption: Building the data model
 from hermes.model import SoftwareMetadata
 
+# Create the model object with the default context
 data = SoftwareMetadata()
 
 # Let's create author metadata for our software!
@@ -306,4 +311,4 @@ except AssertionError:
 
 ## See Also
 
-- Reference: {class}`hermes.model.SoftwareMetadata` API
+- API reference: {class}`hermes.model.SoftwareMetadata`
