@@ -3,7 +3,7 @@ SPDX-FileCopyrightText: 2025 German Aerospace Center (DLR), Forschungszentrum JÃ
 
 SPDX-License-Identifier: CC-BY-SA-4.0
 -->
-# Record provenance of metadata
+# Standardized provenance recording
 
 * Status: proposed
 * Deciders: sdruskat, skernchen, notactuallyfinn
