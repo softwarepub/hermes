@@ -10,7 +10,7 @@ SPDX-License-Identifier: CC-BY-SA-4.0
 * Date: 2025-10-17
 
 Technical story: 
-* __insert link to PR__ 
+* https://github.com/softwarepub/hermes/pull/442
 * https://github.com/softwarepub/hermes/issues/363
 
 ## Context and Problem Statement
