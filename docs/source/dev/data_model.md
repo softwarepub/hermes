@@ -19,8 +19,7 @@ subdirectories of the `.hermes/` directory that is created in the root of the pr
 
 The cache is purely for internal purposes, its data should not be interacted with.
 
-As JSON-LD can be confusing to work with directly, the following sections provide documentation of the data model.
-Depending on whether you develop a plugin for `hermes`, or you develop `hermes` itself, you need to know either _some_,
+Depending on whether you develop a plugin for `hermes`, or you develop `hermes` itself, you need to know either [_some_](#json-ld-for-plugin-developers),
 or _quite a few_ things about JSON-LD.
 
 ## The data model for plugin developers
