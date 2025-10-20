@@ -156,6 +156,7 @@ def test_extend():
     assert li[0:2] == ["foo", "bar"] and li.item_list[0:2] == [{"@value": "foo"}, {"@value": "bar"}]
     assert li[-1].data_dict == {"@type": ["A"], "https://schema.org/name": [{"@value": "a"}]} and len(li) == 3
 
+
 def test_to_python():
     li = ld_list([{"@list": []}], key="https://schema.org/name", context=[{"schema": "https://schema.org/"}])
     li.append("foo")
@@ -163,7 +164,7 @@ def test_to_python():
     li.append(["a"])
     assert li[1]["@type"].item_list == ["A"]
     assert li.to_python() == ["foo", {"@type": ["A"], "schema:name": ["a"]}, ["a"]]
-    
+
 
 def test_is_ld_list():
     assert not any(ld_list.is_ld_list(item) for item in [1, "", [], {}, {"@list": []}, [{}], [{"a": "b"}]])
