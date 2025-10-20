@@ -83,13 +83,6 @@ class ld_container:
     def _to_python(self, full_iri, ld_value):
         if full_iri == "@id":
             value = self.ld_proc.compact_iri(self.active_ctx, ld_value, vocab=False)
-        elif full_iri == "@type":
-            value = [
-                self.ld_proc.compact_iri(self.active_ctx, ld_type)
-                for ld_type in ld_value
-            ]
-            if len(value) == 1:
-                value = value[0]
         else:
             value, ld_output = self.ld_proc.apply_typemap(ld_value, "python", "ld_container",
                                                           parent=self, key=full_iri)

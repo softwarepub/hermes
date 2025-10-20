@@ -26,10 +26,7 @@ _TYPEMAP = [
 
     # Wrap item from ld_dict in ld_list
     (ld_list.is_ld_list, {"ld_container": ld_list}),
-    (
-        lambda c: isinstance(c, list) and all(isinstance(item, dict) for item in c),
-        {"ld_container": lambda c, **kw: ld_list([{"@list": c}], **kw)}
-    ),
+    (lambda c: isinstance(c, list), {"ld_container": lambda c, **kw: ld_list([{"@list": c}], **kw)}),
 
     # pythonize items from lists (expanded set is already handled above)
     (ld_container.is_json_id, {"python": lambda c, **_: c["@id"]}),
@@ -37,6 +34,7 @@ _TYPEMAP = [
     (ld_container.is_json_value, {"python": lambda c, **_: c["@value"]}),
     (ld_list.is_container, {"ld_container": lambda c, **kw: ld_list([c], **kw)}),
     (ld_dict.is_json_dict, {"ld_container": lambda c, **kw: ld_dict([c], **kw)}),
+    (lambda v: isinstance(v, str), {"python": lambda v, parent, **_: parent.ld_proc.compact_iri(parent.active_ctx, v)}),
 
     # Convert internal data types to expanded_json
     (lambda c: ld_container.is_json_id(c), {"expanded_json": lambda c, **_: c}),
@@ -44,7 +42,6 @@ _TYPEMAP = [
     (lambda c: ld_container.is_json_value(c), {"expanded_json": lambda c, **_: [c]}),
     (lambda c: ld_container.is_ld_value(c), {"expanded_json": lambda c, **_: c}),
     (ld_dict.is_json_dict, {"expanded_json": lambda c, **kw: ld_dict.from_dict(c, **kw).ld_value}),
-    (ld_dict.is_ld_dict, {"expanded_json": lambda c, **kw: ld_dict.from_dict(c[0], **kw).ld_value}),
     (
         ld_list.is_container,
         {"expanded_json": lambda c, **kw: ld_list.from_list(ld_list.get_item_list_from_container(c), **kw).ld_value}
