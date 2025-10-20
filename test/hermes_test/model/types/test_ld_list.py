@@ -103,9 +103,9 @@ def test_append():
     assert li.item_list[2] == li.item_list[3]
     li.append(ld_list([{"@list": [{"@type": ["A"], "https://schema.org/name": [{"@value": "a"}]}]}], parent=li,
                       key=li.key))
-    li.append([{"@type": "A", "schema:name": "a"}])  # FIXME: should that be interpreted as a list or expanded dict?
+    li.append([{"@type": "A", "schema:name": "a"}])
     li.append(2 * [{"@type": "A", "schema:name": "a"}])
-    assert 2 * li[4].item_list == 2 * [li[5].data_dict] == li[6].item_list
+    assert 2 * li[4].item_list == 2 * li[5].item_list == li[6].item_list
 
 
 def test_build_in_contains():
@@ -130,6 +130,8 @@ def test_build_in_comparison():
     li3 = ld_list([{"@list": []}], key="https://schema.org/name", context=[{"schema": "https://schema.org/"}])
     li3.extend([{"@type": "A", "schema:name": "a"}, "foo"])
     assert li != li3
+    assert not li == 3
+    assert li != 3
 
 
 def test_extend():
@@ -154,6 +156,14 @@ def test_extend():
     assert li[0:2] == ["foo", "bar"] and li.item_list[0:2] == [{"@value": "foo"}, {"@value": "bar"}]
     assert li[-1].data_dict == {"@type": ["A"], "https://schema.org/name": [{"@value": "a"}]} and len(li) == 3
 
+def test_to_python():
+    li = ld_list([{"@list": []}], key="https://schema.org/name", context=[{"schema": "https://schema.org/"}])
+    li.append("foo")
+    li.append(ld_dict([{"@type": ["A"], "https://schema.org/name": [{"@value": "a"}]}]))
+    li.append(["a"])
+    assert li[1]["@type"].item_list == ["A"]
+    assert li.to_python() == ["foo", {"@type": ["A"], "schema:name": ["a"]}, ["a"]]
+    
 
 def test_is_ld_list():
     assert not any(ld_list.is_ld_list(item) for item in [1, "", [], {}, {"@list": []}, [{}], [{"a": "b"}]])
@@ -186,3 +196,5 @@ def test_get_item_list_from_container():
     assert ld_list.get_item_list_from_container({"@list": ["a"]}) == ["a"]
     assert ld_list.get_item_list_from_container({"@set": ["a"]}) == ["a"]
     assert ld_list.get_item_list_from_container({"@graph": ["a"]}) == ["a"]
+    with pytest.raises(ValueError):
+        ld_list.get_item_list_from_container(["a"])
