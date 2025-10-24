@@ -96,27 +96,26 @@ class TestLdContainer:
 
     def test_to_python_type(self, mock_context):
         cont = ld_container([{}], context=[mock_context])
-        assert cont._to_python("@type", ["@id"]) == '@id'
+        assert cont._to_python("@type", ["@id"]) == ['@id']
         assert cont._to_python("@type", ["@id", "http://spam.eggs/Egg"]) == ["@id", "Egg"]
 
     def test_to_python_id_value(self, mock_context):
         cont = ld_container([{}], context=[mock_context])
+        assert cont._to_python("http://spam.eggs/ham", [{"@id": "http://spam.eggs/spam"}]) == ["http://spam.eggs/spam"]
         assert cont._to_python("http://spam.eggs/ham",
-                               [{"@id": "http://spam.eggs/spam"}]) == "http://spam.eggs/spam"
-        assert cont._to_python("http://spam.eggs/ham",
-                               [{"@id": "http://spam.eggs/identifier"}]) == "http://spam.eggs/identifier"
+                               {"@id": "http://spam.eggs/identifier"}) == "http://spam.eggs/identifier"
 
     def test_to_python_basic_value(self, mock_context):
         cont = ld_container([{}], context=[mock_context])
-        assert cont._to_python("http://soam.eggs/spam", [{"@value": "bacon"}]) == 'bacon'
-        assert cont._to_python("http://spam.eggs/spam", [{"@value": True}]) is True
-        assert cont._to_python("http://spam.eggs/spam", [{"@value": 123}]) == 123
+        assert cont._to_python("http://soam.eggs/spam", {"@value": "bacon"}) == 'bacon'
+        assert cont._to_python("http://spam.eggs/spam", {"@value": True}) is True
+        assert cont._to_python("http://spam.eggs/spam", {"@value": 123}) == 123
 
     def test_to_python_datetime_value(self, mock_context):
         cont = ld_container([{}], context=[mock_context])
-        assert cont._to_python("http://spam.eggs/eggs", [{
+        assert cont._to_python("http://spam.eggs/eggs", {
             "@value": "2022-02-22T00:00:00", "@type": "https://schema.org/DateTime"
-        }]) == "2022-02-22T00:00:00"
+        }) == "2022-02-22T00:00:00"  # TODO: #434 typed date is returned as string instead of date
 
     def test_to_expanded_id(self, mock_context):
         cont = ld_container([{}], context=[mock_context])

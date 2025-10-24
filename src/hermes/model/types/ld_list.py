@@ -60,7 +60,9 @@ class ld_list(ld_container):
             # FIXME: #439 When are ld_lists equal?
             return self.item_list == other.item_list
         if isinstance(other, list):
-            return self.item_list == self._to_expanded_json(self.key, other)[0]["@list"]
+            if ld_list.is_ld_list(other):
+                other = ld_list.get_item_list_from_container(other)
+            return self.item_list == self.from_list(other, key=self.key, context=self.full_context).item_list
         return NotImplemented
 
     def __ne__(self, other):
