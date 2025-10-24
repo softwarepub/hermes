@@ -6,6 +6,7 @@
 
 import argparse
 import shutil
+import logging
 
 from pydantic import BaseModel
 
@@ -27,6 +28,7 @@ class HermesCleanCommand(HermesCommand):
         self.log.info("Removing HERMES caches...")
 
         # Naive implementation for now... check errors, validate directory, don't construct the path ourselves, etc.
+        logging.shutdown() 
         shutil.rmtree(args.path / '.hermes')
 
     def load_settings(self, args: argparse.Namespace):

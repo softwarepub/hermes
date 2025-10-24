@@ -132,7 +132,7 @@ class HermesCommand(abc.ABC):
     def load_settings(self, args: argparse.Namespace):
         """Load settings from the configuration file (passed in from command line)."""
         try:
-            toml_data = toml.load(args.path / args.config)
+            toml_data = toml.load("." / args.config)
             self.root_settings = HermesCommand.settings_class.model_validate(toml_data)
             self.settings = getattr(self.root_settings, self.command_name)
         except FileNotFoundError as e:
