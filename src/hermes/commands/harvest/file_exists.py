@@ -3,10 +3,12 @@
 # SPDX-FileContributor: David Pape
 
 from dataclasses import dataclass
+from functools import cache
 from mimetypes import guess_type
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 from typing_extensions import Self
+import subprocess
 
 from hermes.commands.harvest.base import HermesHarvestCommand, HermesHarvestPlugin
 
@@ -112,8 +114,40 @@ class FileExistsHarvestPlugin(HermesHarvestPlugin):
         return data, {"workingDirectory": str(self.working_directory)}
 
     def _find_files(self, file_name_patterns: List[str]) -> List[CreativeWork]:
+        files = self._find_files_git(file_name_patterns)
+        if files is None:
+            files = self._find_files_directory(file_name_patterns)
+        return [CreativeWork.from_path(file) for file in files]
+
+    def _find_files_directory(self, file_name_patterns: List[str]) -> List[Path]:
         results = set()
         for pattern in file_name_patterns:
             paths = self.working_directory.rglob(pattern, case_sensitive=False)
             results.update(paths)
-        return [CreativeWork.from_path(file) for file in results]
+        return list(results)
+
+    def _find_files_git(self, file_name_patterns: List[str]) -> Optional[List[Path]]:
+        files = _git_ls_files(self.working_directory)
+        if files is None:
+            return None
+        matching_files = []
+        for file in files:
+            for pattern in file_name_patterns:
+                if file.match(pattern, case_sensitive=False):
+                    matching_files.append(file)
+        return matching_files
+
+
+@cache
+def _git_ls_files(working_directory: Path) -> List[Path]:
+    result = subprocess.run(
+        ["git", "ls-files", "--cached"],
+        capture_output=True,
+        cwd=working_directory,
+        text=True,
+    )
+    if result.returncode != 0:
+        return None
+    filenames = result.stdout.splitlines()
+    files = [Path(filename).resolve() for filename in filenames]
+    return files
