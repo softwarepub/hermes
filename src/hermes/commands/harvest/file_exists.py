@@ -10,6 +10,8 @@ from typing import List, Optional
 from typing_extensions import Self
 import subprocess
 
+from pydantic import BaseModel
+
 from hermes.commands.harvest.base import HermesHarvestCommand, HermesHarvestPlugin
 
 
@@ -68,7 +70,15 @@ class CreativeWork:
         }
 
 
+class FileExistsHarvestSettings(BaseModel):
+    """Settings for ``file_exists`` harvester."""
+
+    enable_git_ls_files: bool = True
+
+
 class FileExistsHarvestPlugin(HermesHarvestPlugin):
+    settings_class = FileExistsHarvestSettings
+
     search_patterns = [
         "contributing",
         "contributing.md",
@@ -90,9 +100,11 @@ class FileExistsHarvestPlugin(HermesHarvestPlugin):
 
     def __init__(self):
         self.working_directory: Path = Path.cwd()
+        self.settings: FileExistsHarvestSettings = FileExistsHarvestSettings()
 
     def __call__(self, command: HermesHarvestCommand):
         self.working_directory = command.args.path.resolve()
+        self.settings = command.settings.file_exists
 
         license_files = self._find_files(self.search_patterns_license)
         readme_files = self._find_files(self.search_patterns_readme)
@@ -114,7 +126,15 @@ class FileExistsHarvestPlugin(HermesHarvestPlugin):
         return data, {"workingDirectory": str(self.working_directory)}
 
     def _find_files(self, file_name_patterns: List[str]) -> List[CreativeWork]:
-        files = self._find_files_git(file_name_patterns)
+        """Find files that match ``file_name_patterns``.
+
+        If the setting ``enable_git_ls_files`` is ``True``, ``git ls-files`` is used to
+        find matching files. If it is set to ``False`` or getting the list from git
+        fails, the working directory is searched recursively.
+        """
+        files = None
+        if self.settings.enable_git_ls_files:
+            files = self._find_files_git(file_name_patterns)
         if files is None:
             files = self._find_files_directory(file_name_patterns)
         return [CreativeWork.from_path(file) for file in files]
@@ -143,10 +163,10 @@ def _git_ls_files(working_directory: Path) -> Optional[List[Path]]:
     """Get a list of all files by calling ``git ls-file`` in ``working_directory``.
 
     ``git ls-file`` is called with the ``--cached`` flag which lists all files tracked
-    by git. The returned file paths are converted to a list of ``Path`` objects. If
+    by git. The returned file paths are converted to a list of ``Path`` objects. If the
     git command fails or git is not found, ``None`` is returned.
 
-    The result of this function is cached and thus git is only executed once per given
+    The result of this function is cached. Git is only executed once per given
     ``working_directory``.
     """
     try:
