@@ -24,7 +24,7 @@ class URL:
     def as_codemeta(self) -> dict:
         return {
             "@type": "schema:URL",
-            "@data": self.url,
+            "@value": self.url,
         }
 
 
