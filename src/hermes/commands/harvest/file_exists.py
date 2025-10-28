@@ -139,13 +139,25 @@ class FileExistsHarvestPlugin(HermesHarvestPlugin):
 
 
 @cache
-def _git_ls_files(working_directory: Path) -> List[Path]:
-    result = subprocess.run(
-        ["git", "ls-files", "--cached"],
-        capture_output=True,
-        cwd=working_directory,
-        text=True,
-    )
+def _git_ls_files(working_directory: Path) -> Optional[List[Path]]:
+    """Get a list of all files by calling ``git ls-file`` in ``working_directory``.
+
+    ``git ls-file`` is called with the ``--cached`` flag which lists all files tracked
+    by git. The returned file paths are converted to a list of ``Path`` objects. If
+    git command fails or git is not found, ``None`` is returned.
+
+    The result of this function is cached and thus git is only executed once per given
+    ``working_directory``.
+    """
+    try:
+        result = subprocess.run(
+            ["git", "ls-files", "--cached"],
+            capture_output=True,
+            cwd=working_directory,
+            text=True,
+        )
+    except FileNotFoundError:
+        return None
     if result.returncode != 0:
         return None
     filenames = result.stdout.splitlines()
