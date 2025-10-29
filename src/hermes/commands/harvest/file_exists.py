@@ -2,12 +2,14 @@
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-FileContributor: David Pape
 
+"""Module for the ``FileExistsHarvestPlugin`` and it's associated models and helpers."""
+
 from collections import defaultdict
 from dataclasses import dataclass
 from functools import cache
 from mimetypes import guess_type
 from pathlib import Path
-from typing import Dict, List, Optional, Set
+from typing import Dict, Iterable, List, Optional, Set
 from typing_extensions import Self
 import subprocess
 
@@ -18,6 +20,11 @@ from hermes.commands.harvest.base import HermesHarvestCommand, HermesHarvestPlug
 
 @dataclass
 class URL:
+    """Basic model of a ``schema:URL``.
+
+    See also: https://schema.org/URL
+    """
+
     url: str
 
     @classmethod
@@ -33,6 +40,11 @@ class URL:
 
 @dataclass
 class TextObject:
+    """Basic model of a ``schema:TextObject``.
+
+    See also: https://schema.org/TextObject
+    """
+
     content_size: str
     encoding_format: str
     url: URL
@@ -55,6 +67,11 @@ class TextObject:
 
 @dataclass
 class CreativeWork:
+    """Basic model of a ``schema:CreativeWork``.
+
+    See also: https://schema.org/CreativeWork
+    """
+
     name: str
     associated_media: TextObject
     keywords: List[str]
@@ -81,8 +98,32 @@ class FileExistsHarvestSettings(BaseModel):
 
 
 class FileExistsHarvestPlugin(HermesHarvestPlugin):
+    """Harvest plugin that searches for specific files based on patterns.
+
+    Files are searched based on patterns such as ``readme.md`` or ``licenses/*.txt``.
+    Matching of the file paths is implemented using the ``match`` function of Python's
+    ``Path`` objects. This means, matching is performed from the end of the path. Search
+    patterns are case-insensitive.
+
+    Files are tagged using the name of the file name pattern's "group" as the keyword.
+    If a file matches multiple patterns, all appropriate keywords are added. Files that
+    were tagged with ``readme`` are added to the data model as a ``schema:URL`` using
+    the ``codemeta:readme`` property. Files that were tagged ``license`` are added to
+    the data model as a ``schema:URL`` using the ``schema:readme`` property. All found
+    files that contain at least one tag are added to the data model as a
+    ``schema:CreativeWork`` using the ``schema:hasPart`` property. Files that don't
+    match any pattern (and thus don't have a tag) are not added to the data model. All
+    file URLs are given using the ``file:`` protocol and the absolute path of the file
+    at the time of harvesting.
+
+    If available, ``git ls-files`` is used to find all files of the repository. This can
+    be disabled via the options. As a fallback, the working directory is searched
+    recursively for all files.
+    """
+
     settings_class = FileExistsHarvestSettings
 
+    # key: group name (used as keywords when tagging), value: list of patterns
     base_search_patterns = {
         "readme": [
             "readme",
@@ -148,7 +189,7 @@ class FileExistsHarvestPlugin(HermesHarvestPlugin):
         find matching files. If it is set to ``False`` or getting the list from git
         fails, the working directory is searched recursively.
 
-        The files are tagged using the search pattern "groups" as the keywords.
+        The files are tagged using the "groups" of search pattern as the keywords.
         """
         files = None
         if self.settings.enable_git_ls_files:
@@ -157,11 +198,11 @@ class FileExistsHarvestPlugin(HermesHarvestPlugin):
             files = self.working_directory.rglob("*")
         files_with_keywords = self._tag_files(files)
         return [
-            CreativeWork.from_path(file, keywords=list(keywords))
+            CreativeWork.from_path(file, list(keywords))
             for file, keywords in files_with_keywords.items()
         ]
 
-    def _tag_files(self, paths: List[Path]) -> Optional[Dict[Path, Set[str]]]:
+    def _tag_files(self, paths: Iterable[Path]) -> Dict[Path, Set[str]]:
         """Filter and tag file paths."""
         paths_with_keywords = defaultdict(set)
         for path in paths:
