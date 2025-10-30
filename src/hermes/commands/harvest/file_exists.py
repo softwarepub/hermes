@@ -18,6 +18,33 @@ from pydantic import BaseModel
 from hermes.commands.harvest.base import HermesHarvestCommand, HermesHarvestPlugin
 
 
+def guess_file_type(path: Path):
+    """File type detection for non-standardised formats.
+
+    Custom detection for file types not yet supported by Python's ``guess_type``
+    function.
+    """
+    # YAML was only added to ``guess_type`` in Python 3.14 due to the MIME type only
+    # having been decided in 2024.
+    # See: https://www.rfc-editor.org/rfc/rfc9512.html
+    if path.suffix in [".yml", ".yaml"]:
+        return ("application/yaml", None)
+
+    # TOML is not yet part of ``guess_type`` due to the MIME type only having been
+    # accepted in October of 2024.
+    # See: https://www.iana.org/assignments/media-types/application/toml
+    if path.suffix == ".toml":
+        return ("application/toml", None)
+
+    # cff is yaml.
+    # See: https://github.com/citation-file-format/citation-file-format/issues/391
+    if path.name == "CITATION.cff":
+        return ("application/yaml", None)
+
+    # use non-strict mode to cover more file types
+    return guess_type(path, strict=False)
+
+
 @dataclass
 class URL:
     """Basic model of a ``schema:URL``.
@@ -52,7 +79,7 @@ class TextObject:
     @classmethod
     def from_path(cls, path: Path) -> Self:
         size = str(path.stat().st_size)  # string!
-        type_, _encoding = guess_type(path)
+        type_, _encoding = guess_file_type(path)
         url = URL.from_path(path)
         return cls(content_size=size, encoding_format=type_, url=url)
 
