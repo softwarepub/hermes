@@ -74,19 +74,19 @@ class CreativeWork:
 
     name: str
     associated_media: TextObject
-    keywords: List[str]
+    keywords: Set[str]
 
     @classmethod
-    def from_path(cls, path: Path, keywords: List[str]) -> Self:
+    def from_path(cls, path: Path, keywords: Set[str]) -> Self:
         text_object = TextObject.from_path(path)
-        return cls(name=path.stem, associated_media=text_object, keywords=keywords)
+        return cls(name=path.stem, associated_media=text_object, keywords=set(keywords))
 
     def as_codemeta(self) -> dict:
         return {
             "@type": "schema:CreativeWork",
             "schema:name": self.name,
             "schema:associatedMedia": self.associated_media.as_codemeta(),
-            "schema:keywords": self.keywords,
+            "schema:keywords": list(self.keywords),
         }
 
 
@@ -146,8 +146,8 @@ class FileExistsHarvestPlugin(HermesHarvestPlugin):
 
         # mapping from tag name to list of file name patterns
         self.search_patterns: Dict[str, List[str]] = self.base_search_patterns
-        # mapping from file name pattern to list of tags
-        self.search_pattern_keywords: Dict[str, List[str]] = defaultdict(list)
+        # mapping from file name pattern to set of tags
+        self.search_pattern_keywords: Dict[str, Set[str]] = defaultdict(set)
         # flat list of file name patterns
         self.search_pattern_list: List[str] = []
 
@@ -161,7 +161,7 @@ class FileExistsHarvestPlugin(HermesHarvestPlugin):
         # create inverse lookup table
         for key, patterns in self.search_patterns.items():
             for pattern in patterns:
-                self.search_pattern_keywords[pattern].append(key)
+                self.search_pattern_keywords[pattern].add(key)
 
         self.search_pattern_list = sum(self.search_patterns.values(), start=[])
 
