@@ -41,6 +41,14 @@ def guess_file_type(path: Path):
     if path.name == "CITATION.cff":
         return ("application/yaml", None)
 
+    # .license files are likely license annotations according to REUSE specification.
+    # See: https://reuse.software/spec/
+    if path.suffix == ".license":
+        return ("text/plain", None)
+
+    if path.name == "poetry.lock":
+        return ("text/plain", None)
+
     # use non-strict mode to cover more file types
     return guess_type(path, strict=False)
 
