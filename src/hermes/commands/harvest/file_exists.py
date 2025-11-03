@@ -82,13 +82,17 @@ class TextObject:
     See also: https://schema.org/TextObject
     """
 
-    content_size: str
+    content_size: Optional[str]
     encoding_format: Optional[str]
     url: URL
 
     @classmethod
     def from_path(cls, path: Path) -> Self:
-        size = str(path.stat().st_size)  # string!
+        size = None
+        try:
+            size = str(path.stat().st_size)  # string!
+        except FileNotFoundError:
+            pass
         type_, _encoding = guess_file_type(path)
         url = URL.from_path(path)
         return cls(content_size=size, encoding_format=type_, url=url)
