@@ -114,7 +114,7 @@ class CreativeWork:
     keywords: Set[str]
 
     @classmethod
-    def from_path(cls, path: Path, keywords: Set[str]) -> Self:
+    def from_path(cls, path: Path, keywords: Iterable[str]) -> Self:
         text_object = TextObject.from_path(path)
         return cls(name=path.stem, associated_media=text_object, keywords=set(keywords))
 
@@ -131,31 +131,34 @@ class FileExistsHarvestSettings(BaseModel):
     """Settings for ``file_exists`` harvester."""
 
     enable_git_ls_files: bool = True
+    keep_untagged_files: bool = False
     search_patterns: Dict[str, List[str]] = {}
 
 
 class FileExistsHarvestPlugin(HermesHarvestPlugin):
-    """Harvest plugin that searches for specific files based on patterns.
+    """Harvest plugin that finds and tags files based on patterns.
 
-    Files are searched based on patterns such as ``readme.md`` or ``licenses/*.txt``.
-    Matching of the file paths is implemented using the ``match`` function of Python's
-    ``Path`` objects. This means, matching is performed from the end of the path. Search
-    patterns are case-insensitive.
+    Files are searched uing ``git ls-files`` or a recursive traversal of the working
+    directory. If available, ``git ls-files`` is used. This can be disabled via the
+    options.
+
+    The found files are then tagged based on patterns such as ``readme.md``
+    or ``licenses/*.txt``. Matching of the file paths is implemented using the ``match``
+    function of Python's ``Path`` objects. This means, matching is performed from the
+    end of the path. Search patterns are case-insensitive.
 
     Files are tagged using the name of the file name pattern's "group" as the keyword.
-    If a file matches multiple patterns, all appropriate keywords are added. Files that
-    were tagged with ``readme`` are added to the data model as a ``schema:URL`` using
-    the ``codemeta:readme`` property. Files that were tagged ``license`` are added to
-    the data model as a ``schema:URL`` using the ``schema:readme`` property. All found
-    files that contain at least one tag are added to the data model as a
-    ``schema:CreativeWork`` using the ``schema:hasPart`` property. Files that don't
-    match any pattern (and thus don't have a tag) are not added to the data model. All
-    file URLs are given using the ``file:`` protocol and the absolute path of the file
-    at the time of harvesting.
+    If a file matches multiple patterns, all appropriate keywords are added. Depending
+    on configuration of ``keep_untagged_files``, files without any tags are then removed
+    from the file list (this is the default).
 
-    If available, ``git ls-files`` is used to find all files of the repository. This can
-    be disabled via the options. As a fallback, the working directory is searched
-    recursively for all files.
+    Files that were tagged with ``readme`` are added to the data model as a
+    ``schema:URL`` using the ``codemeta:readme`` property. Files that were tagged
+    ``license`` are added to the data model as a ``schema:URL`` using the
+    ``schema:license`` property. All files are added to the data model as a
+    ``schema:CreativeWork`` using the ``schema:hasPart`` property. All file URLs are
+    given using the ``file:`` protocol and the absolute path of the file at the time of
+    harvesting.
     """
 
     settings_class = FileExistsHarvestSettings
@@ -200,55 +203,72 @@ class FileExistsHarvestPlugin(HermesHarvestPlugin):
             for pattern in patterns:
                 self.search_pattern_keywords[pattern].add(key)
 
+        # create flat list for easy iteration
         self.search_pattern_list = sum(self.search_patterns.values(), start=[])
 
-        files = self._find_files()
+        files_tags = self._filter_files(self._tag_files(self._find_files()))
+        creative_works = [
+            CreativeWork.from_path(file, list(tags))
+            for file, tags in files_tags.items()
+        ]
+
         data = {
-            "schema:hasPart": [file.as_codemeta() for file in files],
+            "schema:hasPart": [work.as_codemeta() for work in creative_works],
             "schema:license": [
-                file.associated_media.url.as_codemeta()
-                for file in files
-                if file.keywords and "license" in file.keywords
+                work.associated_media.url.as_codemeta()
+                for work in creative_works
+                if work.keywords and "license" in work.keywords
             ],
             "codemeta:readme": [
-                file.associated_media.url.as_codemeta()
-                for file in files
-                if file.keywords and "readme" in file.keywords
+                work.associated_media.url.as_codemeta()
+                for work in creative_works
+                if work.keywords and "readme" in work.keywords
             ],
         }
 
         return data, {"workingDirectory": str(self.working_directory)}
 
     def _find_files(self) -> List[CreativeWork]:
-        """Find files that match the search patterns.
+        """Find files.
 
         If the setting ``enable_git_ls_files`` is ``True``, ``git ls-files`` is used to
         find matching files. If it is set to ``False`` or getting the list from git
         fails, the working directory is searched recursively.
-
-        The files are tagged using the "groups" of search pattern as the keywords.
         """
         files = None
         if self.settings.enable_git_ls_files:
             files = _git_ls_files(self.working_directory)
         if files is None:
             files = self.working_directory.rglob("*")
-        files_with_keywords = self._tag_files(files)
-        return [
-            CreativeWork.from_path(file, list(keywords))
-            for file, keywords in files_with_keywords.items()
-        ]
+        return files
 
-    # TODO: How to handle directories?
     def _tag_files(self, paths: Iterable[Path]) -> Dict[Path, Set[str]]:
-        """Filter and tag file paths."""
-        paths_with_keywords = defaultdict(set)
+        """Tag file paths based on patterns.
+
+        The files are tagged using the "group" names of the search pattern as the
+        keywords.
+        """
+        paths_tags = {}
         for path in paths:
+            # TODO: How to handle directories?
+            if not path.is_file():
+                continue
+            paths_tags[path] = set()
             for pattern in self.search_pattern_list:
                 if path.match(pattern, case_sensitive=False):
-                    keywords = self.search_pattern_keywords[pattern]
-                    paths_with_keywords[path].update(keywords)
-        return paths_with_keywords
+                    tags = self.search_pattern_keywords[pattern]
+                    paths_tags[path].update(tags)
+        return paths_tags
+
+    def _filter_files(self, files_tags: Dict[Path, Set[str]]) -> Dict[Path, Set[str]]:
+        """Filter out untagged files if required.
+
+        If the setting ``keep_untagged_files`` is set to ``True``, the filter is not
+        applied.
+        """
+        if self.settings.keep_untagged_files:
+            return files_tags
+        return {path: tags for path, tags in files_tags.items() if tags}
 
 
 @cache
