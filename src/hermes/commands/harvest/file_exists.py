@@ -256,8 +256,9 @@ def _git_ls_files(working_directory: Path) -> Optional[List[Path]]:
     """Get a list of all files by calling ``git ls-file`` in ``working_directory``.
 
     ``git ls-file`` is called with the ``--cached`` flag which lists all files tracked
-    by git. The returned file paths are converted to a list of ``Path`` objects. If the
-    git command fails or git is not found, ``None`` is returned.
+    by git. The returned file paths are converted to a list of ``Path`` objects. Files
+    that are tracked by git but don't exist on disk are not returned. If the git command
+    fails or git is not found, ``None`` is returned.
 
     The result of this function is cached. Git is only executed once per given
     ``working_directory``.
@@ -275,4 +276,4 @@ def _git_ls_files(working_directory: Path) -> Optional[List[Path]]:
         return None
     filenames = result.stdout.splitlines()
     files = [Path(filename).resolve() for filename in filenames]
-    return files
+    return [file for file in files if file.exists()]
