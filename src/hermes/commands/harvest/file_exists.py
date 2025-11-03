@@ -73,6 +73,8 @@ class URL:
         }
 
 
+# TODO: Support other common subtypes of ``MediaObject`` such as ``ImageObject``.
+# Currently, these are incorrectly classified as ``TextObject``.
 @dataclass
 class TextObject:
     """Basic model of a ``schema:TextObject``.
@@ -81,7 +83,7 @@ class TextObject:
     """
 
     content_size: str
-    encoding_format: str
+    encoding_format: Optional[str]
     url: URL
 
     @classmethod
@@ -237,6 +239,7 @@ class FileExistsHarvestPlugin(HermesHarvestPlugin):
             for file, keywords in files_with_keywords.items()
         ]
 
+    # TODO: How to handle directories?
     def _tag_files(self, paths: Iterable[Path]) -> Dict[Path, Set[str]]:
         """Filter and tag file paths."""
         paths_with_keywords = defaultdict(set)
