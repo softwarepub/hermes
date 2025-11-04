@@ -53,7 +53,7 @@ def guess_file_type(path: Path):
     return guess_type(path, strict=False)
 
 
-@dataclass
+@dataclass(kw_only=True)
 class URL:
     """Basic model of a ``schema:URL``.
 
@@ -73,13 +73,16 @@ class URL:
         }
 
 
-# TODO: Support other common subtypes of ``MediaObject`` such as ``ImageObject``.
-# Currently, these are incorrectly classified as ``TextObject``.
-@dataclass
-class TextObject:
-    """Basic model of a ``schema:TextObject``.
+# TODO: Support common subtypes of ``MediaObject`` such as ``TextObject`` and
+# ``ImageObject``? This would require either mapping mime types to text/image/binary/...
+# which probably has many special cases (e.g. ``application/toml`` → text,
+# ``image/svg+xml`` → text, ...), or figuring this out using the file itself, e.g.
+# using libmagic.
+@dataclass(kw_only=True)
+class MediaObject:
+    """Basic model of a ``schema:MediaObject``.
 
-    See also: https://schema.org/TextObject
+    See also: https://schema.org/MediaObject
     """
 
     content_size: Optional[str]
@@ -99,14 +102,14 @@ class TextObject:
 
     def as_codemeta(self) -> dict:
         return {
-            "@type": "schema:TextObject",
+            "@type": "schema:MediaObject",
             "schema:contentSize": self.content_size,
             "schema:encodingFormat": self.encoding_format,
             "schema:url": self.url.as_codemeta(),
         }
 
 
-@dataclass
+@dataclass(kw_only=True)
 class CreativeWork:
     """Basic model of a ``schema:CreativeWork``.
 
@@ -114,12 +117,12 @@ class CreativeWork:
     """
 
     name: str
-    associated_media: TextObject
+    associated_media: MediaObject
     keywords: Set[str]
 
     @classmethod
     def from_path(cls, path: Path, keywords: Iterable[str]) -> Self:
-        text_object = TextObject.from_path(path)
+        text_object = MediaObject.from_path(path)
         return cls(name=path.stem, associated_media=text_object, keywords=set(keywords))
 
     def as_codemeta(self) -> dict:
