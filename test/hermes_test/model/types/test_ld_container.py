@@ -4,6 +4,7 @@
 
 # SPDX-FileContributor: Sophie Kernchen
 # SPDX-FileContributor: Michael Meinel
+# SPDX-FileContributor: Michael Fritzsche
 
 from datetime import datetime
 
@@ -152,3 +153,13 @@ class TestLdContainer:
         assert cont._to_expanded_json("eggs", datetime(2022, 2, 22)) == [
             {"@value": "2022-02-22T00:00:00", "@type": "http://schema.org/DateTime"}
         ]
+
+    def test_are_values_equal(self):
+        assert ld_container.are_values_equal({"@id": "foo"}, {"@id": "foo"})
+        assert not ld_container.are_values_equal({"@id": "foo"}, {"@id": "bar"})
+        assert ld_container.are_values_equal({"@id": "foo"}, {"@id": "foo", "@value": "bar"})
+        assert ld_container.are_values_equal({"@value": "foo"}, {"@value": "foo"})
+        assert ld_container.are_values_equal({"@value": "bar"}, {"@id": "foo", "@value": "bar"})
+        assert not ld_container.are_values_equal({"@value": "foo"}, {"@value": "bar"})
+        assert not ld_container.are_values_equal({"@type": "bar", "@value": "foo"}, {"@value": "foo"})
+        assert ld_container.are_values_equal({"@type": "bar", "@value": "foo"}, {"@type": "bar", "@value": "foo"})

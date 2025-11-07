@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # SPDX-FileContributor: Michael Meinel
+# SPDX-FileContributor: Michael Fritzsche
 
 from .ld_container import ld_container
 
@@ -27,10 +28,6 @@ class ld_list(ld_container):
         return item
 
     def __setitem__(self, index, value):
-        # FIXME: #439 what should your_ld_list[index] = [{"@type": "foo", "name": "bar"}] mean?
-        # set your_ld_list[index] to the dict {"@type": "foo", "name": "bar"} given in expanded form        or
-        # set your_ld_list[index] to the list [{"@type": "foo", "name": "bar"}] given in non expanded form
-
         if not isinstance(index, slice):
             self.item_list[index] = val[0] if isinstance(val := self._to_expanded_json(self.key, value), list) else val
             return
@@ -56,14 +53,36 @@ class ld_list(ld_container):
         return expanded_value in self.item_list
 
     def __eq__(self, other):
-        if isinstance(other, ld_list):
-            # FIXME: #439 When are ld_lists equal?
-            return self.item_list == other.item_list
+        if not (isinstance(other, (list, ld_list)) or ld_list.is_container(other)):
+            return NotImplemented
+        if isinstance(other, dict):
+            other = [other]
         if isinstance(other, list):
             if ld_list.is_ld_list(other):
-                other = ld_list.get_item_list_from_container(other)
-            return self.item_list == self.from_list(other, key=self.key, context=self.full_context).item_list
-        return NotImplemented
+                other = ld_list.get_item_list_from_container(other[0])
+            other = self.from_list(other, parent=self.parent, key=self.key, context=self.context)
+        if len(self.item_list) != len(other.item_list):
+            return False
+        if (self.key == "@type") ^ (other.key == "@type"):
+            return False
+        if self.key == other.key == "@type":
+            return self.item_list == other.item_list
+        for index, (item, other_item) in enumerate(zip(self.item_list, other.item_list)):
+            if ((ld_container.is_typed_json_value(item) or ld_container.is_json_value(item)) and
+                    (ld_container.is_typed_json_value(other_item) or ld_container.is_json_value(other_item))):
+                if not ld_container.are_values_equal(item, other_item):
+                    return False
+                continue
+            if "@id" in item and "@id" in other_item:
+                return item["@id"] == other_item["@id"]
+            item = self[index]
+            other_item = other[index]
+            res = item.__eq__(other_item)
+            if res == NotImplemented:
+                res = other_item.__eq__(item)
+            if res is False or res == NotImplemented:  # res is not True
+                return False
+        return True
 
     def __ne__(self, other):
         x = self.__eq__(other)

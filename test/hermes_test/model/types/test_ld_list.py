@@ -73,6 +73,9 @@ def test_build_in_set():
     li[0] = {"@set": [{"@type": "schema:Thing", "schema:name": "b"}]}
     assert isinstance(li[0], ld_list)
     assert li[0].item_list == [{"@type": ["https://schema.org/Thing"], "https://schema.org/name": [{"@value": "b"}]}]
+    li[0] = [{"@type": "schema:Thing", "schema:name": "b"}]
+    assert isinstance(li[0], ld_list)
+    assert li[0].item_list == [{"@type": ["https://schema.org/Thing"], "https://schema.org/name": [{"@value": "b"}]}]
 
 
 def test_build_in_len():
@@ -132,6 +135,21 @@ def test_build_in_comparison():
     assert li != li3
     assert not li == 3
     assert li != 3
+    li = ld_list([{"@list": []}], key="https://schema.org/Person", context=[{"schema": "https://schema.org/"}])
+    li.append({"@id": "foo"})
+    assert li == [{"@id": "foo"}] and li == [{"@id": "foo", "schema:name": "bar"}] and li == {"@list": [{"@id": "foo"}]}
+    li2 = ld_list([{"@list": []}], key="@type", context=[{"schema": "https://schema.org/"}])
+    li2.append("schema:name")
+    assert li != li2
+    li = ld_list([{"@list": []}], key="https://schema.org/name", context=[{"schema": "https://schema.org/"}])
+    li2 = ld_list([{"@list": []}], key="https://schema.org/name", context=[{"schema2": "https://schema.org/"}])
+    li.append("foo")
+    li2.append("bar")
+    assert li != li2
+    li[0] = {"@type": "foo", "@value": "bar"}
+    assert li != li2
+    li[0] = {"@type": "foobar", "@value": "bar"}
+    assert li != li2
 
 
 def test_extend():

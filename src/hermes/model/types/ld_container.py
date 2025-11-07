@@ -182,3 +182,14 @@ class ld_container:
         ld_value = data[0]['@value']
 
         return ld_value
+
+    @classmethod
+    def are_values_equal(cls, first, second):
+        if "@id" in first and "@id" in second:
+            return first["@id"] == second["@id"]
+        for key in {"@value", "@type"}:
+            if (key in first) ^ (key in second):
+                return False
+            if key in first and key in second and first[key] != second[key]:
+                return False
+        return True

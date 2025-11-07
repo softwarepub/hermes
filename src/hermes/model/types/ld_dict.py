@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # SPDX-FileContributor: Michael Meinel
+# SPDX-FileContributor: Michael Fritzsche
 
 from .ld_container import ld_container
 
@@ -34,6 +35,42 @@ class ld_dict(ld_container):
     def __contains__(self, key):
         full_iri = self.ld_proc.expand_iri(self.active_ctx, key)
         return full_iri in self.data_dict
+
+    def __eq__(self, other):
+        if not isinstance(other, (dict, ld_dict)):
+            return NotImplemented
+        if ld_container.is_json_id(other):
+            if "@id" in self:
+                return self["@id"] == other["@id"]
+            return self.data_dict == {}
+        if ld_container.is_json_value(other):
+            if {*self.keys()}.issubset({"@id", *other.keys()}):
+                return ld_container.are_values_equal(self.data_dict, other)
+            return False
+        if isinstance(other, dict):
+            other = self.from_dict(other, parent=self.parent, key=self.key, context=self.context)
+        if "@id" in self and "@id" in other:
+            return self["@id"] == other["@id"]
+        keys_self = {*self.keys()}
+        keys_other = {*other.keys()}
+        unique_keys = keys_self.symmetric_difference(keys_other)
+        if unique_keys and unique_keys != {"@id"}:
+            return False
+        for key in keys_self.intersection(keys_other):
+            item = self[key]
+            other_item = other[key]
+            res = item.__eq__(other_item)
+            if res == NotImplemented:
+                res = other_item.__eq__(item)
+            if res is False or res == NotImplemented:  # res is not True
+                return False
+        return True
+
+    def __ne__(self, other):
+        x = self.__eq__(other)
+        if x is NotImplemented:
+            return NotImplemented
+        return not x
 
     def get(self, key, default=_NO_DEFAULT):
         try:
