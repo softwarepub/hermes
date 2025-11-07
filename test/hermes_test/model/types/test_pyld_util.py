@@ -6,6 +6,8 @@
 
 import pytest
 
+from unittest import mock
+
 from pyld import jsonld
 from hermes.model.types import pyld_util
 
@@ -53,10 +55,30 @@ def test_expand_iri(ld_proc, mock_context):
 
 def test_compact_iri(ld_proc, mock_context):
     active_ctx = {'mappings': {'spam': {'reverse': False, 'protected': False, '_prefix': False,
-                                        '_term_has_colon': False, '@id': 'http://localhost:62391/spam'},
+                                        '_term_has_colon': False, '@id': 'http://spam.eggs/spam'},
                                'ham': {'reverse': False, 'protected': False, '_prefix': False,
-                                       '_term_has_colon': False, '@id': 'http://localhost:62391/ham', '@type': '@id'},
+                                       '_term_has_colon': False, '@id': 'http://spam.eggs/ham', '@type': '@id'},
                                },
                   'processingMode': 'json-ld-1.1', '_uuid': 'c641b9db-b0e8-11f0-bc68-9cfce89fd5b3'}
 
     assert ld_proc.compact_iri(active_ctx, "http://spam.eggs/spam") == "spam"
+    assert ld_proc.compact_iri(active_ctx, "http://spam.eggs/bacon") == "http://spam.eggs/bacon"
+
+
+def test_register_typemap():
+    len_typemap = len(pyld_util.JsonLdProcessor._type_map)
+    pyld_util.JsonLdProcessor.register_typemap("function", **dict(spam="hallo"))
+    assert len(pyld_util.JsonLdProcessor._type_map) == len_typemap + 1
+    assert pyld_util.JsonLdProcessor._type_map["spam"] == [("function", "hallo")]
+
+
+def test_apply_typemap():
+    pyld_util.JsonLdProcessor._type_map["spam"] = [(lambda c: isinstance(c, list), lambda c, **_: c[0]+"eggs")]
+    ld_value, ld_output = pyld_util.JsonLdProcessor.apply_typemap(["ham"], "spam")
+    assert ld_output == "spam"
+    assert ld_value == "hameggs"
+    ld_value, ld_output = pyld_util.JsonLdProcessor.apply_typemap(["eggs", "ham"], "spam")
+    assert ld_output == "spam"
+    assert ld_value == "eggseggs"
+    ld_value, ld_output = pyld_util.JsonLdProcessor.apply_typemap("ham", "spam")
+    assert ld_value == "ham"
