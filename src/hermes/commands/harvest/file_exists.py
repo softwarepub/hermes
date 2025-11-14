@@ -145,7 +145,7 @@ class FileExistsHarvestSettings(BaseModel):
 class FileExistsHarvestPlugin(HermesHarvestPlugin):
     """Harvest plugin that finds and tags files based on patterns.
 
-    Files are searched uing ``git ls-files`` or a recursive traversal of the working
+    Files are searched using ``git ls-files`` or a recursive traversal of the working
     directory. If available, ``git ls-files`` is used. This can be disabled via the
     options.
 
