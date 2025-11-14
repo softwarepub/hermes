@@ -183,6 +183,10 @@ class FileExistsHarvestPlugin(HermesHarvestPlugin):
             "license",
             "license.txt",
             "license.md",
+            # TODO: Do patterns with slashes work on Windows? If not, we might have to
+            # split on slash/backslash, then piece the parts together again as a Path,
+            # e.g.: ``Path("licenses") / Path("*.txt")``. If Path supports ``*``, that
+            # is.
             "licenses/*.txt",
         ],
     }
