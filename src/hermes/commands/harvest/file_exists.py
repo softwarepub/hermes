@@ -262,7 +262,7 @@ class FileExistsHarvestPlugin(HermesHarvestPlugin):
                 continue
             paths_tags[path] = set()
             for pattern in self.search_pattern_list:
-                if path.match(pattern, case_sensitive=False):
+                if _path_matches_pattern(path, pattern):
                     tags = self.search_pattern_keywords[pattern]
                     paths_tags[path].update(tags)
         return paths_tags
@@ -276,6 +276,15 @@ class FileExistsHarvestPlugin(HermesHarvestPlugin):
         if self.settings.keep_untagged_files:
             return files_tags
         return {path: tags for path, tags in files_tags.items() if tags}
+
+
+def _path_matches_pattern(path: Path, pattern: str):
+    """Case-insensitive path matching.
+
+    Python 3.12 introduces the ``case_sensitive`` kwarg to the ``match`` function. For
+    older Python versions, we have to implement this behaviour ourselves.
+    """
+    return Path(str(path).casefold()).match(pattern.casefold())
 
 
 @cache
