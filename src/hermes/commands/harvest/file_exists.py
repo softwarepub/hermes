@@ -236,7 +236,7 @@ class FileExistsHarvestPlugin(HermesHarvestPlugin):
 
         return data, {"workingDirectory": str(self.working_directory)}
 
-    def _find_files(self) -> List[CreativeWork]:
+    def _find_files(self) -> List[Path]:
         """Find files.
 
         If the setting ``enable_git_ls_files`` is ``True``, ``git ls-files`` is used to

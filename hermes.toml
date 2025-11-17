@@ -21,4 +21,3 @@ record_id = 13221384
 depositions = "api/deposit/depositions"
 licenses = "api/vocabularies/licenses"
 communities = "api/communities"
-
