@@ -250,7 +250,7 @@ class FileExistsHarvestPlugin(HermesHarvestPlugin):
         if self.settings.enable_git_ls_files:
             files = _git_ls_files(self.working_directory)
         if files is None:
-            files = self.working_directory.rglob("*")
+            files = _ls_files(self.working_directory)
         return files
 
     def _tag_files(self, paths: Iterable[Path]) -> Dict[Path, Set[str]]:
@@ -261,9 +261,6 @@ class FileExistsHarvestPlugin(HermesHarvestPlugin):
         """
         paths_tags = {}
         for path in paths:
-            # TODO: How to handle directories?
-            if not path.is_file():
-                continue
             paths_tags[path] = set()
             for pattern in self.search_pattern_list:
                 if _path_matches_pattern(path, pattern):
@@ -289,6 +286,14 @@ def _path_matches_pattern(path: Path, pattern: str):
     older Python versions, we have to implement this behaviour ourselves.
     """
     return Path(str(path).casefold()).match(pattern.casefold())
+
+
+def _ls_files(working_directory: Path) -> List[Path]:
+    """Get a list of all files by recursively searching the ``working_directory``.
+
+    Only regular files (i.e. files which are not directories, pipes, etc.) are returned.
+    """
+    return [file for file in working_directory.rglob("*") if file.is_file()]
 
 
 @cache
