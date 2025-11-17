@@ -152,7 +152,8 @@ class FileExistsHarvestPlugin(HermesHarvestPlugin):
     The found files are then tagged based on patterns such as ``readme.md``
     or ``licenses/*.txt``. Matching of the file paths is implemented using the ``match``
     function of Python's ``Path`` objects. This means, matching is performed from the
-    end of the path. Search patterns are case-insensitive.
+    end of the path. Search patterns are case-insensitive and use ``/`` as the path
+    separator.
 
     Files are tagged using the name of the file name pattern's "group" as the keyword.
     If a file matches multiple patterns, all appropriate keywords are added. Depending
@@ -183,10 +184,6 @@ class FileExistsHarvestPlugin(HermesHarvestPlugin):
             "license",
             "license.txt",
             "license.md",
-            # TODO: Do patterns with slashes work on Windows? If not, we might have to
-            # split on slash/backslash, then piece the parts together again as a Path,
-            # e.g.: ``Path("licenses") / Path("*.txt")``. If Path supports ``*``, that
-            # is.
             "licenses/*.txt",
         ],
     }
