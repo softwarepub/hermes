@@ -12,11 +12,27 @@ class ld_list(ld_container):
     """ An JSON-LD container resembling a list. """
 
     def __init__(self, data, *, parent=None, key=None, index=None, context=None):
-        if not (self.is_ld_list(data) and "@list" in data[0]):
-            raise ValueError("The given data does not represent a ld_list.")
+        if not isinstance(key, str):
+            raise ValueError("The key is not a string or was omitted.")
+        if not isinstance(data, list):
+            raise ValueError("The given data does not represent an ld_list.")
+        if self.is_ld_list(data):
+            if "@list" in data[0]:
+                self.container_type = "@list"
+                self.item_list = data[0]["@list"]
+            elif "@graph" in data[0]:
+                self.container_type = "@graph"
+                self.item_list = data[0]["@graph"]
+            else:
+                raise ValueError("The given @set is not fully expanded.")
+        else:
+            self.container_type = "@set"
+            self.item_list = data
+        if key == "@type" and not all(isinstance(item, str) for item in self.item_list):
+            raise ValueError("A given value for @type is not a string.")
+        if key != "@type" and not all(isinstance(item, dict) for item in self.item_list):
+            raise ValueError("A given value is not properly expanded.")
         super().__init__(data, parent=parent, key=key, index=index, context=context)
-
-        self.item_list = data[0]["@list"]
 
     def __getitem__(self, index):
         if isinstance(index, slice):
@@ -29,13 +45,22 @@ class ld_list(ld_container):
 
     def __setitem__(self, index, value):
         if not isinstance(index, slice):
-            self.item_list[index] = val[0] if isinstance(val := self._to_expanded_json(self.key, value), list) else val
+            value = self._to_expanded_json(value)
+            if not isinstance(value, list):
+                self.item_list[index] = value
+                return
+            if index < 0:
+                self.item_list[index-1:index] = value
+            else:
+                self.item_list[index:index+1] = value
             return
         try:
             iter(value)
         except TypeError as exc:
             raise TypeError("must assign iterable to extended slice") from exc
-        expanded_value = [self._to_expanded_json(self.key, val) for val in value]
+        expanded_value = [self._to_expanded_json(val) for val in value]
+        # TODO: the slice should work if all items including assimilated ones in the given order can be set via slice
+        # Implement this
         self.item_list[index] = [val[0] if isinstance(val, list) else val for val in expanded_value]
 
     def __len__(self):
@@ -49,7 +74,9 @@ class ld_list(ld_container):
             yield item
 
     def __contains__(self, value):
-        expanded_value = val[0] if isinstance(val := self._to_expanded_json(self.key, value), list) else val
+        # TODO: Update to use new _to_expanded_json
+        # and return True if value would be assimilated by self and all those items are in self
+        expanded_value = val[0] if isinstance(val := self._to_expanded_json_deprecated(self.key, value), list) else val
         return expanded_value in self.item_list
 
     def __eq__(self, other):
@@ -91,7 +118,7 @@ class ld_list(ld_container):
         return not x
 
     def append(self, value):
-        ld_value = self._to_expanded_json(self.key, value)
+        ld_value = val if isinstance(val:= self._to_expanded_json(value), list) else [val]
         self.item_list.extend(ld_value)
 
     def extend(self, value):
@@ -117,10 +144,24 @@ class ld_list(ld_container):
         )
 
     @classmethod
-    def from_list(cls, value, *, parent=None, key=None, context=None):
-        new_list = cls([{"@list": []}], parent=parent, key=key, context=context)
-        new_list.extend(value)
-        return new_list
+    def from_list(cls, value, *, parent=None, key=None, context=None, container_type="@set"):
+        if key == "@type":
+            container_type = "@set"
+        if container_type == "@set":
+            temp_list = []
+        else:
+            value = [{container_type: value}]
+            temp_list = [{container_type: value}]
+        if parent is not None:
+            expanded_value = parent._to_expanded_json(value)
+            # TODO: what should happen if value is assimilated by parent?
+            # -> return parent with added values
+        else:
+            expanded_value = cls([], parent=None, key=key, context=context)._to_expanded_json(value)
+        # we don't care if it is assimilated by the temporary object as expanded_value is its replacement
+        if not isinstance(expanded_value, list):
+            expanded_value = [expanded_value]
+        return cls(expanded_value, parent=parent, key=key, context=context)
 
     @classmethod
     def get_item_list_from_container(cls, ld_value):

@@ -16,7 +16,7 @@ def test_build_in_comparison():
     # Fail probably because of bug in ld_dict
     # that is fixed on refactor/data-model after merge of refactor/384-test-ld_dict
     assert di == {"@id": "foo", "schema:name": "bar"}
-    assert di == {"@id": "foo", "name": "b"}
+    assert di == {"@id": "foo", "schema:name": "b"}
     assert di == {"schema:name": "bar"}
     di = ld_dict([{}], context={"schema": "https://schema.org/"})
     di["schema:Person"] = {"schema:name": "foo"}

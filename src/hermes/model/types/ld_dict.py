@@ -25,8 +25,8 @@ class ld_dict(ld_container):
 
     def __setitem__(self, key, value):
         full_iri = self.ld_proc.expand_iri(self.active_ctx, key)
-        ld_value = self._to_expanded_json(full_iri, value)
-        self.data_dict.update({full_iri: ld_value})
+        ld_value = self._to_expanded_json({full_iri: value})
+        self.data_dict.update(ld_value)
 
     def __delitem__(self, key):
         full_iri = self.ld_proc.expand_iri(self.active_ctx, key)
@@ -127,7 +127,7 @@ class ld_dict(ld_container):
             full_context[:0] = parent.full_context
 
         ld_value = cls.ld_proc.expand(ld_data, {"expandContext": full_context, "documentLoader": bundled_loader})
-        ld_value = cls(ld_value, parent=parent, key=key, context=data_context)
+        ld_value = cls(ld_value, parent=parent, key=key, context=full_context)
 
         return ld_value
 

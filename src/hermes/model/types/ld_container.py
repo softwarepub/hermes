@@ -6,6 +6,8 @@
 
 from .pyld_util import JsonLdProcessor, bundled_loader
 
+from datetime import date, time, datetime
+
 
 class ld_container:
     """
@@ -91,7 +93,95 @@ class ld_container:
 
         return value
 
-    def _to_expanded_json(self, key, value):
+    def _to_expanded_json(self, value):
+        """
+            The item_lists contents/ the data_dict will be substituted with value.
+            Value can be an ld_container or contain zero or more.
+            Then the _data of the inner most ld_dict that contains or is self will be expanded.
+            If self is not an ld_dict and none of self's parents is, use the key from ld_list to generate a minimal dict
+
+            The result of this function is what value has turned into
+            (always a list for type(self) == ld_dict and list or dict for type(self) == ld_list).
+            If self is an ld_list and value was assimilated by self the returned value is list otherwise it is a dict
+            (e.g. in a set the inner sets values are put directly into the outer one).
+        """
+        if self.__class__.__name__ == "ld_list":
+            value = [value]
+        parent = self
+        path = []
+        while parent.__class__.__name__ != "ld_dict":
+            if parent.container_type == "@list":
+                path.extend(["@list", 0])
+            elif parent.container_type == "@graph":
+                path.extend(["@graph", 0])
+            path.append(self.ld_proc.expand_iri(parent.active_ctx, parent.key) if self.index is None else self.index)
+            if parent.parent is None:
+                break
+            parent = parent.parent
+        if parent.__class__.__name__ != "ld_dict":
+            key = self.ld_proc.expand_iri(parent.active_ctx, parent.key)
+            parent = ld_container([{key: parent._data}])
+        path.append(0)
+
+        key_and_reference_todo_list = []
+        if isinstance(value, ld_container):
+            if parent.__class__.__name__ == "ld_list" and parent.container_type == "@set":
+                value = value._data
+            else:
+                value = value._data[0]
+        elif isinstance(value, date):
+            value = {"@value": value.isoformat(), "@type": "schema:Date"}
+        elif isinstance(value, datetime):
+            value = {"@value": value.isoformat(), "@type": "schema:DateTime"}
+        elif isinstance(value, time):
+            value = {"@value": value.isoformat(), "@type": "schema:Time"}
+        else:
+            key_and_reference_todo_list = [(0, [value])]
+        special_types = (list, dict, ld_container, date, datetime, time)
+        while True:
+            if len(key_and_reference_todo_list) == 0:
+                break
+            key, ref = key_and_reference_todo_list.pop()
+            temp = ref[key]
+            if isinstance(temp, list):
+                key_and_reference_todo_list.extend([(index, temp) for index, val in enumerate(temp) if isinstance(val, special_types)])
+            elif isinstance(temp, dict):
+                key_and_reference_todo_list.extend([(new_key, temp) for new_key in temp.keys() if isinstance(temp[new_key], special_types)])
+            elif isinstance(temp, ld_container):
+                ref[key] = temp._data[0]
+            elif isinstance(temp, date):
+                ref[key] = {"@value": temp.isoformat(), "@type": "schema:Date"}
+            elif isinstance(temp, datetime):
+                ref[key] = {"@value": temp.isoformat(), "@type": "schema:DateTime"}
+            elif isinstance(temp, time):
+                ref[key] = {"@value": temp.isoformat(), "@type": "schema:Time"}
+
+        current_data = parent._data
+        for index in range(len(path) - 1, 0, -1):
+            current_data = current_data[path[index]]
+        if current_data == []:
+            self_data = None
+            current_data.append(value)
+        else:
+            self_data = current_data[path[0]]
+            current_data[path[0]] = value
+        expanded_data = self.ld_proc.expand(parent._data, {"expandContext": self.full_context,
+                                                                  "documentLoader": bundled_loader,
+                                                                  "keepFreeFloatingNodes": True})
+        if self_data is not None:
+            current_data[path[0]] = self_data
+        else:
+            current_data.clear()
+        for index in range(len(path) - 1, -1, -1):
+            expanded_data = expanded_data[path[index]]
+
+        if self.__class__.__name__ == "ld_dict":
+            return expanded_data
+        if self.__class__.__name__ == "ld_list" and len(expanded_data) != 1:
+            return expanded_data
+        return expanded_data[0]
+
+    def _to_expanded_json_deprecated(self, key, value):
         if key == "@id":
             ld_value = self.ld_proc.expand_iri(self.active_ctx, value, vocab=False)
         elif key == "@type":
