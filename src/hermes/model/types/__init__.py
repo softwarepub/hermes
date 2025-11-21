@@ -37,10 +37,10 @@ _TYPEMAP = [
     (lambda v: isinstance(v, str), {"python": lambda v, parent, **_: parent.ld_proc.compact_iri(parent.active_ctx, v)}),
 
     # Convert internal data types to expanded_json
-    (lambda c: ld_container.is_json_id(c), {"expanded_json": lambda c, **_: [c]}),
-    (lambda c: ld_container.is_ld_id(c), {"expanded_json": lambda c, **_: c}),
-    (lambda c: ld_container.is_json_value(c), {"expanded_json": lambda c, **_: [c]}),
-    (lambda c: ld_container.is_ld_value(c), {"expanded_json": lambda c, **_: c}),
+    (ld_container.is_json_id, {"expanded_json": lambda c, **_: [c]}),
+    (ld_container.is_ld_id, {"expanded_json": lambda c, **_: c}),
+    (ld_container.is_json_value, {"expanded_json": lambda c, **_: [c]}),
+    (ld_container.is_ld_value, {"expanded_json": lambda c, **_: c}),
     (ld_dict.is_json_dict, {"expanded_json": lambda c, **kw: ld_dict.from_dict(c, **kw).ld_value}),
     (
         ld_list.is_container,
