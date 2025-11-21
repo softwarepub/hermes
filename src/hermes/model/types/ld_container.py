@@ -129,15 +129,15 @@ class ld_container:
                 value = value._data
             else:
                 value = value._data[0]
-        elif isinstance(value, date):
-            value = {"@value": value.isoformat(), "@type": "schema:Date"}
         elif isinstance(value, datetime):
             value = {"@value": value.isoformat(), "@type": "schema:DateTime"}
+        elif isinstance(value, date):
+            value = {"@value": value.isoformat(), "@type": "schema:Date"}
         elif isinstance(value, time):
             value = {"@value": value.isoformat(), "@type": "schema:Time"}
         else:
             key_and_reference_todo_list = [(0, [value])]
-        special_types = (list, dict, ld_container, date, datetime, time)
+        special_types = (list, dict, ld_container, datetime, date, time)
         while True:
             if len(key_and_reference_todo_list) == 0:
                 break
@@ -149,10 +149,10 @@ class ld_container:
                 key_and_reference_todo_list.extend([(new_key, temp) for new_key in temp.keys() if isinstance(temp[new_key], special_types)])
             elif isinstance(temp, ld_container):
                 ref[key] = temp._data[0]
-            elif isinstance(temp, date):
-                ref[key] = {"@value": temp.isoformat(), "@type": "schema:Date"}
             elif isinstance(temp, datetime):
                 ref[key] = {"@value": temp.isoformat(), "@type": "schema:DateTime"}
+            elif isinstance(temp, date):
+                ref[key] = {"@value": temp.isoformat(), "@type": "schema:Date"}
             elif isinstance(temp, time):
                 ref[key] = {"@value": temp.isoformat(), "@type": "schema:Time"}
 
@@ -177,7 +177,7 @@ class ld_container:
 
         if self.__class__.__name__ == "ld_dict":
             return expanded_data
-        if self.__class__.__name__ == "ld_list" and len(expanded_data) != 1:
+        if len(expanded_data) != 1:
             return expanded_data
         return expanded_data[0]
 
@@ -213,7 +213,7 @@ class ld_container:
         return ld_value
 
     def __repr__(self):
-        return f'{type(self).__name__}({self._data[0]})'
+        return f'{type(self).__name__}({self._data})'
 
     def __str__(self):
         return str(self.to_python())

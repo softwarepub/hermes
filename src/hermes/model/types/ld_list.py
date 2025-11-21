@@ -151,9 +151,11 @@ class ld_list(ld_container):
         if container_type != "@set":
             value = [{container_type: value}]
         if parent is not None:
-            expanded_value = parent._to_expanded_json(value)
-            if isinstance(expanded_value, list) or not cls.is_container(expanded_value):
-                # parent has to be an ld_list because an ld_dict won't assimilate an list
+            if isinstance(parent, ld_list):
+                expanded_value = parent._to_expanded_json(value)
+            else:
+                expanded_value = parent._to_expanded_json({key: value})[cls.ld_proc.expand_iri(parent.active_ctx, key)]
+            if isinstance(parent, cls) and (isinstance(expanded_value, list) or not cls.is_container(expanded_value)):
                 parent.extend(expanded_value if isinstance(expanded_value, list) else [expanded_value])
                 # TODO: is there a need to add the context to the parent as well?
                 return parent
