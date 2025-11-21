@@ -6,7 +6,7 @@
 # SPDX-FileContributor: Michael Meinel
 # SPDX-FileContributor: Michael Fritzsche
 
-from datetime import date, datetime, time
+from datetime import datetime
 
 import pytest
 
@@ -104,7 +104,8 @@ class TestLdContainer:
 
     def test_to_python_id_value(self, mock_context):
         cont = ld_dict([{}], context=[mock_context])
-        assert cont._to_python("http://spam.eggs/ham", [{"@id": "http://spam.eggs/spam"}]) == [{"@id": "http://spam.eggs/spam"}]
+        assert cont._to_python("http://spam.eggs/ham",
+                               [{"@id": "http://spam.eggs/spam"}]) == [{"@id": "http://spam.eggs/spam"}]
         assert cont._to_python("http://spam.eggs/ham",
                                {"@id": "http://spam.eggs/identifier"}) == "http://spam.eggs/identifier"
 
@@ -138,7 +139,7 @@ class TestLdContainer:
     def test_to_expanded_type(self, mock_context):
         cont = ld_dict([{}], context=[mock_context])
         assert cont._to_expanded_json({"@type": "Egg"}) == {"@type": ["http://spam.eggs/Egg"]}
-        assert cont._to_expanded_json({"@type": ["Egg", "@id"]}) =={"@type": ["http://spam.eggs/Egg", "@id"]}
+        assert cont._to_expanded_json({"@type": ["Egg", "@id"]}) == {"@type": ["http://spam.eggs/Egg", "@id"]}
 
     def test_to_expanded_id_value(self, mock_context):
         cont = ld_dict([{}], context=[mock_context])

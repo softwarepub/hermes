@@ -119,7 +119,7 @@ class ld_list(ld_container):
         return not x
 
     def append(self, value):
-        ld_value = val if isinstance(val:= self._to_expanded_json(value), list) else [val]
+        ld_value = val if isinstance(val := self._to_expanded_json(value), list) else [val]
         self.item_list.extend(ld_value)
 
     def extend(self, value):

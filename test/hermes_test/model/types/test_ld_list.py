@@ -99,6 +99,7 @@ def test_build_in_set_complex():
     li[0:3:2] = [["aa", "bb"]]
     assert li == ["aa", "b", "bb"]
 
+
 def test_build_in_del():
     li = ld_list([{"@list": [{"@value": "foo"}, {"@value": "bar"}, {"@value": "foobar"}]}],
                  key="https://schema.org/name", context=[{"schema": "https://schema.org/"}])

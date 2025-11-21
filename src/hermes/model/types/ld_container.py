@@ -144,9 +144,11 @@ class ld_container:
             key, ref = key_and_reference_todo_list.pop()
             temp = ref[key]
             if isinstance(temp, list):
-                key_and_reference_todo_list.extend([(index, temp) for index, val in enumerate(temp) if isinstance(val, special_types)])
+                key_and_reference_todo_list.extend([(index, temp) for index, val in enumerate(temp)
+                                                    if isinstance(val, special_types)])
             elif isinstance(temp, dict):
-                key_and_reference_todo_list.extend([(new_key, temp) for new_key in temp.keys() if isinstance(temp[new_key], special_types)])
+                key_and_reference_todo_list.extend([(new_key, temp) for new_key in temp.keys()
+                                                    if isinstance(temp[new_key], special_types)])
             elif isinstance(temp, ld_container):
                 ref[key] = temp._data[0]
             elif isinstance(temp, datetime):
@@ -166,8 +168,8 @@ class ld_container:
             self_data = current_data[path[0]]
             current_data[path[0]] = value
         expanded_data = self.ld_proc.expand(parent._data, {"expandContext": self.full_context,
-                                                                  "documentLoader": bundled_loader,
-                                                                  "keepFreeFloatingNodes": True})
+                                                           "documentLoader": bundled_loader,
+                                                           "keepFreeFloatingNodes": True})
         if self_data is not None:
             current_data[path[0]] = self_data
         else:
