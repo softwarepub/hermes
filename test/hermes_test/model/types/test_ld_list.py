@@ -89,10 +89,23 @@ def test_build_in_set_complex():
     temp = di["schema:name"]
     di["schema:name"][0] = {"@list": ["a", "b"]}
     assert di["schema:name"][0] == ["a", "b"] and temp._data is di["schema:name"]._data
-    li = ld_list([{"@list": []}], key="schema:time", context=[{"schema": "https://schema.org/"}])
+    li = ld_list([], key="schema:time", context=[{"schema": "https://schema.org/"}])
     date_obj = date(year=2025, month=12, day=31)
     li.append(date_obj)
     assert li.item_list == [{"@value": date_obj.isoformat(), "@type": "https://schema.org/Date"}]
+    del li[0]
+    li[0:1] = ["a", "b", "c"]
+    assert li == ["a", "b", "c"]
+    li[0:3:2] = [["aa", "bb"]]
+    assert li == ["aa", "b", "bb"]
+
+def test_build_in_del():
+    li = ld_list([{"@list": [{"@value": "foo"}, {"@value": "bar"}, {"@value": "foobar"}]}],
+                 key="https://schema.org/name", context=[{"schema": "https://schema.org/"}])
+    del li[0:3:2]
+    assert li == ["bar"]
+    del li[0]
+    assert li == []
 
 
 def test_build_in_len():
@@ -222,8 +235,8 @@ def test_from_list():
     assert li.item_list == li.context == [] and li.parent is li.index is None and li.key == "schema:foo"
     assert li._data == [] and li.container_type == "@set"
     li = ld_list.from_list([], parent=li, key="schema:name", context=[{"schema": "https://schema.org/"}])
-    assert li.item_list == [] and li.parent is not None and li.key == "schema:name"
-    assert li.index is None and li.context == [{"schema": "https://schema.org/"}]
+    assert li.item_list == [] and li.parent is None and li.key == "schema:foo"
+    assert li.index is None and li.context == []
     li_data = ["a", {"@value": "b"}]
     li = ld_list.from_list(li_data, parent=None, key="https://schema.org/name",
                            context=[{"schema": "https://schema.org/"}])

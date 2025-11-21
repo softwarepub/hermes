@@ -58,10 +58,11 @@ class ld_list(ld_container):
             iter(value)
         except TypeError as exc:
             raise TypeError("must assign iterable to extended slice") from exc
-        expanded_value = [self._to_expanded_json(val) for val in value]
-        # TODO: the slice should work if all items including assimilated ones in the given order can be set via slice
-        # Implement this
+        expanded_value = ld_container.merge_to_list(*[self._to_expanded_json(val) for val in value])
         self.item_list[index] = [val[0] if isinstance(val, list) else val for val in expanded_value]
+
+    def __delitem__(self, index):
+        del self.item_list[index]
 
     def __len__(self):
         return len(self.item_list)
@@ -147,18 +148,18 @@ class ld_list(ld_container):
     def from_list(cls, value, *, parent=None, key=None, context=None, container_type="@set"):
         if key == "@type":
             container_type = "@set"
-        if container_type == "@set":
-            temp_list = []
-        else:
+        if container_type != "@set":
             value = [{container_type: value}]
-            temp_list = [{container_type: value}]
         if parent is not None:
             expanded_value = parent._to_expanded_json(value)
-            # TODO: what should happen if value is assimilated by parent?
-            # -> return parent with added values
+            if isinstance(expanded_value, list) or not cls.is_container(expanded_value):
+                # parent has to be an ld_list because an ld_dict won't assimilate an list
+                parent.extend(expanded_value if isinstance(expanded_value, list) else [expanded_value])
+                # TODO: is there a need to add the context to the parent as well?
+                return parent
         else:
             expanded_value = cls([], parent=None, key=key, context=context)._to_expanded_json(value)
-        # we don't care if it is assimilated by the temporary object as expanded_value is its replacement
+        # the object has to be a list for further use but does not have to be returned by _to_expanded_json as a list
         if not isinstance(expanded_value, list):
             expanded_value = [expanded_value]
         return cls(expanded_value, parent=parent, key=key, context=context)
