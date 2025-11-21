@@ -26,7 +26,7 @@ To do this, we need to specify what provenance information is recorded and how i
 
 ## Decision Outcome
 
-Chosen option: "Provide HERMES API-methods that also document themselves", because comes out best.
+Chosen option:
 
 ## Pros and Cons of the Options
 
