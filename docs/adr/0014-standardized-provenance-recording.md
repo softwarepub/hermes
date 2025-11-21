@@ -16,7 +16,7 @@ Technical story:
 ## Context and Problem Statement
 
 To consolidate traceability of the metadata, and resolution based on metadata sources in case of duplicates, etc., we need to record the provenance of metadata values in a __standardized__ way.
-Additionally we use the [PROV-O ontology](https://www.w3.org/TR/prov-o/) and [JSON-LD](https://www.w3.org/TR/json-ld/) and want that HERMES records as much of the provenance as possible to not overcomplicate plugin development.
+To achieve this, we use the [PROV-O ontology](https://www.w3.org/TR/prov-o/) serialized as [JSON-LD](https://www.w3.org/TR/json-ld/). Additionally, HERMES should make it possible to record as much of the provenance as possible *centrally*, i.e., as part of the core codebase. This is to keep plugin developers from having to supply their own provenance solutions.
 
 To do this, we need to specify what provenance information is recorded and how it can be implemented in HERMES to make it easy to use.
 
@@ -56,7 +56,7 @@ class HermesPlugin():
 * Bad, because API methods may not cover all I/O functionality python provides
 * Bad, because it doesn't cover merging, mapping, etc.  
 
-All provenance information should be recorded in the following format where addtional properties of agents, activites and entities are values of schema and codemeta fields:
+All provenance information should be recorded in the following format where addtional properties of agents, activites and entities are values of suitable vocabularies (from Schema.org, CodeMeta and potentially other schemas):
 
 ![](./hermes-prov-diagram/hermes-prov.svg)<br>
 source: [hermes-prov.drawio](./hermes-prov-diagram/hermes-prov.drawio)
