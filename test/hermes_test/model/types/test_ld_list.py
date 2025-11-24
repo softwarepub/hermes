@@ -93,7 +93,6 @@ def test_build_in_set_complex():
     date_obj = date(year=2025, month=12, day=31)
     li.append(date_obj)
     assert li.item_list == [{"@value": date_obj.isoformat(), "@type": "https://schema.org/Date"}]
-    del li[0]
     li[0:1] = ["a", "b", "c"]
     assert li == ["a", "b", "c"]
     li[0:3:2] = [["aa", "bb"]]
@@ -143,11 +142,16 @@ def test_append():
 
 
 def test_build_in_contains():
-    li = ld_list([{"@list": []}], key="https://schema.org/name", context=[{"schema": "https://schema.org/"}])
+    li = ld_list([], key="https://schema.org/name", context=[{"schema": "https://schema.org/"}])
     li.append("foo")
     li.append({"@type": "A", "schema:name": "a"})
     assert "foo" in li and {"@type": "A", "schema:name": "a"} in li
     assert {"@value": "foo"} in li and {"@type": "A", "https://schema.org/name": "a"} in li
+    assert ["foo", {"@type": "A", "schema:name": "a"}] in li
+    assert [{"@list": ["foo", {"@type": "A", "schema:name": "a"}]}] not in li
+    li.append({"@id": "schema:foo", "schema:name": "foo"})
+    assert {"@id": "schema:foo"} in li and {"@id": "schema:foo", "schema:name": "foobar"} in li
+    assert {"schema:name": "foo"} in li
 
 
 def test_build_in_comparison():

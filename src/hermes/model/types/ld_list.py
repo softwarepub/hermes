@@ -75,10 +75,15 @@ class ld_list(ld_container):
             yield item
 
     def __contains__(self, value):
-        # TODO: Update to use new _to_expanded_json
-        # and return True if value would be assimilated by self and all those items are in self
-        expanded_value = val[0] if isinstance(val := self._to_expanded_json_deprecated(self.key, value), list) else val
-        return expanded_value in self.item_list
+        expanded_value = self._to_expanded_json(value)
+        if isinstance(expanded_value, list):
+            return all(val in self for val in expanded_value)
+        self_attributes = {"parent": self.parent, "key": self.key, "index": self.index, "context": self.full_context}
+        if self.container_type == "@set":
+            temp_list = ld_list([expanded_value], **self_attributes)
+            return any(temp_list == ld_list([val], **self_attributes) for val in self.item_list)
+        temp_list = ld_list([{self.container_type: [expanded_value]}], **self_attributes)
+        return any(temp_list == ld_list([{self.container_type: [val]}], **self_attributes) for val in self.item_list)
 
     def __eq__(self, other):
         if not (isinstance(other, (list, ld_list)) or ld_list.is_container(other)):
