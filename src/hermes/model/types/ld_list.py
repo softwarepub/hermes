@@ -86,6 +86,7 @@ class ld_list(ld_container):
         return any(temp_list == ld_list([{self.container_type: [val]}], **self_attributes) for val in self.item_list)
 
     def __eq__(self, other):
+        # TODO: ld_lists with container_type "@set" have to be considered unordered
         if not (isinstance(other, (list, ld_list)) or ld_list.is_container(other)):
             return NotImplemented
         if isinstance(other, dict):
