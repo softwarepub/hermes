@@ -7,6 +7,9 @@
 from .pyld_util import JsonLdProcessor, bundled_loader
 
 from datetime import date, time, datetime
+from typing import Self
+
+JSON_LD_CONTEXT_DICT = dict[str, str | 'JSON_LD_CONTEXT_DICT']
 
 
 class ld_container:
@@ -20,14 +23,33 @@ class ld_container:
 
     ld_proc = JsonLdProcessor()
 
-    def __init__(self, data, *, parent=None, key=None, index=None, context=None):
+    def __init__(
+        self: Self,
+        data: list,
+        *,
+        parent: "ld_container" | None = None,
+        key: str | None = None,
+        index: int | None = None,
+        context: list[str | JSON_LD_CONTEXT_DICT] | None = None,
+    ) -> None:
         """
         Create a new instance of an ld_container.
 
+        :param self: The instance of ld_container to be initialized.
+        :type self: Self
         :param data: The expanded json-ld data that is mapped.
-        :param parent: Optional parent node of this container.
-        :param key: Optional key into the parent container.
-        :param context: Optional local context for this container.
+        :type data: list
+        :param parent: parent node of this container.
+        :type parent: ld_container | None
+        :param key: key into the parent container.
+        :type key: str | None
+        :param key: index into the parent container.
+        :type index: int | None
+        :param context: local context for this container.
+        :type context: list[str | JSON_LD_CONTEXT_DICT]
+
+        :return:
+        :rtype: None
         """
 
         # Store basic data
@@ -54,7 +76,18 @@ class ld_container:
                 {"documentLoader": bundled_loader}
             )
 
-    def add_context(self, context):
+    def add_context(self: Self, context: list[str | JSON_LD_CONTEXT_DICT]) -> None:
+        """
+        Add the given context to the ld_container.
+
+        :param self: The ld_container the context should be added to.
+        :type self: Self
+        :param context: The context to be added to self.
+        :type context: list[str | JSON_LD_CONTEXT_DICT]
+
+        :return:
+        :rtype: None
+        """
         self.context = self.merge_to_list(self.context, context)
         self.active_ctx = self.ld_proc.process_context(
             self.active_ctx,
@@ -63,31 +96,84 @@ class ld_container:
         )
 
     @property
-    def full_context(self):
+    def full_context(self: Self) -> list[str, JSON_LD_CONTEXT_DICT] | None:
+        """
+        Return the context of the ld_container merged with the full_context of its parent.
+
+        :param self: The ld_container whose full_context is returned
+        :type self: Self
+
+        :return: The context of the ld_container merged with the full_context of its parent via
+            ld_container.merge_to_list or just the context of this ld_container if self.parent is None.
+        :rtype: list[str | JSON_LD_CONTEXT_DICT] | None
+        """
         if self.parent is not None:
             return self.merge_to_list(self.parent.full_context, self.context)
         else:
             return self.context
 
     @property
-    def path(self):
-        """ Create a path representation for this item. """
+    def path(self: Self) -> list[str | int]:
+        """
+        Create a path representation for this item.
+
+        :param self: The ld_container the path leads to from its outer most parent container.
+        :type self: Self
+
+        :return: The path from selfs outer most parent to it self.
+            Let parent be the outer most parent of self.
+            Start with index = 1 and iteratively set parent to parent[path[index]] and then increment index
+            until index == len(path) to get parent is self == true.
+        :rtype: list[str | int]
+        """
         if self.parent:
             return self.parent.path + [self.key if self.index is None else self.index]
         else:
             return ['$']
 
     @property
-    def ld_value(self):
-        """ Retrun a representation that is suitable as a value in expanded JSON-LD. """
+    def ld_value(self: Self) -> list:
+        """
+        Return a representation that is suitable as a value in expanded JSON-LD of this ld_container.
+
+        :param self: The ld_container whose expanded JSON-LD representation is returned.
+        :type self: Self
+
+        :return: The expanded JSON-LD value of this container.
+            This value is the basis of all operations and a reference to the original is returned and not a copy.
+            Do **not** modify unless strictly necessary and you know what you do.
+            Otherwise unexpected behavior may occur.
+        :rtype: list
+        """
         return self._data
 
-    def _to_python(self, full_iri, ld_value):
+    def _to_python(
+            self: Self,
+            full_iri: str,
+            ld_value: list | dict | str
+        ) -> "ld_container" | str | int | float | bool | date | datetime | time:
+        """
+        Returns a pythonized version of the given value pretending the value is in self and full_iri its key.
+
+        :param self: the ld_container ld_value is considered to be in.
+        :type self: Self
+        :param full_iri: The expanded iri of the key of ld_value / self (later if self is not a dictionary).
+        :type full_iri: str
+        :param ld_value: The value thats pythonized value is requested. ld_value has to be valid expanded JSON-LD if it
+            was embeded in self._data.
+        :type ld_value: list | dict | str
+
+        :return: The pythonized value of the ld_value.
+        :rtype: ld_container | str | int | float | bool | date | datetime | time
+        """
         if full_iri == "@id":
+            # values of key "@id" only have to be compacted
             value = self.ld_proc.compact_iri(self.active_ctx, ld_value, vocab=False)
         else:
+            # use the type map from src/hermes/model/types/__init__.py to convert all other values.
             value, ld_output = self.ld_proc.apply_typemap(ld_value, "python", "ld_container",
                                                           parent=self, key=full_iri)
+            # check if conversion was successful
             if ld_output is None:
                 raise TypeError(full_iri, ld_value)
 
