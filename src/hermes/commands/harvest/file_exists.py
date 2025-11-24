@@ -7,7 +7,6 @@
 from collections import defaultdict
 from dataclasses import dataclass
 from functools import cache
-from mimetypes import guess_type
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Set
 from typing_extensions import Self
@@ -16,41 +15,7 @@ import subprocess
 from pydantic import BaseModel
 
 from hermes.commands.harvest.base import HermesHarvestCommand, HermesHarvestPlugin
-
-
-def guess_file_type(path: Path):
-    """File type detection for non-standardised formats.
-
-    Custom detection for file types not yet supported by Python's ``guess_type``
-    function.
-    """
-    # YAML was only added to ``guess_type`` in Python 3.14 due to the MIME type only
-    # having been decided in 2024.
-    # See: https://www.rfc-editor.org/rfc/rfc9512.html
-    if path.suffix in [".yml", ".yaml"]:
-        return ("application/yaml", None)
-
-    # TOML is not yet part of ``guess_type`` due to the MIME type only having been
-    # accepted in October of 2024.
-    # See: https://www.iana.org/assignments/media-types/application/toml
-    if path.suffix == ".toml":
-        return ("application/toml", None)
-
-    # cff is yaml.
-    # See: https://github.com/citation-file-format/citation-file-format/issues/391
-    if path.name == "CITATION.cff":
-        return ("application/yaml", None)
-
-    # .license files are likely license annotations according to REUSE specification.
-    # See: https://reuse.software/spec/
-    if path.suffix == ".license":
-        return ("text/plain", None)
-
-    if path.name == "poetry.lock":
-        return ("text/plain", None)
-
-    # use non-strict mode to cover more file types
-    return guess_type(path, strict=False)
+from hermes.utils import guess_file_type
 
 
 @dataclass(kw_only=True)
