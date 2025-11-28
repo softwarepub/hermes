@@ -5,17 +5,56 @@
 # SPDX-FileContributor: Michael Meinel
 # SPDX-FileContributor: Michael Fritzsche
 
-from .ld_container import ld_container
+from .ld_container import (
+    ld_container,
+    JSON_LD_CONTEXT_DICT,
+    EXPANDED_JSON_LD_VALUE,
+    COMPACTED_JSON_LD_VALUE,
+    JSON_LD_VALUE,
+    TIME_TYPE,
+    BASIC_TYPE,
+)
+
+from typing import Union, Self, Any
 
 
 class ld_list(ld_container):
-    """ An JSON-LD container resembling a list. """
+    """ An JSON-LD container resembling a list ("@set", "@list" or "@graph"). """
 
-    def __init__(self, data, *, parent=None, key=None, index=None, context=None):
+    def __init__(
+        self: Self,
+        data: Union[list[str], list[dict[str, Union[BASIC_TYPE, EXPANDED_JSON_LD_VALUE]]]],
+        *,
+        parent: Union["ld_container", None] = None,
+        key: Union[str, None] = None,
+        index: Union[int, None] = None,
+        context: Union[list[Union[str, JSON_LD_CONTEXT_DICT]], None] = None,
+    ) -> None:
+        """
+        Create a new ld_list.py container.
+
+        :param self: The instance of ld_list to be initialized.
+        :type self: Self
+        :param data: The expanded json-ld data that is mapped (must be valid for @set, @list or @graph)
+        :type data: list[str] | list[dict[str, BASIC_TYPE | EXPANDED_JSON_LD_VALUE]]
+        :param parent: parent node of this container.
+        :type parent: ld_container | None
+        :param key: key into the parent container.
+        :type key: str | None
+        :param index: index into the parent container.
+        :type index: int | None
+        :param context: local context for this container.
+        :type context: list[str | JSON_LD_CONTEXT_DICT] | None
+
+        :return:
+        :rtype: None
+        """
+        # check for validity of data
         if not isinstance(key, str):
             raise ValueError("The key is not a string or was omitted.")
         if not isinstance(data, list):
             raise ValueError("The given data does not represent an ld_list.")
+        # infer the container type and item_list from data
         if self.is_ld_list(data):
             if "@list" in data[0]:
                 self.container_type = "@list"
@@ -28,34 +67,74 @@ class ld_list(ld_container):
         else:
             self.container_type = "@set"
             self.item_list = data
-        if key == "@type" and not all(isinstance(item, str) for item in self.item_list):
-            raise ValueError("A given value for @type is not a string.")
-        if key != "@type" and not all(isinstance(item, dict) for item in self.item_list):
+        # further validity checks
+        if key == "@type":
+            if any(not isinstance(item, str) for item in self.item_list) or self.container_type != "@set":
+                raise ValueError("A given value for @type is not a string.")
+        elif any(not isinstance(item, dict) for item in self.item_list):
             raise ValueError("A given value is not properly expanded.")
+        # call super constructor
         super().__init__(data, parent=parent, key=key, index=index, context=context)
 
-    def __getitem__(self, index):
+    def __getitem__(
+        self: Self, index: Union[int, slice]
+    ) -> Union[BASIC_TYPE, TIME_TYPE, ld_container, list[Union[BASIC_TYPE, TIME_TYPE, ld_container]]]:
+        """
+        Get the item(s) at position index in a pythonized form.
+
+        :param self: The ld_list the items are taken from.
+        :type self: Self
+        :param index: The positon(s) from which the item(s) is/ are taken.
+        :type index: int | slice
+
+        :return: The pythonized item(s) at index.
+        :rtype: BASIC_TYPE | TIME_TYPE | ld_container | list[BASIC_TYPE | TIME_TYPE | ld_container]]
+        """
+        # handle slices by applying them to a list of indices and then getting the items at those
         if isinstance(index, slice):
             return [self[i] for i in [*range(len(self))][index]]
 
+        # get the item from the item_list and pythonize it. If necessary add the index.
         item = self._to_python(self.key, self.item_list[index])
         if isinstance(item, ld_container):
             item.index = index
         return item
 
-    def __setitem__(self, index, value):
+    def __setitem__(
+        self: Self, index: Union[int, slice], value: Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_container]
+    ) -> None:
+        """
+        Set the item(s) at position index to the given value(s).
+        All given values are expanded. If any are assimilated by self all items that would be added by this are added.
+
+        :param self: The ld_list the items are set in.
+        :type self: Self
+        :param index: The positon(s) at which the item(s) is/ are set.
+        :type index: int | slice
+        :param value: The new value(s).
+        :type value: Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_container]
+
+        :return:
+        :rtype: None
+        """
         if not isinstance(index, slice):
+            # expand the value
             value = self._to_expanded_json([value])
+            # the returned value is always a list but my contain more then one item
+            # therefor a slice on the item_list is used to add the expanded value(s)
             if index != -1:
                 self.item_list[index:index+1] = value
             else:
                 self.item_list[index:] = value
             return
+        # check if the given values can be iterated (value does not have to be a list)
         try:
             iter(value)
         except TypeError as exc:
             raise TypeError("must assign iterable to extended slice") from exc
+        # expand the values and merge all expanded values into one list
         expanded_value = ld_container.merge_to_list(*[self._to_expanded_json([val]) for val in value])
+        # set the values at index to the expanded values
         self.item_list[index] = [val[0] if isinstance(val, list) else val for val in expanded_value]
 
     def __delitem__(self, index):

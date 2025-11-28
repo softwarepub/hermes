@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # SPDX-FileContributor: Michael Meinel
+# SPDX-FileContributor: Michael Fritzsche
 
 from .pyld_util import JsonLdProcessor, bundled_loader
 
@@ -38,7 +39,7 @@ class ld_container:
 
     def __init__(
         self: Self,
-        data: list,
+        data: list[EXPANDED_JSON_LD_VALUE],
         *,
         parent: Union["ld_container", None] = None,
         key: Union[str, None] = None,
@@ -51,12 +52,12 @@ class ld_container:
         :param self: The instance of ld_container to be initialized.
         :type self: Self
         :param data: The expanded json-ld data that is mapped.
-        :type data: list
+        :type data: list[EXPANDED_JSON_LD_VALUE]
         :param parent: parent node of this container.
         :type parent: ld_container | None
         :param key: key into the parent container.
         :type key: str | None
-        :param key: index into the parent container.
+        :param index: index into the parent container.
         :type index: int | None
         :param context: local context for this container.
         :type context: list[str | JSON_LD_CONTEXT_DICT] | None
@@ -64,7 +65,6 @@ class ld_container:
         :return:
         :rtype: None
         """
-
         # Store basic data
         self.parent = parent
         self.key = key
