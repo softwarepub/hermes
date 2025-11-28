@@ -181,18 +181,19 @@ class ld_container:
 
     def _to_expanded_json(self, value):
         """
-            The item_lists contents/ the data_dict will be substituted with value.
-            Value can be an ld_container or contain zero or more.
-            Then the _data of the inner most ld_dict that contains or is self will be expanded.
-            If self is not an ld_dict and none of self's parents is, use the key from ld_list to generate a minimal dict
+            Returns an expanded version of the given value.
 
-            The result of this function is what value has turned into
-            (always a list for type(self) == ld_dict and list or dict for type(self) == ld_list).
-            If self is an ld_list and value was assimilated by self the returned value is list otherwise it is a dict
-            (e.g. in a set the inner sets values are put directly into the outer one).
+            The item_list/ data_dict of self will be substituted with value.
+            Value can be an ld_container or contain zero or more.
+            Then the _data of the inner most ld_dict that contains or is self will be expanded
+            using the JSON_LD-Processor.
+            If self and none of self's parents is an ld_dict, use the key from outer most ld_list
+            to generate a minimal dict.
+
+            The result of this function is what value has turned into:
+            - If type(self) == ld_dict: the returned value is a dict
+            - If type(self) == ld_list: the returned value is a list
         """
-        if self.__class__.__name__ == "ld_list":
-            value = [value]
         parent = self
         path = []
         while parent.__class__.__name__ != "ld_dict":
@@ -263,11 +264,7 @@ class ld_container:
         for index in range(len(path) - 1, -1, -1):
             expanded_data = expanded_data[path[index]]
 
-        if self.__class__.__name__ == "ld_dict":
-            return expanded_data
-        if len(expanded_data) != 1:
-            return expanded_data
-        return expanded_data[0]
+        return expanded_data
 
     def _to_expanded_json_deprecated(self, key, value):
         if key == "@id":

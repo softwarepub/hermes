@@ -45,20 +45,17 @@ class ld_list(ld_container):
 
     def __setitem__(self, index, value):
         if not isinstance(index, slice):
-            value = self._to_expanded_json(value)
-            if not isinstance(value, list):
-                self.item_list[index] = value
-                return
-            if index < 0:
-                self.item_list[index-1:index] = value
-            else:
+            value = self._to_expanded_json([value])
+            if index != -1:
                 self.item_list[index:index+1] = value
+            else:
+                self.item_list[index:] = value
             return
         try:
             iter(value)
         except TypeError as exc:
             raise TypeError("must assign iterable to extended slice") from exc
-        expanded_value = ld_container.merge_to_list(*[self._to_expanded_json(val) for val in value])
+        expanded_value = ld_container.merge_to_list(*[self._to_expanded_json([val]) for val in value])
         self.item_list[index] = [val[0] if isinstance(val, list) else val for val in expanded_value]
 
     def __delitem__(self, index):
@@ -75,14 +72,16 @@ class ld_list(ld_container):
             yield item
 
     def __contains__(self, value):
-        expanded_value = self._to_expanded_json(value)
-        if isinstance(expanded_value, list):
+        expanded_value = self._to_expanded_json([value])
+        if len(expanded_value) == 0:
+            return True
+        if len(expanded_value) > 1:
             return all(val in self for val in expanded_value)
         self_attributes = {"parent": self.parent, "key": self.key, "index": self.index, "context": self.full_context}
         if self.container_type == "@set":
-            temp_list = ld_list([expanded_value], **self_attributes)
+            temp_list = ld_list(expanded_value, **self_attributes)
             return any(temp_list == ld_list([val], **self_attributes) for val in self.item_list)
-        temp_list = ld_list([{self.container_type: [expanded_value]}], **self_attributes)
+        temp_list = ld_list([{self.container_type: expanded_value}], **self_attributes)
         return any(temp_list == ld_list([{self.container_type: [val]}], **self_attributes) for val in self.item_list)
 
     def __eq__(self, other):
@@ -125,8 +124,7 @@ class ld_list(ld_container):
         return not x
 
     def append(self, value):
-        ld_value = val if isinstance(val := self._to_expanded_json(value), list) else [val]
-        self.item_list.extend(ld_value)
+        self.item_list.extend(self._to_expanded_json([value]))
 
     def extend(self, value):
         for item in value:
@@ -158,18 +156,15 @@ class ld_list(ld_container):
             value = [{container_type: value}]
         if parent is not None:
             if isinstance(parent, ld_list):
-                expanded_value = parent._to_expanded_json(value)
+                expanded_value = parent._to_expanded_json([value])
+                if (len(expanded_value) != 1 or
+                     not (isinstance(expanded_value[0], list) or cls.is_container(expanded_value[0]))):
+                    parent.extend(expanded_value)
+                    return parent
             else:
                 expanded_value = parent._to_expanded_json({key: value})[cls.ld_proc.expand_iri(parent.active_ctx, key)]
-            if isinstance(parent, cls) and (isinstance(expanded_value, list) or not cls.is_container(expanded_value)):
-                parent.extend(expanded_value if isinstance(expanded_value, list) else [expanded_value])
-                # TODO: is there a need to add the context to the parent as well?
-                return parent
         else:
             expanded_value = cls([], parent=None, key=key, context=context)._to_expanded_json(value)
-        # the object has to be a list for further use but does not have to be returned by _to_expanded_json as a list
-        if not isinstance(expanded_value, list):
-            expanded_value = [expanded_value]
         return cls(expanded_value, parent=parent, key=key, context=context)
 
     @classmethod
