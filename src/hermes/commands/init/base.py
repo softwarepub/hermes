@@ -9,6 +9,7 @@ import re
 import shutil
 import sys
 import traceback
+import jinja2
 from dataclasses import dataclass
 from enum import Enum, auto
 from importlib import metadata
@@ -17,6 +18,7 @@ from urllib.parse import urljoin, urlparse
 
 import requests
 import toml
+from jinja2 import FileSystemLoader
 from pydantic import BaseModel
 from requests import HTTPError
 
@@ -467,18 +469,13 @@ class HermesInitCommand(HermesCommand):
 
     def configure_ci_template(self, ci_file_path) -> None:
         """Replaces all {%parameter%} in a ci file with values from ci_parameters dict"""
-        with open(ci_file_path, 'r') as file:
-            content = file.read()
-        parameters = list(set(re.findall(r'{%(.*?)%}', content)))
-        for parameter in parameters:
-            if parameter in self.ci_parameters:
-                value = str(self.ci_parameters[parameter])
-                content = content.replace(f'{{%{parameter}%}}', value)
-            else:
-                sc.debug_info(f"CI File Parameter {{%{parameter}%}} was not set.", formatting=sc.Formats.WARNING)
-                content = content.replace(f'{{%{parameter}%}}', '')
+        jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(""),
+                                       block_start_string="{%%", block_end_string="%%}",
+                                       variable_start_string="{{", variable_end_string="}}")
+        template = jinja_env.get_template(ci_file_path)
+        rendered = template.render(self.ci_parameters)
         with open(ci_file_path, 'w') as file:
-            file.write(content)
+            file.write(rendered)
 
     def create_zenodo_token(self) -> None:
         """Makes the user create a zenodo token and saves it in self.tokens."""
