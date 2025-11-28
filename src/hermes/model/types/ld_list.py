@@ -158,7 +158,7 @@ class ld_list(ld_container):
             if isinstance(parent, ld_list):
                 expanded_value = parent._to_expanded_json([value])
                 if (len(expanded_value) != 1 or
-                     not (isinstance(expanded_value[0], list) or cls.is_container(expanded_value[0]))):
+                        not (isinstance(expanded_value[0], list) or cls.is_container(expanded_value[0]))):
                     parent.extend(expanded_value)
                     return parent
             else:
