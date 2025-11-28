@@ -230,3 +230,24 @@ class DataverseDepositPlugin(BaseDepositPlugin):
         res = requests.post(url, headers=headers, params=params, data={"persistentId": persistent_id})
         if not res.ok:
             raise RuntimeError(f"Publish failed: {res.status_code}: {res.text}")
+
+def extract_first_and_last_name(name: str, corrected_names: dict[str, list[str]] = dict()) -> list[str]:
+    """
+    Takes a name and tries to separate it into first and last name.
+    If in corrected_names, the corrected values are taken.
+    Otherwise, the name is split at the first (and only) comma or at the last space.
+    If there are no commas or spaces, the names gets doubled as first and last name.
+    """
+    # See if name is already corrected
+    if name in corrected_names.keys():
+        return corrected_names[name]
+    name = name.strip()
+    # Swap and separate names with ","
+    if name.count(",") == 1:
+        return [n.strip() for n in name.split(",")[::-1]]
+    # Separate using spaces
+    if name.count(" ") > 0:
+        splits = name.split(" ")
+        return [" ".join(splits[:-1]), splits[-1]]
+    # Return the doubled name as last default
+    return [name, name]
