@@ -231,6 +231,7 @@ class DataverseDepositPlugin(BaseDepositPlugin):
         if not res.ok:
             raise RuntimeError(f"Publish failed: {res.status_code}: {res.text}")
 
+
 def extract_first_and_last_name(name: str, corrected_names: dict[str, list[str]] = dict()) -> list[str]:
     """
     Takes a name and tries to separate it into first and last name.

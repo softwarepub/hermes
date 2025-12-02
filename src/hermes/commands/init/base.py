@@ -884,7 +884,7 @@ class HermesInitCommand(HermesCommand):
         else:
             self.ci_parameters["gh_push_target"] = "\"*\""
             self.ci_parameters["gl_push_condition"] = "$CI_COMMIT_TAG"
-            sc.echo(f"The HERMES pipeline will be activated when you push a tag.", formatting=sc.Formats.OKGREEN)
+            sc.echo("The HERMES pipeline will be activated when you push a tag.", formatting=sc.Formats.OKGREEN)
         sc.echo()
 
     def choose_deposit_files(self) -> None:
