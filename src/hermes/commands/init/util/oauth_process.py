@@ -4,18 +4,19 @@
 # SPDX-FileContributor: David Pape
 
 from __future__ import annotations
-import logging
 
+import json
+import logging
 import os
 import threading
 import time
 import webbrowser
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from threading import Event
+from urllib.parse import parse_qs, urlparse
+
 import requests
 import requests_oauthlib
-import json
-from threading import Event
-from http.server import BaseHTTPRequestHandler, HTTPServer
-from urllib.parse import parse_qs, urlparse
 
 from . import slim_click as sc
 
