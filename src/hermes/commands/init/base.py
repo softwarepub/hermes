@@ -870,7 +870,7 @@ class HermesInitCommand(HermesCommand):
                 formatting=sc.Formats.OKGREEN)
         sc.echo()
 
-    def set_push_trigger_to_tag(self, tag_pattern:str="") -> None:
+    def set_push_trigger_to_tag(self, tag_pattern: str = "") -> None:
         """
         Sets the CI parameters, so that the pipeline gets triggered when a tag that matches the pattern gets pushed.
         """
