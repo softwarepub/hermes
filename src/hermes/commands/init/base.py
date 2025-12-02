@@ -18,7 +18,6 @@ from urllib.parse import urljoin, urlparse
 
 import requests
 import toml
-from jinja2 import FileSystemLoader
 from pydantic import BaseModel
 from requests import HTTPError
 
