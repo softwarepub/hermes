@@ -10,21 +10,29 @@ from .ld_container import (
     ld_container,
     JSON_LD_CONTEXT_DICT,
     EXPANDED_JSON_LD_VALUE,
-    COMPACTED_JSON_LD_VALUE,
+    PYTHONIZED_LD_CONTAINER,
     JSON_LD_VALUE,
     TIME_TYPE,
     BASIC_TYPE,
 )
 
-from typing import Generator, Union, Self
+from typing import Generator, Union, Self, Any
 
 
 class ld_list(ld_container):
-    """ An JSON-LD container resembling a list ("@set", "@list" or "@graph"). """
+    """
+    An JSON-LD container resembling a list ("@set", "@list" or "@graph").
+    See also :class:`ld_container`
+
+    :ivar container_type: The type of JSON-LD container the list is representing. ("@set", "@list", "graph")
+    :ivartype container_type: str
+    :ivar item_list: The list of items (in expanded JSON-LD form) that are contained in this ld_list.
+    :ivartype item_list: EXPANDED_JSON_LD_VALUE
+    """
 
     def __init__(
         self: Self,
-        data: Union[list[str], list[dict[str, Union[BASIC_TYPE, EXPANDED_JSON_LD_VALUE]]]],
+        data: Union[list[str], list[dict[str, EXPANDED_JSON_LD_VALUE]]],
         *,
         parent: Union["ld_container", None] = None,
         key: Union[str, None] = None,
@@ -32,7 +40,7 @@ class ld_list(ld_container):
         context: Union[list[Union[str, JSON_LD_CONTEXT_DICT]], None] = None,
     ) -> None:
         """
-        Create a new ld_list.py container.
+        Create a new ld_list container.
 
         :param self: The instance of ld_list to be initialized.
         :type self: Self
@@ -49,6 +57,9 @@ class ld_list(ld_container):
 
         :return:
         :rtype: None
+
+        :raises ValueError: bla
+        :raises ValueError: bla
         """
         # check for validity of data
         if not isinstance(key, str):
@@ -278,7 +289,7 @@ class ld_list(ld_container):
                 if not ld_container.are_values_equal(item, other_item):
                     return False
                 continue
-            # check if both contain an id and compare 
+            # check if both contain an id and compare
             if "@id" in item and "@id" in other_item:
                 if item["@id"] != other_item["@id"]:
                     return False
@@ -328,25 +339,78 @@ class ld_list(ld_container):
             return NotImplemented
         return not x
 
-    def append(self, value):
+    def append(self: Self, value: Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_container]) -> None:
+        """
+        Append the item to the given ld_list self.
+        The given value is expanded. If it is assimilated by self all items that would be added by this are added.
+
+        :param self: The ld_list the item is appended to.
+        :type self: Self
+        :param value: The new value.
+        :type value: Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_container]
+
+        :return:
+        :rtype: None
+        """
         self.item_list.extend(self._to_expanded_json([value]))
 
-    def extend(self, value):
+    def extend(self: Self, value: list[Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_container]]) -> None:
+        """
+        Append the items in value to the given ld_list self.
+        The given values are expanded. If any are assimilated by self all items that would be added by this are added.
+
+        :param self: The ld_list the items are appended to.
+        :type self: Self
+        :param value: The new values.
+        :type value: list[Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_container]]
+
+        :return:
+        :rtype: None
+        """
         for item in value:
             self.append(item)
 
-    def to_python(self):
+    def to_python(self: Self) -> list[PYTHONIZED_LD_CONTAINER]:
+        """
+        Return a fully pythonized version of this object where all ld_container are replaced by lists and dicts.
+
+        :param self: The ld_list whose fully pythonized version is returned.
+        :type self: Self
+
+        :return: The fully pythonized version of self.
+        :rtype: list[PYTHONIZED_LD_CONTAINER]
+        """
         return [
             item.to_python() if isinstance(item, ld_container) else item
             for item in self
         ]
 
     @classmethod
-    def is_ld_list(cls, ld_value):
+    def is_ld_list(cls: Self, ld_value: Any) -> bool:
+        """
+        Returns wheter the given value is considered to be possible of representing an ld_list.<br>
+        I.e. if ld_value is of the form [{container_type: [...]}] where container_type is '@set', '@list' or '@graph'.
+
+        :param ld_value: The value that is checked.
+        :type ld_value: Any
+
+        :returns: Wheter or not ld_value could represent an ld_list.
+        :rtype: bool
+        """
         return cls.is_ld_node(ld_value) and cls.is_container(ld_value[0])
 
     @classmethod
     def is_container(cls, value):
+        """
+        Returns wheter the given value is considered to be possible of representing an json-ld container.<br>
+        I.e. if ld_value is of the form {container_type: [...]} where container_type is '@set', '@list' or '@graph'.
+
+        :param ld_value: The value that is checked.
+        :type ld_value: Any
+
+        :returns: Wheter or not ld_value could represent a json-ld container.
+        :rtype: bool
+        """
         return (
             isinstance(value, dict)
             and [*value.keys()] in [["@list"], ["@set"], ["@graph"]]
@@ -354,27 +418,100 @@ class ld_list(ld_container):
         )
 
     @classmethod
-    def from_list(cls, value, *, parent=None, key=None, context=None, container_type="@set"):
+    def from_list(
+        cls: Self,
+        value: list[Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE]],
+        *,
+        parent: Union[ld_container, None] = None,
+        key: Union[str, None] = None,
+        context: Union[str, JSON_LD_CONTEXT_DICT, list[Union[str, JSON_LD_CONTEXT_DICT]], None] = None,
+        container_type: str = "@set"
+    ) -> "ld_list":
+        """
+        Creates a ld_list from the given list with the given parent, key, context and container_type.<br>
+        Note that only container_type '@set' is valid for key '@type'.<br>
+        Further more note that if parent would assimilate the values in value no new ld_list is created
+        and the given values are appended to parent instead and parent is returned.
+
+        :param value: The list of values the ld_list should be created from.
+        :type value: list[JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE]
+        :param parent: The parent container of the new ld_list.<br>If value is assimilated by parent druing JSON-LD
+            expansion parent is extended by value and parent is returned.
+        :type parent: ls_container | None
+        :param key: The key into the inner most parent container representing a dict of the new ld_list.
+        :type: key: str | None
+        :param context: The context for the new list (is will also inherit the context of parent).<br>
+            Note that this context won't be added to parent if value is assimilated by parent and parent is returned.
+        :type context: str | JSON_LD_CONTEXT_DICT | list[str | JSON_LD_CONTEXT_DICT] | None
+        :param container_type: The container type of the new list valid are '@set', '@list' and '@graph'.<br>
+            If value is assimilated by parent and parent is returned the given container_type won't affect
+            the container type of parent.<br> Also note that only '@set' is valid if key is '@type'.
+        :type container_type: str
+
+        :return: The new ld_list build from value or if value is assimilated by parent, parent extended by value.
+        :rtype: ld_list
+
+        :raises ValueError: If key is '@type' and container_type is not '@set'.
+        """
+        # TODO: handle context if not of type list or None
+        # validate container_type
         if key == "@type":
-            container_type = "@set"
-        if container_type != "@set":
+            if container_type != "@set":
+                raise ValueError(f"The given container type is {container_type} which is invalid for a list"
+                                 " containing values for '@type' (valid is only '@set').")
+        if container_type in {"@list", "@graph"}:
+            # construct json-ld container that indicates the container type
             value = [{container_type: value}]
+        elif container_type != "@set":
+            raise ValueError(f"Invalid container type: {container_type}. (valid are only '@set', '@list' and '@graph')")
+
         if parent is not None:
+            # expand value in the "context" of parent
             if isinstance(parent, ld_list):
                 expanded_value = parent._to_expanded_json([value])
                 if (len(expanded_value) != 1 or
                         not (isinstance(expanded_value[0], list) or cls.is_container(expanded_value[0]))):
+                    # parent assimilated value druing expansion. Therefor the values are appended and parent returned
+                    # if value is assimilated but contained only one list after expansion this list is used for
+                    # the new list instead of expanding parent
                     parent.extend(expanded_value)
                     return parent
             else:
                 expanded_value = parent._to_expanded_json({key: value})[cls.ld_proc.expand_iri(parent.active_ctx, key)]
         else:
+            # create a temporary ld_list which is necessary for expansion
+            # value is not passed in a list as usual because value should be treated like the item list of the
+            # temporary object and not like a item in it
             expanded_value = cls([], parent=None, key=key, context=context)._to_expanded_json(value)
+
+        # construct and return the final ld_list from the expanded_value
         return cls(expanded_value, parent=parent, key=key, context=context)
 
     @classmethod
-    def get_item_list_from_container(cls, ld_value):
+    def get_item_list_from_container(cls: Self, ld_value: dict[str, list[Any]]) -> list[Any]:
+        """
+        Returns the item list from a container, the given ld_value, (i.e. {container_type: item_list}).<br>
+        Only '@set', '@list' and '@graph' are valid container types.
+
+        :param ld_value: The container whose item list is to be returned.
+        :type ld_value: dict[str, list[Any]]
+
+        :returns: The list the container holds.
+        :rtype: list[Any]
+
+        :raises ValueError: If the item_container is not a dict.
+        :raises ValueError: If the container_type is not exactly one of '@set', '@list' and '@graph'.
+        :raises ValueError: If the item_list is no list.
+        """
+        if type(ld_value) != dict:
+            raise ValueError(f"The given data {ld_value} is not a dictionary and therefor no container.")
+        if len(ld_value.keys()) != 1:
+            raise ValueError(f"The given data contains two many or few entries ({len(ld_value.keys())})."
+                             " It should be only one entry: '@set', '@list' or '@graph' as key and a list as value.")
+        # find the container type to return the item_list
         for cont in {"@list", "@set", "@graph"}:
             if cont in ld_value:
+                if type(ld_value[cont]) != list:
+                    raise ValueError(f"The item list of {ld_value} is of type {type(ld_value[cont])} and not list.")
                 return ld_value[cont]
-        raise ValueError("The given data does not represent a container.")
+        raise ValueError(f"The given data {ld_value} does not represent a container.")

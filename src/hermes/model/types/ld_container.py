@@ -13,16 +13,19 @@ from typing import Union, Self, Any
 
 JSON_LD_CONTEXT_DICT = dict[str, Union[str, "JSON_LD_CONTEXT_DICT"]]
 BASIC_TYPE = Union[str, float, int, bool]
-EXPANDED_JSON_LD_VALUE = Union[
-    list[Union["EXPANDED_JSON_LD_VALUE", BASIC_TYPE]], dict[str, Union["EXPANDED_JSON_LD_VALUE", BASIC_TYPE]]
-]
+EXPANDED_JSON_LD_VALUE = list[dict[str, Union["EXPANDED_JSON_LD_VALUE", BASIC_TYPE]]]
 COMPACTED_JSON_LD_VALUE = Union[
-    list[Union["COMPACTED_JSON_LD_VALUE", BASIC_TYPE]], dict[str, Union["COMPACTED_JSON_LD_VALUE", BASIC_TYPE]]
+    list[Union[dict[str, Union["COMPACTED_JSON_LD_VALUE", BASIC_TYPE]], BASIC_TYPE]],
+    dict[str, Union["COMPACTED_JSON_LD_VALUE", BASIC_TYPE]],
 ]
 TIME_TYPE = Union[datetime, date, time]
 JSON_LD_VALUE = Union[
     list[Union["JSON_LD_VALUE", BASIC_TYPE, TIME_TYPE, "ld_container"]],
     dict[str, Union["JSON_LD_VALUE", BASIC_TYPE, TIME_TYPE, "ld_container"]],
+]
+PYTHONIZED_LD_CONTAINER = Union[
+    list[Union["PYTHONIZED_LD_CONTAINER", BASIC_TYPE, TIME_TYPE]],
+    dict[str, Union["PYTHONIZED_LD_CONTAINER", BASIC_TYPE, TIME_TYPE]],
 ]
 
 
@@ -33,13 +36,33 @@ class ld_container:
     A linked data container impelements a view on the expanded form of an JSON-LD document.
     It allows to easily interacts them by hinding all the nesting and automatically mapping
     between different forms.
+
+    :ivar active_ctx: The active context that is used by the json-ld processor.
+    :ivar context: The context exclusive to this ld_container and all its childs
+        (it can still be the same as e.g. parent.context)
+    :ivartype context: list[str | JSON_LD_CONTEXT_DICT]
+    :ivar full_context: The context of this ld_container and all its parents merged into one list.
+    :ivartype full_context: list[str | JSON_LD_CONTEXT_DICT]
+    :ivar index: The index into the parent container if it is a list.
+    :ivartype index: int
+    :ivar key: The key into the inner most parent that is a dict of this ld_container.
+    :ivartype key: str
+    :ivar ld_value: The expanded JSON-LD value this object represents.
+    :ivartype ld_value: EXPANDED_JSON_LD_VALUE
+    :ivar parent: The ld_container this one is directly contained in.
+    :ivartype parent: ld_container
+    :ivar path: The path from the outer most parent to this ld_container.
+    :ivartype path: list[str | int]
+
+    :cvar ld_proc: The JSON-LD processor object for all ld_container.
+    :cvartype ld_proc: JsonLdProcessor
     """
 
     ld_proc = JsonLdProcessor()
 
     def __init__(
         self: Self,
-        data: list[EXPANDED_JSON_LD_VALUE],
+        data: EXPANDED_JSON_LD_VALUE,
         *,
         parent: Union["ld_container", None] = None,
         key: Union[str, None] = None,
@@ -52,7 +75,7 @@ class ld_container:
         :param self: The instance of ld_container to be initialized.
         :type self: Self
         :param data: The expanded json-ld data that is mapped.
-        :type data: list[EXPANDED_JSON_LD_VALUE]
+        :type data: EXPANDED_JSON_LD_VALUE
         :param parent: parent node of this container.
         :type parent: ld_container | None
         :param key: key into the parent container.
@@ -101,7 +124,7 @@ class ld_container:
         self.active_ctx = self.ld_proc.process_context(self.active_ctx, context, {"documentLoader": bundled_loader})
 
     @property
-    def full_context(self: Self) -> Union[list[Union[str, JSON_LD_CONTEXT_DICT]], None]:
+    def full_context(self: Self) -> list[Union[str, JSON_LD_CONTEXT_DICT]]:
         """
         Return the context of the ld_container merged with the full_context of its parent.
 
@@ -110,7 +133,7 @@ class ld_container:
 
         :return: The context of the ld_container merged with the full_context of its parent via
             ld_container.merge_to_list or just the context of this ld_container if self.parent is None.
-        :rtype: list[str | JSON_LD_CONTEXT_DICT] | None
+        :rtype: list[str | JSON_LD_CONTEXT_DICT]
         """
         if self.parent is not None:
             return self.merge_to_list(self.parent.full_context, self.context)
@@ -181,7 +204,9 @@ class ld_container:
 
         return value
 
-    def _to_expanded_json(self: Self, value: JSON_LD_VALUE) -> EXPANDED_JSON_LD_VALUE:
+    def _to_expanded_json(
+            self: Self, value: JSON_LD_VALUE
+    ) -> Union[EXPANDED_JSON_LD_VALUE, dict[str, EXPANDED_JSON_LD_VALUE]]:
         """
         Returns an expanded version of the given value.
 
@@ -206,7 +231,7 @@ class ld_container:
             The return type is based on the type of self:
             <ul><li>If type(self) == ld_dict: the returned values type is dict</li>
             <li>If type(self) == ld_list: the returned values type is list</li></ul>
-        :rtype: EXPANDED_JSON_LD_VALUE
+        :rtype: EXPANDED_JSON_LD_VALUE | dict[str, EXPANDED_JSON_LD_VALUE]
         """
         # search for an ld_dict that is either self or the inner most parents parent of self that is an ld_dict
         # while searching build a path such that it leads from the found ld_dicts ld_value to selfs data_dict/ item_list
