@@ -106,6 +106,16 @@ def test_build_in_del():
     assert li == ["bar"]
     del li[0]
     assert li == []
+    di = ld_dict([{}], context=[{"schema": "https://schema.org/"}])
+    di["schema:name"] = [{"@value": "foo"}, {"@value": "bar"}, {"@value": "foobar"}]
+    li = di["schema:name"]
+    del li[0]
+    assert len(di["schema:name"]) == 2
+    di = ld_dict([{}], context=[{"schema": "https://schema.org/"}])
+    di["schema:name"] = [{"@list": [{"@value": "foo"}, {"@value": "bar"}, {"@value": "foobar"}]}]
+    li = di["schema:name"]
+    del di["schema:name"][0:3:2]
+    assert len(di["schema:name"]) == 1 and len(li) == 1
 
 
 def test_build_in_len():
