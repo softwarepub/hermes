@@ -252,7 +252,10 @@ class ld_container:
                     [(new_key, temp) for new_key in temp.keys() if isinstance(temp[new_key], special_types)]
                 )
             elif isinstance(temp, ld_container):
-                ref[key] = temp._data[0]
+                if temp.__class__.__name__ == "ld_list" and temp.container_type == "@set":
+                    ref[key] = temp._data
+                else:
+                    ref[key] = temp._data[0]
             elif isinstance(temp, datetime):
                 ref[key] = {"@value": temp.isoformat(), "@type": "schema:DateTime"}
             elif isinstance(temp, date):
