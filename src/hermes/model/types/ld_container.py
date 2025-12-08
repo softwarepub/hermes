@@ -355,14 +355,43 @@ class ld_container:
         return ld_value
 
     def __repr__(self: Self) -> str:
+        """
+        Returns a short string representation of this object.
+
+        :param self: The object whose representation is returned.
+        :type self: Self
+
+        :returns: The short representation of self.
+        :rtype: str
+        """
         return f"{type(self).__name__}({self._data})"
 
     def __str__(self: Self) -> str:
+        """
+        Returns a string representation of this object.
+
+        :param self: The object whose representation is returned.
+        :type self: Self
+
+        :returns: The representation of self.
+        :rtype: str
+        """
         return str(self.to_python())
 
     def compact(
-        self: Self, context: Union[list[JSON_LD_CONTEXT_DICT], JSON_LD_CONTEXT_DICT] = None
+        self: Self, context: Union[list[Union[JSON_LD_CONTEXT_DICT, str]], JSON_LD_CONTEXT_DICT, str, None] = None
     ) -> COMPACTED_JSON_LD_VALUE:
+        """
+        Returns the compacted version of the given ld_container using its context only if none was supplied.
+
+        :param self: The ld_container that is to be compacted.
+        :type self: Self
+        :param context: The context to use for the compaction. If None the context of self is used.
+        :type context: list[JSON_LD_CONTEXT_DICT | str] | JSON_LD_CONTEXT_DICT | str | None
+
+        :returns: The compacted version of selfs JSON-LD representation.
+        :rtype: COMPACTED_JSON_LD_VALUE
+        """
         return self.ld_proc.compact(
             self.ld_value, context or self.context, {"documentLoader": bundled_loader, "skipExpand": True}
         )
@@ -371,7 +400,7 @@ class ld_container:
         raise NotImplementedError()
 
     @classmethod
-    def merge_to_list(cls: Self, *args: tuple[Any]) -> list[Any]:
+    def merge_to_list(cls: type[Self], *args: tuple[Any]) -> list[Any]:
         """
         Returns a list that is contains all non-list items from args and all items in the lists in args.
 
@@ -394,42 +423,127 @@ class ld_container:
             return [head, *cls.merge_to_list(*tail)]
 
     @classmethod
-    def is_ld_node(cls, ld_value):
+    def is_ld_node(cls: type[Self], ld_value: Any) -> bool:
+        """
+        Returns wheter the given value is considered to be possible of representing an expanded JSON-LD node.<br>
+        I.e. if ld_value is of the form [{a: b, ..., y: z}].
+
+        :param ld_value: The value that is checked.
+        :type ld_value: Any
+
+        :returns: Wheter or not ld_value could represent an expanded JSON-LD node.
+        :rtype: bool
+        """
         return isinstance(ld_value, list) and len(ld_value) == 1 and isinstance(ld_value[0], dict)
 
     @classmethod
-    def is_ld_id(cls, ld_value):
+    def is_ld_id(cls: type[Self], ld_value: Any) -> bool:
+        """
+        Returns wheter the given value is considered to be possible of representing an expanded JSON-LD node
+        containing only an @id value.<br>
+        I.e. if ld_value is of the form [{"@id": ...}].
+
+        :param ld_value: The value that is checked.
+        :type ld_value: Any
+
+        :returns: Wheter or not ld_value could represent an expanded JSON-LD node containing only an @id value.
+        :rtype: bool
+        """
         return cls.is_ld_node(ld_value) and cls.is_json_id(ld_value[0])
 
     @classmethod
-    def is_ld_value(cls, ld_value):
+    def is_ld_value(cls: type[Self], ld_value: Any) -> bool:
+        """
+        Returns wheter the given value is considered to be possible of representing an expanded JSON-LD value.<br>
+        I.e. if ld_value is of the form [{"@value": a, ..., x: z}].
+
+        :param ld_value: The value that is checked.
+        :type ld_value: Any
+
+        :returns: Wheter or not ld_value could represent an expanded JSON-LD value.
+        :rtype: bool
+        """
         return cls.is_ld_node(ld_value) and "@value" in ld_value[0]
 
     @classmethod
-    def is_typed_ld_value(cls, ld_value):
+    def is_typed_ld_value(cls: type[Self], ld_value: Any) -> bool:
+        """
+        Returns wheter the given value is considered to be possible of representing an expanded JSON-LD value
+        containing a value type.<br>
+        I.e. if ld_value is of the form [{"@value": a, "@type": b, ..., x: z}].
+
+        :param ld_value: The value that is checked.
+        :type ld_value: Any
+
+        :returns: Wheter or not ld_value could represent an expanded JSON-LD value containing a value type.
+        :rtype: bool
+        """
         return cls.is_ld_value(ld_value) and "@type" in ld_value[0]
 
     @classmethod
-    def is_json_id(cls, ld_value):
+    def is_json_id(cls: type[Self], ld_value: Any) -> bool:
+        """
+        Returns wheter the given value is considered to be possible of representing a non-expanded JSON-LD node
+        containing only an @id value.<br>
+        I.e. if ld_value is of the form {"@id": ...}.
+
+        :param ld_value: The value that is checked.
+        :type ld_value: Any
+
+        :returns: Wheter or not ld_value could represent a non-expanded JSON-LD node containing only an @id value.
+        :rtype: bool
+        """
         return isinstance(ld_value, dict) and ["@id"] == [*ld_value.keys()]
 
     @classmethod
-    def is_json_value(cls, ld_value):
+    def is_json_value(cls: type[Self], ld_value: Any) -> bool:
+        """
+        Returns wheter the given value is considered to be possible of representing a non-expanded JSON-LD value.<br>
+        I.e. if ld_value is of the form {"@value": b, ..., x: z}.
+
+        :param ld_value: The value that is checked.
+        :type ld_value: Any
+
+        :returns: Wheter or not ld_value could represent a non-expanded JSON-LD value.
+        :rtype: bool
+        """
         return isinstance(ld_value, dict) and "@value" in ld_value
 
     @classmethod
-    def is_typed_json_value(cls, ld_value):
+    def is_typed_json_value(cls: type[Self], ld_value: Any) -> bool:
+        """
+        Returns wheter the given value is considered to be possible of representing a non-expanded JSON-LD value
+        containing a value type.<br>
+        I.e. if ld_value is of the form {"@value": a, "@type": b, ..., x: z}.
+
+        :param ld_value: The value that is checked.
+        :type ld_value: Any
+
+        :returns: Wheter or not ld_value could represent a non-expanded JSON-LD value containing a value type.
+        :rtype: bool
+        """
         return cls.is_json_value(ld_value) and "@type" in ld_value
 
     @classmethod
-    def typed_ld_to_py(cls, data, **kwargs):
+    def typed_ld_to_py(cls: type[Self], data: list[dict[str, BASIC_TYPE]], **kwargs) -> Union[BASIC_TYPE, TIME_TYPE]:
+        """
+        Returns the value of the given expanded JSON-LD value containing a value type converted into that type.
+        Meaning the pythonized version of the JSON-LD value data is returned.<br>
+        ld_container.is_typed_ld_value(data) must return True.
+
+        :param data: The value that is that is converted into its pythonized from.
+        :type data: list[dict[str, BASIC_TYPE]]
+
+        :returns: The pythonized version of data.
+        :rtype: BASIC_TYPE | TIME_TYPE
+        """
         ld_value = data[0]["@value"]
 
         return ld_value
 
     @classmethod
     def are_values_equal(
-        cls: Self, first: dict[str, Union[BASIC_TYPE, TIME_TYPE]], second: dict[str, Union[BASIC_TYPE, TIME_TYPE]]
+        cls: type[Self], first: dict[str, Union[BASIC_TYPE, TIME_TYPE]], second: dict[str, Union[BASIC_TYPE, TIME_TYPE]]
     ) -> bool:
         """
         Returns whether or not the given expanded JSON-LD values are considered equal.
