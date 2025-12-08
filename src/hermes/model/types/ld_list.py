@@ -386,7 +386,7 @@ class ld_list(ld_container):
         ]
 
     @classmethod
-    def is_ld_list(cls: Self, ld_value: Any) -> bool:
+    def is_ld_list(cls: type[Self], ld_value: Any) -> bool:
         """
         Returns wheter the given value is considered to be possible of representing an ld_list.<br>
         I.e. if ld_value is of the form [{container_type: [...]}] where container_type is '@set', '@list' or '@graph'.
@@ -400,7 +400,7 @@ class ld_list(ld_container):
         return cls.is_ld_node(ld_value) and cls.is_container(ld_value[0])
 
     @classmethod
-    def is_container(cls, value):
+    def is_container(cls: type[Self], value: Any) -> bool:
         """
         Returns wheter the given value is considered to be possible of representing an json-ld container.<br>
         I.e. if ld_value is of the form {container_type: [...]} where container_type is '@set', '@list' or '@graph'.
@@ -419,7 +419,7 @@ class ld_list(ld_container):
 
     @classmethod
     def from_list(
-        cls: Self,
+        cls: type[Self],
         value: list[Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE]],
         *,
         parent: Union[ld_container, None] = None,
@@ -488,7 +488,7 @@ class ld_list(ld_container):
         return cls(expanded_value, parent=parent, key=key, context=context)
 
     @classmethod
-    def get_item_list_from_container(cls: Self, ld_value: dict[str, list[Any]]) -> list[Any]:
+    def get_item_list_from_container(cls: type[Self], ld_value: dict[str, list[Any]]) -> list[Any]:
         """
         Returns the item list from a container, the given ld_value, (i.e. {container_type: item_list}).<br>
         Only '@set', '@list' and '@graph' are valid container types.
