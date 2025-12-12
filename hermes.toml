@@ -3,7 +3,10 @@
 # SPDX-License-Identifier: CC0-1.0
 
 [harvest]
-sources = [ "cff", "toml" ] # ordered priority (first one is most important)
+sources = [ "cff", "toml", "file_exists" ] # ordered priority (first one is most important)
+
+[harvest.file_exists.search_patterns]
+community = ["contributing.md", "governance.md"]
 
 [deposit]
 target = "invenio_rdm"
@@ -18,4 +21,3 @@ record_id = 13221384
 depositions = "api/deposit/depositions"
 licenses = "api/vocabularies/licenses"
 communities = "api/communities"
-
