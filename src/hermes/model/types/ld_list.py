@@ -5,6 +5,7 @@
 # SPDX-FileContributor: Michael Meinel
 # SPDX-FileContributor: Michael Fritzsche
 
+from collections import deque
 from types import NotImplementedType
 from .ld_container import (
     ld_container,
@@ -16,7 +17,7 @@ from .ld_container import (
     BASIC_TYPE,
 )
 
-from typing import Generator, Union, Self, Any
+from typing import Generator, Hashable, Union, Self, Any
 
 
 class ld_list(ld_container):
@@ -241,11 +242,16 @@ class ld_list(ld_container):
         ],
     ) -> Union[bool, NotImplementedType]:
         """
-        Returns wheter or not self is considered to be equal to other.
+        Returns wheter or not self is considered to be equal to other.<br>
         If other is not an ld_list, it is converted first.
         For each index it is checked if the ids of the items at index in self and other match if both have one,
-        if only one has an id all other values are compared.
-        If self or other is considered unordered the comparison is more difficult and ...
+        if only one has or neither have an id all other values are compared.<br>
+        Note that due to those circumstances equality is not transitve
+        meaning if a == b and b == c is is not guaranteed that a == c.<br>
+        If self or other is considered unordered the comparison is more difficult. All items in self are compared
+        with all items in other. On the resulting graph given by the realtion == the Hopcroft-Karp algoritm is used
+        to determine if there exists a bijection reordering self so that the ordered comparison of self with other
+        returns true.
 
         :param self: The ld_list other is compared to.
         :type self: Self
@@ -257,7 +263,6 @@ class ld_list(ld_container):
             If other is of the wrong type return NotImplemented instead.
         :rtype: bool | NotImplementedType
         """
-        # TODO: ld_lists with container_type "@set" have to be considered unordered
         # check if other has an acceptable type
         if not (isinstance(other, (list, ld_list)) or ld_list.is_container(other)):
             return NotImplemented
@@ -281,33 +286,215 @@ class ld_list(ld_container):
             # lists will only contain string
             return self.item_list == other.item_list
 
-        # check if at each index the items are considered equal
-        for index, (item, other_item) in enumerate(zip(self.item_list, other.item_list)):
-            # check if items are values
-            if ((ld_container.is_typed_json_value(item) or ld_container.is_json_value(item)) and
-                    (ld_container.is_typed_json_value(other_item) or ld_container.is_json_value(other_item))):
-                if not ld_container.are_values_equal(item, other_item):
+        if self.container_type == other.container_type == "@list":
+            # check if at each index the items are considered equal
+            for index, (item, other_item) in enumerate(zip(self.item_list, other.item_list)):
+                # check if items are values
+                if ((ld_container.is_typed_json_value(item) or ld_container.is_json_value(item)) and
+                        (ld_container.is_typed_json_value(other_item) or ld_container.is_json_value(other_item))):
+                    if not ld_container.are_values_equal(item, other_item):
+                        return False
+                    continue
+                # check if both contain an id and compare
+                if "@id" in item and "@id" in other_item:
+                    if item["@id"] != other_item["@id"]:
+                        return False
+                    continue
+                # get the 'real' items (i.e. can also be ld_dicts or ld_lists)
+                item = self[index]
+                other_item = other[index]
+                # compare using the correct equals method
+                res = item.__eq__(other_item)
+                if res == NotImplemented:
+                    # swap order if first try returned NotImplemented
+                    res = other_item.__eq__(item)
+                # return false if the second comparison also fails or one of them returned false
+                if res is False or res == NotImplemented:
                     return False
-                continue
-            # check if both contain an id and compare
-            if "@id" in item and "@id" in other_item:
-                if item["@id"] != other_item["@id"]:
+            # return true because no unequal elements where found
+            return True
+        else:
+            # check which items in self are equal the which in other
+            equality_pairs = [[] for i in range(len(self))]  # j in equality_pairs[i] <=> self[i] == other[j]
+            for index, item in enumerate(self.item_list):
+                for other_index, other_item in enumerate(other.item_list):
+                    # check if items are values
+                    if ((ld_container.is_typed_json_value(item) or ld_container.is_json_value(item)) and
+                            (ld_container.is_typed_json_value(other_item) or ld_container.is_json_value(other_item))):
+                        if ld_container.are_values_equal(item, other_item):
+                            equality_pairs[index] += [other_index]
+                        continue
+                    # check if both contain an id and compare
+                    if "@id" in item and "@id" in other_item:
+                        if item["@id"] == other_item["@id"]:
+                            equality_pairs[index] += [other_index]
+                        continue
+                    # get the 'real' items (i.e. can also be ld_dicts or ld_lists)
+                    item = self[index]
+                    other_item = other[index]
+                    # compare using the correct equals method
+                    res = item.__eq__(other_item)
+                    if res == NotImplemented:
+                        # swap order if first try returned NotImplemented
+                        res = other_item.__eq__(item)
+                    # if one of both comparisons returned true the elements are equal
+                    if res:
+                        equality_pairs[index] += [other_index]
+                if len(equality_pairs[index]) == 0:
+                    # there exists no element in other that is equal to item
                     return False
-                continue
-            # get the 'real' items (i.e. can also be ld_dicts or ld_lists)
-            item = self[index]
-            other_item = other[index]
-            # compare using the correct equals method
-            res = item.__eq__(other_item)
-            if res == NotImplemented:
-                # swap order if first try returned NotImplemented
-                res = other_item.__eq__(item)
-            # return false if the second comparison also fails or one of them returned false
-            if res is False or res == NotImplemented:
-                return False
+            # check if there is a way to chose one index from equality_pairs[i] for every i
+            # so that there are no two i's with the same chosen index.
+            # If such a way exists self and other are considered equal. If not they are considered to be not equal.
+            # solved via a Hopcroft-Karp algorithm variant:
+            # The bipartite graph is the disjoint union of the vertices 1 to len(self) and
+            # freely chosen ids for each list in equality_pairs.
+            # The graph has an edge from i to the id of a list if i is contained in the list.
+            item_count = len(self)
+            verticies_set1 = {*range(item_count)}
+            verticies_set2 = {*range(item_count, 2 * item_count)}
+            edges = {i: tuple(j for j in verticies_set2 if i in equality_pairs[j - item_count]) for i in verticies_set1}
+            return ld_list._hopcroft_karp(verticies_set1, verticies_set2, edges) == len(self)
 
-        # return true because no unequal elements where found
-        return True
+    @classmethod
+    def _bfs_step(
+        cls: Self, verticies1: set[Hashable], edges: dict[Hashable, tuple[Hashable]], matches: dict[Hashable, Hashable],
+        distances: dict[Hashable, Union[int, float]]
+    ) -> bool:
+        """
+        Completes the BFS step of Hopcroft-Karp. I.e.:<br>
+        Finds the shortest path from all unmatched verticies in verticies1 to any unmatched vertex in any value in edges
+        where the connecting paths are alternating between matches and its complement.<br>
+        It also marks each vertex in verticies1 with how few verticies from verticies1 have to be passed
+        to reach the vertex from an unmatched one in verticies1. This is stored in distances.
+
+        :param verticies1: The set of verticies in the left partition of the bipartite graph.
+        :type verticies1: set[Hashable]
+        :param edges: The edges in the bipartite graph. (As the edges are bidirectional they are expected to be given in
+            this format: Dictionary with keys being the vertices in the left partition and values being tuples
+            of verticies in the right partition.)
+        :type edges: dict[Hashable, tuple[Hashable]]
+        :param matches: The current matching of verticies in the left partition with the ones in the right partition.
+        :type matches: dict[Hashable, Hashable]
+        :param distances: The reference to the dictionary mapping verticies of the left partition to the minimal
+            number of verticies in the left partition that will be passed on a path from an unmatched vertex of the left
+            partition to the vertex that is the key.
+        :type distances: dict[Hashable, Union[int, float]]
+
+        :returns: Wheter or not a alternating path from an unmatched vertex in the left partition to an unmatched vertex
+            in the right partition exists.
+        :rtype: bool
+        """
+        # initialize the queue and set the distances to zero for unmatched vertices and to inf for all others
+        queue = deque()
+        for ver in verticies1:
+            if matches[ver] is None:
+                distances[ver] = 0
+                queue.append(ver)
+            else:
+                distances[ver] = float("inf")
+        distances[None] = float("inf")
+        # begin BFS
+        while len(queue) != 0:
+            ver1 = queue.popleft()
+            # if the current vertex has a distance less then the current minimal one from an unmatched vertex in the
+            # left partition to an unmatched one in the right partition
+            if distances[ver1] < distances[None]:
+                # iterate over all vertices in the right partition connected to ver1
+                for ver2 in edges[ver1]:
+                    # if the vertex ver2 is matched with (or None if not matched) wasn't visited yet
+                    if distances[matches[ver2]] == float("inf"):
+                        # initialize the distance and queue the vertex for further search
+                        distances[matches[ver2]] = distances[ver1] + 1
+                        queue.append(matches[ver2])
+        # if a path to None i.e. an unmatched vertex in the right partition was found return true otherwise false
+        return distances[None] != float("inf")
+
+    @classmethod
+    def _dfs_step(
+        cls: Self, ver: Hashable, edges: dict[Hashable, tuple[Hashable]], matches: dict[Hashable, Hashable],
+        distances: dict[Hashable, Union[int, float]]
+    ) -> bool:
+        """
+        Completes the DFS step of Hopcroft-Karp. I.e.:<br>
+        Adds all edges on every path with the minimal path length to matches if they would be in the symmetric
+        difference of matches and the set of edges on the union of the paths.
+
+        :param ver: The set of verticies in the left partition of the bipartite graph.
+        :type vert: Hashable
+        :param edges: The edges in the bipartite graph. (As the edges are bidirectional they are expected to be given in
+            this format: Dictionary with keys being the vertices in the left partition and values being tuples
+            of verticies in the right partition.)
+        :type edges: dict[Hashable, tuple[Hashable]]
+        :param matches: The current matching of verticies in the left partition with the ones in the right partition.
+        :type matches: dict[Hashable, Hashable]
+        :param distances: The reference to the dictionary mapping verticies of the left partition to the minimal
+            number of verticies in the left partition that will be passed on a path from an unmatched vertex of the left
+            partition to the vertex that is the key. The values will be replaced with float("inf") to mark already
+            visited vertices.
+        :type distances: dict[Hashable, Union[int, float]]
+
+        :returns: Wheter or not a path from the unmatched vertex ver in the left partition to an unmatched vertex
+            in the right partition could still exist.
+        :rtype: bool
+        """
+        # recursion base case: None always has a shortest possible path to itself
+        if ver is None:
+            return True
+        # iterate over all vertices connected to ver in the right partition
+        for ver2 in edges[ver]:
+            # if ver2 is on a path with minimal length and not all subtrees have been searched already
+            if distances[matches[ver2]] == distances[ver] + 1:
+                if cls._dfs_step(matches[ver], edges, matches, distances):
+                    # add the edge to the matches and return true
+                    matches[ver2] = ver
+                    matches[ver] = ver2
+                    return True
+        # mark this vertex as completly searched
+        distances[ver] = float("inf")
+        return False
+
+    @classmethod
+    def _hopcroft_karp(
+        cls: Self, verticies1: set[Hashable], verticies2: set[Hashable], edges: dict[Hashable, tuple[Hashable]]
+    ) -> int:
+        """
+        Implementation of Hopcroft-Karp. I.e.:<br>
+        Finds how maximal number of edges with the property that no two edges share an endpoint (and startpoint)
+        in the given bipartite graph.<br>
+        Note that verticies1 and verticies2 have to be disjoint.
+
+        :param verticies1: The set of verticies in the left partition of the bipartite graph.
+        :type verticies1: set[Hashable]
+        :param verticies2: The set of verticies in the right partition of the bipartite graph.
+        :type verticies2: set[Hashable]
+        :param edges: The edges in the bipartite graph. (As the edges are bidirectional they are expected to be given in
+            this format: Dictionary with keys being the vertices in the left partition and values being tuples
+            of verticies in the right partition.)
+        :type edges: dict[Hashable, tuple[Hashable]]
+
+        :returns: The number of edges.
+        :rtype: int
+        """
+        # initializes the first matching. None is a imaginary vertex to denote unmatched vertices.
+        matches = dict()
+        for ver in verticies1:
+            matches[ver] = None
+        for ver in verticies2:
+            matches[ver] = None
+        matching_size = 0
+        distances = dict()
+        while cls._bfs_step(verticies1, edges, matches, distances):
+            # while a alternating path from an unmatched vertex in the left partition exits
+            # recalculate the distances and
+            # iterate over all unmatched vertices in the left partition.
+            for ver in verticies1:
+                if matches[ver] is None:
+                    # create the new matches dict and if a new edge was added increase the size of the matching
+                    if cls._dfs_step(ver, edges, matches, distances):
+                        matching_size += 1
+        # return the size of the matching
+        return matching_size
 
     def __ne__(
         self: Self,

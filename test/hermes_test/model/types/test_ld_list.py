@@ -197,6 +197,29 @@ def test_build_in_comparison():
     assert li != li2
     li[0] = {"@type": "schema:foobar", "@value": "bar"}
     assert li != li2
+    li = ld_list([], key="https://schema.org/name", context=[{"schema": "https://schema.org/"}])
+    li2 = ld_list([{"@list": []}], key="https://schema.org/name", context=[{"schema2": "https://schema.org/"}])
+    li.extend(["foo", "bar"])
+    li2.extend(["bar", "foo"])
+    assert li == li2
+    li.append("bar")
+    li2.append("foo")
+    assert li != li2
+
+
+def test_hopcroft_karp():
+    ver1 = {0, 1, 2, 3, 4}
+    ver2 = {10, 11, 12, 13, 14}
+    edges = {0: (10, 11), 1: (10, 14), 2: (12, 13), 3: (10, 14), 4: tuple([11])}
+    assert ld_list._hopcroft_karp(ver1, ver2, edges) == 4
+    edges[4] = (11, 13)
+    assert ld_list._hopcroft_karp(ver1, ver2, edges) == 5
+    ver1 = {0, 1, 2, 3, 4}
+    ver2 = {(0, 1, 3), (0, 4), (2, ), (2, 4), (1, 3)}
+    edges = {
+        0: ((0, 1, 3), (0, 4)), 1: ((0, 1, 3), (1, 3)), 2: ((2,), (2, 4)), 3: ((0, 1, 3), (1, 3)), 4: ((0, 4), (2, 4))
+    }
+    assert ld_list._hopcroft_karp(ver1, ver2, edges) == 5
 
 
 def test_extend():
