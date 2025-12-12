@@ -111,7 +111,9 @@ flake8 = "poetry run flake8 ./test/ ./src/ --count --select=E9,F63,F7,F82 --stat
 
 
 [tool.pytest.ini_options]
+minversion = "6.0"
 norecursedirs = "docs/*"
+xfail_strict = true
 testpaths = [
     "test"
 ]
