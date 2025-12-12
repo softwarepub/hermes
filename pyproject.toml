@@ -17,14 +17,13 @@ authors = [
     { name = "Oliver Bertuch", email = "o.bertuch@fz-juelich.de" },
     { name = "Oliver Knodel", email = "o.knodel@hzdr.de" },
     { name = "David Pape", email = "d.pape@hzdr.de" },
-    { name = "Sophie Kernchen", email = "sohpie.kernchen@dlr.de" },
+    { name = "Sophie Kernchen", email = "sophie.kernchen@dlr.de" },
     { name = "Nitai Heeb", email = "n.heeb@fz-juelich.de" },
 ]
 maintainers = [
     { name = "Stephan Druskat", email = "stephan.druskat@dlr.de" },
 ]
 readme = "README.md"
-repository = "https://github.com/softwarepub/hermes"
 keywords = ["software", "publication", "metadata", "automation"]
 
 dependencies = [
@@ -39,6 +38,7 @@ dependencies = [
     "pydantic-settings>=2.1.0, <3.0.0",
     "requests-oauthlib>=2.0.0, <3.0.0",
     "pynacl>=1.5.0, <2.0.0",
+    "easydataverse>=0.4.4, <0.5.0",
 ]
 requires-python = ">=3.10, <4.0.0"
 
@@ -48,11 +48,9 @@ documentation = "https://hermes.software-metadata.pub"
 repository = "https://github.com/softwarepub/hermes.git"
 issues = "https://github.com/softwarepub/hermes/issues"
 
-
 [project.scripts]
 hermes = "hermes.commands.cli:main"
 hermes-marketplace = "hermes.commands.marketplace:main"
-
 
 [project.entry-points."hermes.harvest"]
 cff = "hermes.commands.harvest.cff:CffHarvestPlugin"
@@ -62,14 +60,14 @@ file_exists = "hermes.commands.harvest.file_exists:FileExistsHarvestPlugin"
 [project.entry-points."hermes.deposit"]
 file = "hermes.commands.deposit.file:FileDepositPlugin"
 invenio = "hermes.commands.deposit.invenio:InvenioDepositPlugin"
-invenio_rdm = "hermes.commands.deposit.invenio_rdm:IvenioRDMDepositPlugin"
+invenio_rdm = "hermes.commands.deposit.invenio_rdm:InvenioRDMDepositPlugin"
 rodare = "hermes.commands.deposit.rodare:RodareDepositPlugin"
+dataverse = "hermes.commands.deposit.dataverse:DataverseDepositPlugin"
 
 [project.entry-points."hermes.postprocess"]
 config_invenio_record_id = "hermes.commands.postprocess.invenio:config_record_id"
 config_invenio_rdm_record_id = "hermes.commands.postprocess.invenio_rdm:config_record_id"
 cff_doi = "hermes.commands.postprocess.invenio:cff_doi"
-
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.1.1"
@@ -100,13 +98,11 @@ sphinx-togglebutton="^0.3.2"
 reuse = "^1.1.2"
 sphinxcontrib-datatemplates = "^0.11.0"
 
-
 [tool.taskipy.tasks]
 docs-build = "poetry run sphinx-build -M html docs/source docs/build -W"
 docs-clean = "poetry run sphinx-build -M clean docs/source docs/build"
 docs-live = "poetry run sphinx-autobuild docs/source docs/build"
 flake8 = "poetry run flake8 ./test/ ./src/ --count --select=E9,F63,F7,F82 --statistics"
-
 
 [tool.pytest.ini_options]
 norecursedirs = "docs/*"
@@ -114,7 +110,6 @@ testpaths = [
     "test"
 ]
 addopts = "--cov=hermes --cov-report term"
-
 
 [build-system]
 requires = [

@@ -84,7 +84,7 @@ class InvenioRDMResolver(InvenioResolver):
             return None
 
 
-class IvenioRDMDepositPlugin(InvenioDepositPlugin):
+class InvenioRDMDepositPlugin(InvenioDepositPlugin):
     platform_name = "invenio_rdm"
     invenio_client_class = InvenioRDMClient
     invenio_resolver_class = InvenioRDMResolver
