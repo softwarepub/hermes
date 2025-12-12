@@ -61,7 +61,7 @@ file_exists = "hermes.commands.harvest.file_exists:FileExistsHarvestPlugin"
 [project.entry-points."hermes.deposit"]
 file = "hermes.commands.deposit.file:FileDepositPlugin"
 invenio = "hermes.commands.deposit.invenio:InvenioDepositPlugin"
-invenio_rdm = "hermes.commands.deposit.invenio_rdm:IvenioRDMDepositPlugin"
+invenio_rdm = "hermes.commands.deposit.invenio_rdm:InvenioRDMDepositPlugin"
 rodare = "hermes.commands.deposit.rodare:RodareDepositPlugin"
 
 [project.entry-points."hermes.postprocess"]
