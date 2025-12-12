@@ -17,7 +17,7 @@ authors = [
     { name = "Oliver Bertuch", email = "o.bertuch@fz-juelich.de" },
     { name = "Oliver Knodel", email = "o.knodel@hzdr.de" },
     { name = "David Pape", email = "d.pape@hzdr.de" },
-    { name = "Sophie Kernchen", email = "sohpie.kernchen@dlr.de" },
+    { name = "Sophie Kernchen", email = "sophie.kernchen@dlr.de" },
     { name = "Nitai Heeb", email = "n.heeb@fz-juelich.de" },
 ]
 maintainers = [

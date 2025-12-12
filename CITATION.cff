@@ -44,8 +44,8 @@ authors:
     email: d.pape@hzdr.de
     affiliation: Helmholtz-Zentrum Dresden-Rossendorf (HZDR)
     orcid: 'https://orcid.org/0000-0002-3145-9880'
-  - given-names: Kernchen
-    family-names: Sophie
+  - given-names: Sophie
+    family-names: Kernchen
     email: sophie.kernchen@dlr.de
     affiliation: German Aerospace Center (DLR)
     orcid: 'https://orcid.org/0009-0005-4430-6743'
