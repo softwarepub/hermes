@@ -11,9 +11,9 @@ class ld_container:
     """
     Base class for Linked Data containers.
 
-    A linked data container impelements a view on the expanded form of an JSON-LD document.
-    It allows to easily interacts them by hinding all the nesting and automatically mapping
-    between different forms.
+    A linked data container implements a view on the expanded form of an JSON-LD document.
+    It allows to easily interact with such documents by hiding all the nesting and
+    automatically mapping between different forms.
     """
 
     ld_proc = JsonLdProcessor()
@@ -81,6 +81,7 @@ class ld_container:
         return self._data
 
     def _to_python(self, full_iri, ld_value):
+        # FIXME: #434 dates are not returned as datetime/ date/ time but as string
         if full_iri == "@id":
             value = self.ld_proc.compact_iri(self.active_ctx, ld_value, vocab=False)
         elif full_iri == "@type":
@@ -186,6 +187,7 @@ class ld_container:
 
     @classmethod
     def typed_ld_to_py(cls, data, **kwargs):
+        # FIXME: #434 dates are not returned as datetime/ date/ time but as string
         ld_value = data[0]['@value']
 
         return ld_value
