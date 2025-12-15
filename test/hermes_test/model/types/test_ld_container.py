@@ -6,7 +6,7 @@
 # SPDX-FileContributor: Michael Meinel
 # SPDX-FileContributor: Michael Fritzsche
 
-from datetime import datetime
+from datetime import datetime, time
 
 import pytest
 
@@ -121,6 +121,11 @@ class TestLdContainer:
             "@value": "2022-02-22T00:00:00", "@type": "https://schema.org/DateTime"
         }) == "2022-02-22T00:00:00"  # TODO: #434 typed date is returned as string instead of date
 
+    def test_to_python_error(self, mock_context):
+        cont = ld_container([{}], context=[mock_context])
+        with pytest.raises(TypeError):
+            cont._to_python("http://spam.eggs/eggs", set())
+
     def test_to_expanded_id(self, mock_context):
         cont = ld_dict([{}], context=[mock_context])
         assert cont._to_expanded_json({"@id": f"{self.url}identifier"}) == {"@id": f"{self.url}identifier"}
@@ -156,6 +161,35 @@ class TestLdContainer:
         assert cont._to_expanded_json({"eggs": datetime(2022, 2, 22)}) == {"http://spam.eggs/eggs": [{"@list": [
             {"@value": "2022-02-22T00:00:00", "@type": "https://schema.org/DateTime"}
         ]}]}
+        cont = ld_dict([{}], context=[mock_context])
+        assert cont._to_expanded_json({"eggs": time(5, 4, 3)}) == {"http://spam.eggs/eggs": [{"@list": [
+            {"@value": "05:04:03", "@type": "https://schema.org/Time"}
+        ]}]}
+
+    def test_compact(self, mock_context):
+        cont = ld_container([{"http://spam.eggs/eggs": [{"@list": [{"@value": "a"}]}],
+                              "http://spam.eggs/spam": [{"@value": "bacon"}]}])
+        assert cont.compact([mock_context]) == {"@context": mock_context, "spam": "bacon", "eggs": ["a"]}
+
+    def test_is_ld_id(self):
+        assert ld_container.is_ld_id([{"@id": "foo"}])
+        assert not ld_container.is_ld_id([{"@id": "foo", "bar": "barfoo"}])
+        assert not ld_container.is_ld_id({"@id": "foo"})
+        assert not ld_container.is_ld_id([{"bar": "foo"}])
+
+    def test_is_ld_value(self):
+        assert ld_container.is_ld_value([{"@value": "foo"}])
+        assert ld_container.is_ld_value([{"@value": "foo", "bar": "barfoo"}])
+        assert not ld_container.is_ld_value({"@value": "foo"})
+        assert not ld_container.is_ld_value([{"bar": "foo"}])
+
+    def test_is_typed_ld_value(self):
+        assert ld_container.is_typed_ld_value([{"@value": "foo", "@type": "bar"}])
+        assert ld_container.is_typed_ld_value([{"@value": "foo", "@type": "bar", "bar": "barfoo"}])
+        assert not ld_container.is_typed_ld_value([{"@type": "bar"}])
+        assert not ld_container.is_typed_ld_value([{"@value": "foo"}])
+        assert not ld_container.is_typed_ld_value({"@value": "foo", "@type": "bar"})
+        assert not ld_container.is_typed_ld_value([{"bar": "foo"}])
 
     def test_are_values_equal(self):
         assert ld_container.are_values_equal({"@id": "foo"}, {"@id": "foo"})

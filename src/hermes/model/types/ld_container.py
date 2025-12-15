@@ -224,7 +224,7 @@ class ld_container:
         :param value: The value that is to be expanded. Different types are expected based on the type of self:
             <ul><li>If type(self) == ld_dict: value must be a dict</li>
             <li>If type(self) == ld_list: value must be a list</li></ul>
-            value will be exapnded as if it was the data_dict/ the item_list of self.
+            value will be expanded as if it was the data_dict/ the item_list of self.
         :type value: JSON_LD_VALUE
 
         :return: The expanded version of value i.e. the data_dict/ item_list of self if it had been value.
@@ -293,14 +293,8 @@ class ld_container:
         for index in range(len(path) - 1, 0, -1):
             current_data = current_data[path[index]]
         # replace the data_dict/ item_list so that value is now inside of the ld_value of parent and store the old value
-        if current_data == []:
-            # itemlist of an empty ld_list:
-            # The item_list can't be replaced like in all other cases
-            self_data = None
-            current_data.append(value)
-        else:
-            self_data = current_data[path[0]]
-            current_data[path[0]] = value
+        self_data = current_data[path[0]]
+        current_data[path[0]] = value
 
         # expand the ld_value of parent to implicitly expand value
         # important the ld_value of parent is not modified because the processor makes a deep copy
@@ -310,10 +304,7 @@ class ld_container:
         )
 
         # restore the data_dict/ item_list to its former state
-        if self_data is not None:
-            current_data[path[0]] = self_data
-        else:
-            current_data.clear()
+        current_data[path[0]] = self_data
 
         # use the path to get the expansion of value
         for index in range(len(path) - 1, -1, -1):

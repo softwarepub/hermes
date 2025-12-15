@@ -14,17 +14,15 @@ from hermes.model.types.ld_dict import ld_dict
 
 def test_undefined_list():
     with pytest.raises(ValueError):
-        ld_list([{}])
+        ld_list({}, key="foo")
     with pytest.raises(ValueError):
-        ld_list([{"spam": [{"@value": "bacon"}]}])
+        ld_list([{"@set": [{"@value": "bacon"}]}], key="foo")
     with pytest.raises(ValueError):
-        ld_list([{"@list": [0], "spam": [{"@value": "bacon"}]}])
+        ld_list([{"@value": "bacon"}], key="@type")
     with pytest.raises(ValueError):
-        ld_list([{"@list": ["a", "b"], "@set": ["foo", "bar"]}])
+        ld_list(["bacon"], key="eggs")
     with pytest.raises(ValueError):
         ld_list([{"@list": ["a", "b"]}])  # no given key
-    with pytest.raises(ValueError):
-        ld_list([{"@list": ["a", "b"]}, {"@set": ["foo", "bar"]}])
 
 
 def test_list_basics():
@@ -32,6 +30,15 @@ def test_list_basics():
     li = ld_list(li_data, key="foo")
     assert li._data is li_data
     assert li.item_list is li_data[0]["@list"]
+    li_data = [{"@graph": [{"@value": "bar"}]}]
+    li = ld_list(li_data, key="foo")
+    assert li._data is li_data
+    assert li.item_list is li_data[0]["@graph"]
+    li_data = [{"@value": "bar"}]
+    li = ld_list(li_data, key="foo")
+    assert li._data is li_data
+    assert li.item_list is li_data
+    assert li.container_type == "@set"
 
 
 def test_build_in_get():
@@ -136,6 +143,12 @@ def test_build_in_iter():
 
 def test_append():
     li = ld_list([{"@list": []}], key="https://schema.org/name", context=[{"schema": "https://schema.org/"}])
+    li.append(ld_list([{"@value": "foo"}], key="https://schema.org/name"))
+    assert isinstance(li[0], ld_list) and li[0].container_type == "@list"
+    li = ld_list([{"@graph": []}], key="https://schema.org/name", context=[{"schema": "https://schema.org/"}])
+    li.append({"schema:name": "foo"})
+    assert li[0] == {"https://schema.org/name": "foo"} and len(li) == 1
+    li = ld_list([{"@list": []}], key="https://schema.org/name", context=[{"schema": "https://schema.org/"}])
     li.append("foo")
     assert li[0] == "foo" and li.item_list[0] == {"@value": "foo"} and len(li) == 1
     li.append("bar")
@@ -153,6 +166,7 @@ def test_append():
 
 def test_build_in_contains():
     li = ld_list([], key="https://schema.org/name", context=[{"schema": "https://schema.org/"}])
+    assert [] in li
     li.append("foo")
     li.append({"@type": "A", "schema:name": "a"})
     assert "foo" in li and {"@type": "A", "schema:name": "a"} in li
@@ -162,9 +176,18 @@ def test_build_in_contains():
     li.append({"@id": "schema:foo", "schema:name": "foo"})
     assert {"@id": "schema:foo"} in li and {"@id": "schema:foo", "schema:name": "foobar"} in li
     assert {"schema:name": "foo"} in li
+    li = ld_list([{"@list": []}], key="https://schema.org/name", context=[{"schema": "https://schema.org/"}])
+    li.append("foo")
+    assert "foo" in li
 
 
 def test_build_in_comparison():
+    li = ld_list([{"@list": []}], key="https://schema.org/name", context=[{"schema": "https://schema.org/"}])
+    li.append({"@id": "foo", "schema:bar": "foobar"})
+    assert [{"@list": [{"@id": "foo", "schema:bar": "barfoo"}]}] == li
+    assert [{"@list": [{"@id": "bar", "schema:bar": "foobar"}]}] != li
+    assert [{"@set": [{"@id": "foo", "schema:bar": "barfoo"}]}] == li
+    assert [{"@graph": [{"@id": "foo", "schema:bar": "barfoo"}]}] == li
     li = ld_list([{"@list": []}], key="https://schema.org/name", context=[{"schema": "https://schema.org/"}])
     li2 = ld_list([{"@list": []}], key="https://schema.org/name", context=[{"schema2": "https://schema.org/"}])
     assert li == [] and [] == li
@@ -269,6 +292,10 @@ def test_is_container():
 
 
 def test_from_list():
+    with pytest.raises(ValueError):
+        ld_list.from_list([], key="@type", container_type="@list")
+    with pytest.raises(ValueError):
+        ld_list.from_list([], container_type="foo")
     li = ld_list.from_list([], key="schema:foo")
     assert li.item_list == li.context == [] and li.parent is li.index is None and li.key == "schema:foo"
     assert li._data == [] and li.container_type == "@set"
@@ -290,3 +317,9 @@ def test_get_item_list_from_container():
     assert ld_list.get_item_list_from_container({"@graph": ["a"]}) == ["a"]
     with pytest.raises(ValueError):
         ld_list.get_item_list_from_container(["a"])
+    with pytest.raises(ValueError):
+        ld_list.get_item_list_from_container({"@list": [], "@set": []})
+    with pytest.raises(ValueError):
+        ld_list.get_item_list_from_container({"@list": {}})
+    with pytest.raises(ValueError):
+        ld_list.get_item_list_from_container({"foo": []})

@@ -59,8 +59,12 @@ class ld_list(ld_container):
         :return:
         :rtype: None
 
-        :raises ValueError: bla
-        :raises ValueError: bla
+        :raises ValueError: If the given key is not a string or None was given.
+        :raises ValueError: If the given data is not a list.
+        :raises ValueError: If the data represents an unexpanded @set. I.e. is of the form [{"@set": [...]}]
+        :raises ValueError: If the given key is "@type" but the container_type not "@set"
+            or a value in the item_list not a string.
+        :raises ValueError: If the given key is not "@type" and any value in the item_list not a dict.
         """
         # check for validity of data
         if not isinstance(key, str):
@@ -272,8 +276,16 @@ class ld_list(ld_container):
             other = [other]
         if isinstance(other, list):
             if ld_list.is_ld_list(other):
-                other = ld_list.get_item_list_from_container(other[0])
-            other = self.from_list(other, parent=self.parent, key=self.key, context=self.context)
+                if "@list" in other[0]:
+                    cont = "@list"
+                elif "@graph" in other[0]:
+                    cont = "@graph"
+                else:
+                    cont = "@set"
+                other = other[0][cont]
+            else:
+                cont = "@set"
+            other = self.from_list(other, parent=self.parent, key=self.key, context=self.context, container_type=cont)
 
         # check if the length matches
         if len(self.item_list) != len(other.item_list):
@@ -338,7 +350,7 @@ class ld_list(ld_container):
                         # swap order if first try returned NotImplemented
                         res = other_item.__eq__(item)
                     # if one of both comparisons returned true the elements are equal
-                    if res:
+                    if res is not NotImplemented and res:
                         equality_pairs[index] += [other_index]
                 if len(equality_pairs[index]) == 0:
                     # there exists no element in other that is equal to item
@@ -624,7 +636,7 @@ class ld_list(ld_container):
         :type value: list[JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE]
         :param parent: The parent container of the new ld_list.<br>If value is assimilated by parent druing JSON-LD
             expansion parent is extended by value and parent is returned.
-        :type parent: ls_container | None
+        :type parent: ld_container | None
         :param key: The key into the inner most parent container representing a dict of the new ld_list.
         :type: key: str | None
         :param context: The context for the new list (is will also inherit the context of parent).<br>
