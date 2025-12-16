@@ -13,7 +13,7 @@ from pydantic import BaseModel
 from hermes.commands.deposit.base import BaseDepositPlugin
 from hermes.commands.deposit.error import DepositionUnauthorizedError
 from hermes.model.path import ContextPath
-from hermes.utils import hermes_doi
+from hermes.utils import hermes_doi, hermes_doi_url
 
 _log = logging.getLogger("cli.deposit.dataverse")
 
@@ -165,6 +165,15 @@ class DataverseDepositPlugin(BaseDepositPlugin):
             except Exception as e:
                 _log.warning(f"Could not match license '{deposition_license}' to allowed licenses for deposition: {e}")
         dataset.citation.other_references = [f"Compiled by HERMES ({hermes_doi})"]
+        dataset.citation.publication = [
+            {
+                "publicationCitation": "HERMES",
+                "publicationRelationType": "IsSupplementedBy",
+                "publicationIDType": "doi",
+                "publicationIDNumber": hermes_doi,
+                "publicationURL": hermes_doi_url,
+            }
+        ]
 
     def create_initial_version(self) -> None:
         """

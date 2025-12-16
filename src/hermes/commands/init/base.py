@@ -155,7 +155,7 @@ def string_in_file(file_path, search_string: str) -> bool:
         return any(search_string in line for line in file)
 
 
-def get_builtin_plugins(plugin_commands: list[str]) -> dict[str: HermesPlugin]:
+def get_builtin_plugins(plugin_commands: list[str]) -> dict[str, HermesPlugin]:
     """
     Returns a list of installed HermesPlugins based on a list of related command names.
     This is currently not used (we use the marketplace code instead) but maybe later.
@@ -195,6 +195,7 @@ class HermesInitCommand(HermesCommand):
         super().__init__(parser)
         self.folder_info: HermesInitFolderInfo = HermesInitFolderInfo()
         self.hermes_was_already_installed: bool = False
+        self.warn_on_old_version: bool = True
         self.new_created_paths: list[Path] = []
         self.tokens: dict = {}
         self.setup_method: str = ""
@@ -228,7 +229,7 @@ class HermesInitCommand(HermesCommand):
             }
         }
         self.plugin_relevant_commands = ["harvest", "deposit"]
-        self.builtin_plugins: dict[str: HermesPlugin] = get_builtin_plugins(self.plugin_relevant_commands)
+        self.builtin_plugins: dict[str, HermesPlugin] = get_builtin_plugins(self.plugin_relevant_commands)
         self.selected_plugins: list[marketplace.PluginInfo] = []
 
     def init_command_parser(self, command_parser: argparse.ArgumentParser) -> None:
@@ -259,6 +260,9 @@ class HermesInitCommand(HermesCommand):
     def __call__(self, args: argparse.Namespace) -> None:
         # Setup logging
         self.setup_file_logging()
+
+        # Warning on old hermes version
+        self.check_hermes_version()
 
         # Process command parameters (ci-templates branch & hermes branch)
         if hasattr(args, "template_branch"):
@@ -309,13 +313,13 @@ class HermesInitCommand(HermesCommand):
             self.configure_git_project()
 
             self.clean_up_files(False)
-            sc.echo("\nHERMES is now initialized and ready to be used.\n",
+            sc.echo("\nHERMES is now initialized. Add the changes to your git index and it is ready to be used.\n",
                     formatting=sc.Formats.OKGREEN+sc.Formats.BOLD)
 
         # Nice message on Ctrl+C
         except KeyboardInterrupt:
             sc.echo("")
-            sc.echo("HERMES init was aborted.", sc.Formats.WARNING)
+            sc.echo("HERMES init was aborted. No changes were made.", sc.Formats.WARNING)
             self.clean_up_files(True)
             sys.exit()
 
@@ -325,7 +329,30 @@ class HermesInitCommand(HermesCommand):
                     formatting=sc.Formats.FAIL+sc.Formats.BOLD)
             sc.debug_info(traceback.format_exc())
             self.clean_up_files(True)
+            sc.echo("No changes were made. You will have to run 'hermes init' again.")
             sys.exit(2)
+
+    def check_hermes_version(self) -> None:
+        """Fetches the current Pypi Hermes version. Gives a warning if the current version is not up to date."""
+        if not self.warn_on_old_version:
+            return
+        try:
+            current_hermes_version: str = metadata.version("hermes")
+            pypi_hermes_json: dict = requests.get(f"https://pypi.org/pypi/hermes/json", timeout=10).json()
+            pypi_hermes_version: str = pypi_hermes_json["info"]["version"]
+
+            def version_tuple(version_string: str) -> tuple:
+                version_string = re.split(r"[A-Za-z]", version_string, maxsplit=1)[0]
+                return tuple(int(p) for p in version_string.split(".") if p)
+
+            if version_tuple(current_hermes_version) < version_tuple(pypi_hermes_version):
+                sc.echo(f"You are using an old version of HERMES. ({current_hermes_version})", sc.Formats.WARNING)
+                sc.echo(f"Please upgrade to the latest version ({pypi_hermes_version}) "
+                            "before running 'hermes init' to avoid errors.", sc.Formats.FAIL)
+            else:
+                sc.echo(f"Your version of HERMES ({current_hermes_version}) is up to date.", sc.Formats.OKGREEN)
+        except Exception as e:
+            sc.echo(f"Could not fetch Pypi Hermes version. ({e})", sc.Formats.WARNING)
 
     def test_initialization(self) -> None:
         """Test if init is possible and wanted. If not: sys.exit()"""
@@ -895,8 +922,12 @@ class HermesInitCommand(HermesCommand):
             if sc.confirm(f"Do you want to append your README.md to the {dp_name} upload?"):
                 self.ci_parameters["deposit_extra_files"] = "--file README.md "
                 add_readme = True
+            else:
+                self.ci_parameters["deposit_extra_files"] = ""
+                add_readme = False
         options = [
-            "All (non hidden) folders",
+            "Nothing else",
+            "All (visible) folders",
             "Everything (all folders & all files)",
             "Enter a custom list of paths",
         ]
@@ -907,22 +938,27 @@ class HermesInitCommand(HermesCommand):
         file_choice = sc.choose(f"Which{_other} folders / files of your root directory "
                                 f"should be included in the {dp_name} upload?", options=options)
         match file_choice:
-            case 0:
+            case 0: # Nothing
+                self.ci_parameters["deposit_zip_files"] = "-"
+            case 1: # All folders
                 self.ci_parameters["deposit_zip_files"] = " ".join(self.folder_info.dir_folders)
-            case 1:
+            case 2: # All folders all files
                 self.ci_parameters["deposit_zip_files"] = ""
-            case 2:
+            case 3: # Custom List
                 custom_files = []
                 while True:
                     custom_path = sc.answer("Enter a path you want to include (enter nothing if you are done): ")
-                    if custom_path == "":
+                    if custom_path.strip() == "":
                         break
                     if os.path.exists(os.path.join(self.folder_info.current_dir, custom_path)):
                         custom_files.append(custom_path)
                         sc.echo(f"{custom_path} has been added.", formatting=sc.Formats.OKGREEN)
                     else:
                         sc.echo(f"{custom_path} does not exist.", formatting=sc.Formats.FAIL)
-                self.ci_parameters["deposit_zip_files"] = " ".join(custom_files)
+                if custom_files:
+                    self.ci_parameters["deposit_zip_files"] = " ".join(custom_files)
+                else:
+                    self.ci_parameters["deposit_zip_files"] = "-"
             case _:
                 index = int(file_choice) - folder_base_index
                 if 0 <= index < len(self.folder_info.dir_folders):
@@ -932,12 +968,19 @@ class HermesInitCommand(HermesCommand):
             sc.echo("\tUnzipped:", formatting=sc.Formats.BOLD)
             sc.echo("\t\tREADME.md", formatting=sc.Formats.OKCYAN)
         sc.echo("\tZipped:", formatting=sc.Formats.BOLD)
-        if self.ci_parameters["deposit_zip_files"] != "":
-            for file in self.ci_parameters["deposit_zip_files"].split(" "):
-                sc.echo(f"\t\t{file}", formatting=sc.Formats.OKCYAN)
-        else:
+        if self.ci_parameters["deposit_zip_files"] == "-":
+            sc.echo("\t\t-", formatting=sc.Formats.OKCYAN)
+        elif self.ci_parameters["deposit_zip_files"] == "":
             for file in self.folder_info.dir_list:
                 sc.echo(f"\t\t{file}", formatting=sc.Formats.OKCYAN)
+        else:
+            for file in self.ci_parameters["deposit_zip_files"].split(" "):
+                sc.echo(f"\t\t{file}", formatting=sc.Formats.OKCYAN)
+        if not sc.confirm("Do you want to confirm your selection?"):
+            sc.echo("Your selection was cleared. Now you can select the files again.")
+            self.choose_deposit_files()
+        else:
+            sc.echo("You can change the selected files later inside the CI file or by running 'hermes init' again.")
 
     def mark_as_new_path(self, path: Path, avoid_existing: bool = True) -> None:
         """
