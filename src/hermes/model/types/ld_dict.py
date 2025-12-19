@@ -22,15 +22,16 @@ class ld_dict(ld_container):
 
     def __getitem__(self, key):
         full_iri = self.ld_proc.expand_iri(self.active_ctx, key)
-        try:
-            ld_value = self.data_dict[full_iri]
-        except KeyError:
-            self.data_dict.update({full_iri: [{"@list": []}]})
-            ld_value = self.data_dict[full_iri]
+        if full_iri not in self.data_dict:
+            self[full_iri] = []
+        ld_value = self.data_dict[full_iri]
         return self._to_python(full_iri, ld_value)
 
     def __setitem__(self, key, value):
         full_iri = self.ld_proc.expand_iri(self.active_ctx, key)
+        if value is None:
+            del self[full_iri]
+            return
         ld_value = self._to_expanded_json({full_iri: value})
         self.data_dict.update(ld_value)
 
@@ -40,7 +41,8 @@ class ld_dict(ld_container):
 
     def __contains__(self, key):
         full_iri = self.ld_proc.expand_iri(self.active_ctx, key)
-        return len(self[full_iri]) != 0
+        # FIXME: is that good?
+        return full_iri in self.data_dict
 
     def __eq__(self, other):
         if not isinstance(other, (dict, ld_dict)):
@@ -79,9 +81,12 @@ class ld_dict(ld_container):
         return not x
 
     def get(self, key, default=_NO_DEFAULT):
-        if key not in self and default is not ld_dict._NO_DEFAULT:
+        try:
+            return self[key]
+        except KeyError as e:
+            if default is self._NO_DEFAULT:
+                raise e
             return default
-        return self[key]
 
     def update(self, other):
         for key, value in other.items():

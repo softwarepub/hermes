@@ -189,8 +189,10 @@ def test_get():
                  context=[{"schema": "https://schema.org/"}])
     assert di.get("https://schema.org/name") == ["Manu Sporny"]
     assert di.get("schema:name") == ["Manu Sporny"]
-    assert di.get("bar", None) is None
-    assert isinstance(di["bar"], ld_list) and len(di["bar"]) == 0
+    assert di.get("bar", None) is None  # invalid key
+    with pytest.raises(KeyError):
+        di.get("bar")
+    assert isinstance(di.get("schema:bar", None), ld_list) and len(di.get("schema:bar", None)) == 0
 
 
 def test_update():

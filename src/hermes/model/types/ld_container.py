@@ -237,7 +237,7 @@ class ld_container:
         # while searching build a path such that it leads from the found ld_dicts ld_value to selfs data_dict/ item_list
         parent = self
         path = []
-        while parent.__class__.__name__ != "ld_dict":
+        while parent.__class__.__name__ not in {"ld_dict", "SoftwareMetadata"}:
             if parent.container_type == "@list":
                 path.extend(["@list", 0])
             elif parent.container_type == "@graph":
@@ -250,7 +250,7 @@ class ld_container:
         # if neither self nor any of its parents is a ld_dict:
         # create a dict with the key of the outer most parent of self and this parents ld_value as a value
         # this dict is stored in an ld_container and simulates the most minimal JSON-LD object possible
-        if parent.__class__.__name__ != "ld_dict":
+        if parent.__class__.__name__ not in {"ld_dict", "SoftwareMetadata"}:
             key = self.ld_proc.expand_iri(parent.active_ctx, parent.key)
             parent = ld_container([{key: parent._data}])
         path.append(0)
