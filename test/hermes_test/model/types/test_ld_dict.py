@@ -133,7 +133,6 @@ def test_build_in_set():
     }
     assert isinstance(di["schema:result"][0]["schema:error"][0]["schema:name"], ld_list)
 
-    # FIXME: fixing #433 would fix this (setting nested python dicts)
     di = ld_dict([{}], context=[{"schema": "https://schema.org/"}])
     di["@type"] = "schema:Thing"
     di["schema:result"] = {"@type": "schema:Action", "schema:error": {"@type": "schema:Thing", "schema:name": "foo"}}
