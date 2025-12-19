@@ -137,7 +137,7 @@ class ld_list(ld_container):
         if not isinstance(index, slice):
             # expand the value
             value = self._to_expanded_json([value])
-            # the returned value is always a list but my contain more then one item
+            # the returned value is always a list but may contain more then one item
             # therefor a slice on the item_list is used to add the expanded value(s)
             if index != -1:
                 self.item_list[index:index+1] = value

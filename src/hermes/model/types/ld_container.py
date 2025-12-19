@@ -312,39 +312,6 @@ class ld_container:
 
         return expanded_data
 
-    # TODO: remove this method and all other unused methods/ functions
-    def _to_expanded_json_deprecated(self, key, value):
-        if key == "@id":
-            ld_value = self.ld_proc.expand_iri(self.active_ctx, value, vocab=False)
-        elif key == "@type":
-            if not isinstance(value, list):
-                value = [value]
-            ld_value = [self.ld_proc.expand_iri(self.active_ctx, ld_type) for ld_type in value]
-        else:
-            short_key = self.ld_proc.compact_iri(self.active_ctx, key)
-            if ":" in short_key:
-                prefix, short_key = short_key.split(":", 1)
-                ctx_value = self.ld_proc.get_context_value(self.active_ctx, prefix, "@id")
-                active_ctx = self.ld_proc.process_context(
-                    self.active_ctx, [ctx_value], {"documentLoader": bundled_loader}
-                )
-            else:
-                active_ctx = self.active_ctx
-            ld_type = self.ld_proc.get_context_value(active_ctx, short_key, "@type")
-            if ld_type == "@id":
-                ld_value = [{"@id": value}]
-                ld_output = "expanded_json"
-            else:
-                ld_value, ld_output = self.ld_proc.apply_typemap(value, "expanded_json", "json", parent=self, key=key)
-            if ld_output == "json":
-                ld_value = self.ld_proc.expand(
-                    ld_value, {"expandContext": self.full_context, "documentLoader": bundled_loader}
-                )
-            elif ld_output != "expanded_json":
-                raise TypeError(f"Cannot convert {type(value)}")
-
-        return ld_value
-
     def __repr__(self: Self) -> str:
         """
         Returns a short string representation of this object.
