@@ -14,6 +14,8 @@ class ld_dict(ld_container):
     _NO_DEFAULT = type("NO DEFAULT")
 
     def __init__(self, data, *, parent=None, key=None, index=None, context=None):
+        if not self.is_ld_dict(data):
+            raise ValueError("The given data does not represent a ld_dict.")
         super().__init__(data, parent=parent, key=key, index=index, context=context)
 
         self.data_dict = data[0]
@@ -120,14 +122,15 @@ class ld_dict(ld_container):
             ld_data["@type"] = ld_type
 
         data_context = ld_data.pop('@context', [])
-        full_context = ld_container.merge_to_list(context or [], data_context)
-        if parent is None and data_context:
-            ld_data["@context"] = data_context
+        merged_contexts = ld_container.merge_to_list(data_context, context or [])
+        full_context = []
+        if parent is None and merged_contexts:
+            ld_data["@context"] = merged_contexts
         elif parent is not None:
-            full_context[:0] = parent.full_context
+            full_context = parent.full_context + merged_contexts
 
         ld_value = cls.ld_proc.expand(ld_data, {"expandContext": full_context, "documentLoader": bundled_loader})
-        ld_value = cls(ld_value, parent=parent, key=key, context=full_context)
+        ld_value = cls(ld_value, parent=parent, key=key, context=merged_contexts)
 
         return ld_value
 

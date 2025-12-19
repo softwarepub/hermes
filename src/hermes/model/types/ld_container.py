@@ -528,7 +528,8 @@ class ld_container:
         :returns: The pythonized version of data.
         :rtype: BASIC_TYPE | TIME_TYPE
         """
-        ld_value = data[0]["@value"]
+        # FIXME: #434 dates are not returned as datetime/ date/ time but as string
+        ld_value = data[0]['@value']
 
         return ld_value
 
