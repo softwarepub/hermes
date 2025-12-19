@@ -25,6 +25,7 @@ class MockDocument:
             "ham": {"@id": f"{base_url}ham", "@type": "@id"},
             "eggs": {"@id": f"{base_url}eggs", "@container": "@list"},
             "use_until": {"@id": f"{base_url}use_until", "@type": "http://schema.org/DateTime"},
+            "schema": "https://schema.org/",
 
             "Egg": {"@id": f"{base_url}Egg"},
         }
