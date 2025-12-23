@@ -61,9 +61,21 @@ def main() -> None:
     # Actually parse the command line, configure it and execute the selected sub-command.
     args = parser.parse_args()
 
+    def _mask_option_args() -> dict[str, str]:
+        ret_dict = {}
+        for var in vars(args):
+            if not var == "options":
+                ret_dict[var] = getattr(args, var)
+            else:
+                ret_dict["options"] = []
+                for (opt_name, opt_val) in  getattr(args, var):
+                    ret_dict["options"].append(f"{opt_name}: ***")
+        return ret_dict
+
+
     logger.init_logging()
     log = logger.getLogger("hermes.cli")
-    log.debug("Running hermes with the following command line arguments: %s", args)
+    log.debug("Running hermes with the following command line arguments: %s", _mask_option_args())
 
     try:
         log.debug("Loading settings...")
