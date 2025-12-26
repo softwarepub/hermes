@@ -8,6 +8,9 @@ sources = [ "cff", "toml", "file_exists" ] # ordered priority (first one is most
 [harvest.file_exists.search_patterns]
 community = ["contributing.md", "governance.md"]
 
+[curate]
+method = "accept"
+
 [deposit]
 target = "invenio_rdm"
 
