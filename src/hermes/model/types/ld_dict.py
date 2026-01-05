@@ -65,12 +65,7 @@ class ld_dict(ld_container):
         if unique_keys and unique_keys != {"@id"}:
             return False
         for key in keys_self.intersection(keys_other):
-            item = self[key]
-            other_item = other[key]
-            res = item.__eq__(other_item)
-            if res == NotImplemented:
-                res = other_item.__eq__(item)
-            if res is False or res == NotImplemented:  # res is not True
+            if self[key] != other[key]:
                 return False
         return True
 

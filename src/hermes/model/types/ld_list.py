@@ -312,16 +312,8 @@ class ld_list(ld_container):
                     if item["@id"] != other_item["@id"]:
                         return False
                     continue
-                # get the 'real' items (i.e. can also be ld_dicts or ld_lists)
-                item = self[index]
-                other_item = other[index]
-                # compare using the correct equals method
-                res = item.__eq__(other_item)
-                if res == NotImplemented:
-                    # swap order if first try returned NotImplemented
-                    res = other_item.__eq__(item)
-                # return false if the second comparison also fails or one of them returned false
-                if res is False or res == NotImplemented:
+                # compare the 'real' items (i.e. can also be ld_dicts or ld_lists)
+                if self[index] != other[index]:
                     return False
             # return true because no unequal elements where found
             return True
@@ -341,16 +333,8 @@ class ld_list(ld_container):
                         if item["@id"] == other_item["@id"]:
                             equality_pairs[index] += [other_index]
                         continue
-                    # get the 'real' items (i.e. can also be ld_dicts or ld_lists)
-                    item = self[index]
-                    other_item = other[index]
-                    # compare using the correct equals method
-                    res = item.__eq__(other_item)
-                    if res == NotImplemented:
-                        # swap order if first try returned NotImplemented
-                        res = other_item.__eq__(item)
-                    # if one of both comparisons returned true the elements are equal
-                    if res is not NotImplemented and res:
+                    # compare the 'real' items (i.e. can also be ld_dicts or ld_lists)
+                    if self[index] == other[other_index]:
                         equality_pairs[index] += [other_index]
                 if len(equality_pairs[index]) == 0:
                     # there exists no element in other that is equal to item
