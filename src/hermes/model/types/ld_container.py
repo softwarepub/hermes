@@ -8,7 +8,8 @@
 from .pyld_util import JsonLdProcessor, bundled_loader
 
 from datetime import date, time, datetime
-from typing import Union, Self, Any
+from typing import Union, Any
+from typing_extensions import Self
 
 
 JSON_LD_CONTEXT_DICT = dict[str, Union[str, "JSON_LD_CONTEXT_DICT"]]
@@ -64,7 +65,7 @@ class ld_container:
         self: Self,
         data: EXPANDED_JSON_LD_VALUE,
         *,
-        parent: Union["ld_container", None] = None,
+        parent: Union[Self, None] = None,
         key: Union[str, None] = None,
         index: Union[int, None] = None,
         context: Union[list[Union[str, JSON_LD_CONTEXT_DICT]], None] = None,

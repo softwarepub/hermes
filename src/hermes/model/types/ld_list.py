@@ -17,7 +17,9 @@ from .ld_container import (
     BASIC_TYPE,
 )
 
-from typing import Generator, Hashable, Union, Self, Any
+from collections.abc import Generator, Hashable
+from typing import Union, Any
+from typing_extensions import Self
 
 
 class ld_list(ld_container):
@@ -32,10 +34,10 @@ class ld_list(ld_container):
     """
 
     def __init__(
-        self: Self,
+        self: "ld_list",
         data: Union[list[str], list[dict[str, EXPANDED_JSON_LD_VALUE]]],
         *,
-        parent: Union["ld_container", None] = None,
+        parent: Union[ld_container, None] = None,
         key: Union[str, None] = None,
         index: Union[int, None] = None,
         context: Union[list[Union[str, JSON_LD_CONTEXT_DICT]], None] = None,
@@ -44,7 +46,7 @@ class ld_list(ld_container):
         Create a new ld_list container.
 
         :param self: The instance of ld_list to be initialized.
-        :type self: Self
+        :type self: ld_list
         :param data: The expanded json-ld data that is mapped (must be valid for @set, @list or @graph)
         :type data: list[str] | list[dict[str, BASIC_TYPE | EXPANDED_JSON_LD_VALUE]]
         :param parent: parent node of this container.
@@ -100,7 +102,7 @@ class ld_list(ld_container):
         Get the item(s) at position index in a pythonized form.
 
         :param self: The ld_list the items are taken from.
-        :type self: Self
+        :type self: ld_list
         :param index: The positon(s) from which the item(s) is/ are taken.
         :type index: int | slice
 
@@ -125,7 +127,7 @@ class ld_list(ld_container):
         All given values are expanded. If any are assimilated by self all items that would be added by this are added.
 
         :param self: The ld_list the items are set in.
-        :type self: Self
+        :type self: ld_list
         :param index: The positon(s) at which the item(s) is/ are set.
         :type index: int | slice
         :param value: The new value(s).
@@ -161,7 +163,7 @@ class ld_list(ld_container):
         and not be modified afterwards.
 
         :param self: The ld_list the items are deleted from.
-        :type self: Self
+        :type self: ld_list
         :param index: The positon(s) at which the item(s) is/ are deleted.
         :type index: int | slice
 
@@ -175,22 +177,22 @@ class ld_list(ld_container):
         Returns the number of items in this ld_list.
 
         :param self: The ld_list whose length is to be returned.
-        :type self: Self
+        :type self: ld_list
 
         :return: The length of self.
         :rtype: int
         """
         return len(self.item_list)
 
-    def __iter__(self: Self) -> Generator[Union[BASIC_TYPE | TIME_TYPE | ld_container], None, None]:
+    def __iter__(self: Self) -> Generator[Union[BASIC_TYPE, TIME_TYPE, ld_container], None, None]:
         """
         Returns an iterator over the pythonized values contained in self.
 
         :param self: The ld_list over whose items is iterated.
-        :type self: Self
+        :type self: ld_list
 
         :return: The Iterator over self's values.
-        :rtype: Generator[Union[BASIC_TYPE | TIME_TYPE | ld_container], None, None]
+        :rtype: Generator[BASIC_TYPE | TIME_TYPE | ld_container, None, None]
         """
         # return an Iterator over each value in self in its pythonized from
         for index, value in enumerate(self.item_list):
@@ -211,7 +213,7 @@ class ld_list(ld_container):
         has the same @id like it or it xor the object in the item_list has an id an all other values are the same.
 
         :param self: The ld_list that is checked if it contains value.
-        :type self: Self
+        :type self: ld_list
         :param value: The object being checked whether or not it is in self.
         :type value: JSON_LD_VALUE
 
@@ -240,7 +242,7 @@ class ld_list(ld_container):
     def __eq__(
         self: Self,
         other: Union[
-            "ld_list",
+            Self,
             list[Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_container]],
             dict[str, list[Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_container]]],
         ],
@@ -258,7 +260,7 @@ class ld_list(ld_container):
         returns true.
 
         :param self: The ld_list other is compared to.
-        :type self: Self
+        :type self: ld_list
         :param other: The list/ container/ ld_list self is compared to.
         :type other: ld_list | list[JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE | ld_container]
             | dict[str, list[JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE | ld_container]]
@@ -354,7 +356,10 @@ class ld_list(ld_container):
 
     @classmethod
     def _bfs_step(
-        cls: Self, verticies1: set[Hashable], edges: dict[Hashable, tuple[Hashable]], matches: dict[Hashable, Hashable],
+        cls: type[Self],
+        verticies1: set[Hashable],
+        edges: dict[Hashable, tuple[Hashable]],
+        matches: dict[Hashable, Hashable],
         distances: dict[Hashable, Union[int, float]]
     ) -> bool:
         """
@@ -408,7 +413,10 @@ class ld_list(ld_container):
 
     @classmethod
     def _dfs_step(
-        cls: Self, ver: Hashable, edges: dict[Hashable, tuple[Hashable]], matches: dict[Hashable, Hashable],
+        cls: type[Self],
+        ver: Hashable,
+        edges: dict[Hashable, tuple[Hashable]],
+        matches: dict[Hashable, Hashable],
         distances: dict[Hashable, Union[int, float]]
     ) -> bool:
         """
@@ -452,7 +460,10 @@ class ld_list(ld_container):
 
     @classmethod
     def _hopcroft_karp(
-        cls: Self, verticies1: set[Hashable], verticies2: set[Hashable], edges: dict[Hashable, tuple[Hashable]]
+        cls: type[Self],
+        verticies1: set[Hashable],
+        verticies2: set[Hashable],
+        edges: dict[Hashable, tuple[Hashable]]
     ) -> int:
         """
         Implementation of Hopcroft-Karp. I.e.:<br>
@@ -495,7 +506,7 @@ class ld_list(ld_container):
     def __ne__(
         self: Self,
         other: Union[
-            "ld_list",
+            Self,
             list[Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_container]],
             dict[str, list[Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_container]]],
         ],
@@ -506,7 +517,7 @@ class ld_list(ld_container):
         See ld_list.__eq__ for more details on the comparison.)
 
         :param self: The ld_list other is compared to.
-        :type self: Self
+        :type self: ld_list
         :param other: The list/ container/ ld_list self is compared to.
         :type other: ld_list | list[JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE | ld_container]
             | dict[str, list[JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE | ld_container]]
@@ -528,7 +539,7 @@ class ld_list(ld_container):
         The given value is expanded. If it is assimilated by self all items that would be added by this are added.
 
         :param self: The ld_list the item is appended to.
-        :type self: Self
+        :type self: ld_list
         :param value: The new value.
         :type value: Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_container]
 
@@ -543,7 +554,7 @@ class ld_list(ld_container):
         The given values are expanded. If any are assimilated by self all items that would be added by this are added.
 
         :param self: The ld_list the items are appended to.
-        :type self: Self
+        :type self: ld_list
         :param value: The new values.
         :type value: list[Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_container]]
 
@@ -558,7 +569,7 @@ class ld_list(ld_container):
         Return a fully pythonized version of this object where all ld_container are replaced by lists and dicts.
 
         :param self: The ld_list whose fully pythonized version is returned.
-        :type self: Self
+        :type self: ld_list
 
         :return: The fully pythonized version of self.
         :rtype: list[PYTHONIZED_LD_CONTAINER]
