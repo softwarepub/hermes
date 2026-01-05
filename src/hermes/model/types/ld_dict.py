@@ -5,29 +5,56 @@
 # SPDX-FileContributor: Michael Meinel
 # SPDX-FileContributor: Michael Fritzsche
 
-from .ld_container import ld_container
-
 from .pyld_util import bundled_loader
+from .ld_container import (
+    ld_container,
+    JSON_LD_CONTEXT_DICT,
+    EXPANDED_JSON_LD_VALUE,
+    PYTHONIZED_LD_CONTAINER,
+    JSON_LD_VALUE,
+    TIME_TYPE,
+    BASIC_TYPE,
+)
+
+from collections.abc import KeysView
+from types import NotImplementedType
+from typing import Union, Any
+from typing_extensions import Self
 
 
 class ld_dict(ld_container):
+    """
+    An JSON-LD container resembling a dict.
+    See also :class:`ld_container`
+
+    :cvar container_type: A type used as a placeholder to represent "no default".
+    :cvartype container_type: type[str]
+    """
     _NO_DEFAULT = type("NO DEFAULT")
 
-    def __init__(self, data, *, parent=None, key=None, index=None, context=None):
+    def __init__(
+        self: Self,
+        data: list[dict[str, EXPANDED_JSON_LD_VALUE]],
+        *,
+        parent: Union[ld_container, None] = None,
+        key: Union[str, None] = None,
+        index: Union[int, None] = None,
+        context: Union[list[Union[str, JSON_LD_CONTEXT_DICT]], None] = None
+    ) -> None:
         if not self.is_ld_dict(data):
             raise ValueError("The given data does not represent a ld_dict.")
         super().__init__(data, parent=parent, key=key, index=index, context=context)
 
         self.data_dict = data[0]
 
-    def __getitem__(self, key):
+    def __getitem__(self: Self, key: str) -> list[Union[BASIC_TYPE, TIME_TYPE, ld_container]]:
         full_iri = self.ld_proc.expand_iri(self.active_ctx, key)
         if full_iri not in self.data_dict:
             self[full_iri] = []
         ld_value = self.data_dict[full_iri]
         return self._to_python(full_iri, ld_value)
 
-    def __setitem__(self, key, value):
+    def __setitem__(self: Self, key: str, value: Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_container]) -> None:
         full_iri = self.ld_proc.expand_iri(self.active_ctx, key)
         if value is None:
             del self[full_iri]
@@ -35,16 +62,16 @@ class ld_dict(ld_container):
         ld_value = self._to_expanded_json({full_iri: value})
         self.data_dict.update(ld_value)
 
-    def __delitem__(self, key):
+    def __delitem__(self: Self, key: str) -> None:
         full_iri = self.ld_proc.expand_iri(self.active_ctx, key)
         del self.data_dict[full_iri]
 
-    def __contains__(self, key):
+    def __contains__(self: Self, key: str) -> bool:
         full_iri = self.ld_proc.expand_iri(self.active_ctx, key)
         # FIXME: is that good?
         return full_iri in self.data_dict
 
-    def __eq__(self, other):
+    def __eq__(self: Self, other: Any) -> Union[bool, NotImplementedType]:  # FIXME: give another type hint to other?
         if not isinstance(other, (dict, ld_dict)):
             return NotImplemented
         if ld_container.is_json_id(other):
@@ -69,13 +96,15 @@ class ld_dict(ld_container):
                 return False
         return True
 
-    def __ne__(self, other):
+    def __ne__(self: Self, other: Any) -> Union[bool, NotImplementedType]:  # FIXME: give another type hint to other?
         x = self.__eq__(other)
         if x is NotImplemented:
             return NotImplemented
         return not x
 
-    def get(self, key, default=_NO_DEFAULT):
+    def get(
+        self: Self, key: str, default: Any = _NO_DEFAULT
+    ) -> Union[list[Union[BASIC_TYPE, TIME_TYPE, ld_container]], Any]:
         try:
             return self[key]
         except KeyError as e:
@@ -83,11 +112,14 @@ class ld_dict(ld_container):
                 raise e
             return default
 
-    def update(self, other):
+    def update(
+        self: Self,
+        other: Union[dict[str, Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_container]], "ld_dict"]
+    ) -> None:
         for key, value in other.items():
             self[key] = value
 
-    def keys(self):
+    def keys(self: Self) -> KeysView[str]:
         return self.data_dict.keys()
 
     def compact_keys(self):

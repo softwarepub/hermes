@@ -34,8 +34,8 @@ class ld_list(ld_container):
     """
 
     def __init__(
-        self: "ld_list",
-        data: Union[list[str], list[dict[str, EXPANDED_JSON_LD_VALUE]]],
+        self: Self,
+        data: EXPANDED_JSON_LD_VALUE,
         *,
         parent: Union[ld_container, None] = None,
         key: Union[str, None] = None,
@@ -48,7 +48,7 @@ class ld_list(ld_container):
         :param self: The instance of ld_list to be initialized.
         :type self: ld_list
         :param data: The expanded json-ld data that is mapped (must be valid for @set, @list or @graph)
-        :type data: list[str] | list[dict[str, BASIC_TYPE | EXPANDED_JSON_LD_VALUE]]
+        :type data: EXPANDED_JSON_LD_VALUE
         :param parent: parent node of this container.
         :type parent: ld_container | None
         :param key: key into the parent container.
@@ -253,7 +253,7 @@ class ld_list(ld_container):
         For each index it is checked if the ids of the items at index in self and other match if both have one,
         if only one has or neither have an id all other values are compared.<br>
         Note that due to those circumstances equality is not transitve
-        meaning if a == b and b == c is is not guaranteed that a == c.<br>
+        meaning if a == b and b == c it is not guaranteed that a == c.<br>
         If self or other is considered unordered the comparison is more difficult. All items in self are compared
         with all items in other. On the resulting graph given by the realtion == the Hopcroft-Karp algoritm is used
         to determine if there exists a bijection reordering self so that the ordered comparison of self with other

@@ -14,7 +14,11 @@ from typing_extensions import Self
 
 JSON_LD_CONTEXT_DICT = dict[str, Union[str, "JSON_LD_CONTEXT_DICT"]]
 BASIC_TYPE = Union[str, float, int, bool]
-EXPANDED_JSON_LD_VALUE = list[dict[str, Union["EXPANDED_JSON_LD_VALUE", BASIC_TYPE]]]
+EXPANDED_JSON_LD_VALUE = list[Union[
+    dict[str, Union["EXPANDED_JSON_LD_VALUE", BASIC_TYPE]],
+    "EXPANDED_JSON_LD_VALUE",
+    str
+]]
 COMPACTED_JSON_LD_VALUE = Union[
     list[Union[dict[str, Union["COMPACTED_JSON_LD_VALUE", BASIC_TYPE]], BASIC_TYPE]],
     dict[str, Union["COMPACTED_JSON_LD_VALUE", BASIC_TYPE]],
