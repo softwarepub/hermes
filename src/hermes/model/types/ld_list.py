@@ -5,21 +5,25 @@
 # SPDX-FileContributor: Michael Meinel
 # SPDX-FileContributor: Michael Fritzsche
 
-from collections import deque
-from types import NotImplementedType
-from .ld_container import (
-    ld_container,
-    JSON_LD_CONTEXT_DICT,
-    EXPANDED_JSON_LD_VALUE,
-    PYTHONIZED_LD_CONTAINER,
-    JSON_LD_VALUE,
-    TIME_TYPE,
-    BASIC_TYPE,
-)
+from __future__ import annotations
 
-from collections.abc import Generator, Hashable
-from typing import Union, Any
-from typing_extensions import Self
+from .ld_container import ld_container
+from collections import deque
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from collections.abc import Generator, Hashable
+    from .ld_dict import ld_dict
+    from .ld_container import (
+        JSON_LD_CONTEXT_DICT,
+        EXPANDED_JSON_LD_VALUE,
+        PYTHONIZED_LD_CONTAINER,
+        JSON_LD_VALUE,
+        TIME_TYPE,
+        BASIC_TYPE,
+    )
+    from typing import Any, Union
+    from typing_extensions import Self
 
 
 class ld_list(ld_container):
@@ -37,20 +41,20 @@ class ld_list(ld_container):
         self: Self,
         data: EXPANDED_JSON_LD_VALUE,
         *,
-        parent: Union[ld_container, None] = None,
+        parent: Union[ld_dict, ld_list, None] = None,
         key: Union[str, None] = None,
         index: Union[int, None] = None,
         context: Union[list[Union[str, JSON_LD_CONTEXT_DICT]], None] = None,
     ) -> None:
         """
-        Create a new ld_list container.
+        Create a new instance of an ld_list.
 
         :param self: The instance of ld_list to be initialized.
         :type self: ld_list
         :param data: The expanded json-ld data that is mapped (must be valid for @set, @list or @graph)
         :type data: EXPANDED_JSON_LD_VALUE
         :param parent: parent node of this container.
-        :type parent: ld_container | None
+        :type parent: ld_dict | ld_list | None
         :param key: key into the parent container.
         :type key: str | None
         :param index: index into the parent container.
@@ -97,7 +101,7 @@ class ld_list(ld_container):
 
     def __getitem__(
         self: Self, index: Union[int, slice]
-    ) -> Union[BASIC_TYPE, TIME_TYPE, ld_container, list[Union[BASIC_TYPE, TIME_TYPE, ld_container]]]:
+    ) -> Union[BASIC_TYPE, TIME_TYPE, ld_dict, ld_list, list[Union[BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]]]:
         """
         Get the item(s) at position index in a pythonized form.
 
@@ -107,7 +111,7 @@ class ld_list(ld_container):
         :type index: int | slice
 
         :return: The pythonized item(s) at index.
-        :rtype: BASIC_TYPE | TIME_TYPE | ld_container | list[BASIC_TYPE | TIME_TYPE | ld_container]]
+        :rtype: BASIC_TYPE | TIME_TYPE | ld_dict | ld_list | list[BASIC_TYPE | TIME_TYPE | ld_dict | ld_list]
         """
         # handle slices by applying them to a list of indices and then getting the items at those
         if isinstance(index, slice):
@@ -120,7 +124,7 @@ class ld_list(ld_container):
         return item
 
     def __setitem__(
-        self: Self, index: Union[int, slice], value: Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_container]
+        self: Self, index: Union[int, slice], value: Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]
     ) -> None:
         """
         Set the item(s) at position index to the given value(s).
@@ -131,7 +135,7 @@ class ld_list(ld_container):
         :param index: The positon(s) at which the item(s) is/ are set.
         :type index: int | slice
         :param value: The new value(s).
-        :type value: Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_container]
+        :type value: JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE | ld_dict | ld_list
 
         :return:
         :rtype: None
@@ -184,7 +188,7 @@ class ld_list(ld_container):
         """
         return len(self.item_list)
 
-    def __iter__(self: Self) -> Generator[Union[BASIC_TYPE, TIME_TYPE, ld_container], None, None]:
+    def __iter__(self: Self) -> Generator[Union[BASIC_TYPE, TIME_TYPE, ld_dict, ld_list], None, None]:
         """
         Returns an iterator over the pythonized values contained in self.
 
@@ -192,7 +196,7 @@ class ld_list(ld_container):
         :type self: ld_list
 
         :return: The Iterator over self's values.
-        :rtype: Generator[BASIC_TYPE | TIME_TYPE | ld_container, None, None]
+        :rtype: Generator[BASIC_TYPE | TIME_TYPE | ld_dict | ld_list, None, None]
         """
         # return an Iterator over each value in self in its pythonized from
         for index, value in enumerate(self.item_list):
@@ -241,12 +245,9 @@ class ld_list(ld_container):
 
     def __eq__(
         self: Self,
-        other: Union[
-            Self,
-            list[Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_container]],
-            dict[str, list[Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_container]]],
-        ],
-    ) -> Union[bool, NotImplementedType]:
+        other: Union[ld_list, list[Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]],
+                     dict[str, Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]]]
+    ) -> bool:
         """
         Returns wheter or not self is considered to be equal to other.<br>
         If other is not an ld_list, it is converted first.
@@ -262,12 +263,11 @@ class ld_list(ld_container):
         :param self: The ld_list other is compared to.
         :type self: ld_list
         :param other: The list/ container/ ld_list self is compared to.
-        :type other: ld_list | list[JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE | ld_container]
-            | dict[str, list[JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE | ld_container]]
+        :type other: ld_list | list[JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE | ld_dict | ld_list]
 
         :return: Whether or not self and other are considered equal.
-            If other is of the wrong type return NotImplemented instead.
-        :rtype: bool | NotImplementedType
+            If other is of the wrong type return the NotImplemented singleton instead.
+        :rtype: bool
         """
         # check if other has an acceptable type
         if not (isinstance(other, (list, ld_list)) or ld_list.is_container(other)):
@@ -504,13 +504,8 @@ class ld_list(ld_container):
         return matching_size
 
     def __ne__(
-        self: Self,
-        other: Union[
-            Self,
-            list[Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_container]],
-            dict[str, list[Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_container]]],
-        ],
-    ) -> Union[bool, NotImplementedType]:
+        self: Self, other: Union[ld_list, list[Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]]]
+    ) -> bool:
         """
         Returns whether or not self and other not considered to be equal.
         (Returns not self.__eq__(other) if the return type is bool.
@@ -519,12 +514,11 @@ class ld_list(ld_container):
         :param self: The ld_list other is compared to.
         :type self: ld_list
         :param other: The list/ container/ ld_list self is compared to.
-        :type other: ld_list | list[JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE | ld_container]
-            | dict[str, list[JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE | ld_container]]
+        :type other: ld_list | list[JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE | ld_dict | ld_list]
 
         :return: Whether or not self and other are not considered equal.
-            If other is of the wrong type return NotImplemented instead.
-        :rtype: bool | NotImplementedType
+            If other is of the wrong type return the NotImplemented singleton instead.
+        :rtype: bool
         """
         # compare self and other using __eq__
         x = self.__eq__(other)
@@ -533,7 +527,7 @@ class ld_list(ld_container):
             return NotImplemented
         return not x
 
-    def append(self: Self, value: Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_container]) -> None:
+    def append(self: Self, value: Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]) -> None:
         """
         Append the item to the given ld_list self.
         The given value is expanded. If it is assimilated by self all items that would be added by this are added.
@@ -541,14 +535,14 @@ class ld_list(ld_container):
         :param self: The ld_list the item is appended to.
         :type self: ld_list
         :param value: The new value.
-        :type value: Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_container]
+        :type value: JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE | ld_dict | ld_list
 
         :return:
         :rtype: None
         """
         self.item_list.extend(self._to_expanded_json([value]))
 
-    def extend(self: Self, value: list[Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_container]]) -> None:
+    def extend(self: Self, value: list[Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]]) -> None:
         """
         Append the items in value to the given ld_list self.
         The given values are expanded. If any are assimilated by self all items that would be added by this are added.
@@ -556,7 +550,7 @@ class ld_list(ld_container):
         :param self: The ld_list the items are appended to.
         :type self: ld_list
         :param value: The new values.
-        :type value: list[Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_container]]
+        :type value: list[JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE | ld_dcit | ld_list]
 
         :return:
         :rtype: None
@@ -564,7 +558,7 @@ class ld_list(ld_container):
         for item in value:
             self.append(item)
 
-    def to_python(self: Self) -> list[PYTHONIZED_LD_CONTAINER]:
+    def to_python(self: Self) -> list[Union[BASIC_TYPE, TIME_TYPE, PYTHONIZED_LD_CONTAINER]]:
         """
         Return a fully pythonized version of this object where all ld_container are replaced by lists and dicts.
 
@@ -572,7 +566,7 @@ class ld_list(ld_container):
         :type self: ld_list
 
         :return: The fully pythonized version of self.
-        :rtype: list[PYTHONIZED_LD_CONTAINER]
+        :rtype: list[BASIC_TYPE | TIME_TYPE | PYTHONIZED_LD_CONTAINER]
         """
         return [
             item.to_python() if isinstance(item, ld_container) else item
@@ -616,11 +610,11 @@ class ld_list(ld_container):
         cls: type[Self],
         value: list[Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE]],
         *,
-        parent: Union[ld_container, None] = None,
+        parent: Union[ld_dict, ld_list, None] = None,
         key: Union[str, None] = None,
         context: Union[str, JSON_LD_CONTEXT_DICT, list[Union[str, JSON_LD_CONTEXT_DICT]], None] = None,
         container_type: str = "@set"
-    ) -> "ld_list":
+    ) -> ld_list:
         """
         Creates a ld_list from the given list with the given parent, key, context and container_type.<br>
         Note that only container_type '@set' is valid for key '@type'.<br>
@@ -631,10 +625,10 @@ class ld_list(ld_container):
         :type value: list[JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE]
         :param parent: The parent container of the new ld_list.<br>If value is assimilated by parent druing JSON-LD
             expansion parent is extended by value and parent is returned.
-        :type parent: ld_container | None
+        :type parent: ld_dict | ld_list | None
         :param key: The key into the inner most parent container representing a dict of the new ld_list.
         :type: key: str | None
-        :param context: The context for the new list (is will also inherit the context of parent).<br>
+        :param context: The context for the new list (it will also inherit the context of parent).<br>
             Note that this context won't be added to parent if value is assimilated by parent and parent is returned.
         :type context: str | JSON_LD_CONTEXT_DICT | list[str | JSON_LD_CONTEXT_DICT] | None
         :param container_type: The container type of the new list valid are '@set', '@list' and '@graph'.<br>

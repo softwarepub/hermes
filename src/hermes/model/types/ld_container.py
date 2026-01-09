@@ -5,33 +5,37 @@
 # SPDX-FileContributor: Michael Meinel
 # SPDX-FileContributor: Michael Fritzsche
 
+from __future__ import annotations
+
 from .pyld_util import JsonLdProcessor, bundled_loader
+from datetime import date, datetime, time
 
-from datetime import date, time, datetime
-from typing import Union, Any
-from typing_extensions import Self
-
-
-JSON_LD_CONTEXT_DICT = dict[str, Union[str, "JSON_LD_CONTEXT_DICT"]]
-BASIC_TYPE = Union[str, float, int, bool]
-EXPANDED_JSON_LD_VALUE = list[Union[
-    dict[str, Union["EXPANDED_JSON_LD_VALUE", BASIC_TYPE]],
-    "EXPANDED_JSON_LD_VALUE",
-    str
-]]
-COMPACTED_JSON_LD_VALUE = Union[
-    list[Union[dict[str, Union["COMPACTED_JSON_LD_VALUE", BASIC_TYPE]], BASIC_TYPE]],
-    dict[str, Union["COMPACTED_JSON_LD_VALUE", BASIC_TYPE]],
-]
-TIME_TYPE = Union[datetime, date, time]
-JSON_LD_VALUE = Union[
-    list[Union["JSON_LD_VALUE", BASIC_TYPE, TIME_TYPE, "ld_container"]],
-    dict[str, Union["JSON_LD_VALUE", BASIC_TYPE, TIME_TYPE, "ld_container"]],
-]
-PYTHONIZED_LD_CONTAINER = Union[
-    list[Union["PYTHONIZED_LD_CONTAINER", BASIC_TYPE, TIME_TYPE]],
-    dict[str, Union["PYTHONIZED_LD_CONTAINER", BASIC_TYPE, TIME_TYPE]],
-]
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from .ld_dict import ld_dict
+    from .ld_list import ld_list
+    from typing import Any, TypeAlias, Union
+    from typing_extensions import Self
+    JSON_LD_CONTEXT_DICT: TypeAlias = dict[str, Union[str, "JSON_LD_CONTEXT_DICT"]]
+    BASIC_TYPE: TypeAlias = Union[str, float, int, bool]
+    EXPANDED_JSON_LD_VALUE: TypeAlias = list[Union[
+        dict[str, Union["EXPANDED_JSON_LD_VALUE", BASIC_TYPE]],
+        "EXPANDED_JSON_LD_VALUE",
+        str
+    ]]
+    COMPACTED_JSON_LD_VALUE: TypeAlias = Union[
+        list[Union[dict[str, Union["COMPACTED_JSON_LD_VALUE", BASIC_TYPE]], BASIC_TYPE]],
+        dict[str, Union["COMPACTED_JSON_LD_VALUE", BASIC_TYPE]],
+    ]
+    TIME_TYPE: TypeAlias = Union[datetime, date, time]
+    JSON_LD_VALUE: TypeAlias = Union[
+        list[Union["JSON_LD_VALUE", BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]],
+        dict[str, Union["JSON_LD_VALUE", BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]],
+    ]
+    PYTHONIZED_LD_CONTAINER: TypeAlias = Union[
+        list[Union["PYTHONIZED_LD_CONTAINER", BASIC_TYPE, TIME_TYPE]],
+        dict[str, Union["PYTHONIZED_LD_CONTAINER", BASIC_TYPE, TIME_TYPE]],
+    ]
 
 
 class ld_container:
@@ -69,7 +73,7 @@ class ld_container:
         self: Self,
         data: EXPANDED_JSON_LD_VALUE,
         *,
-        parent: Union[Self, None] = None,
+        parent: Union[ld_dict, ld_list, None] = None,
         key: Union[str, None] = None,
         index: Union[int, None] = None,
         context: Union[list[Union[str, JSON_LD_CONTEXT_DICT]], None] = None,
@@ -82,7 +86,7 @@ class ld_container:
         :param data: The expanded json-ld data that is mapped.
         :type data: EXPANDED_JSON_LD_VALUE
         :param parent: parent node of this container.
-        :type parent: ld_container | None
+        :type parent: ld_dict | ld_list | None
         :param key: key into the parent container.
         :type key: str | None
         :param index: index into the parent container.
@@ -182,7 +186,7 @@ class ld_container:
 
     def _to_python(
         self: Self, full_iri: str, ld_value: Union[list, dict, str]
-    ) -> Union["ld_container", BASIC_TYPE, TIME_TYPE]:
+    ) -> Union[ld_dict, ld_list, BASIC_TYPE, TIME_TYPE]:
         """
         Returns a pythonized version of the given value pretending the value is in self and full_iri its key.
 
@@ -195,7 +199,7 @@ class ld_container:
         :type ld_value: list | dict | str
 
         :return: The pythonized value of the ld_value.
-        :rtype: ld_container | BASIC_TYPE | TIME_TYPE
+        :rtype: ld_dict | ld_list | BASIC_TYPE | TIME_TYPE
         """
         if full_iri == "@id":
             # values of key "@id" only have to be compacted
