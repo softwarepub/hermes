@@ -9,13 +9,14 @@ import re
 import shutil
 import sys
 import traceback
-import jinja2
 from dataclasses import dataclass
 from enum import Enum, auto
 from importlib import metadata
 from pathlib import Path
 from urllib.parse import urljoin, urlparse
 
+import jinja2
+import jinja2.meta
 import requests
 import toml
 from pydantic import BaseModel
@@ -205,11 +206,13 @@ class HermesInitCommand(HermesCommand):
         self.git_remote_url = ""
         self.git_hoster: GitHoster = GitHoster.Empty
         self.template_base_url: str = "https://raw.githubusercontent.com"
-        self.template_branch: str = "feature/init-with-dataverse"
+        self.template_branch: str = "feature/jinja"
         self.template_repo: str = "softwarepub/ci-templates"
-        self.template_folder: str = "init"
+        self.template_folder: str = "init-templates"
         self.ci_parameters: dict = {
             "pip_install_hermes": "pip install hermes",
+            "pip_install_plugins_github": "",
+            "pip_install_plugins_gitlab": "",
             "deposit_zip_name": "artifact.zip",
             "deposit_zip_files": "",
             "deposit_initial": "--initial",
@@ -338,7 +341,7 @@ class HermesInitCommand(HermesCommand):
             return
         try:
             current_hermes_version: str = metadata.version("hermes")
-            pypi_hermes_json: dict = requests.get(f"https://pypi.org/pypi/hermes/json", timeout=10).json()
+            pypi_hermes_json: dict = requests.get("https://pypi.org/pypi/hermes/json", timeout=10).json()
             pypi_hermes_version: str = pypi_hermes_json["info"]["version"]
 
             def version_tuple(version_string: str) -> tuple:
@@ -347,8 +350,10 @@ class HermesInitCommand(HermesCommand):
 
             if version_tuple(current_hermes_version) < version_tuple(pypi_hermes_version):
                 sc.echo(f"You are using an old version of HERMES. ({current_hermes_version})", sc.Formats.WARNING)
-                sc.echo(f"Please upgrade to the latest version ({pypi_hermes_version}) "
-                            "before running 'hermes init' to avoid errors.", sc.Formats.FAIL)
+                sc.echo(
+                    f"Please upgrade to the latest version ({pypi_hermes_version}) before running 'hermes init' to "
+                    f"avoid errors.",
+                    sc.Formats.FAIL)
             else:
                 sc.echo(f"Your version of HERMES ({current_hermes_version}) is up to date.", sc.Formats.OKGREEN)
         except Exception as e:
@@ -542,7 +547,12 @@ class HermesInitCommand(HermesCommand):
         jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(""),
                                        block_start_string="{%%", block_end_string="%%}",
                                        variable_start_string="{%", variable_end_string="%}")
-        template = jinja_env.get_template(ci_file_path)
+        source_text = Path(ci_file_path).read_text(encoding="utf-8")
+        used_params = jinja2.meta.find_undeclared_variables(jinja_env.parse(source_text))
+        template = jinja_env.get_template(str(ci_file_path))
+        missing = [p for p in used_params if p not in self.ci_parameters]
+        if missing:
+            sc.echo("CI Template has missing parameters: {missing}", formatting=sc.Formats.WARNING)
         rendered = template.render(self.ci_parameters)
         with open(ci_file_path, 'w') as file:
             file.write(rendered)
@@ -872,8 +882,19 @@ class HermesInitCommand(HermesCommand):
             ]
         )
         if push_choice == 0:
-            branch = sc.answer("Enter target branch: ")
-            self.set_push_trigger_to_branch(branch)
+            branch_count = 9
+            branch_suggestions: list[str] = git_info.run_git_command(
+                "for-each-ref --sort=-committerdate refs/heads/ --format='%(refname:short)'"
+            ).split("\n")[0:branch_count]
+            branch_suggestions.sort()
+            branch_suggestions.sort(key=lambda branch_name: len(branch_name))
+            branch_suggestions.append("Custom branch name")
+            branch_choice = sc.choose("Choose target branch: ", branch_suggestions)
+            if branch_choice < branch_count:
+                self.set_push_trigger_to_branch(branch_suggestions[branch_choice].removeprefix("'").removesuffix("'"))
+            else:
+                branch = sc.answer("Enter custom branch name: ")
+                self.set_push_trigger_to_branch(branch)
         elif push_choice == 1:
             self.set_push_trigger_to_branch(self.git_branch)
         elif push_choice == 2:
@@ -938,13 +959,13 @@ class HermesInitCommand(HermesCommand):
         file_choice = sc.choose(f"Which{_other} folders / files of your root directory "
                                 f"should be included in the {dp_name} upload?", options=options)
         match file_choice:
-            case 0: # Nothing
+            case 0:  # Nothing
                 self.ci_parameters["deposit_zip_files"] = "-"
-            case 1: # All folders
+            case 1:  # All folders
                 self.ci_parameters["deposit_zip_files"] = " ".join(self.folder_info.dir_folders)
-            case 2: # All folders all files
+            case 2:  # All folders all files
                 self.ci_parameters["deposit_zip_files"] = ""
-            case 3: # Custom List
+            case 3:  # Custom List
                 custom_files = []
                 while True:
                     custom_path = sc.answer("Enter a path you want to include (enter nothing if you are done): ")

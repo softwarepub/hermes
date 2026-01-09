@@ -39,7 +39,7 @@ hermes_homepage = hermes_urls["homepage"]
 
 # Publication metadata
 # TODO: Fetch this from somewhere
-hermes_doi = "10.5281/zenodo.14931650" # "10.5281/zenodo.13311079" for hermes v0.8.1
+hermes_doi = "10.5281/zenodo.14931650"  # "10.5281/zenodo.13311079" for hermes v0.8.1
 hermes_doi_url = "https://doi.org/10.5281/zenodo.14931650"
 hermes_concept_doi = "10.5281/zenodo.13221383"
 """Fix "concept" DOI that always refers to the newest version."""
