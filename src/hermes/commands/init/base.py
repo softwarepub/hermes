@@ -45,9 +45,9 @@ class DepositId(Enum):
     Empty = auto()
     Zenodo = auto()
     ZenodoSandbox = auto()
-    JuelichData = auto()
-    JuelichDataBeta = auto()
-    DemoDataverse = auto()
+    # JuelichData = auto()
+    # JuelichDataBeta = auto()
+    # DemoDataverse = auto()
     Rodare = auto()
     RodareTest = auto()
 
@@ -76,9 +76,9 @@ class DepositPlatform:
 DepositOptions: list[DepositPlatform] = [
     DepositPlatform("Zenodo Sandbox", "https://sandbox.zenodo.org/", "invenio_rdm", DepositId.ZenodoSandbox),
     DepositPlatform("Zenodo", "https://zenodo.org/", "invenio_rdm", DepositId.Zenodo),
-    DepositPlatform("Demo Dataverse", "https://demo.dataverse.org/", "dataverse", DepositId.DemoDataverse),
-    DepositPlatform("Jülich DATA", "https://data.fz-juelich.de/", "dataverse", DepositId.JuelichData),
-    DepositPlatform("Jülich DATA Beta", "https://data-beta.fz-juelich.de/", "dataverse", DepositId.JuelichDataBeta),
+    # DepositPlatform("Demo Dataverse", "https://demo.dataverse.org/", "dataverse", DepositId.DemoDataverse),
+    # DepositPlatform("Jülich DATA", "https://data.fz-juelich.de/", "dataverse", DepositId.JuelichData),
+    # DepositPlatform("Jülich DATA Beta", "https://data-beta.fz-juelich.de/", "dataverse", DepositId.JuelichDataBeta),
     DepositPlatform("Rodare", "https://rodare.hzdr.de/", "rodare", DepositId.Rodare),
     DepositPlatform("Rodare Test", "https://rodare-test.hzdr.de/", "rodare", DepositId.RodareTest),
 ]
@@ -585,30 +585,6 @@ class HermesInitCommand(HermesCommand):
                                 "(If this error persists, you should restart and switch to the manual setup mode.)",
                                 formatting=sc.Formats.WARNING)
 
-    def create_dataverse_token(self):
-        # TODO Try dataverse oauth
-        token_url = urljoin(self.deposit_platform.url, "dataverseuser.xhtml?selectTab=apiTokenTab")
-        sc.echo("{} and create an access token.".format(
-            sc.create_console_hyperlink(token_url, "Open this link")
-        ))
-        if self.setup_method == "m":
-            sc.press_enter_to_continue()
-        else:
-            while True:
-                token = sc.answer("Enter the token here: ")
-                token_valid_url = f"{self.deposit_platform.url}/api/users/token"
-                token_valid_response = requests.get(token_valid_url, headers={"X-Dataverse-key": token})
-                if token_valid_response.ok:
-                    sc.echo(f"The token was validated by {self.deposit_platform.name}.",
-                            formatting=sc.Formats.OKGREEN)
-                    self.deposit_platform.token = token
-                    break
-                else:
-                    sc.echo(f"The token could not be validated by {self.deposit_platform.name}. "
-                            "Make sure to enter the complete token.\n"
-                            "(If this error persists, you should restart and switch to the manual setup mode.)",
-                            formatting=sc.Formats.WARNING)
-
     def create_rodare_token(self):
         token_url = urljoin(self.deposit_platform.url, "account/settings/applications/tokens/new/")
         sc.echo("{} and create an access token.".format(
@@ -755,13 +731,6 @@ class HermesInitCommand(HermesCommand):
                 embargo_date = sc.answer("Enter the embargo date (YYYY-MM-DD): ")
                 self.hermes_toml_data["deposit"][deposit_plugin]["embargo_date"] = embargo_date
 
-        if deposit_plugin.startswith("dataverse"):
-            # Dataverse needs a target_collection name as some sort of directory where the publication will appear
-            target_collection = sc.answer("Enter the name of the collection where you want to publish: ")
-            self.hermes_toml_data["deposit"][deposit_plugin]["target_collection"] = target_collection
-            # To be decided: Should we call it api_token in the other deposit plugins or just in dataverse?
-            self.ci_parameters["deposit_parameter_token"] = f"-O {deposit_plugin}.api_token"
-
         if deposit_plugin.startswith("rodare"):
             # Rodare needs the robis_pub_id
             robis_pub_id = sc.answer("Enter the corresponding Robis Publication ID: ")
@@ -787,8 +756,6 @@ class HermesInitCommand(HermesCommand):
         if used_deposit_plugin.startswith("invenio"):
             connect_zenodo.setup(zenodo_url=self.deposit_platform.url, display_name=self.deposit_platform.name)
             self.create_zenodo_token()
-        elif used_deposit_plugin.startswith("dataverse"):
-            self.create_dataverse_token()
         elif used_deposit_plugin.startswith("rodare"):
             self.create_rodare_token()
         else:
