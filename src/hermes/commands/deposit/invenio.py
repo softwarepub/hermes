@@ -152,7 +152,7 @@ class InvenioResolver:
         :return: The record ID on the respective instance.
         """
 
-        res = self.client.get(f'https://doi.org/{doi}')  # noqa E231
+        res = self.client.get(f'https://doi.org/{doi}')
 
         # This is a mean hack due to DataCite answering a 404 with a 200 status
         if res.url == 'https://datacite.org/404.html':
