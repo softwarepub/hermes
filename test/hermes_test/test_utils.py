@@ -29,6 +29,6 @@ def test_mask_values_options():
     from hermes.utils import mask_options_values
     ns = Namespace(foo="bar", options=[("foo", "bar"), ("bar", "foo")])
     assert mask_options_values(ns) == Namespace(
-        foo="bar", 
+        foo="bar",
         options=[("foo", "***REDACTED***"), ("bar", "***REDACTED***")]
     )
