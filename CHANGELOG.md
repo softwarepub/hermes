@@ -31,6 +31,10 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
 
 - Update poetry to more recent version. (#347)
 
+### Security
+
+- Patch raw logging of '-O' values that could have included arbitrary secrets. (https://github.com/softwarepub/hermes/security/advisories/GHSA-jm5j-jfrm-hm23)
+
 ## [0.9.0] - 2025-02-26
 
 ### Added

@@ -8,6 +8,7 @@
 from importlib.metadata import metadata
 from mimetypes import guess_type
 from pathlib import Path
+import argparse
 
 
 def retrieve_project_urls(metadata_urls: list[str]) -> dict[str, str]:
@@ -80,3 +81,25 @@ def guess_file_type(path: Path):
 
     # use non-strict mode to cover more file types
     return guess_type(path, strict=False)
+
+def mask_options_values(args: argparse.Namespace) -> argparse.Namespace:
+    """Masks potentially sensitive values in the 'options' argument
+    in the passed argparse.Namespace.
+
+    The main use case for this is preventing potentially sensitive
+    data/secrets being included in raw args logging.
+
+    :param args: The argparse.Namespace to mask.
+    :return: A copy of the namespace with masked sensitive values.
+    """
+    import copy
+
+    masked_args = copy.copy(args)
+
+    # Mask the values for 'options' if they exist
+    if hasattr(masked_args, "options") and masked_args.options:
+        masked_args.options = [
+            (key, "***REDACTED***") for key, value in masked_args.options
+        ]
+
+    return masked_args
