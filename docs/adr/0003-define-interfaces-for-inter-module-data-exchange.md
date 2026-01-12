@@ -14,7 +14,7 @@ SPDX-License-Identifier: CC-BY-SA-4.0
 This depends on the data model (ADR 0002).
 Do we have to expose different parts of the data model structure at different points in the workflow?
 
-Superseded: decisions in [ADR 2](./0002-use-a-common-data-model.md) (use JSON-LD) and [ADR 11](./0011-record-provenance-of-metadata.md)  (create a unified data model of metadata and provenance) will result in a context [DAO](https://en.wikipedia.org/wiki/Data_access_object) from beginning till end of a run.
+Superseded: decisions in [ADR 2](./0002-use-a-common-data-model) (use JSON-LD) and [ADR 11](./0011-record-provenance-of-metadata)  (create a unified data model of metadata and provenance) will result in a context [DAO](https://en.wikipedia.org/wiki/Data_access_object) from beginning till end of a run.
 
 ## Decision Drivers
 

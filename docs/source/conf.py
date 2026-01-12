@@ -128,9 +128,10 @@ myst_heading_anchors = 4
 
 # Sphinx API docs configuration, see https://sphinx-autoapi.readthedocs.io/en/latest/reference/config.html
 autoapi_type = "python"
-autoapi_dirs = ["../../src"]
+autoapi_file_patterns = ["*.py"]
 autoapi_root = "api"
-autoapi_ignore = ["*__main__*"]
+autoapi_dirs = ["../../src"]
+autoapi_ignore = ["*/__main__.py"]
 
 # -- Options for HTML output -------------------------------------------------
 

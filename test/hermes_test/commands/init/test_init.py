@@ -4,9 +4,10 @@
 
 import json
 import pytest
-from hermes.commands.init.base import convert_remote_url, is_git_installed, string_in_file, download_file_from_url
+from hermes.commands.init.base import string_in_file, download_file_from_url
 from unittest.mock import patch, MagicMock
 import hermes.commands.init.util.oauth_process as oauth_process
+from hermes.commands.init.util.git_info import is_git_installed, convert_remote_url
 
 
 @pytest.mark.parametrize(

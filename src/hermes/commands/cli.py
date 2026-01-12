@@ -16,6 +16,7 @@ from hermes.commands import (HermesHelpCommand, HermesVersionCommand, HermesClea
                              HermesHarvestCommand, HermesProcessCommand, HermesCurateCommand,
                              HermesDepositCommand, HermesPostprocessCommand, HermesInitCommand)
 from hermes.commands.base import HermesCommand
+from hermes.utils import mask_options_values
 
 
 def main() -> None:
@@ -63,7 +64,7 @@ def main() -> None:
 
     logger.init_logging()
     log = logger.getLogger("hermes.cli")
-    log.debug("Running hermes with the following command line arguments: %s", args)
+    log.debug("Running hermes with the following command line arguments: %s", mask_options_values(args))
 
     try:
         log.debug("Loading settings...")

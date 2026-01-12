@@ -30,7 +30,7 @@ You can either download it as a zipped package or clone the whole Git repository
 You can clone the repository and enter the project directory as follows:
 
 ```shell
-git clone https://gitlab.com/hermes-hmc/hermes.git
+git clone https://github.com/softwarepub/hermes.git
 cd hermes
 ```
 

@@ -5,3 +5,5 @@
 [flake8]
 max-complexity = 15
 max-line-length = 120
+per-file-ignores =
+    src/hermes/commands/marketplace.py:E231
