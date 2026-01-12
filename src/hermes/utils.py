@@ -99,7 +99,7 @@ def mask_options_values(args: argparse.Namespace) -> argparse.Namespace:
     # Mask the values for 'options' if they exist
     if hasattr(masked_args, "options") and masked_args.options:
         masked_args.options = [
-            (key, "***REDACTED***") for key, value in masked_args.options.values
+            (key, "***REDACTED***") for key, value in masked_args.options
         ]
 
     return masked_args
