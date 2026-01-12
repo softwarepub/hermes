@@ -99,7 +99,7 @@ def get_git_hoster_from_url(url: str) -> GitHoster:
     Returns the matching GitHoster value to the given url. Returns GitHoster.Empty if none is found.
     """
     parsed_url = urlparse(url)
-    git_base_url = f"{parsed_url.scheme}://{parsed_url.netloc}/"
+    git_base_url = f"{parsed_url.scheme}://{parsed_url.netloc}/"  # noqa E231
     if "github.com" in url:
         return GitHoster.GitHub
     elif connect_gitlab.is_url_gitlab(git_base_url):
