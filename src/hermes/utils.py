@@ -82,6 +82,7 @@ def guess_file_type(path: Path):
     # use non-strict mode to cover more file types
     return guess_type(path, strict=False)
 
+
 def mask_options_values(args: argparse.Namespace) -> argparse.Namespace:
     """Masks potentially sensitive values in the 'options' argument
     in the passed argparse.Namespace.

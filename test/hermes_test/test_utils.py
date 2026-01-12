@@ -24,7 +24,11 @@ def test_hermes_user_agent():
         hermes_user_agent == f"{expected_name}/{expected_version} ({expected_homepage})"
     )
 
+
 def test_mask_values_options():
     from hermes.utils import mask_options_values
     ns = Namespace(foo="bar", options=[("foo", "bar"), ("bar", "foo")])
-    assert mask_options_values(ns) == Namespace(foo="bar", options=[("foo", "***REDACTED***"), ("bar", "***REDACTED***")])
+    assert mask_options_values(ns) == Namespace(
+        foo="bar",
+        options=[("foo", "***REDACTED***"), ("bar", "***REDACTED***")]
+    )

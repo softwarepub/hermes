@@ -80,7 +80,7 @@ class CffHarvestPlugin(HermesHarvestPlugin):
     def _validate(self, cff_file: pathlib.Path, cff_dict: t.Dict) -> bool:
         audit_log = logging.getLogger('audit.cff')
 
-        cff_schema_url = f'https://citation-file-format.github.io/{_CFF_VERSION}/schema.json'
+        cff_schema_url = f'https://citation-file-format.github.io/{_CFF_VERSION}/schema.json'  # noqa E231
 
         # TODO: we should ship the schema we reference to by default to avoid unnecessary network traffic.
         #       If the requested version is not already downloaded, go ahead and download it.
@@ -101,7 +101,7 @@ class CffHarvestPlugin(HermesHarvestPlugin):
             audit_log.info('')
             audit_log.info('See the Citation File Format schema guide for further details:')
             audit_log.info(
-                f'<https://github.com/citation-file-format/citation-file-format/blob/{_CFF_VERSION}/schema-guide.md>.')
+                f'<https://github.com/citation-file-format/citation-file-format/blob/{_CFF_VERSION}/schema-guide.md>.')  # noqa E231
             return False
 
         elif len(errors) == 0:

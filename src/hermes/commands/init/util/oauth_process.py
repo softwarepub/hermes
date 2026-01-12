@@ -92,7 +92,7 @@ class OauthProcess:
         if DEACTIVATE_BROWSER_OPENING:
             return False
         port = port or self.local_port
-        return webbrowser.open(f'http://localhost:{port}')
+        return webbrowser.open(f'http://localhost:{port}')  # noqa E231
 
     def get_tokens_from_refresh_token(self, refresh_token: str) -> dict[str: str]:
         """Returns access and refresh token as dict using a refresh token"""
