@@ -8,7 +8,7 @@
 
 [project]
 name = "hermes"
-version = "0.9.1"
+version = "0.10.0.dev0"
 description = "Workflow to publish research software with rich metadata"
 license = "Apache-2.0 AND LicenseRef-BSD-Caltech"
 authors = [
