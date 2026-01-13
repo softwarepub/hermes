@@ -11,7 +11,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project tries to adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.9.1] - 2026-01-12
 
 ### Added
 
@@ -30,6 +30,10 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
 ### Changed
 
 - Update poetry to more recent version. (#347)
+
+### Security
+
+- Patch raw logging of '-O' values that could have included arbitrary secrets. (https://github.com/softwarepub/hermes/security/advisories/GHSA-jm5j-jfrm-hm23)
 
 ## [0.9.0] - 2025-02-26
 

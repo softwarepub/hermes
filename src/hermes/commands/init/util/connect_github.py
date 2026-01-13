@@ -49,7 +49,7 @@ def allow_actions(project_url: str, token):
     repo_name = url_split[-1]
 
     # GitHub API URLs
-    repo_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}"
+    repo_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}"  # noqa E231
     action_permissions_url = f"{repo_url}/actions/permissions/workflow"
 
     # Headers for GitHub API requests
@@ -89,7 +89,7 @@ def create_secret(project_url: str, secret_name: str, secret_value, token):
     repo_name = url_split[-1]
 
     # GitHub API URLs
-    repo_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}"
+    repo_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}"  # noqa E231
     public_key_url = f"{repo_url}/actions/secrets/public-key"
     secrets_url = f"{repo_url}/actions/secrets/{secret_name}"
 

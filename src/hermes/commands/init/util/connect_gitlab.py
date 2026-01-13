@@ -16,7 +16,7 @@ token_addition = "oauth/token"
 
 site_specific_oauth_clients = [
     {
-        "url": "https://gitlab.com/",
+        "url": "https://gitlab.com/",  # noqa E231
         "client_id": "1133e9cee188c31bd68c9d0e8531774a4aae9d2458e13d83e67991213f868007",
         "name_addition": "gitlab.com"
     }, {
@@ -33,14 +33,14 @@ site_specific_oauth_clients = [
 
 def is_url_gitlab(url: str) -> bool:
     parsed_url = urlparse(url)
-    return requests.get(f"{parsed_url.scheme}://{parsed_url.netloc}/api/v4/version").status_code == 401
+    return requests.get(f"{parsed_url.scheme}://{parsed_url.netloc}/api/v4/version").status_code == 401  # noqa E231
 
 
 class GitLabConnection:
     def __init__(self, project_url: str):
         self.project_url: str = project_url
         parsed_url = urlparse(project_url)
-        self.base_url: str = f"{parsed_url.scheme}://{parsed_url.netloc}/"
+        self.base_url: str = f"{parsed_url.scheme}://{parsed_url.netloc}/"  # noqa E231
         self.api_url: str = urljoin(self.base_url, "api/v4/")
         self.project_namespace_name: str = parsed_url.path.removeprefix("/")
         self.gitlab_instance_name: str = f"GitLab ({parsed_url.netloc})"

@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.10"]  # Ignore Python < 3.10, they are unsupported
+        python-version: ["3.12"]  # Ignore Python < 3.11, they are unsupported
 
     steps:
       - uses: actions/checkout@v4
@@ -26,11 +26,9 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip poetry
-          poetry install
+          poetry install --with dev
       - name: Lint with flake8
         run: |
-          # stop the build if there are Python syntax errors or undefined names
-          poetry run flake8 ./test/ ./src/ --count --select=E9,F63,F7,F82 --show-source --statistics
           # Stop build on errors
           poetry run flake8 ./test/ ./src/ --count --statistics
       - name: Test with pytest
