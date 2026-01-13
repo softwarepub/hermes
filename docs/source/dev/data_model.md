@@ -112,13 +112,13 @@ from hermes.model import SoftwareMetadata
 # {
 #    "@context":
 #    {
-#       "baz": "https://schema.org/Thing"
+#       "name": "https://schema.org/name"
 #    }
 # }
 
 data = SoftwareMetadata(extra_vocabs={"foo": "https://bar.net/schema.jsonld"})
 
-data["foo:baz"] = ...
+data["foo:name"] = ...
 ```
 
 ##### Adding data
@@ -131,8 +131,8 @@ i.e., metadata that describes software:
 data["name"] = "My Research Software"  # A simple "Text"-type value
 # → Simplified model representation : { "name": [ "My Research Software" ] }
 # Cf. "Accessing data" below
-data["author"] = {"name": "Foo"}  # An object value that uses terms available in the defined context
-# → Simplified model representation : { "name": [ "My Research Software" ], "author": [ { "name": "Foo" } ] }
+data["author"] = {"name": "Shakespeare"}  # An object value that uses terms available in the defined context
+# → Simplified model representation : { "name": [ "My Research Software" ], "author": [ { "name": "Shakespeare" } ] }
 # Cf. "Accessing data" below
 ```
 
@@ -153,14 +153,14 @@ will treat it as an array, i.e., a list-like object:
 ```{code-block} python
 :caption: Internal data values are arrays
 data["name"] = "My Research Software"  # → [ "My Research Software" ]
-data["author"] = {"name": "Foo"}       # → [ { "name": [ "Foo" ] } ]
+data["author"] = {"name": "Shakespeare"}       # → [ { "name": [ "Shakespeare" ] } ]
 ```
 
 Therefore, you access data in the same way you would access data from a Python `list`:
 
 1. You access single values using indices, e.g., `data["name"][0]`.
 2. You can use a list-like API to interact with data objects, e.g.,
-`data["name"].append("Bar")`, `data["name"].extend(["Bar", "Baz"])`, `for name in data["name"]: ...`, etc.
+`data["name"].append("Hamilton")`, `data["name"].extend(["Hamilton", "Knuth"])`, `for name in data["name"]: ...`, etc.
 
 ##### Interacting with data
 
@@ -176,22 +176,22 @@ data = SoftwareMetadata()
 # Let's create author metadata for our software!
 # Below each line of code, the value of `data["author"]` is given.
 
-data["author"] = {"name": "Foo"}
-# → [{'name': ['Foo']}]
+data["author"] = {"name": "Shakespeare"}
+# → [{'name': ['Shakespeare']}]
 
-data["author"].append({"name": "Bar"})
-# [{'name': ['Foo']}, {'name': ['Bar']}]
+data["author"].append({"name": "Hamilton"})
+# [{'name': ['Shakespeare']}, {'name': ['Hamilton']}]
 
-data["author"][0]["email"] = "foo@baz.net"
-# [{'name': ['Foo'], 'email': ['foo@baz.net']}, {'name': ['Bar']}]
+data["author"][0]["email"] = "Shakespeare@baz.net"
+# [{'name': ['Shakespeare'], 'email': ['shakespeare@baz.net']}, {'name': ['Hamilton']}]
 
-data["author"][1]["email"].append("bar@baz.net")
-# [{'name': ['Foo'], 'email': ['foo@baz.net']}, {'name': ['Bar'], 'email': ['bar@baz.net']}]
+data["author"][1]["email"].append("Hamilton@baz.net")
+# [{'name': ['Shakespeare'], 'email': ['shakespeare@baz.net']}, {'name': ['Hamilton'], 'email': ['hamilton@baz.net']}]
 
-data["author"][1]["email"].extend(["bar@spam.org", "bar@eggs.com"])
+data["author"][1]["email"].extend(["hamilton@spam.org", "hamilton@eggs.com"])
 # [
-#   {'name': ['Foo'], 'email': ['foo@baz.net']},
-#   {'name': ['Bar'], 'email': ['bar@baz.net', 'bar@spam.org', 'bar@eggs.com']}
+#   {'name': ['Shakespeare'], 'email': ['shakespeare@baz.net']},
+#   {'name': ['Hamilton'], 'email': ['hamilton@baz.net', 'hamilton@spam.org', 'hamilton@eggs.com']}
 # ]
 ```
 
@@ -199,9 +199,9 @@ The example continues to show how to iterate through data.
 
 ```{code-block} python
 :caption: for-loop, containment check
-for i, author in enumerate(data["author"]):
-    if author["name"][0] in ["Foo", "Bar"]:
-        print(f"Author {i + 1} has expected name.")
+for i, author in enumerate(data["author"], start=1):
+    if author["name"][0] in ["Shakespeare", "Hamilton"]:
+        print(f"Author {i} has expected name.")
     else:
         raise ValueError("Unexpected author name found!", author["name"][0])
 
@@ -224,7 +224,7 @@ for email in data["author"][0]["email"]:
 
 ```{code-block} python
 :caption: Value check and list comprehension 
-if ["bar" in email for email in data["author"][1]["email"]]:
+if all(["hamilton" in email for email in data["author"][1]["email"]]):
     print("Author has only emails with their name in it.")
 
 # Mock output
@@ -248,7 +248,7 @@ Python data:
 :emphasize-lines: 5,13 
 try:
     assert (
-            {'name': ['Foo'], 'email': ['foo@baz.net']}
+            {'name': ['Shakespeare'], 'email': ['shakespeare@baz.net']}
             in
             data["author"]
     )
@@ -261,19 +261,19 @@ except AssertionError:
 # $> The author could not be found.
 # $> AssertionError:
 #    assert
-#    {'email': ['foo@baz.net'], 'name': ['Foo']}
+#    {'email': ['shakespeare@baz.net'], 'name': ['Shakespeare']}
 #    in
 #    _LDList(
 #        {'@list': [
 #            {
-#                'http://schema.org/name': [{'@value': 'Foo'}],
-#                'http://schema.org/email': [{'@value': 'foo@baz.net'}]
+#                'http://schema.org/name': [{'@value': 'Shakespeare'}],
+#                'http://schema.org/email': [{'@value': 'shakespeare@baz.net'}]
 #            },
 #            {
-#                'http://schema.org/name': [{'@value': 'Bar'}],
+#                'http://schema.org/name': [{'@value': 'Hamilton'}],
 #                'http://schema.org/email': [
 #                    {'@list': [
-#                        {'@value': 'bar@baz.net'}, {'@value': 'bar@spam.org'}, {'@value': 'bar@eggs.com'}
+#                        {'@value': 'hamilton@baz.net'}, {'@value': 'hamilton@spam.org'}, {'@value': 'hamilton@eggs.com'}
 #                    ]}
 #                ]
 #            }]
@@ -294,7 +294,7 @@ This function can be used in assertions to assert full data integrity:
 :emphasize-lines: 5,13 
 try:
     assert (
-            {'name': ['Foo'], 'email': ['foo@baz.net']}
+            {'name': ['Shakespeare'], 'email': ['Shakespeare@baz.net']}
             in
             data["author"].to_python()
     )
