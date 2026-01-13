@@ -182,10 +182,10 @@ data["author"] = {"name": "Shakespeare"}
 data["author"].append({"name": "Hamilton"})
 # [{'name': ['Shakespeare']}, {'name': ['Hamilton']}]
 
-data["author"][0]["email"] = "Shakespeare@baz.net"
+data["author"][0]["email"] = "shakespeare@baz.net"
 # [{'name': ['Shakespeare'], 'email': ['shakespeare@baz.net']}, {'name': ['Hamilton']}]
 
-data["author"][1]["email"].append("Hamilton@baz.net")
+data["author"][1]["email"].append("hamilton@baz.net")
 # [{'name': ['Shakespeare'], 'email': ['shakespeare@baz.net']}, {'name': ['Hamilton'], 'email': ['hamilton@baz.net']}]
 
 data["author"][1]["email"].extend(["hamilton@spam.org", "hamilton@eggs.com"])
@@ -294,7 +294,7 @@ This function can be used in assertions to assert full data integrity:
 :emphasize-lines: 5,13 
 try:
     assert (
-            {'name': ['Shakespeare'], 'email': ['Shakespeare@baz.net']}
+            {'name': ['Shakespeare'], 'email': ['shakespeare@baz.net']}
             in
             data["author"].to_python()
     )
