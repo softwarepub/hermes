@@ -599,13 +599,13 @@ class HermesInitCommand(HermesCommand):
                     self.git_remote_url + "/-/settings/ci_cd", "project's ci settings")
             ))
             sc.echo("Then, add that token as variable with key HERMES_PUSH_TOKEN.")
-            sc.echo("(For your safety, you should set the visibility to 'Masked'.)")
+            sc.echo("(For your safety, you should set the visibility to 'Masked and hidden'.)")
             sc.press_enter_to_continue()
             sc.echo("Next, add the {} token{} as variable with key ZENODO_TOKEN.".format(
                 self.deposit_platform.name,
                 f" ({self.tokens[self.deposit_platform]})" if self.tokens[self.deposit_platform] else ""
             ))
-            sc.echo("(For your safety, you should set the visibility to 'Masked'.)")
+            sc.echo("(For your safety, you should set the visibility to 'Masked and hidden'.)")
             sc.press_enter_to_continue()
 
     def choose_deposit_platform(self) -> None:

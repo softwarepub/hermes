@@ -120,7 +120,14 @@ class GitLabConnection:
         sc.debug_info(delete_status=delete_response.status_code, delete_response=delete_response.text)
         # Then create a new variable
         create_url = urljoin(self.api_url, f"projects/{self.project_id}/variables")
-        data = {"key": key, "value": value, "masked": True, "raw": True, "description": description}
+        data = {
+            "key": key,
+            "value": value,
+            "masked": True,
+            "masked_and_hidden": True,
+            "raw": True,
+            "description": description,
+        }
         response = requests.post(create_url, headers=headers, json=data)
         if response.status_code == 201:
             desc = f" ({description})" if description else ""
