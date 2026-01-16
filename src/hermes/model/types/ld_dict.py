@@ -110,14 +110,12 @@ class ld_dict(ld_container):
         :return:
         :rtype: None
         """
-        # expand key
-        full_iri = self.ld_proc.expand_iri(self.active_ctx, key)
         # if the value is None delete the entry instead of updating it
         if value is None:
-            del self[full_iri]
+            del self[self.ld_proc.expand_iri(self.active_ctx, key)]
             return
-        # expand the value and replace the key, value pair
-        ld_value = self._to_expanded_json({full_iri: value})
+        # expand the key, value pair and update data_dict
+        ld_value = self._to_expanded_json({key: value})
         self.data_dict.update(ld_value)
 
     def __delitem__(self: Self, key: str) -> None:
