@@ -352,10 +352,14 @@ class HermesInitCommand(HermesCommand):
                 sc.echo(f"You are using an old version of HERMES. ({current_hermes_version})", sc.Formats.WARNING)
                 sc.echo(
                     f"Please upgrade to the latest version ({pypi_hermes_version}) before running 'hermes init' to "
-                    f"avoid errors.",
+                    f"avoid errors!",
                     sc.Formats.FAIL)
-            else:
+            elif version_tuple(current_hermes_version) == version_tuple(pypi_hermes_version):
                 sc.echo(f"Your version of HERMES ({current_hermes_version}) is up to date.", sc.Formats.OKGREEN)
+            else:
+                sc.echo(
+                    f"Your version of HERMES ({current_hermes_version}) is even newer than "
+                    f"the latest version ({pypi_hermes_version}).", sc.Formats.OKCYAN + sc.Formats.BOLD)
         except Exception as e:
             sc.echo(f"Could not fetch Pypi Hermes version. ({e})", sc.Formats.WARNING)
 
@@ -849,12 +853,15 @@ class HermesInitCommand(HermesCommand):
             ]
         )
         if push_choice == 0:
-            branch_count = 9
+            branch_suggestion_max_count = 9
             branch_suggestions: list[str] = git_info.run_git_command(
                 "for-each-ref --sort=-committerdate refs/heads/ --format='%(refname:short)'"
-            ).split("\n")[0:branch_count]
+            ).split("\n")
+            branch_suggestions = [b.strip() for b in branch_suggestions if b.strip() != ""]
             branch_suggestions.sort()
             branch_suggestions.sort(key=lambda branch_name: len(branch_name))
+            branch_suggestions = branch_suggestions[:branch_suggestion_max_count]
+            branch_count = len(branch_suggestions)
             branch_suggestions.append("Custom branch name")
             branch_choice = sc.choose("Choose target branch: ", branch_suggestions)
             if branch_choice < branch_count:
