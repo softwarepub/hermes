@@ -9,19 +9,19 @@ import argparse
 import logging
 import pathlib
 from importlib import metadata
-from typing import Dict, Optional, Type
+from typing import Type, Union
 
 import toml
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class _HermesSettings(BaseSettings):
+class HermesSettings(BaseSettings):
     """Root class for HERMES configuration model."""
 
     model_config = SettingsConfigDict(env_file_encoding='utf-8')
 
-    logging: Dict = {}
+    logging: dict = {}
 
 
 class HermesCommand(abc.ABC):
@@ -31,7 +31,7 @@ class HermesCommand(abc.ABC):
     """
 
     command_name: str = ""
-    settings_class: Type = _HermesSettings
+    settings_class: Type = HermesSettings
 
     def __init__(self, parser: argparse.ArgumentParser):
         """Initialize a new instance of any HERMES command.
@@ -45,28 +45,27 @@ class HermesCommand(abc.ABC):
         self.log = logging.getLogger(f"hermes.{self.command_name}")
         self.errors = []
 
-    @classmethod
-    def init_plugins(cls):
+    def init_plugins(self):
         """Collect and initialize the plugins available for the HERMES command."""
 
         # Collect all entry points for this group (i.e., all valid plug-ins for the step)
-        entry_point_group = f"hermes.{cls.command_name}"
-        group_plugins = {
-            entry_point.name: entry_point.load()
-            for entry_point in metadata.entry_points(group=entry_point_group)
-        }
+        entry_point_group = f"hermes.{self.command_name}"
+        group_plugins = {}
+        group_settings = {}
 
-        # Collect the plug-in specific configurations
-        cls.derive_settings_class({
-            plugin_name: plugin_class.settings_class
-            for plugin_name, plugin_class in group_plugins.items()
-            if hasattr(plugin_class, "settings_class") and plugin_class.settings_class is not None
-        })
+        for entry_point in metadata.entry_points(group=entry_point_group):
+            plugin_cls = entry_point.load()
+
+            group_plugins[entry_point.name] = plugin_cls
+            if hasattr(plugin_cls, 'settings_class') and plugin_cls.settings_class is not None:
+                group_settings[entry_point.name] = plugin_cls.settings_class
+
+        self.derive_settings_class(group_settings)
 
         return group_plugins
 
     @classmethod
-    def derive_settings_class(cls, setting_types: Dict[str, Type]) -> None:
+    def derive_settings_class(cls, setting_types: dict[str, Type]) -> None:
         """Build a new Pydantic data model class for configuration.
 
         This will create a new class that includes all settings from the plugins available.
@@ -131,13 +130,10 @@ class HermesCommand(abc.ABC):
 
     def load_settings(self, args: argparse.Namespace):
         """Load settings from the configuration file (passed in from command line)."""
-        try:
-            toml_data = toml.load(args.path / args.config)
-            self.root_settings = HermesCommand.settings_class.model_validate(toml_data)
-            self.settings = getattr(self.root_settings, self.command_name)
-        except FileNotFoundError as e:
-            self.log.error("hermes.toml was not found. Try to run 'hermes init' first or create one manually.")
-            raise e  # This will lead to our default error message & sys.exit
+
+        toml_data = toml.load(args.path / args.config)
+        self.root_settings = HermesCommand.settings_class.model_validate(toml_data)
+        self.settings = getattr(self.root_settings, self.command_name)
 
     def patch_settings(self, args: argparse.Namespace):
         """Process command line options for the settings."""
@@ -164,7 +160,9 @@ class HermesCommand(abc.ABC):
 class HermesPlugin(abc.ABC):
     """Base class for all HERMES plugins."""
 
-    settings_class: Optional[Type] = None
+    pluing_node = None
+
+    settings_class: Union[Type, None] = None
 
     @abc.abstractmethod
     def __call__(self, command: HermesCommand) -> None:
@@ -202,27 +200,3 @@ class HermesHelpCommand(HermesCommand):
             # Otherwise, simply show the general help and exit (cleanly).
             self.parser.print_help()
             self.parser.exit()
-
-    def load_settings(self, args: argparse.Namespace):
-        """No settings are needed for the help command."""
-        pass
-
-
-class HermesVersionSettings(BaseModel):
-    """Intentionally empty settings class for the version command."""
-    pass
-
-
-class HermesVersionCommand(HermesCommand):
-    """Show HERMES version and exit."""
-
-    command_name = "version"
-    settings_class = HermesVersionSettings
-
-    def load_settings(self, args: argparse.Namespace):
-        """Pass loading settings as not necessary for this command."""
-        pass
-
-    def __call__(self, args: argparse.Namespace) -> None:
-        self.log.info(metadata.version("hermes"))
-        self.parser.exit()

@@ -5,14 +5,13 @@
 # SPDX-FileContributor: Michael Meinel
 
 import argparse
-import typing as t
-from datetime import datetime
 
 from pydantic import BaseModel
 
 from hermes.commands.base import HermesCommand, HermesPlugin
-from hermes.model.context import HermesContext, HermesHarvestContext
-from hermes.model.error import HermesValidationError, HermesMergeError
+from hermes.model.context_manager import HermesContext
+from hermes.model.error import HermesValidationError
+from hermes.model import SoftwareMetadata
 
 
 class HermesHarvestPlugin(HermesPlugin):
@@ -21,11 +20,11 @@ class HermesHarvestPlugin(HermesPlugin):
     TODO: describe the harvesting process and how this is mapped to this plugin.
     """
 
-    def __call__(self, command: HermesCommand) -> t.Tuple[t.Dict, t.Dict]:
+    def __call__(self, command: HermesCommand) -> tuple[SoftwareMetadata, dict]:
         pass
 
 
-class _HarvestSettings(BaseModel):
+class HarvestSettings(BaseModel):
     """Generic harvesting settings."""
 
     sources: list[str] = []
@@ -35,32 +34,31 @@ class HermesHarvestCommand(HermesCommand):
     """ Harvest metadata from configured sources. """
 
     command_name = "harvest"
-    settings_class = _HarvestSettings
+    settings_class = HarvestSettings
 
     def __call__(self, args: argparse.Namespace) -> None:
         self.args = args
-        ctx = HermesContext()
 
         # Initialize the harvest cache directory here to indicate the step ran
-        ctx.init_cache("harvest")
+        ctx = HermesContext()
+        ctx.prepare_step('harvest')
 
         for plugin_name in self.settings.sources:
+            plugin_cls = self.plugins[plugin_name]
+
             try:
-                plugin_func = self.plugins[plugin_name]()
-                harvested_data, tags = plugin_func(self)
+                # Load plugin and run the harvester
+                plugin_func = plugin_cls()
+                harvested_data = plugin_func(self)
 
-                with HermesHarvestContext(ctx, plugin_name) as harvest_ctx:
-                    harvest_ctx.update_from(harvested_data,
-                                            plugin=plugin_name,
-                                            timestamp=datetime.now().isoformat(), **tags)
-                    for _key, ((_value, _tag), *_trace) in harvest_ctx._data.items():
-                        if any(v != _value and t == _tag for v, t in _trace):
-                            raise HermesMergeError(_key, None, _value)
+                with ctx[plugin_name] as plugin_ctx:
+                    plugin_ctx["codemeta"] = harvested_data[0].compact()
+                    plugin_ctx["context"] = {"@context": harvested_data[0].full_context}
 
-            except KeyError as e:
-                self.log.error("Plugin '%s' not found.", plugin_name)
-                self.errors.append(e)
+                    plugin_ctx["expanded"] = harvested_data[0].ld_value
 
             except HermesValidationError as e:
                 self.log.error("Error while executing %s: %s", plugin_name, e)
                 self.errors.append(e)
+
+        ctx.finalize_step('harvest')

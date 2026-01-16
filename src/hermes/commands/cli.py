@@ -12,9 +12,11 @@ import argparse
 import sys
 
 from hermes import logger
-from hermes.commands import (HermesHelpCommand, HermesVersionCommand, HermesCleanCommand,
-                             HermesHarvestCommand, HermesProcessCommand, HermesCurateCommand,
-                             HermesDepositCommand, HermesPostprocessCommand, HermesInitCommand)
+# FIXME: remove comments after new implementation of modules is available
+# from hermes.commands import (HermesHelpCommand, HermesVersionCommand, HermesCleanCommand,
+#                              HermesHarvestCommand, HermesProcessCommand, HermesCurateCommand,
+#                              HermesDepositCommand, HermesPostprocessCommand, HermesInitCommand)
+from hermes.commands import HermesHarvestCommand
 from hermes.commands.base import HermesCommand
 
 
@@ -36,15 +38,15 @@ def main() -> None:
     setting_types = {}
 
     for command in (
-            HermesHelpCommand(parser),
-            HermesVersionCommand(parser),
-            HermesInitCommand(parser),
-            HermesCleanCommand(parser),
+            # HermesHelpCommand(parser),
+            # HermesVersionCommand(parser),
+            # HermesInitCommand(parser),
+            # HermesCleanCommand(parser),
             HermesHarvestCommand(parser),
-            HermesProcessCommand(parser),
-            HermesCurateCommand(parser),
-            HermesDepositCommand(parser),
-            HermesPostprocessCommand(parser),
+            # HermesProcessCommand(parser),
+            # HermesCurateCommand(parser),
+            # HermesDepositCommand(parser),
+            # HermesPostprocessCommand(parser),
     ):
         if command.settings_class is not None:
             setting_types[command.command_name] = command.settings_class

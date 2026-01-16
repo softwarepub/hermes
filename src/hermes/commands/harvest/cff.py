@@ -9,16 +9,16 @@ import json
 import logging
 import pathlib
 import urllib.request
-import typing as t
 
 from pydantic import BaseModel
 from ruamel.yaml import YAML
 import jsonschema
 from cffconvert import Citation
+from typing import Any, Union
 
-from hermes.model.context import ContextPath
-from hermes.model.errors import HermesValidationError
+from hermes.model.error import HermesValidationError
 from hermes.commands.harvest.base import HermesHarvestPlugin, HermesHarvestCommand
+from hermes.model import SoftwareMetadata
 
 
 # TODO: should this be configurable via a CLI option?
@@ -35,7 +35,7 @@ class CffHarvestSettings(BaseModel):
 class CffHarvestPlugin(HermesHarvestPlugin):
     settings_class = CffHarvestSettings
 
-    def __call__(self, command: HermesHarvestCommand) -> t.Tuple[t.Dict, t.Dict]:
+    def __call__(self, command: HermesHarvestCommand) -> tuple[SoftwareMetadata, dict]:
         # Get source files
         cff_file = self._get_single_cff(command.args.path)
         if not cff_file:
@@ -44,23 +44,24 @@ class CffHarvestPlugin(HermesHarvestPlugin):
 
         # Read the content
         cff_data = cff_file.read_text()
-
-        # Validate the content to be correct CFF
         cff_dict = self._load_cff_from_file(cff_data)
 
-        if command.settings.cff.enable_validation and not self._validate(cff_file, cff_dict):
-            raise HermesValidationError(cff_file)
+        if command.settings.cff.enable_validation:
+            # Validate the content to be correct CFF
+            if not self._validate(cff_file, cff_dict):
+                raise HermesValidationError(cff_file)
 
         # Convert to CodeMeta using cffconvert
         codemeta_dict = self._convert_cff_to_codemeta(cff_data)
-        # TODO Replace the following temp patch for #112 once there is a new cffconvert version with cffconvert#309
-        codemeta_dict = self._patch_author_emails(cff_dict, codemeta_dict)
         if "version" in codemeta_dict:
             codemeta_dict["version"] = str(codemeta_dict["version"])   # Convert Version to string
 
-        return codemeta_dict, {'local_path': str(cff_file)}
+        # TODO Replace the following temp patch for #112 once there is a new cffconvert version with cffconvert#309
+        codemeta_dict = self._patch_author_emails(cff_dict, codemeta_dict)
+        ld_codemeta = SoftwareMetadata(codemeta_dict, extra_vocabs={'legalName': {'@id': "http://schema.org/name"}})
+        return ld_codemeta, {}
 
-    def _load_cff_from_file(self, cff_data: str) -> t.Any:
+    def _load_cff_from_file(self, cff_data: str) -> Any:
         yaml = YAML(typ='safe')
         yaml.constructor.yaml_constructors[u'tag:yaml.org,2002:timestamp'] = yaml.constructor.yaml_constructors[
             u'tag:yaml.org,2002:str']
@@ -73,11 +74,11 @@ class CffHarvestPlugin(HermesHarvestPlugin):
                 codemeta["author"][i]["email"] = author["email"]
         return codemeta
 
-    def _convert_cff_to_codemeta(self, cff_data: str) -> t.Any:
+    def _convert_cff_to_codemeta(self, cff_data: str) -> Any:
         codemeta_str = Citation(cff_data).as_codemeta()
         return json.loads(codemeta_str)
 
-    def _validate(self, cff_file: pathlib.Path, cff_dict: t.Dict) -> bool:
+    def _validate(self, cff_file: pathlib.Path, cff_dict: dict) -> bool:
         audit_log = logging.getLogger('audit.cff')
 
         cff_schema_url = f'https://citation-file-format.github.io/{_CFF_VERSION}/schema.json'
@@ -93,7 +94,7 @@ class CffHarvestPlugin(HermesHarvestPlugin):
             audit_log.warning('!!! warning "%s is not valid according to <%s>"', cff_file, cff_schema_url)
 
             for error in errors:
-                path = ContextPath.make(error.absolute_path or ['root'])
+                path = error.absolute_path or ['root']
                 audit_log.info('    Invalid input for `%s`.', str(path))
                 audit_log.info('    !!! message "%s"', error.message)
                 audit_log.debug('    !!! value "%s"', error.instance)
@@ -108,7 +109,7 @@ class CffHarvestPlugin(HermesHarvestPlugin):
             audit_log.info('- Found valid Citation File Format file at: %s', cff_file)
             return True
 
-    def _get_single_cff(self, path: pathlib.Path) -> t.Optional[pathlib.Path]:
+    def _get_single_cff(self, path: pathlib.Path) -> Union[pathlib.Path, None]:
         # Find CFF files in directories and subdirectories
         cff_file = path / 'CITATION.cff'
         if cff_file.exists():

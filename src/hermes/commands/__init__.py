@@ -8,12 +8,12 @@
 # "unused import" errors.
 # flake8: noqa
 
-from hermes.commands.base import HermesHelpCommand
-from hermes.commands.base import HermesVersionCommand
-from hermes.commands.clean.base import HermesCleanCommand
-from hermes.commands.init.base import HermesInitCommand
-from hermes.commands.curate.base import HermesCurateCommand
+# from hermes.commands.base import HermesHelpCommand
+# from hermes.commands.base import HermesVersionCommand
+# from hermes.commands.clean.base import HermesCleanCommand
+# from hermes.commands.init.base import HermesInitCommand
+# from hermes.commands.curate.base import HermesCurateCommand
 from hermes.commands.harvest.base import HermesHarvestCommand
-from hermes.commands.process.base import HermesProcessCommand
-from hermes.commands.deposit.base import HermesDepositCommand
-from hermes.commands.postprocess.base import HermesPostprocessCommand
+# from hermes.commands.process.base import HermesProcessCommand
+# from hermes.commands.deposit.base import HermesDepositCommand
+# from hermes.commands.postprocess.base import HermesPostprocessCommand
