@@ -102,7 +102,7 @@ extensions = [
     'sphinx_togglebutton',
     'sphinxcontrib.datatemplates',
     # Custom extensions, see `_ext` directory.
-    'plugin_markup',
+    # 'plugin_markup',
 ]
 
 language = 'en'
