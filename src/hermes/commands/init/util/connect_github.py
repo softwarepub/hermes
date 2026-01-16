@@ -2,13 +2,13 @@
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-FileContributor: Nitai Heeb
 
-import requests
 from base64 import b64encode
+
+import requests
 from nacl import encoding, public
 
 from . import slim_click as sc
 from .oauth_process import OauthProcess
-
 
 local_port = 8333
 client_id = 'Ov23linvdC7WzHnOO2WK'

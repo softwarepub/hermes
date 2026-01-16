@@ -46,6 +46,10 @@ This also works with many Jupyter Hubs, no need for a Linux computer!
    ```{code-block} bash
      python -m pip install hermes
    ```
+   If already installed, make sure you have the latest version by running:
+   ```{code-block} bash
+     python -m pip install hermes --upgrade
+   ```
 5. Once installed, navigate to the main directory of your project.
    ```{code-block} bash
      cd myproject/
