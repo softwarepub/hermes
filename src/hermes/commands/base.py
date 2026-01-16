@@ -16,7 +16,6 @@ from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-
 class HermesSettings(BaseSettings):
     """Root class for HERMES configuration model."""
 

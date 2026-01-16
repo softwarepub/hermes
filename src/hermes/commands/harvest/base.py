@@ -52,10 +52,10 @@ class HermesHarvestCommand(HermesCommand):
                 harvested_data = plugin_func(self)
 
                 with ctx[plugin_name] as plugin_ctx:
-                    plugin_ctx["codemeta"] = harvested_data.compact()
-                    plugin_ctx["context"] = {"@context": harvested_data.full_context}
+                    plugin_ctx["codemeta"] = harvested_data[0].compact()
+                    plugin_ctx["context"] = {"@context": harvested_data[0].full_context}
 
-                    plugin_ctx["expanded"] = harvested_data.ld_value
+                    plugin_ctx["expanded"] = harvested_data[0].ld_value
 
             except HermesValidationError as e:
                 self.log.error("Error while executing %s: %s", plugin_name, e)
