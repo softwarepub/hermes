@@ -187,7 +187,7 @@ def test_cff_harvest(tmp_path, monkeypatch, cff, res):
         manager = context_manager.HermesContext()
         manager.prepare_step("harvest")
         with manager["cff"] as cache:
-            result = SoftwareMetadata(cache["expanded"][0], cache["context"]["@context"][1])
+            result = SoftwareMetadata(cache["codemeta"])
         manager.finalize_step("harvest")
     finally:
         sys.argv = orig_argv
@@ -347,7 +347,7 @@ def test_codemeta_harvest(tmp_path, monkeypatch, codemeta, res):
         manager = context_manager.HermesContext()
         manager.prepare_step("harvest")
         with manager["codemeta"] as cache:
-            result = SoftwareMetadata(cache["expanded"][0], cache["context"]["@context"][1])
+            result = SoftwareMetadata(cache["codemeta"])
         manager.finalize_step("harvest")
     finally:
         sys.argv = orig_argv
