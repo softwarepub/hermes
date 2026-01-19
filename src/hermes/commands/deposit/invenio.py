@@ -17,11 +17,10 @@ from urllib.parse import urlparse
 import requests
 from pydantic import BaseModel
 
-from hermes.commands.deposit.base import BaseDepositPlugin, HermesDepositCommand
+from hermes.commands.deposit.base import BaseDepositPlugin
 from hermes.commands.deposit.error import DepositionUnauthorizedError
 from hermes.error import MisconfigurationError
-from hermes.model.context import CodeMetaContext
-from hermes.model.path import ContextPath
+from hermes.model.context_manager import HermesContext
 from hermes.utils import hermes_doi, hermes_user_agent
 
 
@@ -258,11 +257,13 @@ class InvenioDepositPlugin(BaseDepositPlugin):
     invenio_resolver_class = InvenioResolver
     settings_class = InvenioDepositSettings
 
-    def __init__(self, command: HermesDepositCommand, ctx: CodeMetaContext, client=None, resolver=None) -> None:
-        super().__init__(command, ctx)
+    def __init__(self) -> None:
+        super().__init__()
 
-        self.invenio_context_path = ContextPath.parse(f"deposit.{self.platform_name}")
         self.invenio_ctx = None
+
+    def __call__(self, command, *, client=None, resolver=None):
+        self.command = command
         self.config = getattr(self.command.settings, self.platform_name)
 
         if client is None:
@@ -292,7 +293,9 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         self.resolver = resolver or self.invenio_resolver_class(self.client)
         self.links = {}
 
-    # TODO: Populate some data structure here? Or move more of this into __init__?
+        super().__call__(command)
+
+    # TODO: Populate some data structure here? Or move more of this into __init__.py?
     def prepare(self) -> None:
         """Prepare the deposition on an Invenio-based platform.
 
@@ -305,49 +308,42 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         - check access modalities (access right, access conditions, embargo data, existence
           of license)
         - check whether required configuration options are present
-        - update ``self.ctx`` with metadata collected during the checks
+        - update ``self.metadata`` with metadata collected during the checks
         """
 
         rec_id = self.config.record_id
         doi = self.config.doi
 
-        try:
-            codemeta_identifier = self.ctx["codemeta.identifier"]
-        except KeyError:
-            codemeta_identifier = None
-
+        codemeta_identifier = self.metadata.get("identifier", None)
         rec_id, rec_meta = self.resolver.resolve_latest_id(
             record_id=rec_id, doi=doi, codemeta_identifier=codemeta_identifier
         )
 
-        version = self.ctx["codemeta"].get("version")
+        version = self.metadata["version"]
         if rec_meta and (version == rec_meta.get("version")):
             raise ValueError(f"Version {version} already deposited.")
 
-        self.ctx.update(self.invenio_context_path['latestRecord'], {'id': rec_id, 'metadata': rec_meta})
-
-        license = self._get_license_identifier()
-        self.ctx.update(self.invenio_context_path["license"], license)
-
-        communities = self._get_community_identifiers()
-        self.ctx.update(self.invenio_context_path["communities"], communities)
+        deposition_data = {}
+        deposition_data["latestRecord"] = {'id': rec_id, 'metadata': rec_meta}
+        deposition_data["license"] = self._get_license_identifier()
+        deposition_data["communities"] = self._get_community_identifiers()
 
         access_right, embargo_date, access_conditions = self._get_access_modalities(license)
-        self.ctx.update(self.invenio_context_path["access_right"], access_right)
-        self.ctx.update(self.invenio_context_path["embargo_date"], embargo_date)
-        self.ctx.update(self.invenio_context_path["access_conditions"], access_conditions)
+        deposition_data["access_right"] = access_right
+        deposition_data["embargo_date"] = embargo_date
+        deposition_data["access_conditions"] = access_conditions
 
-        self.invenio_ctx = self.ctx[self.invenio_context_path]
+        self.invenio_ctx = deposition_data
 
     def map_metadata(self) -> None:
         """Map the harvested metadata onto the Invenio schema."""
 
         deposition_metadata = self._codemeta_to_invenio_deposition()
-        self.ctx.update(self.invenio_context_path["depositionMetadata"], deposition_metadata)
-
-        # Store a snapshot of the mapped data within the cache, useful for analysis, debugging, etc
-        with open(self.ctx.get_cache("deposit", self.platform_name, create=True), 'w') as invenio_json:
-            json.dump(deposition_metadata, invenio_json, indent='  ')
+        ctx = HermesContext()
+        ctx.prepare_step("deposit")
+        with ctx[self.platform_name] as deposit_ctx:
+            deposit_ctx["deposit"] = deposition_metadata
+        ctx.finalize_step("deposit")
 
     def is_initial_publication(self) -> bool:
         latest_record_id = self.invenio_ctx.get("latestRecord", {}).get("id")
@@ -426,7 +422,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         self.links.update(deposit["links"])
 
         _log.debug("Created new version deposit: %s", self.links["html"])
-        with open(self.ctx.get_cache('deposit', 'deposit', create=True), 'w') as deposit_file:
+        with open(self.metadata.get_cache('deposit', 'deposit', create=True), 'w') as deposit_file:
             json.dump(deposit, deposit_file, indent=4)
 
     def delete_artifacts(self) -> None:
@@ -505,7 +501,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         differences between Invenio-based platforms.
         """
 
-        metadata = self.ctx["codemeta"]
+        metadata = self.metadata
         license = self.invenio_ctx["license"]
         communities = self.invenio_ctx["communities"]
         access_right = self.invenio_ctx["access_right"]
@@ -520,7 +516,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
                     "affiliation": author.get("affiliation", {"legalName": None}).get("legalName"),
                     # Invenio wants "family, given". author.get("name") might not have this format.
                     "name": f"{author.get('familyName')}, {author.get('givenName')}"
-                    if author.get("familyName") and author.get("givenName")
+                    if "familyName" in author and "givenName" in author
                     else author.get("name"),
                     # Invenio expects the ORCID without the URL part
                     "orcid": author.get("@id", "").replace("https://orcid.org/", "") or None,
@@ -538,7 +534,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
                     "affiliation": contributor.get("affiliation", {"legalName": None}).get("legalName"),
                     # Invenio wants "family, given". contributor.get("name") might not have this format.
                     "name": f"{contributor.get('familyName')}, {contributor.get('givenName')}"
-                    if contributor.get("familyName") and contributor.get("givenName")
+                    if "familyName" in contributor and "givenName" in contributor
                     else contributor.get("name"),
                     # Invenio expects the ORCID without the URL part
                     "orcid": contributor.get("@id", "").replace("https://orcid.org/", "") or None,
@@ -604,7 +600,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
         If no license is configured, ``None``  will be returned.
         """
-        license_url = self.ctx["codemeta"].get("license")
+        license_url = self.metadata["license"]
         return self.resolver.resolve_license_id(license_url)
 
     def _get_community_identifiers(self):
@@ -612,7 +608,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
         This function gets the communities to be used for the deposition on an Invenio-based
         site from the config and checks their validity against the site's API. If one of the
-        identifiers can not be found on the site, a :class:`HermesMisconfigurationError` is
+        identifiers can not be found on the site, a :class:`MisconfigurationError` is
         raised.
         """
 
