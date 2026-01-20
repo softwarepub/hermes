@@ -214,9 +214,9 @@ for i, author in enumerate(data["author"], start=1):
 :caption: Value check 
 for email in data["author"][0]["email"]:
     if email.endswith(".edu"):
-        print("Author has an email address at an educational institution.")
+        print("Shakespeare has an email address at an educational institution.")
     else:
-        print("Cannot confirm affiliation with educational institution for author.")
+        print("Cannot confirm affiliation with educational institution for Shakespeare.")
 
 # Mock output
 # $> Cannot confirm affiliation with educational institution for author.
@@ -239,8 +239,8 @@ The API class {class}`hermes.model.SoftwareMetadata` hides many
 of the more complex aspects of JSON-LD and makes it easy to work
 with the data model.
 
-Assertions, however, operate on the internal model objects.
-Therefore, they may not work as you would expect from plain
+So the API class hides the internal model objects.
+Therefore, they work as you would expect from plain
 Python data:
 
 ```{code-block} python
@@ -258,12 +258,10 @@ except AssertionError:
     raise
 
 # Mock output
-# $> The author could not be found.
-# $> AssertionError:
-#    assert
-#    {'email': ['shakespeare@baz.net'], 'name': ['Shakespeare']}
-#    in
-#    _LDList(
+# $> The author was found!
+#
+#
+# Internal Model from data["author"]:
 #        {'@list': [
 #            {
 #                'http://schema.org/name': [{'@value': 'Shakespeare'}],
@@ -279,32 +277,6 @@ except AssertionError:
 #            }]
 #        }
 #    )
-```
-
-The mock output in the example above shows the inequality of the expected and the actual value.
-The actual value is an internal data type wrapping the more complex JSON-LD data.
-
-The complex data structure of JSON-LD is internally constructed in the `hermes` data
-model, and to make it possible to work with only the data that is important - the actual terms
-and their values - the internal data model types provide a function `.to_python()`.
-This function can be used in assertions to assert full data integrity:
-
-```{code-block} python
-:caption: Containment assertion with `to_python()`
-:emphasize-lines: 5,13 
-try:
-    assert (
-            {'name': ['Shakespeare'], 'email': ['shakespeare@baz.net']}
-            in
-            data["author"].to_python()
-    )
-    print("The author was found!")
-except AssertionError:
-    print("The author could not be found.")
-    raise
-
-# Mock output
-# $> The author was found!
 ```
 
 ---
