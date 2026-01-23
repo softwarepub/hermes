@@ -5,6 +5,7 @@
 # SPDX-FileContributor: Michael Meinel
 # SPDX-FileContributor: David Pape
 
+from abc import abstractmethod
 import argparse
 import json
 import sys
@@ -70,13 +71,14 @@ class BaseCuratePlugin(HermesPlugin):
         """
         pass
 
+    @abstractmethod
     def is_publication_approved(self) -> bool:
         """Return the publication decision made through the curation process.
 
-        If publication is allowed, this method must return ``True``. By default,
-        ``False`` is returned.
+        If publication is allowed, this method must return ``True``, otherwise
+        ``False``.
         """
-        return False
+        pass
 
     def process_decision_positive(self):
         """Process a positive curation decision.
