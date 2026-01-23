@@ -8,15 +8,16 @@
 import glob
 import json
 import pathlib
-import typing as t
+from typing import Union
 
 from hermes.commands.harvest.base import HermesHarvestCommand, HermesHarvestPlugin
 from hermes.commands.harvest.util.validate_codemeta import validate_codemeta
-from hermes.model.errors import HermesValidationError
+from hermes.model.error import HermesValidationError
+from hermes.model import SoftwareMetadata
 
 
 class CodeMetaHarvestPlugin(HermesHarvestPlugin):
-    def __call__(self, command: HermesHarvestCommand) -> t.Tuple[t.Dict, t.Dict]:
+    def __call__(self, command: HermesHarvestCommand) -> tuple[SoftwareMetadata, dict]:
         """
         Implementation of a harvester that provides data from a codemeta.json file format.
 
@@ -39,7 +40,7 @@ class CodeMetaHarvestPlugin(HermesHarvestPlugin):
             raise HermesValidationError(codemeta_file)
 
         codemeta = json.loads(codemeta_str)
-        return codemeta, {'local_path': str(codemeta_file)}
+        return SoftwareMetadata(codemeta), {'local_path': str(codemeta_file)}
 
     def _validate(self, codemeta_file: pathlib.Path) -> bool:
         with open(codemeta_file, "r") as fi:
@@ -55,7 +56,7 @@ class CodeMetaHarvestPlugin(HermesHarvestPlugin):
 
         return True
 
-    def _get_single_codemeta(self, path: pathlib.Path) -> t.Optional[pathlib.Path]:
+    def _get_single_codemeta(self, path: pathlib.Path) -> Union[pathlib.Path, None]:
         # Find CodeMeta files in directories and subdirectories
         # TODO: Do we really want to search recursive? Maybe add another option to enable pointing to a single file?
         #       (So this stays "convention over configuration")
