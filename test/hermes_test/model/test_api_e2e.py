@@ -4,10 +4,21 @@
 
 # SPDX-FileContributor: Michael Fritzsche
 
+import json
 import pytest
 import sys
 from hermes.model import context_manager, SoftwareMetadata
 from hermes.commands import cli
+from pathlib import Path
+
+
+@pytest.fixture
+def sandbox_auth():
+    path = Path("./../auth.txt")
+    if not path.exists():
+        pytest.skip("Local auth token file does not exist.")
+    with path.open() as f:
+        yield f.read()
 
 
 @pytest.mark.parametrize(
@@ -353,3 +364,100 @@ def test_codemeta_harvest(tmp_path, monkeypatch, codemeta, res):
         sys.argv = orig_argv
 
     assert result.data_dict == res.data_dict
+
+
+@pytest.mark.parametrize(
+    "deposit, res",
+    [
+        2 * (
+            SoftwareMetadata({
+                "@type": ["http://schema.org/SoftwareSourceCode"],
+                "http://schema.org/description": [{"@value": "for testing"}],
+                "http://schema.org/name": [{"@value": "Test"}]
+            }),
+        )
+    ]
+)
+def test_file_deposit(tmp_path, monkeypatch, deposit, res):
+    monkeypatch.chdir(tmp_path)
+
+    manager = context_manager.HermesContext(tmp_path)
+    manager.prepare_step("curate")
+    with manager["result"] as cache:
+        cache["codemeta"] = deposit.compact()
+    manager.finalize_step("curate")
+
+    config_file = tmp_path / "hermes.toml"
+    config_file.write_text("[deposit]\ntarget = \"file\"")
+
+    orig_argv = sys.argv[:]
+    sys.argv = ["hermes", "deposit", "--path", str(tmp_path), "--config", str(config_file)]
+    result = {}
+    try:
+        monkeypatch.setattr(context_manager.HermesContext.__init__, "__defaults__", (tmp_path.cwd(),))
+        cli.main()
+    except SystemExit:
+        with open('codemeta.json', 'r') as cache:
+            result = SoftwareMetadata(json.load(cache))
+    finally:
+        sys.argv = orig_argv
+
+    assert result.data_dict == res.data_dict
+
+
+@pytest.mark.parametrize(
+    "metadata",
+    [
+        SoftwareMetadata({
+            "@type": ["http://schema.org/SoftwareSourceCode"],
+            "http://schema.org/description": [{"@value": "for testing"}],
+            "http://schema.org/name": [{"@value": "Test"}],
+            "http://schema.org/author": [{
+                "@type": "http://schema.org/Person",
+                "http://schema.org/familyName": [{"@value": "Test"}],
+                "http://schema.org/givenName": [{"@value": "Testi"}]
+            }],
+            "http://schema.org/license": [{"@id": "https://spdx.org/licenses/apache-2.0"}]
+        }),
+    ]
+)
+def test_invenio_deposit(tmp_path, monkeypatch, sandbox_auth, metadata):
+    monkeypatch.chdir(tmp_path)
+
+    manager = context_manager.HermesContext(tmp_path)
+    manager.prepare_step("curate")
+    with manager["result"] as cache:
+        cache["codemeta"] = metadata.compact()
+    manager.finalize_step("curate")
+
+    config_file = tmp_path / "hermes.toml"
+    config_file.write_text(f"""[deposit]
+target = \"invenio\"
+[deposit.invenio]
+site_url = \"https://sandbox.zenodo.org\"
+access_right = \"closed\"
+auth_token = \"{sandbox_auth}\"
+file = []
+[deposit.invenio.api_paths]
+licenses = "api/vocabularies/licenses"
+""")
+
+    orig_argv = sys.argv[:]
+    sys.argv = ["hermes", "deposit", "--path", str(tmp_path), "--config", str(config_file), "--initial"]
+    result = {}
+    try:
+        monkeypatch.setattr(context_manager.HermesContext.__init__, "__defaults__", (tmp_path.cwd(),))
+        cli.main()
+    except SystemExit:
+        manager.prepare_step("deposit")
+        result = SoftwareMetadata.load_from_cache(manager, "invenio")
+        manager.finalize_step("deposit")
+    finally:
+        sys.argv = orig_argv
+
+    assert result.data_dict == metadata.data_dict
+
+# TODO:
+#   - handle get() on Softwaremetadata objects in invenio.py
+#   - Sophie genaueres bezüglich Zeiten für Arbeitszeiterhöhung und -zeitraumerweiterung schicken
+

@@ -11,7 +11,7 @@ import json
 from pydantic import BaseModel
 
 from hermes.commands.deposit.base import BaseDepositPlugin
-
+from hermes.model import SoftwareMetadata
 
 class FileDepositSettings(BaseModel):
     filename: str = 'codemeta.json'
@@ -19,6 +19,9 @@ class FileDepositSettings(BaseModel):
 
 class FileDepositPlugin(BaseDepositPlugin):
     settings_class = FileDepositSettings
+
+    def map_metadata(self) -> SoftwareMetadata:
+        return self.metadata
 
     def publish(self) -> None:
         file_config = self.command.settings.file

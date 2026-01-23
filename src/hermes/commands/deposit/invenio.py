@@ -6,21 +6,21 @@
 # SPDX-FileContributor: Oliver Bertuch
 # SPDX-FileContributor: Michael Meinel
 
-import json
 import logging
 import pathlib
-import typing as t
 from datetime import date, datetime
 from pathlib import Path
 from urllib.parse import urlparse
 
 import requests
 from pydantic import BaseModel
+from typing import Union
 
 from hermes.commands.deposit.base import BaseDepositPlugin
 from hermes.commands.deposit.error import DepositionUnauthorizedError
 from hermes.error import MisconfigurationError
-from hermes.model.context_manager import HermesContext
+from hermes.model import SoftwareMetadata
+from hermes.model.error import HermesValidationError
 from hermes.utils import hermes_doi, hermes_user_agent
 
 
@@ -108,7 +108,7 @@ class InvenioResolver:
 
     def resolve_latest_id(
         self, record_id=None, doi=None, codemeta_identifier=None
-    ) -> t.Tuple[t.Optional[str], dict]:
+    ) -> tuple[Union[str, None], dict]:
         """
         Using the given metadata parameters, figure out the latest record id.
 
@@ -166,7 +166,7 @@ class InvenioResolver:
         *_, record_id = page_url.path.split('/')
         return record_id
 
-    def resolve_record_id(self, record_id: str) -> t.Tuple[str, dict]:
+    def resolve_record_id(self, record_id: str) -> tuple[str, dict]:
         """
         Find the latest version of a given record.
 
@@ -185,7 +185,7 @@ class InvenioResolver:
         res_json = res.json()
         return res_json['id'], res_json['metadata']
 
-    def resolve_license_id(self, license_url: t.Optional[str]) -> t.Optional[str]:
+    def resolve_license_id(self, license_url: Union[str, None]) -> Union[str, None]:
         """Get Invenio license representation from CodeMeta.
 
         The license to use is extracted from the ``license`` field in the
@@ -218,7 +218,7 @@ class InvenioResolver:
 
         parsed_url = urlparse(license_url)
         url_path = parsed_url.path.rstrip("/")
-        license_id = url_path.split("/")[-1]
+        license_id = str.lower(url_path.split("/")[-1])
 
         response = self.client.get_license(license_id)
         if response.status_code == 404:
@@ -230,7 +230,8 @@ class InvenioResolver:
 
     @staticmethod
     def _extract_license_id_from_response(data: dict) -> str:
-        return data["metadata"]["id"]
+        # TODO: find correct key, data["metadata"]["id"] did not work for me but data["id"] does
+        return data["id"]
 
 
 class InvenioDepositSettings(BaseModel):
@@ -242,7 +243,7 @@ class InvenioDepositSettings(BaseModel):
     access_right: str = None
     embargo_date: str = None
     access_conditions: str = None
-    api_paths: t.Dict = {}
+    api_paths: dict = {}
     auth_token: str = ''
     files: list[pathlib.Path] = []
 
@@ -335,15 +336,10 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
         self.invenio_ctx = deposition_data
 
-    def map_metadata(self) -> None:
-        """Map the harvested metadata onto the Invenio schema."""
-
-        deposition_metadata = self._codemeta_to_invenio_deposition()
-        ctx = HermesContext()
-        ctx.prepare_step("deposit")
-        with ctx[self.platform_name] as deposit_ctx:
-            deposit_ctx["deposit"] = deposition_metadata
-        ctx.finalize_step("deposit")
+    def map_metadata(self) -> SoftwareMetadata:
+        """Map the harvested metadata onto the Invenio schema and return it."""
+        self.invenio_ctx["depositionMetadata"] = self._codemeta_to_invenio_deposition()
+        return SoftwareMetadata(self.invenio_ctx["depositionMetadata"])
 
     def is_initial_publication(self) -> bool:
         latest_record_id = self.invenio_ctx.get("latestRecord", {}).get("id")
@@ -402,8 +398,8 @@ class InvenioDepositPlugin(BaseDepositPlugin):
             },
         ]
 
-    def update_metadata(self) -> None:
-        """Update the metadata of a draft."""
+    def update_metadata(self) -> SoftwareMetadata:
+        """Update the metadata of a draft and return it."""
 
         draft_url = self.links["latest_draft"]
 
@@ -422,8 +418,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         self.links.update(deposit["links"])
 
         _log.debug("Created new version deposit: %s", self.links["html"])
-        with open(self.metadata.get_cache('deposit', 'deposit', create=True), 'w') as deposit_file:
-            json.dump(deposit, deposit_file, indent=4)
+        return SoftwareMetadata(deposit.get("metadata", {}))
 
     def delete_artifacts(self) -> None:
         """Delete existing file artifacts.
@@ -444,7 +439,10 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
         bucket_url = self.links["bucket"]
 
-        files = *self.config.files, *[f[0] for f in self.command.args.file]
+        if self.command.args.file:
+            files = *self.config.files, *[f[0] for f in self.command.args.file]
+        else:
+            files = tuple(*self.config.files)
         for path_arg in files:
             path = Path(path_arg)
 
@@ -508,7 +506,22 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         embargo_date = self.invenio_ctx["embargo_date"]
         access_conditions = self.invenio_ctx["access_conditions"]
 
-        creators = [
+        creators = []
+        for author in metadata["author"]:
+            creator = {}
+            if len(affils := [name for affil in author["affiliation"] for name in affil["legalname"]]) != 0:
+                creator["affiliation"] = affils
+            given_names_str = " ".join(author["givenName"])
+            names = [f"{family_name}, {given_names_str}" for family_name in author["familyName"]]
+            names.extend(author["names"])
+            if len(names) != 0:
+                creator["name"] = names
+            if (id := author.get("@id", None)) is not None:
+                creator["orcid"] = id.replace("https://orcid.org/", "")
+            if creator:
+                creators.append(creator)
+
+        """creators = [
             # TODO: Distinguish between @type "Person" and others
             {
                 k: v for k, v in {
@@ -523,7 +536,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
                 }.items() if v is not None
             }
             for author in metadata["author"]
-        ]
+        ]"""
 
         # This is not used at the moment. See comment below in `deposition_metadata` dict.
         contributors = [  # noqa: F841
@@ -546,6 +559,27 @@ class InvenioDepositPlugin(BaseDepositPlugin):
             for contributor in metadata.get("contributor", []) if contributor.get("name") != "GitHub"
         ]
 
+        if len(metadata["name"]) != 1:
+            _log.error("More than one or zero names for the Software are given.")
+            raise HermesValidationError("More than one or zerno names for the Software.")
+        name = metadata["name"][0]
+
+        if len(metadata["schema:description"]) > 1:
+            _log.error("More than one descriptions of the Software are given.")
+            raise HermesValidationError("More than one descriptions of the Software are given.")
+        if len(metadata["schema:description"]) == 1:
+            description = metadata["schema:description"][0]
+        else:
+            description = None
+
+        if len(metadata["schema:version"]) > 1:
+            _log.error("More than one version of the Software are given.")
+            raise HermesValidationError("More than one version of the Software are given.")
+        if len(metadata["schema:version"]) == 1:
+            version = metadata["schema:version"][0]
+        else:
+            version = None
+
         # TODO: Use the fields currently set to `None`.
         # Some more fields are available but they most likely don't relate to software
         # publications targeted by hermes.
@@ -559,12 +593,12 @@ class InvenioDepositPlugin(BaseDepositPlugin):
             # TODO: Maybe we want a different date? Then make this configurable. If not,
             # this can be removed as it defaults to today.
             "publication_date": date.today().isoformat(),
-            "title": metadata["name"],
+            "title": name,
             "creators": creators,
             # TODO: Use a real description here. Possible sources could be
             # `tool.poetry.description` from pyproject.toml or `abstract` from
             # CITATION.cff. This should then be stored in codemeta description field.
-            "description": metadata["name"],
+            "description": description,
             "access_right": access_right,
             "license": license,
             "embargo_date": embargo_date,
@@ -590,17 +624,17 @@ class InvenioDepositPlugin(BaseDepositPlugin):
             "communities": communities,
             "grants": None,
             "subjects": None,
-            "version": metadata.get('version'),
+            "version": version,
         }.items() if v is not None}
 
         return deposition_metadata
 
-    def _get_license_identifier(self) -> t.Optional[str]:
+    def _get_license_identifier(self) -> Union[str, None]:
         """Get Invenio license identifier that matches the given license URL.
 
         If no license is configured, ``None``  will be returned.
         """
-        license_url = self.metadata["license"]
+        license_url = self.metadata["license"][0]
         return self.resolver.resolve_license_id(license_url)
 
     def _get_community_identifiers(self):

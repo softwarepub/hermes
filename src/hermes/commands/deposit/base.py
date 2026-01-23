@@ -34,17 +34,25 @@ class BaseDepositPlugin(HermesPlugin):
         self.metadata = SoftwareMetadata.load_from_cache(self.ctx, "result")
         self.ctx.finalize_step("curate")
 
-        self.ctx.prepare_step("deposit")
-
         self.prepare()
-        self.map_metadata()
+        deposit = self.map_metadata()
+        self.ctx.prepare_step("deposit")
+        with self.ctx[command.settings.target] as cache:
+            cache["deposit"] = deposit.compact()
+        self.ctx.finalize_step("deposit")
 
         if self.is_initial_publication():
             self.create_initial_version()
         else:
             self.create_new_version()
 
-        self.update_metadata()
+        deposit = self.update_metadata()
+        self.ctx.prepare_step("deposit")
+        with self.ctx[command.settings.target] as cache:
+            cache["codemeta"] = deposit.compact()
+            cache["expanded"] = deposit.ld_value
+            cache["context"] = {"@context": deposit.full_context}
+        self.ctx.finalize_step("deposit")
         self.delete_artifacts()
         self.upload_artifacts()
         self.publish()
@@ -59,8 +67,8 @@ class BaseDepositPlugin(HermesPlugin):
         pass
 
     @abc.abstractmethod
-    def map_metadata(self) -> None:
-        """Map the given metadata to the target schema of the deposition platform.
+    def map_metadata(self) -> SoftwareMetadata:
+        """Map the given metadata to the target schema of the deposition platform and return it.
 
         When mapping metadata, make sure to add traces to the HERMES software, e.g. via
         DataCite's ``relatedIdentifier`` using the ``isCompiledBy`` relation. Ideally, the value
@@ -89,9 +97,9 @@ class BaseDepositPlugin(HermesPlugin):
         """Create a new version of an existing publication on the target platform."""
         pass
 
-    def update_metadata(self) -> None:
-        """Update the metadata of the newly created version."""
-        pass
+    def update_metadata(self) -> SoftwareMetadata:
+        """Update the metadata of the newly created version and return it even if it hasn't changed."""
+        return self.metadata
 
     def delete_artifacts(self) -> None:
         """Delete any superfluous artifacts taken from the previous version of the publication."""
@@ -131,10 +139,11 @@ class HermesDepositCommand(HermesCommand):
 
         try:
             plugin_func = self.plugins[plugin_name]()
-            plugin_func(self)
         except KeyError as e:
             self.log.error("Plugin '%s' not found.", plugin_name)
             self.errors.append(e)
+        try:
+            plugin_func(self)
         except HermesValidationError as e:
             self.log.error("Error while executing %s: %s", plugin_name, e)
             self.errors.append(e)
