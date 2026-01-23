@@ -25,10 +25,7 @@ class _CurateSettings(BaseModel):
 
 
 class BaseCuratePlugin(HermesPlugin):
-    """Base class for curation plugins.
-
-    Objects of this class are callables.
-    """
+    """Base class for curation plugins."""
 
     def __init__(self, command, ctx):
         self.command = command
