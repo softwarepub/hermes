@@ -19,7 +19,7 @@ class AcceptCuratePlugin(BaseCuratePlugin):
     also copies the metadata produced in the process step to the "curate" directory.
     """
 
-    def get_decision(self):
+    def is_publication_approved(self):
         """Simulate positive curation result."""
         return True
 

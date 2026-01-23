@@ -38,14 +38,14 @@ class BaseCuratePlugin(HermesPlugin):
         """Entry point of the callable.
 
         This method runs the main logic of the plugin. It calls the other methods of the
-        object in the correct order. Depending on the result of ``get_decision`` the
-        corresponding ``process_decision_*()`` method is called, based on the curation
-        decision.
+        object in the correct order. Depending on the result of
+        ``is_publication_approved`` the corresponding ``process_decision_*()`` method is
+        called, based on the curation decision.
         """
         self.prepare()
         self.validate()
         self.create_report()
-        if self.get_decision():
+        if self.is_publication_approved():
             self.process_decision_positive()
         else:
             self.process_decision_negative()
@@ -73,7 +73,7 @@ class BaseCuratePlugin(HermesPlugin):
         """
         pass
 
-    def get_decision(self) -> bool:
+    def is_publication_approved(self) -> bool:
         """Return the publication decision made through the curation process.
 
         If publication is allowed, this method must return ``True``. By default,
