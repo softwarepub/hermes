@@ -897,6 +897,7 @@ class HermesInitCommand(HermesCommand):
         Sets the CI parameters, so that the pipeline gets triggered when a tag that matches the pattern gets pushed.
         """
         self.ci_parameters["gh_push_branches_or_tags"] = "tags"
+        self.ci_parameters["git_create_curate_branch"] = 'git checkout -b "hermes/curate-$SHORT_SHA" ${{ github.ref }}'
         if tag_pattern:
             self.ci_parameters["gh_push_target"] = f"\"{tag_pattern}\""
             self.ci_parameters["gl_push_condition"] = f"$CI_COMMIT_TAG =~ {tag_pattern}"
