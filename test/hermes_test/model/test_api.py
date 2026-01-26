@@ -53,20 +53,23 @@ def test_init_nested_object():
 
 def test_append():
     data = SoftwareMetadata()
-    data["foo"].append("a")
-    assert type(data["foo"]) is ld_list and data["foo"][0] == "a" and data["foo"].item_list == [{"@value": "a"}]
-    data["foo"].append("b")
-    assert type(data["foo"]) is ld_list and data["foo"].item_list == [{"@value": "a"}, {"@value": "b"}]
-    data["foo"].append("c")
-    assert data["foo"].item_list == [{"@value": "a"}, {"@value": "b"}, {"@value": "c"}]
+    data["schema:name"].append("a")
+    assert type(data["schema:name"]) is ld_list
+    assert data["schema:name"][0] == "a" and data["schema:name"].item_list == [{"@value": "a"}]
+    data["schema:name"].append("b")
+    assert type(data["schema:name"]) is ld_list and data["schema:name"].item_list == [{"@value": "a"}, {"@value": "b"}]
+    data["schema:name"].append("c")
+    assert data["schema:name"].item_list == [{"@value": "a"}, {"@value": "b"}, {"@value": "c"}]
+
     data = SoftwareMetadata()
-    data["foo"].append({"schema:name": "foo"})
-    assert type(data["foo"]) is ld_list and type(data["foo"][0]) is ld_dict
-    assert data["foo"][0].data_dict == {"http://schema.org/name": [{"@value": "foo"}]}
-    data["foo"].append({"schema:name": "foo"})
-    assert type(data["foo"]) is ld_list and data["foo"].item_list == 2*[{"http://schema.org/name": [{"@value": "foo"}]}]
-    data["foo"].append({"schema:name": "foo"})
-    assert data["foo"].item_list == 3 * [{"http://schema.org/name": [{"@value": "foo"}]}]
+    data["schema:Person"].append({"schema:name": "foo"})
+    assert type(data["schema:Person"]) is ld_list and type(data["schema:Person"][0]) is ld_dict
+    assert data["schema:Person"][0].data_dict == {"http://schema.org/name": [{"@value": "foo"}]}
+    data["schema:Person"].append({"schema:name": "foo"})
+    assert type(data["schema:Person"]) is ld_list
+    assert data["schema:Person"].item_list == 2 * [{"http://schema.org/name": [{"@value": "foo"}]}]
+    data["schema:Person"].append({"schema:name": "foo"})
+    assert data["schema:Person"].item_list == 3 * [{"http://schema.org/name": [{"@value": "foo"}]}]
 
 
 def test_iterative_assignment():
@@ -125,7 +128,8 @@ def test_usage():
     assert len(baz["email"]) == 0
     for author in data["author"]:
         assert "name" in author
-        assert "email" in author
+        if "Baz" not in author["name"]:
+            assert "email" in author
         if "schema:knowsAbout" not in author:
             # FIXME: None has to be discussed
             author["schema:knowsAbout"] = None

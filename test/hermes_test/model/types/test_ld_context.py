@@ -10,6 +10,8 @@ from hermes.model.types.ld_context import (
     ALL_CONTEXTS,
 )
 
+from hermes.model.error import HermesContextError
+
 
 @pytest.fixture
 def ctx():
@@ -18,18 +20,29 @@ def ctx():
 
 def test_ctx():
     ctx = ContextPrefix(["u1", {"2": "u2"}])
-    assert ctx.prefix[None] == "u1"
-    assert ctx.prefix["2"] == "u2"
+    assert ctx.context[None] == "u1"
+    assert ctx.context["2"] == "u2"
 
 
+@pytest.mark.xfail(
+    raises=AssertionError,
+    reason="Currently, the wrong CodeMeta IRI is used in the implementation: "
+    "https://github.com/softwarepub/hermes/issues/419",
+)
 def test_codemeta_prefix(ctx):
     """Default vocabulary in context has the correct base IRI."""
-    assert ctx.prefix[None] == "https://codemeta.github.io/terms/"
+    assert ctx.context[None] == "https://codemeta.github.io/terms/"
 
 
-def test_get_codemeta_item(ctx):
+@pytest.mark.xfail(
+    raises=AssertionError,
+    reason="Currently, the wrong CodeMeta IRI is used in the implementation, so expanding terms doesn't work correctly,"
+    " see https://github.com/softwarepub/hermes/issues/419",
+)
+@pytest.mark.parametrize("compacted", ["maintainer", (None, "maintainer")])
+def test_get_item_from_default_vocabulary_pass(ctx, compacted):
     """Context returns fully expanded terms for default vocabulary in the context."""
-    item = ctx["maintainer"]
+    item = ctx[compacted]
     assert item == "https://codemeta.github.io/terms/maintainer"
 
 
@@ -41,37 +54,104 @@ def test_get_codemeta_item(ctx):
             "hermes:semanticVersion",
             "https://schema.software-metadata.pub/hermes-content/1.0/semanticVersion",  # TODO: Change on #393 fix
         ),
+        (("schema", "Organization"), "http://schema.org/Organization"),
+        (
+            ("hermes", "semanticVersion"),
+            "https://schema.software-metadata.pub/hermes-content/1.0/semanticVersion",
+        ),  # TODO: Change on #393 fix
     ],
 )
-def test_get_prefixed_items(ctx, compacted, expanded):
-    """Context returns fully expanded terms for prefixed vocabularies in the context."""
+def test_get_item_from_prefixed_vocabulary_pass(ctx, compacted, expanded):
+    """
+    Context returns fully expanded terms for prefixed vocabularies in the context,
+    for all accepted parameter formats.
+    """
     item = ctx[compacted]
     assert item == expanded
 
 
-def test_get_protocol_items_pass(ctx):
-    item = ctx["https://schema.org/Organisation"]
-    assert item == "https://schema.org/Organisation"
-
-
-def test_get_protocol_items_fail(ctx):
-    with pytest.raises(Exception) as e:
-        ctx["https://foo.bar/baz"]
-    assert "cannot access local variable" not in str(e.value)  # FIXME: Replace with custom error
+@pytest.mark.parametrize(
+    "prefix,not_exist",
+    [
+        ("foobar", item)
+        for item in [
+            "foobar:baz",
+            ("foobar", "baz"),
+        ]
+    ],
+)
+def test_get_item_from_prefixed_vocabulary_raises_on_prefix_not_exist(
+    ctx, prefix, not_exist
+):
+    """
+    Tests that an exception is raised when trying to get compacted items for which there is no
+    prefixed vocabulary in the context.
+    """
+    with pytest.raises(HermesContextError) as hce:
+        _ = ctx[not_exist]
+    assert str(hce.value) == prefix
 
 
 @pytest.mark.parametrize(
-    "compacted,expanded",
+    "term,not_exist",
     [
-        ([None, "maintainer"], "https://codemeta.github.io/terms/maintainer"),
-        (["schema", "Organization"], "http://schema.org/Organization"),
-        ((None, "maintainer"), "https://codemeta.github.io/terms/maintainer"),
-        (("schema", "Organization"), "http://schema.org/Organization"),
+        ("baz", item)
+        for item in [
+            "baz",
+            "hermes:baz",
+            "schema:baz",
+            (None, "baz"),
+            ("hermes", "baz"),
+            ("schema", "baz"),
+        ]
     ],
 )
-def test_get_valid_non_str_items(ctx, compacted, expanded):
-    """Context returns fully expanded terms for valid non-string inputs."""
-    assert ctx[compacted] == expanded
+@pytest.mark.xfail(
+    raises=NotImplementedError,
+    reason="Not yet implemented/decided: Check if terms exist in given vocabulary.",
+)
+def test_get_item_from_prefixed_vocabulary_raises_on_term_not_exist(
+    ctx, term, not_exist
+):
+    """
+    Tests that an exception is raised when trying to get compacted items for which the vocabulary exists,
+    but doesn't contain the requested term.
+    """
+    with pytest.raises(HermesContextError) as hce:
+        _ = ctx[not_exist]
+        with pytest.raises(Exception):
+            assert str(hce.value) == term
+        raise NotImplementedError
+
+
+@pytest.mark.parametrize(
+    "expanded",
+    [
+        "https://codemeta.github.io/terms/maintainer",
+        "https://schema.org/Organisation",
+        "https://schema.software-metadata.pub/hermes-content/1.0/semanticVersion",
+    ],
+)
+@pytest.mark.xfail(
+    raises=NotImplementedError,
+    reason="Passing back expanded terms on their input if they are valid in the context "
+    "is not yet implemented (or decided).",
+)
+def test_get_item_from_expanded_pass(ctx, expanded):
+    """
+    Tests that getting items via their fully expanded terms works as expected.
+    """
+    with pytest.raises(Exception):
+        assert ctx[expanded] == expanded
+    raise NotImplementedError
+
+
+def test_get_item_from_expanded_fail(ctx):
+    """
+    Tests that context raises on unsupported expanded term input.
+    """
+    with pytest.raises(HermesContextError):
+        ctx["https://foo.bar/baz"]
 
 
 @pytest.mark.parametrize(
@@ -88,20 +168,31 @@ def test_get_non_str_item_fail(ctx, non_str, error_type):
     "item",
     [
         "",
-        "fooBar",
+        pytest.param(
+            "fooBar",
+            marks=pytest.mark.xfail(
+                reason="Not yet implemented/decided: Check if terms exist in given vocabulary."
+            ),
+        ),
         [0, "foo"],
         (0, "foo"),
         {"foo": "bar", "baz": "foo"},
-        "schema:fooBar",
-        "hermes:fooBar",
+        pytest.param(
+            "schema:fooBar",
+            marks=pytest.mark.xfail(
+                reason="Not yet implemented/decided: Check if terms exist in given vocabulary."
+            ),
+        ),
+        pytest.param(
+            "hermes:fooBar",
+            marks=pytest.mark.xfail(
+                reason="Not yet implemented/decided: Check if terms exist in given vocabulary."
+            ),
+        ),
         "codemeta:maintainer",  # Prefixed CodeMeta doesn't exist in context
-        # Even a dict with valid terms should fail, as it is unclear what to expect
-        {None: "maintainer", "schema": "Organization"},
     ],
 )
 def test_get_item_validate_fail(ctx, item):
-    """Context raises on terms that don't exist in the context."""
-    with pytest.raises(
-        Exception
-    ):  # FIXME: Replace with custom error, e.g., hermes.model.errors.InvalidTermException
+    """Context raises on theoretically valid compressed terms that don't exist in the context."""
+    with pytest.raises(HermesContextError):
         ctx[item]
