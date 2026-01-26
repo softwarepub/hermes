@@ -442,7 +442,8 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         if self.command.args.file:
             files = *self.config.files, *[f[0] for f in self.command.args.file]
         else:
-            files = tuple(*self.config.files)
+            files = tuple(self.config.files)
+
         for path_arg in files:
             path = Path(path_arg)
 
@@ -511,11 +512,17 @@ class InvenioDepositPlugin(BaseDepositPlugin):
             creator = {}
             if len(affils := [name for affil in author["affiliation"] for name in affil["legalname"]]) != 0:
                 creator["affiliation"] = affils
-            given_names_str = " ".join(author["givenName"])
-            names = [f"{family_name}, {given_names_str}" for family_name in author["familyName"]]
-            names.extend(author["names"])
-            if len(names) != 0:
-                creator["name"] = names
+            if len(author["familyName"]) > 1:
+                raise HermesValidationError(f"Author has too many family names: {author.to_python()}")
+            if len(author["familyName"]) == 1:
+                given_names_str = " ".join(author["givenName"])
+                name = f"{author["familyName"][0]}, {given_names_str}"
+            elif len(author["name"]) != 1:
+                raise HermesValidationError(f"Author has too many names: {author.to_python()}")
+            else:
+                name = author["name"][0]
+            if len(name) != 0:
+                creator["name"] = name
             if (id := author.get("@id", None)) is not None:
                 creator["orcid"] = id.replace("https://orcid.org/", "")
             if creator:

@@ -205,7 +205,7 @@ def test_cff_harvest(tmp_path, monkeypatch, cff, res):
 
     # FIXME: update to compare the SoftwareMetadata objects instead of the data_dicts (in multiple places)
     # after merge with refactor/data-model and/or refactor/423-implement-public-api
-    assert result.data_dict == res.data_dict
+    assert result == res
 
 
 @pytest.mark.parametrize(
@@ -363,7 +363,7 @@ def test_codemeta_harvest(tmp_path, monkeypatch, codemeta, res):
     finally:
         sys.argv = orig_argv
 
-    assert result.data_dict == res.data_dict
+    assert result == res
 
 
 @pytest.mark.parametrize(
@@ -402,7 +402,7 @@ def test_file_deposit(tmp_path, monkeypatch, deposit, res):
     finally:
         sys.argv = orig_argv
 
-    assert result.data_dict == res.data_dict
+    assert result == res
 
 
 @pytest.mark.parametrize(
@@ -432,12 +432,12 @@ def test_invenio_deposit(tmp_path, monkeypatch, sandbox_auth, metadata):
 
     config_file = tmp_path / "hermes.toml"
     config_file.write_text(f"""[deposit]
-target = \"invenio\"
+target = "invenio"
 [deposit.invenio]
-site_url = \"https://sandbox.zenodo.org\"
-access_right = \"closed\"
-auth_token = \"{sandbox_auth}\"
-file = []
+site_url = "https://sandbox.zenodo.org"
+access_right = "closed"
+auth_token = "{sandbox_auth}"
+files = ["hermes.toml"]
 [deposit.invenio.api_paths]
 licenses = "api/vocabularies/licenses"
 """)
@@ -455,9 +455,7 @@ licenses = "api/vocabularies/licenses"
     finally:
         sys.argv = orig_argv
 
-    assert result.data_dict == metadata.data_dict
+    assert result == metadata
 
-# TODO:
-#   - handle get() on Softwaremetadata objects in invenio.py
-#   - Sophie genaueres bezüglich Zeiten für Arbeitszeiterhöhung und -zeitraumerweiterung schicken
+# TODO: handle get() on Softwaremetadata objects in invenio.py
 
