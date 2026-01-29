@@ -3,8 +3,9 @@
 # SPDX-FileContributor: Nitai Heeb
 
 import time
-import requests
+
 import oauthlib.oauth2.rfc6749.errors
+import requests
 
 from . import slim_click as sc
 from .oauth_process import OauthProcess
@@ -20,10 +21,8 @@ USING_SANDBOX_AS_DEFAULT = True
 local_port = 8334
 sandbox_client_id = 'QJ8Q9GBI78uOdNmVNK1Vd0oAOJHqmYGvxRxiSFxt'
 sandbox_client_secret = 'nGuOqoDtd2tckP6lmQS3If3cY39lPLKLU8skcv72JeowNupMD2bnLparsGO9'
-sandbox_base_url = 'https://sandbox.zenodo.org'
 real_client_id = 'L0d9HQVW4Ig9PnC6qh6zkOAwgvYy08GcmHJqVVvV'
 real_client_secret = '0HIvtC2D2aPvpq2W0GtfWdeivwkqvnvrOTGx14nUJA5lDXrEDSaQAnqxHbLH'
-real_base_url = 'https://zenodo.org'
 url_suffix_authorize = '/oauth/authorize'
 url_suffix_token = '/oauth/token'
 url_suffix_api_list = '/api/deposit/depositions'
@@ -32,7 +31,7 @@ scope = 'deposit:write deposit:actions'
 client_id = client_secret = base_url = authorize_url = token_url = api_list_url = name = ""
 
 
-def setup(using_sandbox: bool = USING_SANDBOX_AS_DEFAULT):
+def setup(zenodo_url="https://sandbox.zenodo.org/", display_name=""):
     global client_id
     global client_secret
     global base_url
@@ -40,13 +39,16 @@ def setup(using_sandbox: bool = USING_SANDBOX_AS_DEFAULT):
     global token_url
     global api_list_url
     global name
-    client_id = sandbox_client_id if using_sandbox else real_client_id
-    client_secret = sandbox_client_secret if using_sandbox else real_client_secret
-    base_url = sandbox_base_url if using_sandbox else real_base_url
+    base_url = zenodo_url
     authorize_url = base_url + url_suffix_authorize
     token_url = base_url + url_suffix_token
     api_list_url = base_url + url_suffix_api_list
-    name = "Zenodo (Sandbox)" if using_sandbox else "Zenodo"
+    using_sandbox = "sandbox" in zenodo_url
+    client_id = sandbox_client_id if using_sandbox else real_client_id
+    client_secret = sandbox_client_secret if using_sandbox else real_client_secret
+    name = display_name
+    if name == "":
+        name = "Zenodo Sandbox" if using_sandbox else "Zenodo"
 
 
 setup()
@@ -79,7 +81,7 @@ def test_if_token_is_valid(token: str) -> bool:
 
 
 def test_if_refresh_token_authorization_works():
-    for version in [True, False]:
+    for version in ["https://sandbox.zenodo.org/", "https://zenodo.org/"]:
         setup(version)
         sc.echo(f"Testing if the {name} refresh token mechanism works...",
                 formatting=sc.Formats.BOLD+sc.Formats.WARNING)

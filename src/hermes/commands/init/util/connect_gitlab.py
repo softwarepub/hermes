@@ -2,13 +2,13 @@
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-FileContributor: Nitai Heeb
 
-import requests
-from urllib.parse import urlparse, urljoin, quote
 from datetime import datetime, timedelta
+from urllib.parse import quote, urljoin, urlparse
+
+import requests
 
 from . import slim_click as sc
 from .oauth_process import OauthProcess
-
 
 default_scopes = "api write_repository"
 device_code_addition = "oauth/authorize_device"

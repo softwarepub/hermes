@@ -267,21 +267,6 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
         if client is None:
             auth_token = self.config.auth_token
-
-            # TODO reactivate this code again, once we use Zenodo OAuth again (once the refresh token works)
-            # If auth_token is a refresh-token, get the auth-token from that.
-            # if str(auth_token).startswith("REFRESH_TOKEN:"):
-            #     _log.debug(f"Getting token from refresh_token {auth_token}")
-            #     # TODO How do we know if this targets sandbox or not?
-            #     # Now we assume it's sandbox
-            #     connect_zenodo.setup(True)
-            #     tokens = connect_zenodo.oauth_process() \
-            #         .get_tokens_from_refresh_token(auth_token.split("REFRESH_TOKEN:")[1])
-            #     _log.debug(f"Tokens: {str(tokens)}")
-            #     auth_token = tokens.get("access_token", "")
-            #     _log.debug(f"Auth Token: {auth_token}")
-            #     # TODO Update the secret (github/lab token is needed)
-
             if not auth_token:
                 raise DepositionUnauthorizedError("No valid auth token given for deposition platform")
             self.client = self.invenio_client_class(self.config,

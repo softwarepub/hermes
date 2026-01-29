@@ -39,6 +39,7 @@ dependencies = [
     "pydantic-settings>=2.1.0, <3.0.0",
     "requests-oauthlib>=2.0.0, <3.0.0",
     "pynacl>=1.6.2, <2.0.0",
+    "jinja2 (>=3.1.6,<4.0.0)",
 ]
 requires-python = ">=3.11, <4.0.0"
 
@@ -48,11 +49,9 @@ documentation = "https://hermes.software-metadata.pub"
 repository = "https://github.com/softwarepub/hermes.git"
 issues = "https://github.com/softwarepub/hermes/issues"
 
-
 [project.scripts]
 hermes = "hermes.commands.cli:main"
 hermes-marketplace = "hermes.commands.marketplace:main"
-
 
 [project.entry-points."hermes.harvest"]
 cff = "hermes.commands.harvest.cff:CffHarvestPlugin"
@@ -106,13 +105,11 @@ reuse = "^1.1.2"
 sphinxcontrib-datatemplates = "~=0.11"
 
 
-
 [tool.taskipy.tasks]
 docs-build = "poetry run sphinx-build -M html docs/source docs/build -W"
 docs-clean = "poetry run sphinx-build -M clean docs/source docs/build"
 docs-live = "poetry run sphinx-autobuild docs/source docs/build"
 flake8 = "poetry run flake8 ./test/ ./src/ --count --select=E9,F63,F7,F82 --statistics"
-
 
 [tool.pytest.ini_options]
 norecursedirs = "docs/*"
@@ -120,7 +117,6 @@ testpaths = [
     "test"
 ]
 addopts = "--cov=hermes --cov-report term"
-
 
 [build-system]
 requires = [

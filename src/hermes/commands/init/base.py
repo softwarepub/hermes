@@ -15,6 +15,8 @@ from importlib import metadata
 from pathlib import Path
 from urllib.parse import urljoin, urlparse
 
+import jinja2
+import jinja2.meta
 import requests
 import toml
 from pydantic import BaseModel
@@ -27,6 +29,7 @@ from hermes.commands.init.util import (connect_github, connect_gitlab,
                                        connect_zenodo, git_info)
 
 TUTORIAL_URL = "https://hermes.software-metadata.pub/en/latest/tutorials/automated-publication-with-ci.html"
+REPOSITORY_URL = "https://github.com/softwarepub/hermes"
 
 
 class GitHoster(Enum):
@@ -35,22 +38,50 @@ class GitHoster(Enum):
     GitLab = auto()
 
 
-class DepositPlatform(Enum):
+class DepositId(Enum):
+    """
+    Enum as additional identifier for DepositPlatforms so we have something persistent to code with.
+    """
     Empty = auto()
     Zenodo = auto()
     ZenodoSandbox = auto()
+    # JuelichData = auto()
+    # JuelichDataBeta = auto()
+    # DemoDataverse = auto()
+    Rodare = auto()
+    RodareTest = auto()
 
 
-DepositPlatformNames: dict[DepositPlatform, str] = {
-        DepositPlatform.ZenodoSandbox: "Zenodo (Sandbox)",
-        DepositPlatform.Zenodo: "Zenodo",
-    }
+@dataclass
+class DepositPlatform:
+    """
+    This dataclass contains all relevant data to set up hermes for a given platform.
+    """
+    def __init__(self, name: str = "", url: str = "", plugin_name: str = "", deposit_id: DepositId = DepositId.Empty):
+        self.name: str = name
+        self.url: str = url
+        """Base url of the deposit platform"""
+        self.plugin_name: str = plugin_name
+        """Internal name of our related hermes deposit plugin"""
+        self.id: DepositId = deposit_id
+        """Non changing enum-based ID to keep the consistency"""
+        self.internal_name: str = deposit_id.name
+        self.token: str = ""
+        """This is the access token which will get filled in connect_deposit_platform"""
+        self.token_name: str = re.sub(r'(?<!^)(?=[A-Z])', '_', self.internal_name).upper() + "_TOKEN"
+        """This is the internal name in uppercase, with underscores and ending with _TOKEN.
+           This is used as name for the secret variable on the GitHoster."""
 
 
-DepositPlatformUrls: dict[DepositPlatform, str] = {
-        DepositPlatform.Zenodo: "https://zenodo.org/",
-        DepositPlatform.ZenodoSandbox: "https://sandbox.zenodo.org/"
-    }
+DepositOptions: list[DepositPlatform] = [
+    DepositPlatform("Zenodo Sandbox", "https://sandbox.zenodo.org/", "invenio_rdm", DepositId.ZenodoSandbox),
+    DepositPlatform("Zenodo", "https://zenodo.org/", "invenio_rdm", DepositId.Zenodo),
+    # DepositPlatform("Demo Dataverse", "https://demo.dataverse.org/", "dataverse", DepositId.DemoDataverse),
+    # DepositPlatform("Jülich DATA", "https://data.fz-juelich.de/", "dataverse", DepositId.JuelichData),
+    # DepositPlatform("Jülich DATA Beta", "https://data-beta.fz-juelich.de/", "dataverse", DepositId.JuelichDataBeta),
+    DepositPlatform("Rodare", "https://rodare.hzdr.de/", "rodare", DepositId.Rodare),
+    DepositPlatform("Rodare Test", "https://rodare-test.hzdr.de/", "rodare", DepositId.RodareTest),
+]
 
 
 @dataclass
@@ -108,6 +139,8 @@ def get_git_hoster_from_url(url: str) -> GitHoster:
 
 
 def download_file_from_url(url, filepath, append: bool = False) -> None:
+    if not append and os.path.exists(filepath):
+        os.remove(filepath)
     try:
         with requests.get(url, stream=True) as r:
             r.raise_for_status()
@@ -123,7 +156,7 @@ def string_in_file(file_path, search_string: str) -> bool:
         return any(search_string in line for line in file)
 
 
-def get_builtin_plugins(plugin_commands: list[str]) -> dict[str: HermesPlugin]:
+def get_builtin_plugins(plugin_commands: list[str]) -> dict[str, HermesPlugin]:
     """
     Returns a list of installed HermesPlugins based on a list of related command names.
     This is currently not used (we use the marketplace code instead) but maybe later.
@@ -163,43 +196,50 @@ class HermesInitCommand(HermesCommand):
         super().__init__(parser)
         self.folder_info: HermesInitFolderInfo = HermesInitFolderInfo()
         self.hermes_was_already_installed: bool = False
+        self.warn_on_old_version: bool = True
         self.new_created_paths: list[Path] = []
         self.tokens: dict = {}
         self.setup_method: str = ""
-        self.deposit_platform: DepositPlatform = DepositPlatform.Empty
+        self.deposit_platform: DepositPlatform = DepositPlatform()
+        self.git_branch: str = ""
         self.git_remote: str = ""
         self.git_remote_url = ""
         self.git_hoster: GitHoster = GitHoster.Empty
         self.template_base_url: str = "https://raw.githubusercontent.com"
-        self.template_branch: str = "feature/init-custom-ci"
+        self.template_branch: str = "feature/jinja"
         self.template_repo: str = "softwarepub/ci-templates"
-        self.template_folder: str = "init"
+        self.template_folder: str = "init-templates"
         self.ci_parameters: dict = {
+            "pip_install_hermes": "pip install hermes",
+            "pip_install_plugins_github": "",
+            "pip_install_plugins_gitlab": "",
             "deposit_zip_name": "artifact.zip",
             "deposit_zip_files": "",
             "deposit_initial": "--initial",
             "deposit_extra_files": "",
-            "push_branch": "main"
+            "deposit_parameter_token": "-O ???.auth_token",
+            "deposit_token_name": "???_TOKEN",
+            "gh_push_branches_or_tags": "branches",
+            "gh_push_target": "main",
+            "gl_push_condition": "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
         }
         self.hermes_toml_data = {
             "harvest": {
                 "sources": ["cff"]
             },
             "deposit": {
-                "target": "invenio_rdm",
-                "invenio_rdm": {
-                    "site_url": "",
-                    "access_right": "open"
-                 }
+                "target": "",
             }
         }
         self.plugin_relevant_commands = ["harvest", "deposit"]
-        self.builtin_plugins: dict[str: HermesPlugin] = get_builtin_plugins(self.plugin_relevant_commands)
+        self.builtin_plugins: dict[str, HermesPlugin] = get_builtin_plugins(self.plugin_relevant_commands)
         self.selected_plugins: list[marketplace.PluginInfo] = []
 
     def init_command_parser(self, command_parser: argparse.ArgumentParser) -> None:
         command_parser.add_argument('--template-branch', nargs=1, default="",
                                     help="Branch or tag of the ci-templates repository.")
+        command_parser.add_argument('--hermes-branch', nargs=1, default="",
+                                    help="Branch of the hermes repository which will be used in the pipeline.")
 
     def load_settings(self, args: argparse.Namespace):
         pass
@@ -224,10 +264,20 @@ class HermesInitCommand(HermesCommand):
         # Setup logging
         self.setup_file_logging()
 
-        # Save command parameter (template branch)
+        # Warning on old hermes version
+        self.check_hermes_version()
+
+        # Process command parameters (ci-templates branch & hermes branch)
         if hasattr(args, "template_branch"):
             if args.template_branch != "":
                 self.template_branch = args.template_branch
+        if hasattr(args, "hermes_branch"):
+            if args.hermes_branch:
+                branch_name = args.hermes_branch[0]
+                if branch_name != "":
+                    sc.echo(f"Using Hermes branch: {branch_name}")
+                    self.ci_parameters["pip_install_hermes"] = \
+                        f"pip install git+{REPOSITORY_URL}.git@{branch_name}"
 
         try:
             # Test if init is valid in current folder
@@ -246,7 +296,7 @@ class HermesInitCommand(HermesCommand):
             self.choose_setup_method()
 
             sc.next_step("Configure HERMES behaviour")
-            self.choose_push_branch()
+            self.choose_push_trigger()
             self.choose_deposit_files()
 
             sc.next_step("Create hermes.toml file")
@@ -266,13 +316,13 @@ class HermesInitCommand(HermesCommand):
             self.configure_git_project()
 
             self.clean_up_files(False)
-            sc.echo("\nHERMES is now initialized and ready to be used.\n",
+            sc.echo("\nHERMES is now initialized. Add the changes to your git index and it is ready to be used.\n",
                     formatting=sc.Formats.OKGREEN+sc.Formats.BOLD)
 
         # Nice message on Ctrl+C
         except KeyboardInterrupt:
             sc.echo("")
-            sc.echo("HERMES init was aborted.", sc.Formats.WARNING)
+            sc.echo("HERMES init was aborted. No changes were made.", sc.Formats.WARNING)
             self.clean_up_files(True)
             sys.exit()
 
@@ -282,7 +332,36 @@ class HermesInitCommand(HermesCommand):
                     formatting=sc.Formats.FAIL+sc.Formats.BOLD)
             sc.debug_info(traceback.format_exc())
             self.clean_up_files(True)
+            sc.echo("No changes were made. You will have to run 'hermes init' again.")
             sys.exit(2)
+
+    def check_hermes_version(self) -> None:
+        """Fetches the current Pypi Hermes version. Gives a warning if the current version is not up to date."""
+        if not self.warn_on_old_version:
+            return
+        try:
+            current_hermes_version: str = metadata.version("hermes")
+            pypi_hermes_json: dict = requests.get("https://pypi.org/pypi/hermes/json", timeout=10).json()
+            pypi_hermes_version: str = pypi_hermes_json["info"]["version"]
+
+            def version_tuple(version_string: str) -> tuple:
+                version_string = re.split(r"[A-Za-z]", version_string, maxsplit=1)[0]
+                return tuple(int(p) for p in version_string.split(".") if p)
+
+            if version_tuple(current_hermes_version) < version_tuple(pypi_hermes_version):
+                sc.echo(f"You are using an old version of HERMES. ({current_hermes_version})", sc.Formats.WARNING)
+                sc.echo(
+                    f"Please upgrade to the latest version ({pypi_hermes_version}) before running 'hermes init' to "
+                    f"avoid errors!",
+                    sc.Formats.FAIL)
+            elif version_tuple(current_hermes_version) == version_tuple(pypi_hermes_version):
+                sc.echo(f"Your version of HERMES ({current_hermes_version}) is up to date.", sc.Formats.OKGREEN)
+            else:
+                sc.echo(
+                    f"Your version of HERMES ({current_hermes_version}) is even newer than "
+                    f"the latest version ({pypi_hermes_version}).", sc.Formats.OKCYAN + sc.Formats.BOLD)
+        except Exception as e:
+            sc.echo(f"Could not fetch Pypi Hermes version. ({e})", sc.Formats.WARNING)
 
     def test_initialization(self) -> None:
         """Test if init is possible and wanted. If not: sys.exit()"""
@@ -307,7 +386,8 @@ class HermesInitCommand(HermesCommand):
             self.no_git_setup()
             sys.exit()
 
-        # Look at git remotes
+        # Look at git branch & remotes
+        self.git_branch = git_info.get_current_branch()
         remotes = git_info.get_remotes()
         if remotes:
             self.git_remote = remotes[0]
@@ -425,6 +505,7 @@ class HermesInitCommand(HermesCommand):
                 self.mark_as_new_path(ci_file_path)
                 # Creating folder & ci file
                 ci_file_folder.mkdir(parents=True, exist_ok=True)
+                sc.debug_info(f"Downloading github template from {template_url}")
                 download_file_from_url(template_url, ci_file_path)
                 self.configure_ci_template(ci_file_path)
                 sc.echo(f"GitHub CI: File was created at {ci_file_path}", formatting=sc.Formats.OKGREEN)
@@ -467,27 +548,26 @@ class HermesInitCommand(HermesCommand):
 
     def configure_ci_template(self, ci_file_path) -> None:
         """Replaces all {%parameter%} in a ci file with values from ci_parameters dict"""
-        with open(ci_file_path, 'r') as file:
-            content = file.read()
-        parameters = list(set(re.findall(r'{%(.*?)%}', content)))
-        for parameter in parameters:
-            if parameter in self.ci_parameters:
-                value = str(self.ci_parameters[parameter])
-                content = content.replace(f'{{%{parameter}%}}', value)
-            else:
-                sc.debug_info(f"CI File Parameter {{%{parameter}%}} was not set.", formatting=sc.Formats.WARNING)
-                content = content.replace(f'{{%{parameter}%}}', '')
+        jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(""),
+                                       block_start_string="{%%", block_end_string="%%}",
+                                       variable_start_string="{%", variable_end_string="%}")
+        source_text = Path(ci_file_path).read_text(encoding="utf-8")
+        used_params = jinja2.meta.find_undeclared_variables(jinja_env.parse(source_text))
+        template = jinja_env.get_template(str(ci_file_path))
+        missing = [p for p in used_params if p not in self.ci_parameters]
+        if missing:
+            sc.echo("CI Template has missing parameters: {missing}", formatting=sc.Formats.WARNING)
+        rendered = template.render(self.ci_parameters)
         with open(ci_file_path, 'w') as file:
-            file.write(content)
+            file.write(rendered)
 
     def create_zenodo_token(self) -> None:
-        """Makes the user create a zenodo token and saves it in self.tokens."""
-        self.tokens[self.deposit_platform] = ""
+        """Makes the user create a zenodo token and saves it in self.deposit_platform.token."""
         # Deactivated Zenodo OAuth as long as the refresh token bug is not fixed.
         if self.setup_method == "a":
             sc.echo("Doing OAuth with Zenodo is currently not available.")
-        if self.setup_method == "m" or self.tokens[self.deposit_platform] == '':
-            zenodo_token_url = urljoin(DepositPlatformUrls[self.deposit_platform],
+        if self.setup_method == "m" or self.deposit_platform.token == '':
+            zenodo_token_url = urljoin(self.deposit_platform.url,
                                        "account/settings/applications/tokens/new/")
             sc.echo("{} and create an access token.".format(
                 sc.create_console_hyperlink(zenodo_token_url, "Open this link")
@@ -497,17 +577,29 @@ class HermesInitCommand(HermesCommand):
                 sc.press_enter_to_continue()
             else:
                 while True:
-                    self.tokens[self.deposit_platform] = sc.answer("Enter the token here: ")
-                    valid = connect_zenodo.test_if_token_is_valid(self.tokens[self.deposit_platform])
+                    self.deposit_platform.token = sc.answer("Enter the token here: ")
+                    valid = connect_zenodo.test_if_token_is_valid(self.deposit_platform.token)
                     if valid:
-                        sc.echo(f"The token was validated by {connect_zenodo.name}.",
+                        sc.echo(f"The token was validated by {self.deposit_platform.name}.",
                                 formatting=sc.Formats.OKGREEN)
                         break
                     else:
-                        sc.echo(f"The token could not be validated by {connect_zenodo.name}. "
+                        sc.echo(f"The token could not be validated by {self.deposit_platform.name}. "
                                 "Make sure to enter the complete token.\n"
-                                "(If this error persists, you should try switching to the manual setup mode.)",
+                                "(If this error persists, you should restart and switch to the manual setup mode.)",
                                 formatting=sc.Formats.WARNING)
+
+    def create_rodare_token(self):
+        token_url = urljoin(self.deposit_platform.url, "account/settings/applications/tokens/new/")
+        sc.echo("{} and create an access token.".format(
+            sc.create_console_hyperlink(token_url, "Open this link")
+        ))
+        sc.echo("It needs the scopes \"deposit:actions\" and \"deposit:write\".")
+        if self.setup_method == "m":
+            sc.press_enter_to_continue()
+        else:
+            # TODO try to validate the token
+            self.deposit_platform.token = sc.answer("Enter the token here: ")
 
     def configure_git_project(self) -> None:
         """Adds the token to the git secrets & changes action workflow settings."""
@@ -524,8 +616,8 @@ class HermesInitCommand(HermesCommand):
             if self.tokens[GitHoster.GitHub]:
                 sc.echo("OAuth at GitHub was successful.", formatting=sc.Formats.OKGREEN)
                 sc.debug_info(github_token=self.tokens[GitHoster.GitHub])
-                connect_github.create_secret(self.git_remote_url, "ZENODO_SANDBOX",
-                                             secret_value=self.tokens[self.deposit_platform],
+                connect_github.create_secret(self.git_remote_url, self.deposit_platform.token_name,
+                                             secret_value=self.deposit_platform.token,
                                              token=self.tokens[GitHoster.GitHub])
                 connect_github.allow_actions(self.git_remote_url,
                                              token=self.tokens[GitHoster.GitHub])
@@ -534,13 +626,14 @@ class HermesInitCommand(HermesCommand):
                 sc.echo("Something went wrong while doing OAuth. You'll have to do it manually instead.",
                         formatting=sc.Formats.WARNING)
         if not oauth_success:
-            sc.echo("Add the {} token{} to your {} under the name ZENODO_SANDBOX.".format(
+            sc.echo("Add the {} token{} to your {} under the name {}.".format(
                 self.deposit_platform.name,
-                f" ({self.tokens[self.deposit_platform]})" if self.tokens[self.deposit_platform] else "",
+                f" ({self.deposit_platform.token})" if self.deposit_platform.token else "",
                 sc.create_console_hyperlink(
                     self.git_remote_url + "/settings/secrets/actions",
                     "project's GitHub secrets"
-                )
+                ),
+                self.deposit_platform.token_name
             ))
             sc.press_enter_to_continue()
             sc.echo("Next open your {} and check the checkbox which reads:".format(
@@ -569,7 +662,7 @@ class HermesInitCommand(HermesCommand):
                 token = sc.answer("Then paste the token here: ")
             if gl.authorize(token):
                 vars_created = gl.create_variable(
-                    "ZENODO_TOKEN", self.tokens[self.deposit_platform],
+                    self.deposit_platform.token_name, self.deposit_platform.token,
                     f"This token is used by Hermes to publish on {self.deposit_platform.name}."
                 )
                 if vars_created:
@@ -601,30 +694,56 @@ class HermesInitCommand(HermesCommand):
             sc.echo("Then, add that token as variable with key HERMES_PUSH_TOKEN.")
             sc.echo("(For your safety, you should set the visibility to 'Masked and hidden'.)")
             sc.press_enter_to_continue()
-            sc.echo("Next, add the {} token{} as variable with key ZENODO_TOKEN.".format(
+            sc.echo("Next, add the {} token{} as variable with key {}.".format(
                 self.deposit_platform.name,
-                f" ({self.tokens[self.deposit_platform]})" if self.tokens[self.deposit_platform] else ""
+                f" ({self.deposit_platform.token})" if self.deposit_platform.token else "",
+                self.deposit_platform.token_name
             ))
             sc.echo("(For your safety, you should set the visibility to 'Masked and hidden'.)")
             sc.press_enter_to_continue()
 
     def choose_deposit_platform(self) -> None:
         """User chooses his desired deposit platform."""
-        deposit_platform_list = list(DepositPlatformNames.keys())
         deposit_platform_index = sc.choose(
-            "Where do you want to publish the software?", [DepositPlatformNames[dp] for dp in deposit_platform_list]
+            "Where do you want to publish the software?", [do.name for do in DepositOptions]
         )
-        self.deposit_platform = deposit_platform_list[deposit_platform_index]
+        self.deposit_platform = DepositOptions[deposit_platform_index]
 
     def integrate_deposit_platform(self) -> None:
         """Makes changes to the toml data or something else based on the chosen deposit platform."""
-        deposit_url = DepositPlatformUrls.get(self.deposit_platform)
-        self.hermes_toml_data["deposit"]["invenio_rdm"]["site_url"] = deposit_url
+        deposit_plugin: str = self.deposit_platform.plugin_name
+        self.hermes_toml_data["deposit"]["target"] = deposit_plugin
+        self.hermes_toml_data["deposit"][deposit_plugin] = {}
+        self.hermes_toml_data["deposit"][deposit_plugin]["site_url"] = self.deposit_platform.url
+        self.ci_parameters["deposit_parameter_token"] = f"-O {deposit_plugin}.auth_token"
+        self.ci_parameters["deposit_token_name"] = self.deposit_platform.token_name
+
+        if deposit_plugin.startswith("invenio") or deposit_plugin.startswith("rodare"):
+            # Invenio & rodare need access_right
+            # For possible customization we ask the user here
+            options = ["open", "closed", "restricted", "embargoed"]
+            target_access_right_index = sc.choose(
+                text="Select an access right for your publication",
+                options=options
+            )
+            target_access_right = options[target_access_right_index]
+            self.hermes_toml_data["deposit"][deposit_plugin]["access_right"] = target_access_right
+            if target_access_right == "restricted":
+                conditions = sc.answer("Enter the access conditions of the restriction: ")
+                self.hermes_toml_data["deposit"][deposit_plugin]["access_conditions"] = conditions
+            elif target_access_right == "embargoed":
+                embargo_date = sc.answer("Enter the embargo date (YYYY-MM-DD): ")
+                self.hermes_toml_data["deposit"][deposit_plugin]["embargo_date"] = embargo_date
+
+        if deposit_plugin.startswith("rodare"):
+            # Rodare needs the robis_pub_id
+            robis_pub_id = sc.answer("Enter the corresponding Robis Publication ID: ")
+            self.hermes_toml_data["deposit"][deposit_plugin]["robis_pub_id"] = robis_pub_id
 
     def choose_setup_method(self) -> None:
         """User chooses his desired setup method: Either preferring automatic (if available) or manual."""
         setup_method_index = sc.choose(
-            f"How do you want to connect {DepositPlatformNames[self.deposit_platform]} "
+            f"How do you want to connect {self.deposit_platform.name} "
             f"with your {self.git_hoster.name} CI?",
             options=[
                 "Automatically (using OAuth / Device Flow)",
@@ -635,14 +754,18 @@ class HermesInitCommand(HermesCommand):
 
     def connect_deposit_platform(self) -> None:
         """Acquires the access token of the chosen deposit platform."""
-        assert self.deposit_platform != DepositPlatform.Empty
-        match self.deposit_platform:
-            case DepositPlatform.Zenodo:
-                connect_zenodo.setup(using_sandbox=False)
-                self.create_zenodo_token()
-            case DepositPlatform.ZenodoSandbox:
-                connect_zenodo.setup(using_sandbox=True)
-                self.create_zenodo_token()
+        used_deposit_plugin = self.deposit_platform.plugin_name
+        deposit_url = self.deposit_platform
+        deposit_name = self.deposit_platform.name
+        if used_deposit_plugin.startswith("invenio"):
+            connect_zenodo.setup(zenodo_url=self.deposit_platform.url, display_name=self.deposit_platform.name)
+            self.create_zenodo_token()
+        elif used_deposit_plugin.startswith("rodare"):
+            self.create_rodare_token()
+        else:
+            sc.echo(f"Unknown deposit plugin: {used_deposit_plugin}", formatting=sc.Formats.WARNING)
+            sc.echo(f"Getting an access token from {deposit_name} ({deposit_url}) is not supported by hermes init."
+                    "You might have to do it manually instead.", formatting=sc.Formats.WARNING)
 
     def choose_plugins(self) -> None:
         """User chooses the plugins he wants to use."""
@@ -718,35 +841,89 @@ class HermesInitCommand(HermesCommand):
             sc.echo("\nHERMES is now initialized (without git integration or CI/CD files).\n",
                     formatting=sc.Formats.OKGREEN)
 
-    def choose_push_branch(self) -> None:
-        """User chooses the branch that should be used to activate the whole hermes process."""
+    def choose_push_trigger(self) -> None:
+        """User chooses the branch / tag that should be used to trigger the whole hermes pipeline."""
         push_choice = sc.choose(
             "When should the automated HERMES process start?",
             [
-                "When I push a branch",
-                "When I push a specific tag (not implemented)",
+                "When I push on target branch",
+                f"When I push on current branch ({self.git_branch})",
+                "When I push any tag",
+                "When I push a tag with target pattern"
             ]
         )
         if push_choice == 0:
-            branch = sc.answer("Enter target branch: ")
-            self.ci_parameters["push_branch"] = branch
-            sc.echo(f"The HERMES pipeline will be activated when you push on {sc.Formats.BOLD.wrap_around(branch)}",
-                    formatting=sc.Formats.OKGREEN)
-            sc.echo()
+            branch_suggestion_max_count = 9
+            branch_suggestions: list[str] = git_info.run_git_command(
+                "for-each-ref --sort=-committerdate refs/heads/ --format='%(refname:short)'"
+            ).split("\n")
+            branch_suggestions = [b.strip() for b in branch_suggestions if b.strip() != ""]
+            branch_suggestions.sort()
+            branch_suggestions.sort(key=lambda branch_name: len(branch_name))
+            branch_suggestions = branch_suggestions[:branch_suggestion_max_count]
+            branch_count = len(branch_suggestions)
+            branch_suggestions.append("Custom branch name")
+            branch_choice = sc.choose("Choose target branch: ", branch_suggestions)
+            if branch_choice < branch_count:
+                self.set_push_trigger_to_branch(branch_suggestions[branch_choice].removeprefix("'").removesuffix("'"))
+            else:
+                branch = sc.answer("Enter custom branch name: ")
+                self.set_push_trigger_to_branch(branch)
         elif push_choice == 1:
-            sc.echo("Setting up triggering by tags is currently not implemented.", formatting=sc.Formats.WARNING)
-            sc.echo(f"You can visit {TUTORIAL_URL} to set it up manually later-on.", formatting=sc.Formats.WARNING)
+            self.set_push_trigger_to_branch(self.git_branch)
+        elif push_choice == 2:
+            self.set_push_trigger_to_tag()
+        elif push_choice == 3:
+            pattern_hint = ""
+            if self.git_hoster == GitHoster.GitHub:
+                pattern_hint = " (GitHub uses glob patterns)"
+            elif self.git_hoster == GitHoster.GitLab:
+                pattern_hint = " (Gitlab uses regex)"
+            pattern = sc.answer(f"Enter the target tag-pattern{pattern_hint}: ")
+            self.set_push_trigger_to_tag(pattern)
+
+    def set_push_trigger_to_branch(self, branch: str) -> None:
+        """Sets the CI parameters, so that the pipeline gets triggered when the branch gets pushed."""
+        self.ci_parameters["gh_push_branches_or_tags"] = "branches"
+        self.ci_parameters["gh_push_target"] = branch
+        self.ci_parameters["gl_push_condition"] = f"$CI_COMMIT_BRANCH == \"{branch}\""
+        bold_branch = sc.Formats.BOLD.wrap_around(branch)
+        sc.echo(f"The HERMES pipeline will be activated when you push on {bold_branch}.",
+                formatting=sc.Formats.OKGREEN)
+        sc.echo()
+
+    def set_push_trigger_to_tag(self, tag_pattern: str = "") -> None:
+        """
+        Sets the CI parameters, so that the pipeline gets triggered when a tag that matches the pattern gets pushed.
+        """
+        self.ci_parameters["gh_push_branches_or_tags"] = "tags"
+        self.ci_parameters["git_create_curate_branch"] = 'git checkout -b "hermes/curate-$SHORT_SHA" ${{ github.ref }}'
+        if tag_pattern:
+            self.ci_parameters["gh_push_target"] = f"\"{tag_pattern}\""
+            self.ci_parameters["gl_push_condition"] = f"$CI_COMMIT_TAG =~ {tag_pattern}"
+            bold_pattern = sc.Formats.BOLD.wrap_around(tag_pattern)
+            sc.echo(f"The HERMES pipeline will be activated when you push a tag that fits '{bold_pattern}'.",
+                    formatting=sc.Formats.OKGREEN)
+        else:
+            self.ci_parameters["gh_push_target"] = "\"*\""
+            self.ci_parameters["gl_push_condition"] = "$CI_COMMIT_TAG"
+            sc.echo("The HERMES pipeline will be activated when you push a tag.", formatting=sc.Formats.OKGREEN)
+        sc.echo()
 
     def choose_deposit_files(self) -> None:
         """User chooses the files that should be included in the deposition."""
-        dp_name = DepositPlatformNames[self.deposit_platform]
+        dp_name = self.deposit_platform.name
         add_readme = False
         if self.folder_info.has_readme:
             if sc.confirm(f"Do you want to append your README.md to the {dp_name} upload?"):
                 self.ci_parameters["deposit_extra_files"] = "--file README.md "
                 add_readme = True
+            else:
+                self.ci_parameters["deposit_extra_files"] = ""
+                add_readme = False
         options = [
-            "All (non hidden) folders",
+            "Nothing else",
+            "All (visible) folders",
             "Everything (all folders & all files)",
             "Enter a custom list of paths",
         ]
@@ -757,22 +934,27 @@ class HermesInitCommand(HermesCommand):
         file_choice = sc.choose(f"Which{_other} folders / files of your root directory "
                                 f"should be included in the {dp_name} upload?", options=options)
         match file_choice:
-            case 0:
+            case 0:  # Nothing
+                self.ci_parameters["deposit_zip_files"] = "-"
+            case 1:  # All folders
                 self.ci_parameters["deposit_zip_files"] = " ".join(self.folder_info.dir_folders)
-            case 1:
+            case 2:  # All folders all files
                 self.ci_parameters["deposit_zip_files"] = ""
-            case 2:
+            case 3:  # Custom List
                 custom_files = []
                 while True:
                     custom_path = sc.answer("Enter a path you want to include (enter nothing if you are done): ")
-                    if custom_path == "":
+                    if custom_path.strip() == "":
                         break
                     if os.path.exists(os.path.join(self.folder_info.current_dir, custom_path)):
                         custom_files.append(custom_path)
                         sc.echo(f"{custom_path} has been added.", formatting=sc.Formats.OKGREEN)
                     else:
                         sc.echo(f"{custom_path} does not exist.", formatting=sc.Formats.FAIL)
-                self.ci_parameters["deposit_zip_files"] = " ".join(custom_files)
+                if custom_files:
+                    self.ci_parameters["deposit_zip_files"] = " ".join(custom_files)
+                else:
+                    self.ci_parameters["deposit_zip_files"] = "-"
             case _:
                 index = int(file_choice) - folder_base_index
                 if 0 <= index < len(self.folder_info.dir_folders):
@@ -782,12 +964,19 @@ class HermesInitCommand(HermesCommand):
             sc.echo("\tUnzipped:", formatting=sc.Formats.BOLD)
             sc.echo("\t\tREADME.md", formatting=sc.Formats.OKCYAN)
         sc.echo("\tZipped:", formatting=sc.Formats.BOLD)
-        if self.ci_parameters["deposit_zip_files"] != "":
-            for file in self.ci_parameters["deposit_zip_files"].split(" "):
-                sc.echo(f"\t\t{file}", formatting=sc.Formats.OKCYAN)
-        else:
+        if self.ci_parameters["deposit_zip_files"] == "-":
+            sc.echo("\t\t-", formatting=sc.Formats.OKCYAN)
+        elif self.ci_parameters["deposit_zip_files"] == "":
             for file in self.folder_info.dir_list:
                 sc.echo(f"\t\t{file}", formatting=sc.Formats.OKCYAN)
+        else:
+            for file in self.ci_parameters["deposit_zip_files"].split(" "):
+                sc.echo(f"\t\t{file}", formatting=sc.Formats.OKCYAN)
+        if not sc.confirm("Do you want to confirm your selection?"):
+            sc.echo("Your selection was cleared. Now you can select the files again.")
+            self.choose_deposit_files()
+        else:
+            sc.echo("You can change the selected files later inside the CI file or by running 'hermes init' again.")
 
     def mark_as_new_path(self, path: Path, avoid_existing: bool = True) -> None:
         """
