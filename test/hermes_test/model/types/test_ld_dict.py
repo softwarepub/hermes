@@ -197,6 +197,25 @@ def test_get():
         di["bar"]
 
 
+def test_setdefault():
+    di = ld_dict([{"https://schema.org/name": [{"@value": "Manu Sporny"}]}],
+                 context=[{"schema": "https://schema.org/"}])
+    assert di.setdefault("schema:name", []) == [{"@value": "Manu Sporny"}]
+    assert di.setdefault("schema:email", []) == []
+    assert di["schema:email"] == []
+
+
+def test_emplace():
+    di = ld_dict([{"https://schema.org/name": [{"@value": "Manu Sporny"}]}],
+                 context=[{"schema": "https://schema.org/"}])
+    di.emplace("schema:name")
+    assert di["schema:name"] == [{"@value": "Manu Sporny"}]
+    with pytest.raises(KeyError):
+        di["schema:email"]
+    di.emplace("schema:email")
+    assert di["schema:email"] == []
+
+
 def test_update():
     di = ld_dict([{"http://xmlns.com/foaf/0.1/name": [{"@value": "Manu Sporny"}],
                    "http://xmlns.com/foaf/0.1/homepage": [{"@id": "http://manu.sporny.org/"}]}],

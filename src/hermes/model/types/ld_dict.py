@@ -22,14 +22,7 @@ class ld_dict(ld_container):
 
     def __getitem__(self, key):
         full_iri = self.ld_proc.expand_iri(self.active_ctx, key)
-        if full_iri == "@id":
-            return self._to_python(full_iri, self.data_dict[full_iri])
-        try:
-            ld_value = self.data_dict[full_iri]
-        except KeyError:
-            self[key] = []
-            ld_value = self.data_dict[full_iri]
-        return self._to_python(full_iri, ld_value)
+        return self._to_python(full_iri, self.data_dict[full_iri])
 
     def __setitem__(self, key, value):
         ld_value = self._to_expanded_json({key: value})
@@ -41,12 +34,7 @@ class ld_dict(ld_container):
 
     def __contains__(self, key):
         full_iri = self.ld_proc.expand_iri(self.active_ctx, key)
-        if full_iri == "@id":
-            return "@id" in self.data_dict
-        try:
-            return len(self[full_iri]) != 0
-        except KeyError:
-            return False
+        return full_iri in self.data_dict
 
     def __eq__(self, other):
         if not isinstance(other, (dict, ld_dict)):
@@ -88,6 +76,15 @@ class ld_dict(ld_container):
         if key not in self and default is not ld_dict._NO_DEFAULT:
             return default
         return self[key]
+
+    def setdefault(self, key, default):
+        if key not in self:
+            self[key] = default
+        return self[key]
+
+    def emplace(self, key):
+        if key not in self:
+            self[key] = []
 
     def update(self, other):
         for key, value in other.items():
@@ -136,7 +133,7 @@ class ld_dict(ld_container):
             full_context = parent.full_context + merged_contexts
 
         ld_value = cls.ld_proc.expand(ld_data, {"expandContext": full_context, "documentLoader": bundled_loader})
-        ld_value = cls(ld_value, parent=parent, key=key, context=merged_contexts)
+        ld_value = ld_dict(ld_value, parent=parent, key=key, context=merged_contexts)
 
         return ld_value
 

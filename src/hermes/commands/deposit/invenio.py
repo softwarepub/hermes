@@ -19,7 +19,6 @@ from typing import Union
 from hermes.commands.deposit.base import BaseDepositPlugin
 from hermes.commands.deposit.error import DepositionUnauthorizedError
 from hermes.error import MisconfigurationError
-from hermes.model import SoftwareMetadata
 from hermes.model.error import HermesValidationError
 from hermes.utils import hermes_doi, hermes_user_agent
 
@@ -320,7 +319,12 @@ class InvenioDepositPlugin(BaseDepositPlugin):
             record_id=rec_id, doi=doi, codemeta_identifier=codemeta_identifier
         )
 
-        version = self.metadata["version"]
+        if len(self.metadata.get("version", [])) > 1:
+            raise HermesValidationError("Too many licenses for invenio deposit.")
+        if len(self.metadata.get("version", [])) == 1:
+            version = self.metadata["version"][0]
+        else:
+            version = None
         if rec_meta and (version == rec_meta.get("version")):
             raise ValueError(f"Version {version} already deposited.")
 
@@ -336,10 +340,10 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
         self.invenio_ctx = deposition_data
 
-    def map_metadata(self) -> SoftwareMetadata:
+    def map_metadata(self) -> dict:
         """Map the harvested metadata onto the Invenio schema and return it."""
         self.invenio_ctx["depositionMetadata"] = self._codemeta_to_invenio_deposition()
-        return SoftwareMetadata(self.invenio_ctx["depositionMetadata"])
+        return self.invenio_ctx["depositionMetadata"]
 
     def is_initial_publication(self) -> bool:
         latest_record_id = self.invenio_ctx.get("latestRecord", {}).get("id")
@@ -398,7 +402,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
             },
         ]
 
-    def update_metadata(self) -> SoftwareMetadata:
+    def update_metadata(self) -> dict:
         """Update the metadata of a draft and return it."""
 
         draft_url = self.links["latest_draft"]
@@ -418,7 +422,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         self.links.update(deposit["links"])
 
         _log.debug("Created new version deposit: %s", self.links["html"])
-        return SoftwareMetadata(deposit.get("metadata", {}))
+        return deposit
 
     def delete_artifacts(self) -> None:
         """Delete existing file artifacts.
@@ -508,21 +512,25 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         access_conditions = self.invenio_ctx["access_conditions"]
 
         creators = []
-        for author in metadata["author"]:
+        for author in metadata.get("author", []):
             creator = {}
-            if len(affils := [name for affil in author["affiliation"] for name in affil["legalname"]]) != 0:
+            if len(
+                affils := [
+                    name for affil in author.get("affiliation", []) for name in affil.get("legalname", [])
+                ]
+            ) != 0:
                 creator["affiliation"] = affils
-            if len(author["familyName"]) > 1:
-                raise HermesValidationError(f"Author has too many family names: {author.to_python()}")
-            if len(author["familyName"]) == 1:
-                given_names_str = " ".join(author["givenName"])
+
+            if len(author.get("familyName", [])) > 1:
+                raise HermesValidationError(f"Author has too many family names: {author}")
+            if len(author.get("familyName", [])) == 1:
+                given_names_str = " ".join(author.get("givenName", []))
                 name = f"{author["familyName"][0]}, {given_names_str}"
-            elif len(author["name"]) != 1:
-                raise HermesValidationError(f"Author has too many names: {author.to_python()}")
+            elif len(author.get("name", [])) != 1:
+                raise HermesValidationError(f"Author has too many or no names: {author}")
             else:
                 name = author["name"][0]
-            if len(name) != 0:
-                creator["name"] = name
+            creator["name"] = name
             if (id := author.get("@id", None)) is not None:
                 creator["orcid"] = id.replace("https://orcid.org/", "")
             if creator:
@@ -545,6 +553,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
             for author in metadata["author"]
         ]"""
 
+        # TODO: reimplement with new api
         # This is not used at the moment. See comment below in `deposition_metadata` dict.
         contributors = [  # noqa: F841
             # TODO: Distinguish between @type "Person" and others
@@ -566,26 +575,32 @@ class InvenioDepositPlugin(BaseDepositPlugin):
             for contributor in metadata.get("contributor", []) if contributor.get("name") != "GitHub"
         ]
 
-        if len(metadata["name"]) != 1:
+        if len(metadata.get("name", [])) != 1:
             _log.error("More than one or zero names for the Software are given.")
             raise HermesValidationError("More than one or zerno names for the Software.")
         name = metadata["name"][0]
 
-        if len(metadata["schema:description"]) > 1:
+        if len(metadata.get("schema:description", [])) > 1:
             _log.error("More than one descriptions of the Software are given.")
             raise HermesValidationError("More than one descriptions of the Software are given.")
-        if len(metadata["schema:description"]) == 1:
+        if len(metadata.get("schema:description", [])) == 1:
             description = metadata["schema:description"][0]
         else:
             description = None
 
-        if len(metadata["schema:version"]) > 1:
+        if len(metadata.get("schema:version", [])) > 1:
             _log.error("More than one version of the Software are given.")
             raise HermesValidationError("More than one version of the Software are given.")
-        if len(metadata["schema:version"]) == 1:
+        if len(metadata.get("schema:version", [])) == 1:
             version = metadata["schema:version"][0]
         else:
             version = None
+
+        keywords = metadata.get("schema:keywords", [])
+        if len(keywords) == 0:
+            keywords = None
+        else:
+            keywords = keywords.to_python()
 
         # TODO: Use the fields currently set to `None`.
         # Some more fields are available but they most likely don't relate to software
@@ -602,9 +617,6 @@ class InvenioDepositPlugin(BaseDepositPlugin):
             "publication_date": date.today().isoformat(),
             "title": name,
             "creators": creators,
-            # TODO: Use a real description here. Possible sources could be
-            # `tool.poetry.description` from pyproject.toml or `abstract` from
-            # CITATION.cff. This should then be stored in codemeta description field.
             "description": description,
             "access_right": access_right,
             "license": license,
@@ -618,8 +630,8 @@ class InvenioDepositPlugin(BaseDepositPlugin):
             # them.
             # TODO: Use the DOI we get back from this.
             "prereserve_doi": True,
-            # TODO: A good source for this could be `tool.poetry.keywords` in pyproject.toml.
-            "keywords": None,
+            "keywords": keywords,
+            # TODO: Is there a good codemeta/ schema field?
             "notes": None,
             "related_identifiers": self.related_identifiers(),
             # TODO: Use `contributors`. In the case of the hermes workflow itself, the
@@ -641,6 +653,10 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
         If no license is configured, ``None``  will be returned.
         """
+        if "license" not in self.metadata:
+            raise HermesValidationError("No license is given.")
+        if len(self.metadata["license"]) > 1:
+            raise HermesValidationError("Too many licenses for invenio deposit.")
         license_url = self.metadata["license"][0]
         return self.resolver.resolve_license_id(license_url)
 

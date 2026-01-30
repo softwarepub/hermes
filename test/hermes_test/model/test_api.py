@@ -53,16 +53,18 @@ def test_init_nested_object():
 
 def test_append():
     data = SoftwareMetadata()
+    data.emplace("schema:name")
     data["schema:name"].append("a")
     assert type(data["schema:name"]) is ld_list
     assert data["schema:name"][0] == "a" and data["schema:name"].item_list == [{"@value": "a"}]
     data["schema:name"].append("b")
     assert type(data["schema:name"]) is ld_list and data["schema:name"].item_list == [{"@value": "a"}, {"@value": "b"}]
+    data.emplace("schema:name")
     data["schema:name"].append("c")
     assert data["schema:name"].item_list == [{"@value": "a"}, {"@value": "b"}, {"@value": "c"}]
 
     data = SoftwareMetadata()
-    data["schema:Person"].append({"schema:name": "foo"})
+    data.setdefault("schema:Person", []).append({"schema:name": "foo"})
     assert type(data["schema:Person"]) is ld_list and type(data["schema:Person"][0]) is ld_dict
     assert data["schema:Person"][0].data_dict == {"http://schema.org/name": [{"@value": "foo"}]}
     data["schema:Person"].append({"schema:name": "foo"})
@@ -94,7 +96,7 @@ def test_usage():
     data["author"][0]["email"].append("foo@baz.com")
     assert len(data["author"]) == 2
     assert len(data["author"][0]["email"]) == 2
-    assert len(data["author"][1]["email"]) == 0
+    assert len(data["author"][1].get("email", [])) == 0
     harvest = {
         "authors": [
             {"name": "Foo", "affiliation": ["Uni A", "Lab B"], "kw": ["a", "b", "c"]},
@@ -103,17 +105,19 @@ def test_usage():
         ]
     }
     for author in harvest["authors"]:
-        for exist_author in data["author"]:
-            if author["name"] == exist_author["name"][0]:
+        for exist_author in data.get("author", []):
+            if author["name"] in exist_author.get("name", []):
                 exist_author["affiliation"] = author["affiliation"]
                 if "email" in author:
+                    exist_author.emplace("email")
                     exist_author["email"].append(author["email"])
                 if "kw" in author:
+                    exist_author.emplace("schema:knowsAbout")
                     exist_author["schema:knowsAbout"].extend(author["kw"])
                 break
         else:
-            data["author"].append(author)
-    assert len(data["author"]) == 3
+            data.setdefault("author", []).append(author)
+    assert len(data.get("author", [])) == 3
     foo, bar, baz = data["author"]
     assert foo["name"][0] == "Foo"
     assert foo["affiliation"].to_python() == ["Uni A", "Lab B"]
@@ -124,8 +128,8 @@ def test_usage():
     assert bar["email"].to_python() == ["bar@c.edu"]
     assert baz["name"][0] == "Baz"
     assert baz["affiliation"].to_python() == ["Lab E"]
-    assert len(baz["schema:knowsAbout"]) == 0
-    assert len(baz["email"]) == 0
+    assert len(baz.get("schema:knowsAbout", [])) == 0
+    assert len(baz.get("email", [])) == 0
     for author in data["author"]:
         assert "name" in author
         if "Baz" not in author["name"]:

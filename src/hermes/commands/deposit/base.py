@@ -38,7 +38,7 @@ class BaseDepositPlugin(HermesPlugin):
         deposit = self.map_metadata()
         self.ctx.prepare_step("deposit")
         with self.ctx[command.settings.target] as cache:
-            cache["deposit"] = deposit.compact()
+            cache["deposit"] = deposit
         self.ctx.finalize_step("deposit")
 
         if self.is_initial_publication():
@@ -48,10 +48,8 @@ class BaseDepositPlugin(HermesPlugin):
 
         deposit = self.update_metadata()
         self.ctx.prepare_step("deposit")
-        with self.ctx[command.settings.target] as cache:
-            cache["codemeta"] = deposit.compact()
-            cache["expanded"] = deposit.ld_value
-            cache["context"] = {"@context": deposit.full_context}
+        with self.ctx["deposit"] as cache:
+            cache["result"] = deposit
         self.ctx.finalize_step("deposit")
         self.delete_artifacts()
         self.upload_artifacts()
@@ -67,7 +65,7 @@ class BaseDepositPlugin(HermesPlugin):
         pass
 
     @abc.abstractmethod
-    def map_metadata(self) -> SoftwareMetadata:
+    def map_metadata(self) -> dict:
         """Map the given metadata to the target schema of the deposition platform and return it.
 
         When mapping metadata, make sure to add traces to the HERMES software, e.g. via
@@ -97,9 +95,10 @@ class BaseDepositPlugin(HermesPlugin):
         """Create a new version of an existing publication on the target platform."""
         pass
 
-    def update_metadata(self) -> SoftwareMetadata:
+    @abc.abstractmethod
+    def update_metadata(self) -> dict:
         """Update the metadata of the newly created version and return it even if it hasn't changed."""
-        return self.metadata
+        pass
 
     def delete_artifacts(self) -> None:
         """Delete any superfluous artifacts taken from the previous version of the publication."""
