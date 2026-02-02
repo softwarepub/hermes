@@ -172,7 +172,7 @@ date-released: "2026-01-16" """,
                 "http://schema.org/license": [{"@id": "https://spdx.org/licenses/Apache-2.0"}],
                 "http://schema.org/name": [{"@value": "Test"}],
                 "http://schema.org/url": [
-                    {"@id": 'https://arxiv.org/abs/2201.09015'},
+                    {"@id": "https://arxiv.org/abs/2201.09015"},
                     {"@id": "https://docs.software-metadata.pub/en/latest"}
                 ],
                 "http://schema.org/version": [{"@value": "9.0.1"}]
@@ -398,7 +398,7 @@ def test_file_deposit(tmp_path, monkeypatch, metadata):
         if e.code != 0:
             raise e
     finally:
-        with open('codemeta.json', 'r') as cache:
+        with open("codemeta.json", "r") as cache:
             result = SoftwareMetadata(json.load(cache))
         sys.argv = orig_argv
 
@@ -406,22 +406,37 @@ def test_file_deposit(tmp_path, monkeypatch, metadata):
 
 
 @pytest.mark.parametrize(
-    "metadata",
+    "metadata, invenio_metadata",
     [
-        SoftwareMetadata({
-            "@type": ["http://schema.org/SoftwareSourceCode"],
-            "http://schema.org/description": [{"@value": "for testing"}],
-            "http://schema.org/name": [{"@value": "Test"}],
-            "http://schema.org/author": [{
-                "@type": "http://schema.org/Person",
-                "http://schema.org/familyName": [{"@value": "Test"}],
-                "http://schema.org/givenName": [{"@value": "Testi"}]
-            }],
-            "http://schema.org/license": [{"@id": "https://spdx.org/licenses/apache-2.0"}]
-        }),
+        (
+            SoftwareMetadata({
+                "@type": ["http://schema.org/SoftwareSourceCode"],
+                "http://schema.org/description": [{"@value": "for testing"}],
+                "http://schema.org/name": [{"@value": "Test"}],
+                "http://schema.org/author": [{
+                    "@type": "http://schema.org/Person",
+                    "http://schema.org/familyName": [{"@value": "Test"}],
+                    "http://schema.org/givenName": [{"@value": "Testi"}]
+                }],
+                "http://schema.org/license": [{"@id": "https://spdx.org/licenses/Apache-2.0"}]
+            }),
+            {
+                "upload_type": "software",
+                "publication_date": "2026-02-02",
+                "title": "Test",
+                "creators": [{"name": "Test, Testi"}],
+                "description": "for testing",
+                "access_right": "closed",
+                "license": "apache-2.0",
+                "prereserve_doi": True,
+                "related_identifiers": [
+                    {"identifier": "10.5281/zenodo.13311079", "relation": "isCompiledBy", "scheme": "doi"}
+                ]
+            }
+        )
     ]
 )
-def test_invenio_deposit(tmp_path, monkeypatch, sandbox_auth, metadata):
+def test_invenio_deposit(tmp_path, monkeypatch, sandbox_auth, metadata, invenio_metadata):
     monkeypatch.chdir(tmp_path)
 
     manager = context_manager.HermesContext(tmp_path)
@@ -453,10 +468,10 @@ licenses = "api/vocabularies/licenses"
             raise e
     finally:
         manager.prepare_step("deposit")
-        with manager["deposit"] as cache:
-            result = cache["result"]
+        with manager["invenio"] as cache:
+            result = cache["deposit"]
         manager.finalize_step("deposit")
         sys.argv = orig_argv
 
     # TODO: compare to actually expected value
-    assert result == {}
+    assert result == invenio_metadata

@@ -513,6 +513,8 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
         creators = []
         for author in metadata.get("author", []):
+            if not "Person" in author.get("@type", []):
+                continue
             creator = {}
             if len(
                 affils := [

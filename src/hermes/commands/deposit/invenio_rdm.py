@@ -6,9 +6,8 @@
 # SPDX-FileContributor: Oliver Bertuch
 # SPDX-FileContributor: Michael Meinel
 
-import typing as t
-
 from requests import HTTPError
+from typing import Union
 
 from hermes.commands.deposit.invenio import InvenioClient, InvenioDepositPlugin, InvenioResolver
 
@@ -27,7 +26,7 @@ class InvenioRDMClient(InvenioClient):
 class InvenioRDMResolver(InvenioResolver):
     invenio_client_class = InvenioRDMClient
 
-    def resolve_license_id(self, license_url: t.Optional[str]) -> t.Optional[dict]:
+    def resolve_license_id(self, license_url: Union[str, None]) -> Union[dict, None]:
         """Deliberately try to resolve the license URL to a valid InvenioRDM license information record from the
         vocabulary.
 
@@ -47,6 +46,12 @@ class InvenioRDMResolver(InvenioResolver):
         except HTTPError:
             pass
 
+        # FIXME: Why not get all license_cross_refs and then use a query parameter like this:
+        # ?q=props.url:("license_url" OR "license_cross_ref[1]" OR ...)&size=1000
+        # That would be able to replace _search_license_info.
+        # FIXME: Some licenses in valid_licenses["hits"]["hits"]["props"]["url"] are only http although
+        # https://spdx.org/licenses/license.json lists them in crossRef as https
+
         # If the easy "mapping" did not work, we really need to "search" for the correct license ID.
         response = self.client.get_licenses()
         response.raise_for_status()
@@ -65,6 +70,7 @@ class InvenioRDMResolver(InvenioResolver):
                 if license_info is not None:
                     break
             else:
+                # FIXME: Why is this only raised here and not always when license_info is None?
                 raise RuntimeError(f"Could not resolve license URL {license_url} to a valid identifier.")
 
         return license_info
@@ -73,7 +79,7 @@ class InvenioRDMResolver(InvenioResolver):
     def _extract_license_id_from_response(data: dict) -> str:
         return data["id"]
 
-    def _search_license_info(self, _url: str, valid_licenses: dict) -> t.Optional[dict]:
+    def _search_license_info(self, _url: str, valid_licenses: dict) -> Union[dict, None]:
         for license_info in valid_licenses['hits']['hits']:
             try:
                 if license_info['props']['url'] == _url:
