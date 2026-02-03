@@ -216,8 +216,9 @@ class HermesInitCommand(HermesCommand):
             "deposit_zip_name": "artifact.zip",
             "deposit_zip_files": "",
             "deposit_initial": "--initial",
-            "deposit_extra_files": "",
+            "deposit_extra_files": "--file ???",
             "deposit_parameter_token": "-O ???.auth_token",
+            "deposit_parameter_zip_file": "--file ???.zip",
             "deposit_token_name": "???_TOKEN",
             "gh_push_branches_or_tags": "branches",
             "gh_push_target": "main",
@@ -897,7 +898,8 @@ class HermesInitCommand(HermesCommand):
         Sets the CI parameters, so that the pipeline gets triggered when a tag that matches the pattern gets pushed.
         """
         self.ci_parameters["gh_push_branches_or_tags"] = "tags"
-        self.ci_parameters["git_create_curate_branch"] = 'git checkout -b "hermes/curate-$SHORT_SHA" ${{ github.ref }}'
+        self.ci_parameters["gh_create_curate_branch"] = 'git checkout -b "hermes/curate-$SHORT_SHA" ${{ github.ref }}'
+        self.ci_parameters["gl_create_curate_branch"] = 'git checkout -b "$MR_TARGET_BRANCH" "$CI_COMMIT_REF_NAME"'
         if tag_pattern:
             self.ci_parameters["gh_push_target"] = f"\"{tag_pattern}\""
             self.ci_parameters["gl_push_condition"] = f"$CI_COMMIT_TAG =~ {tag_pattern}"
@@ -959,6 +961,10 @@ class HermesInitCommand(HermesCommand):
                 index = int(file_choice) - folder_base_index
                 if 0 <= index < len(self.folder_info.dir_folders):
                     self.ci_parameters["deposit_zip_files"] = self.folder_info.dir_folders[index]
+        self.ci_parameters["deposit_parameter_zip_file"] = "--file " + self.ci_parameters["deposit_zip_name"]
+        if self.ci_parameters["deposit_zip_files"] == "-":
+            self.ci_parameters["deposit_parameter_zip_file"] = ""
+        # Print selection to confirm
         sc.echo("Your upload will consist of the following:")
         if add_readme:
             sc.echo("\tUnzipped:", formatting=sc.Formats.BOLD)
