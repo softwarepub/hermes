@@ -162,7 +162,10 @@ class HermesCommand(abc.ABC):
 
 
 class HermesPlugin(abc.ABC):
-    """Base class for all HERMES plugins."""
+    """Base class for all HERMES plugins.
+
+    Objects of this class are callables.
+    """
 
     settings_class: Optional[Type] = None
 
