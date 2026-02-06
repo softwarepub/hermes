@@ -14,6 +14,6 @@
 # from hermes.commands.init.base import HermesInitCommand
 # from hermes.commands.curate.base import HermesCurateCommand
 from hermes.commands.harvest.base import HermesHarvestCommand
-# from hermes.commands.process.base import HermesProcessCommand
+from hermes.commands.process.base import HermesProcessCommand
 from hermes.commands.deposit.base import HermesDepositCommand
 # from hermes.commands.postprocess.base import HermesPostprocessCommand

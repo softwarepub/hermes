@@ -16,7 +16,7 @@ from hermes import logger
 # from hermes.commands import (HermesHelpCommand, HermesVersionCommand, HermesCleanCommand,
 #                              HermesHarvestCommand, HermesProcessCommand, HermesCurateCommand,
 #                              HermesDepositCommand, HermesPostprocessCommand, HermesInitCommand)
-from hermes.commands import HermesDepositCommand, HermesHarvestCommand
+from hermes.commands import HermesDepositCommand, HermesHarvestCommand, HermesProcessCommand
 from hermes.commands.base import HermesCommand
 
 
@@ -43,7 +43,7 @@ def main() -> None:
             # HermesInitCommand(parser),
             # HermesCleanCommand(parser),
             HermesHarvestCommand(parser),
-            # HermesProcessCommand(parser),
+            HermesProcessCommand(parser),
             # HermesCurateCommand(parser),
             HermesDepositCommand(parser),
             # HermesPostprocessCommand(parser),
