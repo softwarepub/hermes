@@ -206,7 +206,7 @@ class HermesInitCommand(HermesCommand):
         self.git_remote_url = ""
         self.git_hoster: GitHoster = GitHoster.Empty
         self.template_base_url: str = "https://raw.githubusercontent.com"
-        self.template_branch: str = "feature/jinja"
+        self.template_branch: str = "main"
         self.template_repo: str = "softwarepub/ci-templates"
         self.template_folder: str = "init-templates"
         self.ci_parameters: dict = {
@@ -323,7 +323,7 @@ class HermesInitCommand(HermesCommand):
         # Nice message on Ctrl+C
         except KeyboardInterrupt:
             sc.echo("")
-            sc.echo("HERMES init was aborted. No changes were made.", sc.Formats.WARNING)
+            sc.echo("HERMES init was aborted.", sc.Formats.WARNING)
             self.clean_up_files(True)
             sys.exit()
 
@@ -333,7 +333,7 @@ class HermesInitCommand(HermesCommand):
                     formatting=sc.Formats.FAIL+sc.Formats.BOLD)
             sc.debug_info(traceback.format_exc())
             self.clean_up_files(True)
-            sc.echo("No changes were made. You will have to run 'hermes init' again.")
+            sc.echo("The initialization was not finalized. You will have to run 'hermes init' again.")
             sys.exit(2)
 
     def check_hermes_version(self) -> None:
@@ -496,7 +496,7 @@ class HermesInitCommand(HermesCommand):
         """Downloads and configures the ci workflow files using templates from the chosen template branch."""
         match self.git_hoster:
             case GitHoster.GitHub:
-                template_url = self.get_template_url("TEMPLATE_hermes_github_to_zenodo.yml")
+                template_url = self.get_template_url("hermes_github.yml")
                 ci_file_folder = Path(".github/workflows")
                 ci_file_name = "hermes_github.yml"
                 ci_file_path = ci_file_folder / ci_file_name
@@ -511,7 +511,7 @@ class HermesInitCommand(HermesCommand):
                 self.configure_ci_template(ci_file_path)
                 sc.echo(f"GitHub CI: File was created at {ci_file_path}", formatting=sc.Formats.OKGREEN)
             case GitHoster.GitLab:
-                gitlab_ci_template_url = self.get_template_url("TEMPLATE_hermes_gitlab_to_zenodo.yml")
+                gitlab_ci_template_url = self.get_template_url("hermes_gitlab.yml")
                 hermes_ci_template_url = self.get_template_url("hermes-ci.yml")
                 gitlab_ci_path = Path(".gitlab-ci.yml")
                 gitlab_folder_path = Path("gitlab")
@@ -534,6 +534,7 @@ class HermesInitCommand(HermesCommand):
                     sc.echo(f"GitLab CI: {gitlab_ci_path} was created.", formatting=sc.Formats.OKGREEN)
                 self.configure_ci_template(gitlab_ci_path)
                 # Creating hermes-ci
+                sc.debug_info(f"Downloading gitlab hermes-ci template from {hermes_ci_template_url}")
                 download_file_from_url(hermes_ci_template_url, hermes_ci_path)
                 self.configure_ci_template(hermes_ci_path)
 
@@ -557,7 +558,7 @@ class HermesInitCommand(HermesCommand):
         template = jinja_env.get_template(str(ci_file_path))
         missing = [p for p in used_params if p not in self.ci_parameters]
         if missing:
-            sc.echo("CI Template has missing parameters: {missing}", formatting=sc.Formats.WARNING)
+            sc.echo(f"CI Template has missing parameters: {missing}", formatting=sc.Formats.WARNING)
         rendered = template.render(self.ci_parameters)
         with open(ci_file_path, 'w') as file:
             file.write(rendered)
