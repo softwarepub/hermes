@@ -17,3 +17,9 @@ path = ["REUSE.toml"]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "German Aerospace Center (DLR), Helmholtz-Zentrum Dresden-Rossendorf, Forschungszentrum Jülich"
 SPDX-License-Identifier = "CC0-1.0"
+
+[[annotations]]
+path = ["src/**/*.py", "test/**/*.py"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "German Aerospace Center (DLR), Helmholtz-Zentrum Dresden-Rossendorf, Forschungszentrum Jülich"
+SPDX-License-Identifier = "Apache-2.0"
