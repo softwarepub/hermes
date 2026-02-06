@@ -902,7 +902,7 @@ class HermesInitCommand(HermesCommand):
         self.ci_parameters["gl_create_curate_branch"] = 'git checkout -b "$MR_TARGET_BRANCH" "$CI_COMMIT_REF_NAME"'
         if tag_pattern:
             self.ci_parameters["gh_push_target"] = f"\"{tag_pattern}\""
-            self.ci_parameters["gl_push_condition"] = f"$CI_COMMIT_TAG =~ {tag_pattern}"
+            self.ci_parameters["gl_push_condition"] = f"$CI_COMMIT_TAG && $CI_COMMIT_TAG =~ /{tag_pattern}/"
             bold_pattern = sc.Formats.BOLD.wrap_around(tag_pattern)
             sc.echo(f"The HERMES pipeline will be activated when you push a tag that fits '{bold_pattern}'.",
                     formatting=sc.Formats.OKGREEN)
