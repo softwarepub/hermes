@@ -237,7 +237,7 @@ class ld_container:
         # while searching build a path such that it leads from the found ld_dicts ld_value to selfs data_dict/ item_list
         parent = self
         path = []
-        while parent.__class__.__name__ not in ("ld_dict", "SoftwareMetadata"):
+        while parent.__class__.__name__ not in ("ld_dict", "SoftwareMetadata", "ld_merge_dict"):
             if parent.container_type == "@list":
                 path.extend(["@list", 0])
             elif parent.container_type == "@graph":
@@ -250,7 +250,7 @@ class ld_container:
         # if neither self nor any of its parents is a ld_dict:
         # create a dict with the key of the outer most parent of self and this parents ld_value as a value
         # this dict is stored in an ld_container and simulates the most minimal JSON-LD object possible
-        if parent.__class__.__name__ not in ("ld_dict", "SoftwareMetadata"):
+        if parent.__class__.__name__ not in ("ld_dict", "SoftwareMetadata", "ld_merge_dict"):
             key = self.ld_proc.expand_iri(parent.active_ctx, parent.key)
             parent = ld_container([{key: parent._data}])
         path.append(0)
@@ -277,7 +277,7 @@ class ld_container:
                     [(new_key, temp) for new_key in temp.keys() if isinstance(temp[new_key], special_types)]
                 )
             elif isinstance(temp, ld_container):
-                if temp.__class__.__name__ == "ld_list" and temp.container_type == "@set":
+                if temp.__class__.__name__ in ("ld_list", "ld_merge_list") and temp.container_type == "@set":
                     ref[key] = temp._data
                 else:
                     ref[key] = temp._data[0]

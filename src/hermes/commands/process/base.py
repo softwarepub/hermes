@@ -5,13 +5,13 @@
 # SPDX-FileContributor: Michael Meinel
 
 import argparse
-import json
-import sys
 
 from pydantic import BaseModel
 
 from hermes.commands.base import HermesCommand, HermesPlugin
-from hermes.model.context import HermesHarvestContext, CodeMetaContext
+from hermes.model.api import SoftwareMetadata
+from hermes.model.context_manager import HermesContext
+from hermes.model.merge.container import ld_merge_dict
 
 
 class HermesProcessPlugin(HermesPlugin):
@@ -33,42 +33,21 @@ class HermesProcessCommand(HermesCommand):
 
     def __call__(self, args: argparse.Namespace) -> None:
         self.args = args
-        ctx = CodeMetaContext()
-
-        if not (ctx.hermes_dir / "harvest").exists():
-            self.log.error("You must run the harvest command before process")
-            sys.exit(1)
+        ctx = HermesContext()
+        merged_doc = ld_merge_dict([{}])
 
         # Get all harvesters
         harvester_names = self.root_settings.harvest.sources
-        harvester_names.reverse()   # Switch order for priority handling
 
+        ctx.prepare_step('harvest')
         for harvester in harvester_names:
             self.log.info("## Process data from %s", harvester)
+            merged_doc.update(SoftwareMetadata.load_from_cache(ctx, harvester))
+        ctx.finalize_step("harvest")
 
-            harvest_context = HermesHarvestContext(ctx, harvester, {})
-            try:
-                harvest_context.load_cache()
-            # when the harvest step ran, but there is no cache file, this is a serious flaw
-            except FileNotFoundError:
-                self.log.warning("No output data from harvester %s found, skipping", harvester)
-                continue
-
-            ctx.merge_from(harvest_context)
-            ctx.merge_contexts_from(harvest_context)
-
-        if ctx._errors:
-            self.log.error('Errors during merge')
-            self.errors.extend(ctx._errors)
-
-            for ep, error in ctx._errors:
-                self.log.info("    - %s: %s", ep.name, error)
-
-        tags_path = ctx.get_cache('process', 'tags', create=True)
-        with tags_path.open('w') as tags_file:
-            json.dump(ctx.tags, tags_file, indent=2)
-
-        ctx.prepare_codemeta()
-
-        with open(ctx.get_cache("process", ctx.hermes_name, create=True), 'w') as codemeta_file:
-            json.dump(ctx._data, codemeta_file, indent=2)
+        ctx.prepare_step("process")
+        with ctx["result"] as result_ctx:
+            result_ctx["codemeta"] = merged_doc.compact()
+            result_ctx["context"] = {"@context": merged_doc.full_context}
+            result_ctx["expanded"] = merged_doc.ld_value
+        ctx.finalize_step("process")
