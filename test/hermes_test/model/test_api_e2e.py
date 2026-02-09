@@ -511,12 +511,18 @@ licenses = "api/vocabularies/licenses"
                 "cff": SoftwareMetadata({
                     "@type": ["http://schema.org/SoftwareSourceCode"],
                     "http://schema.org/name": [{"@value": "Test"}],
-                    "http://schema.org/author": [{
-                        "@type": "http://schema.org/Person",
-                        "http://schema.org/familyName": [{"@value": "Test"}],
-                        "http://schema.org/givenName": [{"@value": "Testi"}],
-                        "http://schema.org/email": [{"@value": "test.testi@testis.tests"}]
-                    }],
+                    "http://schema.org/author": [
+                        {
+                            "@type": "http://schema.org/Person",
+                            "http://schema.org/familyName": [{"@value": "Test"}],
+                            "http://schema.org/email": [{"@value": "test.testi@testis.tests"}]
+                        },
+                        {
+                            "@type": "http://schema.org/Person",
+                            "http://schema.org/familyName": [{"@value": "Tester"}],
+                            "http://schema.org/email": [{"@value": "test@tester.tests"}]
+                        }
+                    ],
                     "http://schema.org/license": [{"@id": "https://spdx.org/licenses/Apache-2.0"}]
                 }),
                 "codemeta": SoftwareMetadata({
@@ -535,12 +541,19 @@ licenses = "api/vocabularies/licenses"
                 "@type": ["http://schema.org/SoftwareSourceCode"],
                 "http://schema.org/description": [{"@value": "for testing"}],
                 "http://schema.org/name": [{"@value": "Test"}],
-                "http://schema.org/author": [{
-                    "@type": "http://schema.org/Person",
-                    "http://schema.org/familyName": [{"@value": "Test"}],
-                    "http://schema.org/givenName": [{"@value": "Testi"}],
-                    "http://schema.org/email": [{"@value": "test.testi@testis.tests"}]
-                }],
+                "http://schema.org/author": [
+                    {
+                        "@type": "http://schema.org/Person",
+                        "http://schema.org/familyName": [{"@value": "Test"}],
+                        "http://schema.org/givenName": [{"@value": "Testi"}],
+                        "http://schema.org/email": [{"@value": "test.testi@testis.tests"}]
+                    },
+                    {
+                        "@type": "http://schema.org/Person",
+                        "http://schema.org/familyName": [{"@value": "Tester"}],
+                        "http://schema.org/email": [{"@value": "test@tester.tests"}]
+                    }
+                ],
                 "http://schema.org/license": [{"@id": "https://spdx.org/licenses/Apache-2.0"}]
             })
         )
