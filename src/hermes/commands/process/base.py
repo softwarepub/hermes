@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from hermes.commands.base import HermesCommand, HermesPlugin
 from hermes.model.api import SoftwareMetadata
 from hermes.model.context_manager import HermesContext
+from hermes.model.error import HermesContextError
 from hermes.model.merge.container import ld_merge_dict
 
 
@@ -42,7 +43,13 @@ class HermesProcessCommand(HermesCommand):
         ctx.prepare_step('harvest')
         for harvester in harvester_names:
             self.log.info("## Process data from %s", harvester)
-            merged_doc.update(SoftwareMetadata.load_from_cache(ctx, harvester))
+            try:
+                metadata = SoftwareMetadata.load_from_cache(ctx, harvester)
+            except HermesContextError as e:
+                self.log.error("Error while trying to load data from harvest plugin '%s': %s", harvester, e)
+                self.errors.append(e)
+                continue
+            merged_doc.update(metadata)
         ctx.finalize_step("harvest")
 
         ctx.prepare_step("process")
