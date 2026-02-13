@@ -184,7 +184,7 @@ def test_cff_harvest(tmp_path, monkeypatch, cff, res):
         monkeypatch.setattr(context_manager.HermesContext.__init__, "__defaults__", (tmp_path.cwd(),))
         cli.main()
     except SystemExit:
-        print("TODO: Delete wenn package is working again or mock cli")
+        print("TODO: Delete when package is working again or mock cli")
     finally:
         manager = context_manager.HermesContext()
         manager.prepare_step("harvest")
@@ -345,7 +345,7 @@ def test_codemeta_harvest(tmp_path, monkeypatch, codemeta, res):
         monkeypatch.setattr(context_manager.HermesContext.__init__, "__defaults__", (tmp_path.cwd(),))
         cli.main()
     except SystemExit:
-        print("TODO: Delete wenn package is working again or mock cli")
+        print("TODO: Delete when package is working again or mock cli")
     finally:
         manager = context_manager.HermesContext()
         manager.prepare_step("harvest")
