@@ -4,6 +4,7 @@
 
 # SPDX-FileContributor: Michael Fritzsche
 
+from datetime import date
 import json
 import pytest
 import sys
@@ -422,7 +423,7 @@ def test_file_deposit(tmp_path, monkeypatch, metadata):
             }),
             {
                 "upload_type": "software",
-                "publication_date": "2026-02-02",
+                "publication_date": date.today().isoformat(),
                 "title": "Test",
                 "creators": [{"name": "Test, Testi"}],
                 "description": "for testing",
@@ -445,6 +446,8 @@ def test_invenio_deposit(tmp_path, monkeypatch, sandbox_auth, metadata, invenio_
         cache["codemeta"] = metadata.compact()
     manager.finalize_step("curate")
 
+    (tmp_path / "test.txt").write_text("Test, oh wonderful test!\n")
+
     config_file = tmp_path / "hermes.toml"
     config_file.write_text(f"""[deposit]
 target = "invenio"
@@ -452,7 +455,7 @@ target = "invenio"
 site_url = "https://sandbox.zenodo.org"
 access_right = "closed"
 auth_token = "{sandbox_auth}"
-files = ["hermes.toml"]
+files = ["test.txt"]
 [deposit.invenio.api_paths]
 licenses = "api/vocabularies/licenses"
 """)
@@ -572,7 +575,7 @@ def test_process(tmp_path, monkeypatch, metadata_in, metadata_out):
     manager.finalize_step("harvest")
 
     config_file = tmp_path / "hermes.toml"
-    config_file.write_text(f"[harvest]\nsources = [{", ".join(f"\"{harvester}\"" for harvester in metadata_in)}]")
+    config_file.write_text(f"[harvest]\nsources = [{', '.join(f'\"{harvester}\"' for harvester in metadata_in)}]")
 
     orig_argv = sys.argv[:]
     sys.argv = ["hermes", "process", "--path", str(tmp_path), "--config", str(config_file)]

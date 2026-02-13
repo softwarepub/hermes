@@ -176,7 +176,9 @@ class ld_container:
         return self._data
 
     def _to_python(
-        self: Self, full_iri: str, ld_value: Union[list, dict, str]
+        self: Self,
+        full_iri: str,
+        ld_value: Union[EXPANDED_JSON_LD_VALUE, dict[str, EXPANDED_JSON_LD_VALUE], list[str], str]
     ) -> Union["ld_container", BASIC_TYPE, TIME_TYPE]:
         """
         Returns a pythonized version of the given value pretending the value is in self and full_iri its key.
@@ -187,7 +189,7 @@ class ld_container:
         :type full_iri: str
         :param ld_value: The value thats pythonized value is requested. ld_value has to be valid expanded JSON-LD if it
             was embeded in self._data.
-        :type ld_value: list | dict | str
+        :type ld_value: EXPANDED_JSON_LD_VALUE | dict[str, EXPANDED_JSON_LD_VALUE] | list[str] | str
 
         :return: The pythonized value of the ld_value.
         :rtype: ld_container | BASIC_TYPE | TIME_TYPE
