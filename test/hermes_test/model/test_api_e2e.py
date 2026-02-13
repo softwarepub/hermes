@@ -184,12 +184,13 @@ def test_cff_harvest(tmp_path, monkeypatch, cff, res):
         monkeypatch.setattr(context_manager.HermesContext.__init__, "__defaults__", (tmp_path.cwd(),))
         cli.main()
     except SystemExit:
+        print("TODO: Delete wenn package is working again or mock cli")
+    finally:
         manager = context_manager.HermesContext()
         manager.prepare_step("harvest")
         with manager["cff"] as cache:
             result = SoftwareMetadata(cache["codemeta"])
         manager.finalize_step("harvest")
-    finally:
         sys.argv = orig_argv
 
     # FIXME: update to compare the SoftwareMetadata objects instead of the data_dicts (in multiple places)
@@ -344,12 +345,13 @@ def test_codemeta_harvest(tmp_path, monkeypatch, codemeta, res):
         monkeypatch.setattr(context_manager.HermesContext.__init__, "__defaults__", (tmp_path.cwd(),))
         cli.main()
     except SystemExit:
+        print("TODO: Delete wenn package is working again or mock cli")
+    finally:
         manager = context_manager.HermesContext()
         manager.prepare_step("harvest")
         with manager["codemeta"] as cache:
             result = SoftwareMetadata(cache["codemeta"])
         manager.finalize_step("harvest")
-    finally:
         sys.argv = orig_argv
 
     assert result.data_dict == res.data_dict
