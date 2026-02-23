@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2026 OFFIS e.V.
+# SPDX-FileCopyrightText: 2026 UOL
 #
 # SPDX-License-Identifier: Apache-2.0
 
