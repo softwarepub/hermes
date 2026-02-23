@@ -57,6 +57,13 @@
         "builtin": true
     },
     {
+        "name": "hermes-plugin-software-card",
+        "description": "HERMES curation plugin using the Software CaRD framework.",
+        "author": "Software CaRD team",
+        "steps": ["curate"],
+        "repository_url": "https://github.com/softwarepub/hermes-plugin-software-card"
+    },
+    {
         "name": "Invenio Deposit",
         "description": "Deposit plugin for Invenio-based platforms.",
         "author": "Hermes team",
