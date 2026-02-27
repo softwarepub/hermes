@@ -5,17 +5,20 @@
 # SPDX-FileContributor: Michael Meinel
 # SPDX-FileContributor: Michael Fritzsche
 
-from typing import Callable, Union
+from __future__ import annotations
+
+from typing import Callable, Union, TYPE_CHECKING
 from typing_extensions import Self
 
-from hermes.model.merge.action import MergeAction
-from hermes.model.types import ld_container, ld_context, ld_dict, ld_list
-from hermes.model.types.ld_container import (
+from ..types import ld_container, ld_context, ld_dict, ld_list
+from ..types.ld_container import (
     BASIC_TYPE, EXPANDED_JSON_LD_VALUE, JSON_LD_CONTEXT_DICT, JSON_LD_VALUE, TIME_TYPE
 )
-
-from .strategy import CODEMETA_STRATEGY, PROV_STRATEGY, REPLACE_STRATEGY
 from ..types.pyld_util import bundled_loader
+from .strategy import CODEMETA_STRATEGY, PROV_STRATEGY, REPLACE_STRATEGY
+
+if TYPE_CHECKING:
+    from .action import MergeAction
 
 
 class _ld_merge_container:
@@ -170,24 +173,12 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
         :rtype: None
         """
         if other_context:
-            if len(self.context) < 1 or not isinstance(self.context[-1], dict):
-                self.context.append({})
-
-            if not isinstance(other_context, list):
-                other_context = [other_context]
-            for ctx in other_context:
-                if isinstance(ctx, dict):
-                    # FIXME #471: Shouldn't the dict be appended instead?
-                    # How it is implemented currently results in anomalies like this:
-                    # other_context = [{"codemeta": "https://doi.org/10.5063/schema/codemeta-1.0/"}]
-                    # self.context = [{"codemeta": "https://doi.org/10.5063/schema/codemeta-2.0/"}]
-                    # resulting context is only [{"codemeta": "https://doi.org/10.5063/schema/codemeta-1.0/"}]
-                    # values that start with "https://doi.org/10.5063/schema/codemeta-2.0/" can't be compacted anymore
-                    self.context[-1].update(ctx)
-                elif ctx not in self.context:
-                    # FIXME #471: If multiple string values are in self.context, the others are prefered
-                    # if the new one is inserted at the beginning. But with the dictionaries the order is reversed.
-                    self.context.insert(0, ctx)
+            if not isinstance(self.context, list):
+                self.context = [self.context]
+            if isinstance(other_context, list):
+                self.context = [*other_context, *self.context]
+            else:
+                self.context = [other_context, *self.context]
 
             # update the active context that is used for compaction/ expansion
             self.active_ctx = self.ld_proc.initial_ctx(self.context, {"documentLoader": bundled_loader})
@@ -270,10 +261,7 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
         :type value: Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]
         :param match: The method defining if two objects are a match.
         :type match: Callable[
-            [
-                BASIC_TYPE | TIME_TYPE | ld_merge_dict | ld_merge_list,
-                BASIC_TYPE | TIME_TYPE | ld_dict | ld_list
-            ],
+            [BASIC_TYPE | TIME_TYPE | ld_merge_dict | ld_merge_list, BASIC_TYPE | TIME_TYPE | ld_dict | ld_list],
             bool
         ] | Callable[[ld_merge_dict, ld_dict], bool]
 

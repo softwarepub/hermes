@@ -1,3 +1,10 @@
+# SPDX-FileCopyrightText: 2026 German Aerospace Center (DLR)
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# SPDX-FileContributor: Michael Fritzsche
+# SPDX-FileContributor: Stephan Druskat
+
 from hermes.model.context_manager import HermesContext, HermesContexError
 from hermes.model.types import ld_dict
 from hermes.model.types.ld_context import ALL_CONTEXTS

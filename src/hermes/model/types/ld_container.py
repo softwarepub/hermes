@@ -96,17 +96,9 @@ class ld_container:
 
         self.context = context or []
 
-        # Create active context (to use with pyld) depending on the initial variables
-        # Re-use active context from parent if available
-        if self.parent:
-            if self.context:
-                self.active_ctx = self.ld_proc.process_context(
-                    self.parent.active_ctx, self.context, {"documentLoader": bundled_loader}
-                )
-            else:
-                self.active_ctx = parent.active_ctx
-        else:
-            self.active_ctx = self.ld_proc.initial_ctx(self.full_context, {"documentLoader": bundled_loader})
+        # Create active context (to use with pyld) depending on the initial variables.
+        # Don't re-use active context from parent (created some weird in the process step when context is often added).
+        self.active_ctx = self.ld_proc.initial_ctx(self.full_context, {"documentLoader": bundled_loader})
 
     def add_context(self: Self, context: list[Union[str | JSON_LD_CONTEXT_DICT]]) -> None:
         """

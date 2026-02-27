@@ -4,15 +4,14 @@
 
 # SPDX-FileContributor: Michael Meinel
 
-from hermes.model.types.ld_context import iri_map as iri
-
+from ..types.ld_context import iri_map as iri
 from .action import Reject, Replace, Collect, Concat, MergeSet
 from .match import match_equals, match_keys
 
 
 REPLACE_STRATEGY = {
     None: {
-        None: Replace,
+        None: Replace(),
         "@type": Collect(match_equals),
     },
 }
@@ -20,7 +19,7 @@ REPLACE_STRATEGY = {
 
 REJECT_STRATEGY = {
     None: {
-        None: Reject,
+        None: Reject(),
         "@type": Collect(match_equals),
     },
 }
@@ -28,9 +27,9 @@ REJECT_STRATEGY = {
 
 PROV_STRATEGY = {
     None: {
-        iri["hermes-rt:graph"]: Concat,
-        iri["hermes-rt:replace"]: Concat,
-        iri["hermes-rt:reject"]: Concat,
+        iri["hermes-rt:graph"]: Concat(),
+        iri["hermes-rt:replace"]: Concat(),
+        iri["hermes-rt:reject"]: Concat(),
     },
 }
 

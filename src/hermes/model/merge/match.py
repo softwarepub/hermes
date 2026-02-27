@@ -3,11 +3,16 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # SPDX-FileContributor: Michael Meinel
+# SPDX-FileContributor: Michael Fritzsche
 
-from typing import Any, Callable
+from __future__ import annotations
 
-from hermes.model.merge.container import ld_merge_dict
-from hermes.model.types import ld_dict
+from typing import Any, Callable, TYPE_CHECKING
+
+from ..types import ld_dict
+
+if TYPE_CHECKING:
+    from .container import ld_merge_dict
 
 
 def match_equals(a: Any, b: Any) -> bool:
@@ -22,6 +27,8 @@ def match_equals(a: Any, b: Any) -> bool:
     :return: Truth value of a == b.
     :rtype: bool
     """
+    print(f"a: {a}")
+    print(f"b: {b}")
     return a == b
 
 
@@ -54,6 +61,7 @@ def match_keys(
         :return: The result of the comparison.
         :rtype: bool
         """
+        # TODO: This method maybe should try == comparison instead of returning false if active_keys == [].
         # create a list of all common important keys
         active_keys = [key for key in keys if key in left and key in right]
         # check if both objects have the same values for all active keys
