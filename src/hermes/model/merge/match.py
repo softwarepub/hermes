@@ -27,8 +27,6 @@ def match_equals(a: Any, b: Any) -> bool:
     :return: Truth value of a == b.
     :rtype: bool
     """
-    print(f"a: {a}")
-    print(f"b: {b}")
     return a == b
 
 
