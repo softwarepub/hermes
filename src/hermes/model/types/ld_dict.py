@@ -149,7 +149,4 @@ class ld_dict(ld_container):
         if any(k in ld_value for k in ["@set", "@graph", "@list", "@value"]):
             return False
 
-        if ['@id'] == [*ld_value.keys()]:
-            return False
-
         return True
