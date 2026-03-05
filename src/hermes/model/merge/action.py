@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Union
+from typing import TYPE_CHECKING, Any, Callable, Union
 from typing_extensions import Self
 
 from ..types import ld_dict, ld_list
@@ -76,9 +76,8 @@ class Reject(MergeAction):
             This value will always be value.
         :rtype: ld_merge_list
         """
-        # If necessary, add the entry that data has been rejected.
-        if value != update:
-            target.reject(key, update)
+        # Add the entry that data has been rejected.
+        target.reject(key, update)
         # Return value unchanged.
         return value
 
@@ -111,8 +110,7 @@ class Replace(MergeAction):
         :rtype: BASIC_TYPE | TIME_TYPE | ld_dict | ld_list
         """
         # If necessary, add the entry that data has been replaced.
-        if value != update:
-            target.replace(key, value)
+        target.replace(key, value)
         # Return the new value.
         return update
 
@@ -151,32 +149,21 @@ class Concat(MergeAction):
 
 
 class Collect(MergeAction):
-    def __init__(
-        self: Self,
-        match: Union[
-            Callable[
-                [
-                    Union[BASIC_TYPE, TIME_TYPE, ld_merge_dict, ld_merge_list],
-                    Union[BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]
-                ],
-                bool
-            ],
-            Callable[[ld_merge_dict, ld_dict], bool]
-        ]
-    ) -> None:
+    def __init__(self: Self, match: Callable[[Any, Any], bool], reject_incoming: bool = True) -> None:
         """
-        Set the match function for this collect merge action.
+        Set the match function for this collect merge action. And the behaivior for matches.
 
         :param match: The function used to evaluate equality while merging.
-        :type match: Callable[
-            [BASIC_TYPE | TIME_TYPE | ld_merge_dict | ld_merge_list, BASIC_TYPE | TIME_TYPE | ld_dict | ld_list],
-            bool
-        ] | Callable[[ld_merge_dict, ld_dict], bool]
+        :type match: Callable[[Any, Any], bool]
+        :param reject_incoming: If an incoming item matches an already collected one, if ``reject_incoming`` True,
+            the incoming item gets rejected, if ``reject_incoming`` False, the match of the incoming item gets replaced.
+        :type reject_incoming: bool
 
         :return:
         :rtype: None
         """
         self.match = match
+        self.reject_incoming = reject_incoming
 
     def merge(
         self: Self,
@@ -206,44 +193,31 @@ class Collect(MergeAction):
 
         # iterate over all new items
         for update_item in update:
-            # If the current new item has no occurence in value (according to self.match) add it to value.
-            if not any(self.match(item, update_item) for item in value):
+            # Iterate over all items in value and if a match is found replace the first one or reject update_item.
+            for index, item in enumerate(value):
+                if self.match(item, update_item):
+                    if not self.reject_incoming:
+                        value[index] = update_item
+                    break
+            else:
+                # If the current new item has no occurence in value (according to self.match) add it to value.
                 value.append(update_item)
 
         return value
 
 
 class MergeSet(MergeAction):
-    def __init__(
-        self: Self,
-        match: Union[
-            Callable[
-                [
-                    Union[BASIC_TYPE, TIME_TYPE, ld_merge_dict, ld_merge_list],
-                    Union[BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]
-                ],
-                bool
-            ],
-            Callable[[ld_merge_dict, ld_dict], bool]
-        ],
-        merge_items: bool = True
-    ) -> None:
+    def __init__(self: Self, match: Callable[[Any, Any], bool]) -> None:
         """
         Set the match function for this collect merge action.
 
         :param match: The function used to evaluate equality while merging.
-        :type match: Callable[
-            [BASIC_TYPE | TIME_TYPE | ld_merge_dict | ld_merge_list, BASIC_TYPE | TIME_TYPE | ld_dict | ld_list],
-            bool
-        ] | Callable[[ld_merge_dict, ld_dict], bool]
-        :param merge_items: Whether or to to merge similar items. (If false this is basically :class:`Concat`)
-        :type merge_items: bool
+        :type match: Callable[[ANy, Any], bool]
 
         :return:
         :rtype: None
         """
         self.match = match
-        self.merge_items = merge_items
 
     def merge(
         self: Self,
@@ -271,13 +245,19 @@ class MergeSet(MergeAction):
         if not isinstance(update, (list, ld_list)):
             update = [update]
 
-        for item in update:
+        for update_item in update:
             # For each new item merge it into a similar item (according to match) inside target[key[-1]]
-            # (aka inside value) if such an item exists and merging is permitted.
+            # (aka inside value) if such an item exists.
             # Otherwise append it to target[key[-1]] (aka to value).
-            target_item = target.match(key[-1], item, self.match)
-            if target_item and self.merge_items:
-                target_item.update(item)
+            for index, item in enumerate(value):
+                if self.match(item, update_item):
+                    if isinstance(item, ld_dict) and isinstance(update_item, ld_dict):
+                        item.update(update_item)
+                    elif isinstance(item, ld_list) and isinstance(update_item, ld_list):
+                        self.merge(target, [*key, index], item, update_item)
+                    elif isinstance(item, (ld_dict,  ld_list)) or isinstance(update_item, (ld_dict, ld_list)):
+                        """ FIXME: log error """
+                    break
             else:
                 value.append(item)
         # Return the merged values.

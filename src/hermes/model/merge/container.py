@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from typing import Callable, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Callable, Union
 from typing_extensions import Self
 
 from ..types import ld_container, ld_context, ld_dict, ld_list
@@ -15,7 +15,7 @@ from ..types.ld_container import (
     BASIC_TYPE, EXPANDED_JSON_LD_VALUE, JSON_LD_CONTEXT_DICT, JSON_LD_VALUE, TIME_TYPE
 )
 from ..types.pyld_util import bundled_loader
-from .strategy import CODEMETA_STRATEGY, PROV_STRATEGY, REPLACE_STRATEGY
+from .strategy import CODEMETA_STRATEGY, PROV_STRATEGY
 
 if TYPE_CHECKING:
     from .action import MergeAction
@@ -153,8 +153,7 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
         self.update_context(ld_context.HERMES_PROV_CONTEXT)
 
         # add strategies
-        self.strategies = {**REPLACE_STRATEGY}
-        self.add_strategy(CODEMETA_STRATEGY)
+        self.strategies = {**CODEMETA_STRATEGY}
         self.add_strategy(PROV_STRATEGY)
 
     def update_context(
@@ -238,16 +237,7 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
         self: Self,
         key: str,
         value: Union[BASIC_TYPE, TIME_TYPE, ld_dict, ld_list],
-        match: Union[
-            Callable[
-                [
-                    Union[BASIC_TYPE, TIME_TYPE, "ld_merge_dict", ld_merge_list],
-                    Union[BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]
-                ],
-                bool
-            ],
-            Callable[["ld_merge_dict", ld_dict], bool]
-        ]
+        match: Callable[[Any, Any],  bool]
     ) -> Union[BASIC_TYPE, TIME_TYPE, "ld_merge_dict", ld_merge_list]:
         """
         Returns the first item in self[key] for which match(item, value) returns true.
@@ -260,10 +250,7 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
         :param value: The value a match is searched for in self[key].
         :type value: Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]
         :param match: The method defining if two objects are a match.
-        :type match: Callable[
-            [BASIC_TYPE | TIME_TYPE | ld_merge_dict | ld_merge_list, BASIC_TYPE | TIME_TYPE | ld_dict | ld_list],
-            bool
-        ] | Callable[[ld_merge_dict, ld_dict], bool]
+        :type match: Callable[[Any, Any], bool]
 
         :return: The item in self[key] that is a match to value if one exists else None
         :rtype: BASIC_TYPE | TIME_TYPE | ld_merge_dict | ld_merge_list
@@ -317,6 +304,7 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
         :return:
         :rtype: None
         """
+        # FIXME: key not only string
         # make sure appending is possible
         self.emplace(rel)
         # append the new entry
@@ -338,6 +326,7 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
         :return:
         :rtype: None
         """
+        # FIXME: key not only string
         self._add_related("hermes-rt:reject", key, value)
 
     def replace(self: Self, key: str, value: Union[BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]) -> None:
@@ -356,4 +345,5 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
         :return:
         :rtype: None
         """
+        # FIXME: key not only string
         self._add_related("hermes-rt:replace", key, value)
