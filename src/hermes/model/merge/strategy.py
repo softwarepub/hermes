@@ -188,7 +188,9 @@ CODEMETA_STRATEGY[iri["schema:Demand"]] = {
     iri["schema:areaServed"]: None,  # FIXME: troublesome AdministrativeArea or GeoShape or Place
     iri["schema:eligibleRegion"]: None,  # FIXME: troublesome GeoShape or Place
     iri["schema:ineligibleRegion"]: None,  # FIXME: troublesome GeoShape or Place
-    iri["schema:itemOffered"]: None,  # FIXME: troublesome AggregateOffer or CreativeWork or Event or MenuItem or Product or Service or Trip
+    iri[
+        "schema:itemOffered"
+    ]: None,  # FIXME: troublesome AggregateOffer or CreativeWork or Event or MenuItem or Product or Service or Trip
     iri["schema:seller"]: None  # FIXME: troublesome Organization or Person
 }
 CODEMETA_STRATEGY[iri["schema:Offer"]] = {
@@ -198,7 +200,9 @@ CODEMETA_STRATEGY[iri["schema:Offer"]] = {
     iri["schema:category"]: None,  # FIXME: troublesome CategoryCode or Thing
     iri["schema:eligibleRegion"]: None,  # FIXME: troublesome GeoShape or Place
     iri["schema:ineligibleRegion"]: None,  # FIXME: troublesome GeoShape or Place
-    iri["schema:itemOffered"]: None,  # FIXME: troublesome AggregateOffer or CreativeWork or Event or MenuItem or Product or Service or Trip
+    iri[
+        "schema:itemOffered"
+    ]: None,  # FIXME: troublesome AggregateOffer or CreativeWork or Event or MenuItem or Product or Service or Trip
     iri["schema:leaseLength"]: None,  # FIXME: troublesome Duration or QuantitativeValue
     iri["schema:offeredBy"]: None,  # FIXME: troublesome Organization or Person
     iri["schema:seller"]: None,  # FIXME: troublesome Organization or Person
@@ -233,7 +237,8 @@ CODEMETA_STRATEGY[iri["schema:InteractionCounter"]] = {
 }
 CODEMETA_STRATEGY[iri["schema:PropertyValue"]] = {
     **CODEMETA_STRATEGY[iri["schema:StructuredValue"]],
-    iri["schema:valueReference"]: None  # FIXME: troublesome DefinedTerm or Enumeration or PropertyValue or QualitativeValue or QuantitativeValue or StructuredValue
+    iri["schema:valueReference"]: None  # FIXME: troublesome DefinedTerm or Enumeration or PropertyValue
+    # or QualitativeValue or QuantitativeValue or StructuredValue
 }
 CODEMETA_STRATEGY[iri["schema:ContactPoint"]] = {
     **CODEMETA_STRATEGY[iri["schema:StructuredValue"]],
@@ -263,7 +268,8 @@ CODEMETA_STRATEGY[iri["schema:ServicePeriod"]] = {
 }
 CODEMETA_STRATEGY[iri["schema:QuantitativeValue"]] = {
     **CODEMETA_STRATEGY[iri["schema:StructuredValue"]],
-    iri["schema:valueReference"]: None  # FIXME: troublesome DefinedTerm or Enumeration or PropertyValue or QualitativeValue or QuantitativeValue or StructuredValue
+    iri["schema:valueReference"]: None  # FIXME: troublesome DefinedTerm or Enumeration or PropertyValue
+    # or QualitativeValue or QuantitativeValue or StructuredValue
 }
 CODEMETA_STRATEGY[iri["schema:ShippingService"]] = {
     **CODEMETA_STRATEGY[iri["schema:StructuredValue"]],
@@ -312,7 +318,8 @@ CODEMETA_STRATEGY[iri["schema:GeospatialGeometry"]] = {
 }
 CODEMETA_STRATEGY[iri["schema:Grant"]] = {
     **CODEMETA_STRATEGY[iri["schema:Intangible"]],
-    iri["schema:fundedItem"]: None,  # FIXME: troublesome BioChemEntity or CreativeWork or Event or MedicalEntity or Organization or Person or Product
+    iri["schema:fundedItem"]: None,  # FIXME: troublesome BioChemEntity or CreativeWork or Event or MedicalEntity
+    # or Organization or Person or Product
     iri["schema:funder"]: None,  # FIXME: troublesome Organization or Person
     iri["schema:sponsor"]: None  # FIXME: troublesome Organization or Person
 }
@@ -351,7 +358,8 @@ CODEMETA_STRATEGY[iri["schema:Enumeration"]] = {
 }
 CODEMETA_STRATEGY[iri["schema:QualitativeValue"]] = {
     **CODEMETA_STRATEGY[iri["schema:Enumeration"]],
-    iri["schema:valueReference"]: None  # FIXME: troublesome DefinedTerm or Enumeration or PropertyValue or QualitativeValue or QuantitativeValue or StructuredValue
+    iri["schema:valueReference"]: None  # FIXME: troublesome DefinedTerm or Enumeration or PropertyValue
+    # or QualitativeValue or QuantitativeValue or StructuredValue
 }
 CODEMETA_STRATEGY[iri["schema:SizeSpecification"]] = {**CODEMETA_STRATEGY[iri["schema:QualitativeValue"]]}
 CODEMETA_STRATEGY[iri["schema:Class"]] = {
@@ -467,7 +475,9 @@ CODEMETA_STRATEGY[iri["schema:BioChemEntity"]] = {
 }
 CODEMETA_STRATEGY[iri["schema:Gene"]] = {
     **CODEMETA_STRATEGY[iri["schema:BioChemEntity"]],
-    iri["schema:expressedIn"]: None  # FIXME: troublesome AnatomicalStructure or AnatomicalSystem or BioChemEntity or DefinedTerm
+    iri[
+        "schema:expressedIn"
+    ]: None  # FIXME: troublesome AnatomicalStructure or AnatomicalSystem or BioChemEntity or DefinedTerm
 }
 
 CODEMETA_STRATEGY[iri["schema:MedicalEntity"]] = {**CODEMETA_STRATEGY[iri["schema:Thing"]]}
@@ -497,13 +507,21 @@ CODEMETA_STRATEGY[iri["schema:MedicalStudy"]] = {
 }
 CODEMETA_STRATEGY[iri["schema:MedicalCondition"]] = {
     **CODEMETA_STRATEGY[iri["schema:MedicalEntity"]],
-    iri["schema:associatedAnatomy"]: None,  # FIXME: troublesome AnatomicalStructure or AnatomicalSystem or SuperficialAnatomy
-    iri["schema:possibleTreatment"]: None,  # FIXME: troublesome Drug or DrugClass or LifestyleModification or MedicalTherapy
-    iri["schema:secondaryPrevention"]: None  # FIXME: troublesome Drug or DrugClass or LifestyleModification or MedicalTherapy
+    iri[
+        "schema:associatedAnatomy"
+    ]: None,  # FIXME: troublesome AnatomicalStructure or AnatomicalSystem or SuperficialAnatomy
+    iri[
+        "schema:possibleTreatment"
+    ]: None,  # FIXME: troublesome Drug or DrugClass or LifestyleModification or MedicalTherapy
+    iri[
+        "schema:secondaryPrevention"
+    ]: None  # FIXME: troublesome Drug or DrugClass or LifestyleModification or MedicalTherapy
 }
 CODEMETA_STRATEGY[iri["schema:MedicalSignOrSymptom"]] = {
     **CODEMETA_STRATEGY[iri["schema:MedicalCondition"]],
-    iri["schema:possibleTreatment"]: None  # FIXME: troublesome Drug or DrugClass or LifestyleModification or MedicalTherapy
+    iri[
+        "schema:possibleTreatment"
+    ]: None  # FIXME: troublesome Drug or DrugClass or LifestyleModification or MedicalTherapy
 }
 CODEMETA_STRATEGY[iri["schema:MedicalSign"]] = {**CODEMETA_STRATEGY[iri["schema:MedicalSignOrSymptom"]]}
 CODEMETA_STRATEGY[iri["schema:SuperficialAnatomy"]] = {
