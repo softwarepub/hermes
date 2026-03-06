@@ -259,6 +259,6 @@ class MergeSet(MergeAction):
                         """ FIXME: log error """
                     break
             else:
-                value.append(item)
+                value.append(update_item)
         # Return the merged values.
         return value

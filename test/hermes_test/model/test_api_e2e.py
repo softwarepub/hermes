@@ -544,7 +544,6 @@ def test_process(tmp_path, monkeypatch, metadata_in, metadata_out):
     assert result == metadata_out
 
 
-@pytest.mark.xfail
 @pytest.mark.parametrize(
     "metadata_in, metadata_out",
     [

@@ -10,21 +10,6 @@ from typing import Any, Callable
 from ..types import ld_dict
 
 
-def match_equals(a: Any, b: Any) -> bool:
-    """
-    Wrapper method for normal == comparison.
-
-    :param a: First item for the comparison.
-    :type a: Any
-    :param b: Second item for the comparison.
-    :type b: Any
-
-    :return: Truth value of a == b.
-    :rtype: bool
-    """
-    return a == b
-
-
 def match_keys(*keys: list[str], fall_back_to_equals: bool = False) -> Callable[[Any, Any], bool]:
     """
     Creates a function taking to parameters that returns true
@@ -81,3 +66,19 @@ def match_person(left: Any, right: Any) -> bool:
         mails_right = right["schema:email"]
         return any((mail in mails_right) for mail in left["schema:email"])
     return left == right
+
+
+def match_multiple_types(
+    *functions_for_types: list[tuple[str, Callable[[Any, Any], bool]]],
+    fall_back_function: Callable[[Any, Any], bool] = match_keys("@id", fall_back_to_equals=True)
+) -> Callable[[Any, Any], bool]:
+    def match_func(left: Any, right: Any) -> bool:
+        if not ((isinstance(left, ld_dict) and isinstance(right, ld_dict)) and "@type" in left and "@type" in right):
+            return fall_back_function(left, right)
+        types_left = left["@type"]
+        types_right = right["@type"]
+        for ld_type, func in functions_for_types:
+            if ld_type in types_left and ld_type in types_right:
+                return func(left, right)
+        return fall_back_function(left, right)
+    return match_func
