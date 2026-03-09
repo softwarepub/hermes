@@ -185,13 +185,9 @@ def test_cff_harvest(tmp_path, monkeypatch, cff, res):
         monkeypatch.setattr(HermesContext.__init__, "__defaults__", (tmp_path.cwd(),))
         cli.main()
     except SystemExit:
-<<<<<<< feature/454-e2e-curate
-        manager = HermesContext()
-=======
         print("TODO: Delete when package is working again or mock cli")
     finally:
-        manager = context_manager.HermesContext()
->>>>>>> feature/454-e2e-test-plugin-api
+        manager = HermesContext()
         manager.prepare_step("harvest")
         with manager["cff"] as cache:
             result = SoftwareMetadata(cache["codemeta"])
@@ -350,13 +346,9 @@ def test_codemeta_harvest(tmp_path, monkeypatch, codemeta, res):
         monkeypatch.setattr(HermesContext.__init__, "__defaults__", (tmp_path.cwd(),))
         cli.main()
     except SystemExit:
-<<<<<<< feature/454-e2e-curate
-        manager = HermesContext()
-=======
         print("TODO: Delete when package is working again or mock cli")
     finally:
-        manager = context_manager.HermesContext()
->>>>>>> feature/454-e2e-test-plugin-api
+        manager = HermesContext()
         manager.prepare_step("harvest")
         with manager["codemeta"] as cache:
             result = SoftwareMetadata(cache["codemeta"])
