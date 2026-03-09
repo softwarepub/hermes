@@ -190,11 +190,11 @@ def test_build_in_comparison():
 def test_get():
     di = ld_dict([{"https://schema.org/name": [{"@value": "Manu Sporny"}]}],
                  context=[{"schema": "https://schema.org/"}])
-    assert di.get("https://schema.org/name").item_list == [{"@value": "Manu Sporny"}]
-    assert di.get("schema:name").item_list == [{"@value": "Manu Sporny"}]
+    assert di.get("https://schema.org/name") == ["Manu Sporny"]
+    assert di.get("schema:name") == ["Manu Sporny"]
     assert di.get("bar", None) is None
     with pytest.raises(KeyError):
-        di["bar"]
+        di.get("bar")
 
 
 def test_setdefault():

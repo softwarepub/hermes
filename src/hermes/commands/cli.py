@@ -16,9 +16,9 @@ from hermes import logger
 # from hermes.commands import (HermesHelpCommand, HermesVersionCommand, HermesCleanCommand,
 #                              HermesHarvestCommand, HermesProcessCommand, HermesCurateCommand,
 #                              HermesDepositCommand, HermesPostprocessCommand, HermesInitCommand)
-from hermes.commands import (
-    HermesDepositCommand, HermesHarvestCommand, HermesHelpCommand, HermesProcessCommand, HermesVersionCommand
-)
+from hermes.commands import (HermesCurateCommand, HermesDepositCommand,
+                             HermesHarvestCommand, HermesHelpCommand,
+                             HermesProcessCommand, HermesVersionCommand)
 from hermes.commands.base import HermesCommand
 
 
@@ -40,15 +40,15 @@ def main() -> None:
     setting_types = {}
 
     for command in (
-            HermesHelpCommand(parser),
-            HermesVersionCommand(parser),
-            # HermesInitCommand(parser),
             # HermesCleanCommand(parser),
-            HermesHarvestCommand(parser),
-            HermesProcessCommand(parser),
-            # HermesCurateCommand(parser),
+            HermesCurateCommand(parser),
             HermesDepositCommand(parser),
+            HermesHarvestCommand(parser),
+            HermesHelpCommand(parser),
+            # HermesInitCommand(parser),
             # HermesPostprocessCommand(parser),
+            HermesProcessCommand(parser),
+            HermesVersionCommand(parser),
     ):
         if command.settings_class is not None:
             setting_types[command.command_name] = command.settings_class
