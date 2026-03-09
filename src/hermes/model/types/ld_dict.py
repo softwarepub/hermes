@@ -107,7 +107,9 @@ class ld_dict(ld_container):
         :return:
         :rtype: None
         """
-        # if the value is None delete the entry instead of updating it
+        # if the value is None delete the entry instead of updating it, but make sure it exists before deleting
+        if value is None and key not in self:
+            return
         if value is None:
             del self[self.ld_proc.expand_iri(self.active_ctx, key)]
             return

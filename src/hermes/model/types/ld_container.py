@@ -7,35 +7,35 @@
 
 from __future__ import annotations
 
-from .pyld_util import JsonLdProcessor, bundled_loader
 from datetime import date, datetime, time
+from typing import Any, TypeAlias, TYPE_CHECKING, Union
+from typing_extensions import Self
 
-from typing import TYPE_CHECKING
+from .pyld_util import JsonLdProcessor, bundled_loader
 if TYPE_CHECKING:
     from .ld_dict import ld_dict
     from .ld_list import ld_list
-    from typing import Any, TypeAlias, Union
-    from typing_extensions import Self
-    JSON_LD_CONTEXT_DICT: TypeAlias = dict[str, Union[str, "JSON_LD_CONTEXT_DICT"]]
-    BASIC_TYPE: TypeAlias = Union[str, float, int, bool]
-    EXPANDED_JSON_LD_VALUE: TypeAlias = list[Union[
-        dict[str, Union["EXPANDED_JSON_LD_VALUE", BASIC_TYPE]],
-        "EXPANDED_JSON_LD_VALUE",
-        str
-    ]]
-    COMPACTED_JSON_LD_VALUE: TypeAlias = Union[
-        list[Union[dict[str, Union["COMPACTED_JSON_LD_VALUE", BASIC_TYPE]], BASIC_TYPE]],
-        dict[str, Union["COMPACTED_JSON_LD_VALUE", BASIC_TYPE]],
-    ]
-    TIME_TYPE: TypeAlias = Union[datetime, date, time]
-    JSON_LD_VALUE: TypeAlias = Union[
-        list[Union["JSON_LD_VALUE", BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]],
-        dict[str, Union["JSON_LD_VALUE", BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]],
-    ]
-    PYTHONIZED_LD_CONTAINER: TypeAlias = Union[
-        list[Union["PYTHONIZED_LD_CONTAINER", BASIC_TYPE, TIME_TYPE]],
-        dict[str, Union["PYTHONIZED_LD_CONTAINER", BASIC_TYPE, TIME_TYPE]],
-    ]
+
+JSON_LD_CONTEXT_DICT: TypeAlias = dict[str, Union[str, "JSON_LD_CONTEXT_DICT"]]
+BASIC_TYPE: TypeAlias = Union[str, float, int, bool]
+EXPANDED_JSON_LD_VALUE: TypeAlias = list[Union[
+    dict[str, Union["EXPANDED_JSON_LD_VALUE", BASIC_TYPE]],
+    "EXPANDED_JSON_LD_VALUE",
+    str
+]]
+COMPACTED_JSON_LD_VALUE: TypeAlias = Union[
+    list[Union[dict[str, Union["COMPACTED_JSON_LD_VALUE", BASIC_TYPE]], BASIC_TYPE]],
+    dict[str, Union["COMPACTED_JSON_LD_VALUE", BASIC_TYPE]],
+]
+TIME_TYPE: TypeAlias = Union[datetime, date, time]
+JSON_LD_VALUE: TypeAlias = Union[
+    list[Union["JSON_LD_VALUE", BASIC_TYPE, TIME_TYPE, "ld_dict", "ld_list"]],
+    dict[str, Union["JSON_LD_VALUE", BASIC_TYPE, TIME_TYPE, "ld_dict", "ld_list"]],
+]
+PYTHONIZED_LD_CONTAINER: TypeAlias = Union[
+    list[Union["PYTHONIZED_LD_CONTAINER", BASIC_TYPE, TIME_TYPE]],
+    dict[str, Union["PYTHONIZED_LD_CONTAINER", BASIC_TYPE, TIME_TYPE]],
+]
 
 
 class ld_container:

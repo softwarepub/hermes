@@ -29,7 +29,7 @@ class SoftwareMetadata(ld_dict):
                 data = SoftwareMetadata()
                 data.active_ctx = data.ld_proc.initial_ctx(context, {"documentLoader": bundled_loader})
                 data.context = context
-                for key, value in cache["expanded"][0]:
+                for key, value in cache["expanded"][0].items():
                     data[key] = value
                 return data
             except Exception as e:
