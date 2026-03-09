@@ -58,13 +58,30 @@ def match_keys(*keys: list[str], fall_back_to_equals: bool = False) -> Callable[
 
 
 def match_person(left: Any, right: Any) -> bool:
+    """
+    Compares two objects assuming they are representing schema:Person's
+    if they are not ld_dicts, == is used as a fallback.<br>
+    If both objects have an @id value, the truth value returned by this function is the comparison of both ids.
+    If either other has no @id value and both objects have at least one email value,
+    they are considered equal if they have one common email.
+    If the equality of the objects is not yet decided, == comparison of the objects is returned.
+
+    :param left: The first object for the comparison.
+    :type left: ld_merge_dict
+    :param right: The second object for the comparison.
+    :type right: ld_dict
+
+    :return: The result of the comparison.
+    :rtype: bool
+    """
     if not (isinstance(left, ld_dict) and isinstance(right, ld_dict)):
         return left == right
     if "@id" in left and "@id" in right:
         return left["@id"] == right["@id"]
     if "schema:email" in left and "schema:email" in right:
-        mails_right = right["schema:email"]
-        return any((mail in mails_right) for mail in left["schema:email"])
+        if len(left["schema:email"]) > 0 and len(right["schema:email"]) > 0:
+            mails_right = right["schema:email"]
+            return any((mail in mails_right) for mail in left["schema:email"])
     return left == right
 
 
@@ -72,13 +89,46 @@ def match_multiple_types(
     *functions_for_types: list[tuple[str, Callable[[Any, Any], bool]]],
     fall_back_function: Callable[[Any, Any], bool] = match_keys("@id", fall_back_to_equals=True)
 ) -> Callable[[Any, Any], bool]:
+    """
+    Returns a function that compares two objects using the given functions.
+
+    :param functions_for_types: Tuples of type and match_function.
+        The returned function will compare two objects of a the same, given type with the specified function.
+    :type functions_for_types: list[tuple[str, Callable[[Any, Any], bool]]]
+    :param fall_back_function: The fallback for comparison if the objects that are being compared don't have a common
+        type with specified compare function or at least one object is not a JSON-LD dictionary.
+    :type fall_back_function: Callable[[Any, Any], bool]
+
+    :return: The function that compares the two given objects using the given functions.
+    :rtype: Callable[[Any, Any], bool]
+    """
+
+    # create and return the match function using the given keys
     def match_func(left: Any, right: Any) -> bool:
-        if not ((isinstance(left, ld_dict) and isinstance(right, ld_dict)) and "@type" in left and "@type" in right):
+        """
+        Compares two objects using a predetermined function if either objects is not an ld_dict
+        or they don't have a common type in a predetermined list of types.<br>
+        If the objects are ld_dicts and have the same type with a known comparison function this is used instead.
+
+        :param left: The first object for the comparison.
+        :type left: ld_merge_dict
+        :param right: The second object for the comparison.
+        :type right: ld_dict
+
+        :return: The result of the comparison.
+        :rtype: bool
+        """
+        # If at least one of the objects is not an ld_dict or contains no value for the key "@type", use the fallback.
+        if not (isinstance(left, ld_dict) and isinstance(right, ld_dict) and "@type" in left and "@type" in right):
             return fall_back_function(left, right)
+        # Extract the list of types
         types_left = left["@type"]
         types_right = right["@type"]
+        # Iterate over all known type, match_function pairs.
+        # If one type is in both objects return the result of the comparison with the match_function.
         for ld_type, func in functions_for_types:
             if ld_type in types_left and ld_type in types_right:
                 return func(left, right)
+        # No common type with known match_function: Fallback
         return fall_back_function(left, right)
     return match_func

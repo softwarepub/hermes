@@ -90,12 +90,10 @@ PROV_STRATEGY = {
 }
 
 
-
 # Filled with entries for every schema-type that can be found inside an JSON-LD dict of type
-# SoftwareSourceCode or SoftwareApplication.
+# SoftwareSourceCode or SoftwareApplication using schema and CodeMeta as Context.
 CODEMETA_STRATEGY = {None: {None: ACTIONS["default"]}}
 CODEMETA_STRATEGY[iri["schema:Thing"]] = {iri["schema:owner"]: ACTIONS["OrganizationOrPerson"]}
-
 
 
 CODEMETA_STRATEGY[iri["schema:Action"]] = {
@@ -107,7 +105,6 @@ CODEMETA_STRATEGY[iri["schema:Action"]] = {
 }
 
 
-
 CODEMETA_STRATEGY[iri["schema:BioChemEntity"]] = {
     **CODEMETA_STRATEGY[iri["schema:Thing"]],
     iri["schema:associatedDisease"]: ACTIONS["MedicalConditionOrPropertyValue"],
@@ -117,12 +114,10 @@ CODEMETA_STRATEGY[iri["schema:BioChemEntity"]] = {
     iri["schema:taxonomicRange"]: ACTIONS["DefinedTermOrTaxon"]
 }
 
-
 CODEMETA_STRATEGY[iri["schema:Gene"]] = {
     **CODEMETA_STRATEGY[iri["schema:BioChemEntity"]],
     iri["schema:expressedIn"]: ACTIONS["AnatomicalStructureOrAnatomicalSystemOrBioChemEntityOrDefinedTerm"]
 }
-
 
 
 CODEMETA_STRATEGY[iri["schema:CreativeWork"]] = {
@@ -149,38 +144,30 @@ CODEMETA_STRATEGY[iri["schema:CreativeWork"]] = {
     iri["schema:video"]: ACTIONS["ClipOrVideoObject"]
 }
 
-
 CODEMETA_STRATEGY[iri["schema:Article"]] = {**CODEMETA_STRATEGY[iri["schema:CreativeWork"]]}
 CODEMETA_STRATEGY[iri["schema:NewsArticle"]] = {**CODEMETA_STRATEGY[iri["schema:Article"]]}
 CODEMETA_STRATEGY[iri["schema:ScholarlyArticle"]] = {**CODEMETA_STRATEGY[iri["schema:Article"]]}
-
 CODEMETA_STRATEGY[iri["schema:Certification"]] = {**CODEMETA_STRATEGY[iri["schema:CreativeWork"]]}
-
 CODEMETA_STRATEGY[iri["schema:Claim"]] = {
     **CODEMETA_STRATEGY[iri["schema:CreativeWork"]],
     iri["schema:claimInterpreter"]: ACTIONS["OrganizationOrPerson"]
 }
-
 CODEMETA_STRATEGY[iri["schema:Clip"]] = {
     **CODEMETA_STRATEGY[iri["schema:CreativeWork"]],
     iri["schema:actor"]: ACTIONS["PerformingGroupOrPerson"],
     iri["schema:dircetor"]: ACTIONS["Person"],
     iri["schema:musicBy"]: ACTIONS["MusicGroupOrPerson"]
 }
-
 CODEMETA_STRATEGY[iri["schema:Comment"]] = {
     **CODEMETA_STRATEGY[iri["schema:CreativeWork"]],
     iri["schema:parentItem"]: ACTIONS["CommentOrCreativeWork"]
 }
 CODEMETA_STRATEGY[iri["schema:CorrectionComment"]] = {**CODEMETA_STRATEGY[iri["schema:Comment"]]}
-
 CODEMETA_STRATEGY[iri["schema:CreativeWorkSeason"]] = {
     **CODEMETA_STRATEGY[iri["schema:CreativeWork"]],
     iri["schema:actor"]: ACTIONS["PerformingGroupOrPerson"]
 }
-
 CODEMETA_STRATEGY[iri["schema:DataCatalog"]] = {**CODEMETA_STRATEGY[iri["schema:CreativeWork"]]}
-
 CODEMETA_STRATEGY[iri["schema:Dataset"]] = {
     **CODEMETA_STRATEGY[iri["schema:CreativeWork"]],
     iri["schema:variableMeasured"]: ACTIONS["PropertyOrPropertyValueOrStatisticalVariable"]
@@ -189,12 +176,9 @@ CODEMETA_STRATEGY[iri["schema:DataFeed"]] = {
     **CODEMETA_STRATEGY[iri["schema:Dataset"]],
     iri["schema:dataFeedElement"]: ACTIONS["DataFeedItemOrThing"]
 }
-
 CODEMETA_STRATEGY[iri["schema:DefinedTermSet"]] = {**CODEMETA_STRATEGY[iri["schema:CreativeWork"]]}
 CODEMETA_STRATEGY[iri["schema:CategoryCodeSet"]] = {**CODEMETA_STRATEGY[iri["schema:DefinedTermSet"]]}
-
 CODEMETA_STRATEGY[iri["schema:EducationalOccupationalCredential"]] = {**CODEMETA_STRATEGY[iri["schema:CreativeWork"]]}
-
 CODEMETA_STRATEGY[iri["schema:Episode"]] = {
     **CODEMETA_STRATEGY[iri["schema:CreativeWork"]],
     iri["schema:actor"]: ACTIONS["PerformingGroupOrPerson"],
@@ -202,16 +186,12 @@ CODEMETA_STRATEGY[iri["schema:Episode"]] = {
     iri["schema:duration"]: ACTIONS["DurationOrQuantitativeValue"],
     iri["schema:musicBy"]: ACTIONS["MusicGroupOrPerson"]
 }
-
 CODEMETA_STRATEGY[iri["schema:HowTo"]] = {
     **CODEMETA_STRATEGY[iri["schema:CreativeWork"]],
     iri["schema:step"]: ACTIONS["CreativeWorkOrHowToSectionOrHowToStep"]
 }
-
 CODEMETA_STRATEGY[iri["schema:HyperTocEntry"]] = {**CODEMETA_STRATEGY[iri["schema:CreativeWork"]]}
-
 CODEMETA_STRATEGY[iri["schema:Map"]] = {**CODEMETA_STRATEGY[iri["schema:CreativeWork"]]}
-
 CODEMETA_STRATEGY[iri["schema:MediaObject"]] = {
     **CODEMETA_STRATEGY[iri["schema:CreativeWork"]],
     iri["schema:duration"]: ACTIONS["DurationOrQuantitativeValue"],
@@ -228,15 +208,12 @@ CODEMETA_STRATEGY[iri["schema:VideoObject"]] = {
     iri["schema:dircetor"]: ACTIONS["Person"],
     iri["schema:musicBy"]: ACTIONS["MusicGroupOrPerson"]
 }
-
 CODEMETA_STRATEGY[iri["schema:MenuSection"]] = {**CODEMETA_STRATEGY[iri["schema:CreativeWork"]]}
-
 CODEMETA_STRATEGY[iri["schema:MusicComposition"]] = {
     **CODEMETA_STRATEGY[iri["schema:CreativeWork"]],
     iri["schema:composer"]: ACTIONS["OrganizationOrPerson"],
     iri["schema:lyricist"]: ACTIONS["Person"]
 }
-
 CODEMETA_STRATEGY[iri["schema:MusicPlaylist"]] = {
     **CODEMETA_STRATEGY[iri["schema:CreativeWork"]],
     iri["schema:track"]: ACTIONS["ItemListOrMusicRecording"]
@@ -250,42 +227,32 @@ CODEMETA_STRATEGY[iri["schema:MusicRelease"]] = {
     iri["schema:creditedTo"]: ACTIONS["OrganizationOrPerson"],
     iri["schema:duration"]: ACTIONS["DurationOrQuantitativeValue"]
 }
-
 CODEMETA_STRATEGY[iri["schema:MusicRecording"]] = {
     **CODEMETA_STRATEGY[iri["schema:CreativeWork"]],
     iri["schema:byArtist"]: ACTIONS["MusicGroupOrPerson"],
     iri["schema:duration"]: ACTIONS["DurationOrQuantitativeValue"]
 }
-
 CODEMETA_STRATEGY[iri["schema:Photograph"]] = {**CODEMETA_STRATEGY[iri["schema:CreativeWork"]]}
-
 CODEMETA_STRATEGY[iri["schema:Review"]] = {
     **CODEMETA_STRATEGY[iri["schema:CreativeWork"]],
     iri["schema:negativeNotes"]: ACTIONS["ItemListOrListItemOrWebContent"],
     iri["schema:positiveNotes"]: ACTIONS["ItemListOrListItemOrWebContent"]
 }
-
 CODEMETA_STRATEGY[iri["schema:SoftwareApplication"]] = {**CODEMETA_STRATEGY[iri["schema:CreativeWork"]]}
 CODEMETA_STRATEGY[iri["schema:OperatingSystem"]] = {**CODEMETA_STRATEGY[iri["schema:SoftwareApplication"]]}
 CODEMETA_STRATEGY[iri["schema:RuntimePlatform"]] = {**CODEMETA_STRATEGY[iri["schema:SoftwareApplication"]]}
-
 CODEMETA_STRATEGY[iri["schema:SoftwareSourceCode"]] = {
     **CODEMETA_STRATEGY[iri["schema:CreativeWork"]],
     iri["maintainer"]: ACTIONS["Person"]
 }
-
 CODEMETA_STRATEGY[iri["schema:WebContent"]] = {**CODEMETA_STRATEGY[iri["schema:CreativeWork"]]}
-
 CODEMETA_STRATEGY[iri["schema:WebPage"]] = {
     **CODEMETA_STRATEGY[iri["schema:CreativeWork"]],
     iri["schema:reviewedBy"]: ACTIONS["OrganizationOrPerson"]
 }
 CODEMETA_STRATEGY[iri["schema:AboutPage"]] = {**CODEMETA_STRATEGY[iri["schema:WebPage"]]}
-
 CODEMETA_STRATEGY[iri["schema:WebPageElement"]] = {**CODEMETA_STRATEGY[iri["schema:CreativeWork"]]}
-
 CODEMETA_STRATEGY[iri["schema:WebSite"]] = {**CODEMETA_STRATEGY[iri["schema:CreativeWork"]]}
-
 
 
 CODEMETA_STRATEGY[iri["schema:Event"]] = {
@@ -305,40 +272,28 @@ CODEMETA_STRATEGY[iri["schema:Event"]] = {
     iri["schema:translator"]: ACTIONS["OrganizationOrPerson"]
 }
 
-
 CODEMETA_STRATEGY[iri["schema:PublicationEvent"]] = {
     **CODEMETA_STRATEGY[iri["schema:Event"]],
     iri["schema:publishedBy"]: ACTIONS["OrganizationOrPerson"]
 }
 
 
-
 CODEMETA_STRATEGY[iri["schema:Intangible"]] = {**CODEMETA_STRATEGY[iri["schema:Thing"]]}
 
-
 CODEMETA_STRATEGY[iri["schema:AlignmentObject"]] = {**CODEMETA_STRATEGY[iri["schema:Intangible"]]}
-
 CODEMETA_STRATEGY[iri["schema:Audience"]] = {**CODEMETA_STRATEGY[iri["schema:Intangible"]]}
-
 CODEMETA_STRATEGY[iri["schema:Brand"]] = {**CODEMETA_STRATEGY[iri["schema:Intangible"]]}
-
 CODEMETA_STRATEGY[iri["schema:BroadcastChannel"]] = {**CODEMETA_STRATEGY[iri["schema:Intangible"]]}
-
 CODEMETA_STRATEGY[iri["schema:BroadcastFrequencySpecification"]] = {**CODEMETA_STRATEGY[iri["schema:Intangible"]]}
-
 CODEMETA_STRATEGY[iri["schema:Class"]] = {
     **CODEMETA_STRATEGY[iri["schema:Intangible"]],
     iri["schema:supersededBy"]: ACTIONS["ClassOrEnumeration"]
 }
-
 CODEMETA_STRATEGY[iri["schema:ComputerLanguage"]] = {**CODEMETA_STRATEGY[iri["schema:Intangible"]]}
-
 CODEMETA_STRATEGY[iri["schema:ConstraintNode"]] = {**CODEMETA_STRATEGY[iri["schema:Intangible"]]}
 CODEMETA_STRATEGY[iri["schema:StatisticalVariable"]] = {**CODEMETA_STRATEGY[iri["schema:ConstraintNode"]]}
-
 CODEMETA_STRATEGY[iri["schema:DefinedTerm"]] = {**CODEMETA_STRATEGY[iri["schema:Intangible"]]}
 CODEMETA_STRATEGY[iri["schema:CategoryCode"]] = {**CODEMETA_STRATEGY[iri["schema:DefinedTerm"]]}
-
 CODEMETA_STRATEGY[iri["schema:Demand"]] = {
     **CODEMETA_STRATEGY[iri["schema:Intangible"]],
     iri["schema:acceptedPaymentMethod"]: ACTIONS["LoanOrCreditOrPaymentMethod"],
@@ -348,11 +303,8 @@ CODEMETA_STRATEGY[iri["schema:Demand"]] = {
     iri["schema:itemOffered"]: ACTIONS["AggregateOfferOrCreativeWorkOrEventOrMenuItemOrProductOrServiceOrTrip"],
     iri["schema:seller"]: ACTIONS["OrganizationOrPerson"]
 }
-
 CODEMETA_STRATEGY[iri["schema:EnergyConsumptionDetails"]] = {**CODEMETA_STRATEGY[iri["schema:Intangible"]]}
-
 CODEMETA_STRATEGY[iri["schema:EntryPoint"]] = {**CODEMETA_STRATEGY[iri["schema:Intangible"]]}
-
 CODEMETA_STRATEGY[iri["schema:Enumeration"]] = {
     **CODEMETA_STRATEGY[iri["schema:Intangible"]],
     iri["schema:supersededBy"]: ACTIONS["ClassOrEnumeration"]
@@ -364,7 +316,6 @@ CODEMETA_STRATEGY[iri["schema:QualitativeValue"]] = {
     ]: ACTIONS["DefinedTermOrEnumerationOrPropertyValueOrQualitativeValueOrQuantitativeValueOrStructuredValue"]
 }
 CODEMETA_STRATEGY[iri["schema:SizeSpecification"]] = {**CODEMETA_STRATEGY[iri["schema:QualitativeValue"]]}
-
 CODEMETA_STRATEGY[iri["schema:GeospatialGeometry"]] = {
     **CODEMETA_STRATEGY[iri["schema:Intangible"]],
     iri["schema:geoContains"]: ACTIONS["GeospatialGeometryOrPlace"],
@@ -378,7 +329,6 @@ CODEMETA_STRATEGY[iri["schema:GeospatialGeometry"]] = {
     iri["schema:geoTouches"]: ACTIONS["GeospatialGeometryOrPlace"],
     iri["schema:geoWithin"]: ACTIONS["GeospatialGeometryOrPlace"]
 }
-
 CODEMETA_STRATEGY[iri["schema:Grant"]] = {
     **CODEMETA_STRATEGY[iri["schema:Intangible"]],
     iri[
@@ -387,55 +337,39 @@ CODEMETA_STRATEGY[iri["schema:Grant"]] = {
     iri["schema:funder"]: ACTIONS["OrganizationOrPerson"],
     iri["schema:sponsor"]: ACTIONS["OrganizationOrPerson"]
 }
-
 CODEMETA_STRATEGY[iri["schema:HealthInsurancePlan"]] = {**CODEMETA_STRATEGY[iri["schema:Intangible"]]}
-
 CODEMETA_STRATEGY[iri["schema:HealthPlanCostSharingSpecification"]] = {**CODEMETA_STRATEGY[iri["schema:Intangible"]]}
-
 CODEMETA_STRATEGY[iri["schema:HealthPlanFormulary"]] = {**CODEMETA_STRATEGY[iri["schema:Intangible"]]}
-
 CODEMETA_STRATEGY[iri["schema:HealthPlanNetwork"]] = {**CODEMETA_STRATEGY[iri["schema:Intangible"]]}
-
 CODEMETA_STRATEGY[iri["schema:ItemList"]] = {
     **CODEMETA_STRATEGY[iri["schema:Intangible"]],
     iri["schema:itemListElement"]: ACTIONS["ListItemOrThing"]
 }
 CODEMETA_STRATEGY[iri["schema:OfferCatalog"]] = {**CODEMETA_STRATEGY[iri["schema:ItemList"]]}
 CODEMETA_STRATEGY[iri["schema:BreadcrumbList"]] = {**CODEMETA_STRATEGY[iri["schema:ItemList"]]}
-
 CODEMETA_STRATEGY[iri["schema:Language"]] = {**CODEMETA_STRATEGY[iri["schema:Intangible"]]}
-
 CODEMETA_STRATEGY[iri["schema:ListItem"]] = {**CODEMETA_STRATEGY[iri["schema:Intangible"]]}
 CODEMETA_STRATEGY[iri["schema:HowToItem"]] = {**CODEMETA_STRATEGY[iri["schema:ListItem"]]}
 CODEMETA_STRATEGY[iri["schema:HowToSupply"]] = {**CODEMETA_STRATEGY[iri["schema:HowToItem"]]}
 CODEMETA_STRATEGY[iri["schema:HowToTool"]] = {**CODEMETA_STRATEGY[iri["schema:HowToItem"]]}
-
 CODEMETA_STRATEGY[iri["schema:MediaSubscription"]] = {**CODEMETA_STRATEGY[iri["schema:Intangible"]]}
-
 CODEMETA_STRATEGY[iri["schema:MemberProgram"]] = {**CODEMETA_STRATEGY[iri["schema:Intangible"]]}
-
 CODEMETA_STRATEGY[iri["schema:MemberProgramTier"]] = {
     **CODEMETA_STRATEGY[iri["schema:Intangible"]],
     iri["schema:hasTierRequirement"]: ACTIONS["CreditCardOrMonetaryAmountOrUnitPriceSpecification"]
 }
-
 CODEMETA_STRATEGY[iri["schema:MenuItem"]] = {
     **CODEMETA_STRATEGY[iri["schema:Intangible"]],
     iri["schema:menuAddOn"]: ACTIONS["MenuItemOrMenuSection"],
     iri["schema:offers"]: ACTIONS["DemandOrOffer"]
 }
-
 CODEMETA_STRATEGY[iri["schema:MerchantReturnPolicy"]] = {**CODEMETA_STRATEGY[iri["schema:Intangible"]]}
-
 CODEMETA_STRATEGY[iri["schema:MerchantReturnPolicySeasonalOverride"]] = {**CODEMETA_STRATEGY[iri["schema:Intangible"]]}
-
 CODEMETA_STRATEGY[iri["schema:Occupation"]] = {
     **CODEMETA_STRATEGY[iri["schema:Intangible"]],
     iri["schema:estimatedSalary"]: ACTIONS["MonetaryAmountOrMonetaryAmountDistribution"]
 }
-
 CODEMETA_STRATEGY[iri["schema:OccupationalExperienceRequirements"]] = {**CODEMETA_STRATEGY[iri["schema:Intangible"]]}
-
 CODEMETA_STRATEGY[iri["schema:Offer"]] = {
     **CODEMETA_STRATEGY[iri["schema:Intangible"]],
     iri["schema:acceptedPaymentMethod"]: ACTIONS["LoanOrCreditOrPaymentMethod"],
@@ -452,37 +386,29 @@ CODEMETA_STRATEGY[iri["schema:AggregateOffer"]] = {
     **CODEMETA_STRATEGY[iri["schema:Offer"]],
     iri["schema:offers"]: ACTIONS["DemandOrOffer"]
 }
-
 CODEMETA_STRATEGY[iri["schema:PaymentMethod"]] = {**CODEMETA_STRATEGY[iri["schema:Intangible"]]}
-
 CODEMETA_STRATEGY[iri["schema:ProgramMembership"]] = {
     **CODEMETA_STRATEGY[iri["schema:Intangible"]],
     iri["schema:member"]: ACTIONS["OrganizationOrPerson"]
 }
-
 CODEMETA_STRATEGY[iri["schema:Property"]] = {
     **CODEMETA_STRATEGY[iri["schema:Intangible"]],
     iri["schema:supersededBy"]: ACTIONS["ClassOrEnumerationOrProperty"]
 }
-
 CODEMETA_STRATEGY[iri["schema:Quantity"]] = {**CODEMETA_STRATEGY[iri["schema:Intangible"]]}
 CODEMETA_STRATEGY[iri["schema:Duration"]] = {**CODEMETA_STRATEGY[iri["schema:Quantity"]]}
 CODEMETA_STRATEGY[iri["schema:Energy"]] = {**CODEMETA_STRATEGY[iri["schema:Quantity"]]}
 CODEMETA_STRATEGY[iri["schema:Mass"]] = {**CODEMETA_STRATEGY[iri["schema:Quantity"]]}
-
 CODEMETA_STRATEGY[iri["schema:Rating"]] = {
     **CODEMETA_STRATEGY[iri["schema:Intangible"]],
     iri["schema:author"]: ACTIONS["OrganizationOrPerson"]
 }
 CODEMETA_STRATEGY[iri["schema:AggregateRating"]] = {**CODEMETA_STRATEGY[iri["schema:Rating"]]}
-
 CODEMETA_STRATEGY[iri["schema:Schedule"]] = {
     **CODEMETA_STRATEGY[iri["schema:Intangible"]],
     iri["schema:duration"]: ACTIONS["DurationOrQuantitativeValue"]
 }
-
 CODEMETA_STRATEGY[iri["schema:Series"]] = {**CODEMETA_STRATEGY[iri["schema:Intangible"]]}
-
 CODEMETA_STRATEGY[iri["schema:Service"]] = {
     **CODEMETA_STRATEGY[iri["schema:Intangible"]],
     iri["schema:areaServed"]: ACTIONS["AdministrativeAreaOrGeoShapeOrPlace"],
@@ -498,11 +424,8 @@ CODEMETA_STRATEGY[iri["schema:BroadcastService"]] = {**CODEMETA_STRATEGY[iri["sc
 CODEMETA_STRATEGY[iri["schema:CableOrSatelliteService"]] = {**CODEMETA_STRATEGY[iri["schema:Service"]]}
 CODEMETA_STRATEGY[iri["schema:FinancialProduct"]] = {**CODEMETA_STRATEGY[iri["schema:Service"]]}
 CODEMETA_STRATEGY[iri["schema:LoanOrCredit"]] = {**CODEMETA_STRATEGY[iri["schema:FinancialProduct"]]}
-
 CODEMETA_STRATEGY[iri["schema:ServiceChannel"]] = {**CODEMETA_STRATEGY[iri["schema:Intangible"]]}
-
 CODEMETA_STRATEGY[iri["schema:SpeakableSpecification"]] = {**CODEMETA_STRATEGY[iri["schema:Intangible"]]}
-
 CODEMETA_STRATEGY[iri["schema:StructuredValue"]] = {**CODEMETA_STRATEGY[iri["schema:Intangible"]]}
 CODEMETA_STRATEGY[iri["schema:ContactPoint"]] = {
     **CODEMETA_STRATEGY[iri["schema:StructuredValue"]],
@@ -524,7 +447,7 @@ CODEMETA_STRATEGY[iri["schema:OfferShippingDetails"]] = {
     iri["schema:depth"]: ACTIONS["DistanceOrQuantitativeValue"],
     iri["schema:height"]: ACTIONS["DistanceOrQuantitativeValue"],
     iri["schema:shippingRate"]: ACTIONS["MonetaryAmountOrShippingRateSettings"],
-    iri["schema:weight"]:ACTIONS["MassOrQuantitativeValue"],
+    iri["schema:weight"]: ACTIONS["MassOrQuantitativeValue"],
     iri["schema:width"]: ACTIONS["DistanceOrQuantitativeValue"]
 }
 CODEMETA_STRATEGY[iri["schema:OpeningHoursSpecification"]] = {**CODEMETA_STRATEGY[iri["schema:StructuredValue"]]}
@@ -571,7 +494,7 @@ CODEMETA_STRATEGY[iri["schema:ShippingConditions"]] = {
     iri["schema:height"]: ACTIONS["DistanceOrQuantitativeValue"],
     iri["schema:shippingRate"]: ACTIONS["MonetaryAmountOrShippingRateSettings"],
     iri["schema:transitTime"]: ACTIONS["QuantitativeValueOrServicePeriod"],
-    iri["schema:weight"]:ACTIONS["MassOrQuantitativeValue"],
+    iri["schema:weight"]: ACTIONS["MassOrQuantitativeValue"],
     iri["schema:width"]: ACTIONS["DistanceOrQuantitativeValue"]
 }
 CODEMETA_STRATEGY[iri["schema:ShippingDeliveryTime"]] = {
@@ -592,27 +515,19 @@ CODEMETA_STRATEGY[iri["schema:TypeAndQuantityNode"]] = {
     iri["schema:typeOfGood"]: ACTIONS["ProductOrService"]
 }
 CODEMETA_STRATEGY[iri["schema:WarrantyPromise"]] = {**CODEMETA_STRATEGY[iri["schema:StructuredValue"]]}
-
 CODEMETA_STRATEGY[iri["schema:VirtualLocation"]] = {**CODEMETA_STRATEGY[iri["schema:Intangible"]]}
-
 
 
 CODEMETA_STRATEGY[iri["schema:MedicalEntity"]] = {**CODEMETA_STRATEGY[iri["schema:Thing"]]}
 
-
 CODEMETA_STRATEGY[iri["schema:AnatomicalStructure"]] = {**CODEMETA_STRATEGY[iri["schema:MedicalEntity"]]}
-
 CODEMETA_STRATEGY[iri["schema:AnatomicalSystem"]] = {
     **CODEMETA_STRATEGY[iri["schema:MedicalEntity"]],
     iri["schema:comprisedOf"]: ACTIONS["AnatomicalStructureOrAnatomicalSystem"]
 }
-
 CODEMETA_STRATEGY[iri["schema:DrugClass"]] = {**CODEMETA_STRATEGY[iri["schema:MedicalEntity"]]}
-
 CODEMETA_STRATEGY[iri["schema:LifestyleModification"]] = {**CODEMETA_STRATEGY[iri["schema:MedicalEntity"]]}
-
 CODEMETA_STRATEGY[iri["schema:MedicalCause"]] = {**CODEMETA_STRATEGY[iri["schema:MedicalEntity"]]}
-
 CODEMETA_STRATEGY[iri["schema:MedicalCondition"]] = {
     **CODEMETA_STRATEGY[iri["schema:MedicalEntity"]],
     iri["schema:associatedAnatomy"]: ACTIONS["AnatomicalStructureOrAnatomicalSystemOrSuperficialAnatomy"],
@@ -624,13 +539,9 @@ CODEMETA_STRATEGY[iri["schema:MedicalSignOrSymptom"]] = {
     iri["schema:possibleTreatment"]: ACTIONS["DrugOrDrugClassOrLifestyleModificationOrMedicalTherapy"]
 }
 CODEMETA_STRATEGY[iri["schema:MedicalSign"]] = {**CODEMETA_STRATEGY[iri["schema:MedicalSignOrSymptom"]]}
-
 CODEMETA_STRATEGY[iri["schema:MedicalContraindication"]] = {**CODEMETA_STRATEGY[iri["schema:MedicalEntity"]]}
-
 CODEMETA_STRATEGY[iri["schema:MedicalDevice"]] = {**CODEMETA_STRATEGY[iri["schema:MedicalEntity"]]}
-
 CODEMETA_STRATEGY[iri["schema:MedicalGuideline"]] = {**CODEMETA_STRATEGY[iri["schema:MedicalEntity"]]}
-
 CODEMETA_STRATEGY[iri["schema:MedicalIntangible"]] = {**CODEMETA_STRATEGY[iri["schema:MedicalEntity"]]}
 CODEMETA_STRATEGY[iri["schema:DDxElement"]] = {**CODEMETA_STRATEGY[iri["schema:MedicalIntangible"]]}
 CODEMETA_STRATEGY[iri["schema:DrugLegalStatus"]] = {**CODEMETA_STRATEGY[iri["schema:MedicalIntangible"]]}
@@ -638,25 +549,19 @@ CODEMETA_STRATEGY[iri["schema:DoseSchedule"]] = {**CODEMETA_STRATEGY[iri["schema
 CODEMETA_STRATEGY[iri["schema:DrugStrength"]] = {**CODEMETA_STRATEGY[iri["schema:MedicalIntangible"]]}
 CODEMETA_STRATEGY[iri["schema:MaximumDoseSchedule"]] = {**CODEMETA_STRATEGY[iri["schema:MedicalIntangible"]]}
 CODEMETA_STRATEGY[iri["schema:MedicalConditionStage"]] = {**CODEMETA_STRATEGY[iri["schema:MedicalIntangible"]]}
-
 CODEMETA_STRATEGY[iri["schema:MedicalProcedure"]] = {**CODEMETA_STRATEGY[iri["schema:MedicalEntity"]]}
 CODEMETA_STRATEGY[iri["schema:TherapeuticProcedure"]] = {**CODEMETA_STRATEGY[iri["schema:MedicalProcedure"]]}
 CODEMETA_STRATEGY[iri["schema:MedicalTherapy"]] = {**CODEMETA_STRATEGY[iri["schema:TherapeuticProcedure"]]}
-
 CODEMETA_STRATEGY[iri["schema:MedicalRiskFactor"]] = {**CODEMETA_STRATEGY[iri["schema:MedicalEntity"]]}
-
 CODEMETA_STRATEGY[iri["schema:MedicalStudy"]] = {
     **CODEMETA_STRATEGY[iri["schema:MedicalEntity"]],
     iri["schema:sponsor"]: ACTIONS["OrganizationOrPerson"]
 }
-
 CODEMETA_STRATEGY[iri["schema:MedicalTest"]] = {**CODEMETA_STRATEGY[iri["schema:MedicalEntity"]]}
-
 CODEMETA_STRATEGY[iri["schema:SuperficialAnatomy"]] = {
     **CODEMETA_STRATEGY[iri["schema:MedicalEntity"]],
     iri["schema:relatedAnatomy"]: ACTIONS["AnatomicalStructureOrAnatomicalSystem"]
 }
-
 
 
 CODEMETA_STRATEGY[iri["schema:Organization"]] = {
@@ -676,14 +581,12 @@ CODEMETA_STRATEGY[iri["schema:Organization"]] = {
     iri["schema:sponsor"]: ACTIONS["OrganizationOrPerson"]
 }
 
-
 CODEMETA_STRATEGY[iri["schema:PerformingGroup"]] = {**CODEMETA_STRATEGY[iri["schema:Organization"]]}
 CODEMETA_STRATEGY[iri["schema:MusicGroup"]] = {
     **CODEMETA_STRATEGY[iri["schema:PerformingGroup"]],
     iri["schema:musicGroupMember"]: ACTIONS["Person"],
     iri["schema:track"]: ACTIONS["ItemListOrMusicRecording"]
 }
-
 
 
 CODEMETA_STRATEGY[iri["schema:Person"]] = {
@@ -705,10 +608,9 @@ CODEMETA_STRATEGY[iri["schema:Person"]] = {
     iri["schema:sibling"]: ACTIONS["Person"],
     iri["schema:sponsor"]: ACTIONS["OrganizationOrPerson"],
     iri["schema:spouse"]: ACTIONS["Person"],
-    iri["schema:weight"]:ACTIONS["MassOrQuantitativeValue"],
+    iri["schema:weight"]: ACTIONS["MassOrQuantitativeValue"],
     iri["schema:workLocation"]: ACTIONS["ContactPointOrPlace"]
 }
-
 
 
 CODEMETA_STRATEGY[iri["schema:Place"]] = {
@@ -727,12 +629,9 @@ CODEMETA_STRATEGY[iri["schema:Place"]] = {
     iri["schema:photo"]: ACTIONS["ImageObjectOrPhotograph"]
 }
 
-
 CODEMETA_STRATEGY[iri["schema:AdministrativeArea"]] = {**CODEMETA_STRATEGY[iri["schema:Place"]]}
 CODEMETA_STRATEGY[iri["schema:Country"]] = {**CODEMETA_STRATEGY[iri["schema:AdministrativeArea"]]}
-
 CODEMETA_STRATEGY[iri["schema:CivicStructure"]] = {**CODEMETA_STRATEGY[iri["schema:Place"]]}
-
 
 
 CODEMETA_STRATEGY[iri["schema:Product"]] = {
@@ -748,22 +647,18 @@ CODEMETA_STRATEGY[iri["schema:Product"]] = {
     iri["schema:offers"]: ACTIONS["DemandOrOffer"],
     iri["schema:positiveNotes"]: ACTIONS["ItemListOrListItemOrWebContent"],
     iri["schema:size"]: ACTIONS["DefinedTermOrQuantitativeValueOrSizeSpecification"],
-    iri["schema:weight"]:ACTIONS["MassOrQuantitativeValue"],
+    iri["schema:weight"]: ACTIONS["MassOrQuantitativeValue"],
     iri["schema:width"]: ACTIONS["DistanceOrQuantitativeValue"]
 }
 
-
 CODEMETA_STRATEGY[iri["schema:ProductGroup"]] = {**CODEMETA_STRATEGY[iri["schema:Product"]]}
-
 CODEMETA_STRATEGY[iri["schema:ProductModel"]] = {
     **CODEMETA_STRATEGY[iri["schema:Product"]],
     iri["schema:isVariantOf"]: ACTIONS["ProductGroupOrProductModel"]
 }
 
 
-
 CODEMETA_STRATEGY[iri["schema:Taxon"]] = {**CODEMETA_STRATEGY[iri["schema:Thing"]]}
-
 
 
 CODEMETA_STRATEGY[iri["schema:CreativeWorkSeries"]] = {
@@ -771,24 +666,20 @@ CODEMETA_STRATEGY[iri["schema:CreativeWorkSeries"]] = {
     **CODEMETA_STRATEGY[iri["schema:Series"]]
 }
 
-
 CODEMETA_STRATEGY[iri["schema:DefinedRegion"]] = {
     **CODEMETA_STRATEGY[iri["schema:Place"]],
     **CODEMETA_STRATEGY[iri["schema:StructuredValue"]]
 }
-
 
 CODEMETA_STRATEGY[iri["schema:Drug"]] = {
     **CODEMETA_STRATEGY[iri["schema:Product"]],
     **CODEMETA_STRATEGY[iri["schema:MedicalEntity"]]
 }
 
-
 CODEMETA_STRATEGY[iri["schema:EducationalOrganization"]] = {
     **CODEMETA_STRATEGY[iri["schema:Organization"]],
     **CODEMETA_STRATEGY[iri["schema:CivicStructure"]]
 }
-
 
 CODEMETA_STRATEGY[iri["schema:HowToSection"]] = {
     **CODEMETA_STRATEGY[iri["schema:CreativeWork"]],
@@ -796,25 +687,21 @@ CODEMETA_STRATEGY[iri["schema:HowToSection"]] = {
     **CODEMETA_STRATEGY[iri["schema:ListItem"]]
 }
 
-
 CODEMETA_STRATEGY[iri["schema:HowToStep"]] = {
     **CODEMETA_STRATEGY[iri["schema:CreativeWork"]],
     **CODEMETA_STRATEGY[iri["schema:ItemList"]],
     **CODEMETA_STRATEGY[iri["schema:ListItem"]]
 }
 
-
 CODEMETA_STRATEGY[iri["schema:MedicalCode"]] = {
     **CODEMETA_STRATEGY[iri["schema:CategoryCode"]],
     **CODEMETA_STRATEGY[iri["schema:MedicalIntangible"]]
 }
 
-
 CODEMETA_STRATEGY[iri["schema:PaymentCard"]] = {
     **CODEMETA_STRATEGY[iri["schema:FinancialProduct"]],
     **CODEMETA_STRATEGY[iri["schema:PaymentMethod"]]
 }
-
 CODEMETA_STRATEGY[iri["schema:CreditCard"]] = {
     **CODEMETA_STRATEGY[iri["schema:LoanOrCredit"]],
     **CODEMETA_STRATEGY[iri["schema:PaymentCard"]]
