@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 class ld_list(ld_container):
     """
     An JSON-LD container resembling a list ("@set", "@list" or "@graph").
-    See also :class:`ld_container`
+    See also :class:`ld_container`.
 
     :ivar container_type: The type of JSON-LD container the list is representing. ("@set", "@list", "graph")
     :ivartype container_type: str

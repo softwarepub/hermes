@@ -20,7 +20,6 @@ _TYPEMAP = [
     (lambda c: isinstance(c, list), {"ld_container": ld_list}),
 
     # pythonize items from lists (expanded set is already handled above)
-    (ld_container.is_json_id, {"python": lambda c, **_: c["@id"]}),
     (ld_container.is_typed_json_value, {"python": lambda c, **kw: ld_container.typed_ld_to_py([c], **kw)}),
     (ld_container.is_json_value, {"python": lambda c, **_: c["@value"]}),
     (ld_list.is_container, {"ld_container": lambda c, **kw: ld_list([c], **kw)}),

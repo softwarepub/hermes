@@ -27,14 +27,17 @@ def test_malformed_input():
 
 
 def test_build_in_get():
-    di = ld_dict([{"http://xmlns.com/foaf/0.1/name": [{"@value": "Manu Sporny"}],
-                   "http://xmlns.com/foaf/0.1/homepage": [{"@id": "http://manu.sporny.org/"}],
-                   "http://xmlns.com/foaf/0.1/foo": [{"http://xmlns.com/foaf/0.1/foobar": [{"@value": "bar"}],
-                                                      "http://xmlns.com/foaf/0.1/barfoo": [{"@value": "foo"}]}]}],
-                 context=[{"xmlns": "http://xmlns.com/foaf/0.1/"}])
-    assert di["xmlns:name"] == ["Manu Sporny"]
-    assert di["xmlns:homepage"] == ["http://manu.sporny.org/"]
-    assert di["xmlns:foo"] == [{"xmlns:foobar": ["bar"], "xmlns:barfoo": ["foo"]}]
+    di = ld_dict([{"http://schema.org/name": [{"@value": "Manu Sporny"}],
+                   "http://schema.org/homepage": [{"@id": "http://manu.sporny.org/"}],
+                   "http://schema.org/foo": [{"http://schema.org/foobar": [{"@value": "bar"}],
+                                              "http://schema.org/barfoo": [{"@value": "foo"}]}]}],
+                 context=[{"schema": "http://schema.org/"}])
+    assert isinstance(di["schema:name"], ld_list) and di["schema:name"].item_list == [{"@value": "Manu Sporny"}]
+    assert isinstance(di["schema:homepage"], ld_list)
+    assert di["schema:homepage"].item_list == [{"@id": "http://manu.sporny.org/"}]
+    assert isinstance(di["http://schema.org/foo"], ld_list) and isinstance(di["http://schema.org/foo"][0], ld_dict)
+    assert di["http://schema.org/foo"][0].data_dict == {"http://schema.org/foobar": [{"@value": "bar"}],
+                                                        "http://schema.org/barfoo": [{"@value": "foo"}]}
     with pytest.raises(KeyError):
         di["bar"]
 
@@ -189,10 +192,28 @@ def test_get():
                  context=[{"schema": "https://schema.org/"}])
     assert di.get("https://schema.org/name") == ["Manu Sporny"]
     assert di.get("schema:name") == ["Manu Sporny"]
-    assert di.get("bar", None) is None  # invalid key
+    assert di.get("bar", None) is None
     with pytest.raises(KeyError):
         di.get("bar")
-    assert isinstance(di.get("schema:bar", None), ld_list) and len(di.get("schema:bar", None)) == 0
+
+
+def test_setdefault():
+    di = ld_dict([{"https://schema.org/name": [{"@value": "Manu Sporny"}]}],
+                 context=[{"schema": "https://schema.org/"}])
+    assert di.setdefault("schema:name", []) == [{"@value": "Manu Sporny"}]
+    assert di.setdefault("schema:email", []) == []
+    assert di["schema:email"] == []
+
+
+def test_emplace():
+    di = ld_dict([{"https://schema.org/name": [{"@value": "Manu Sporny"}]}],
+                 context=[{"schema": "https://schema.org/"}])
+    di.emplace("schema:name")
+    assert di["schema:name"] == [{"@value": "Manu Sporny"}]
+    with pytest.raises(KeyError):
+        di["schema:email"]
+    di.emplace("schema:email")
+    assert di["schema:email"] == []
 
 
 def test_update():
@@ -255,11 +276,12 @@ def test_items():
     inner_di = ld_dict([{}], parent=di, key="http://xmlns.com/foaf/0.1/foo")
     inner_di.update({"xmlns:foobar": "bar", "http://xmlns.com/foaf/0.1/barfoo": {"@id": "foo"}})
     di.update({"http://xmlns.com/foaf/0.1/name": "foo", "xmlns:homepage": {"@id": "bar"}, "xmlns:foo": inner_di})
-    assert [*di.items()][0:2] == [("http://xmlns.com/foaf/0.1/name", ["foo"]),
-                                  ("http://xmlns.com/foaf/0.1/homepage", ["bar"])]
-    assert [*di.items()][2][0] == "http://xmlns.com/foaf/0.1/foo"
-    assert [*di.items()][2][1][0] == {"http://xmlns.com/foaf/0.1/foobar": [{"@value": "bar"}],
-                                      "http://xmlns.com/foaf/0.1/barfoo": [{"@id": "foo"}]}
+    items = [*di.items()]
+    assert (items[0][0], items[1][0]) == ("http://xmlns.com/foaf/0.1/name", "http://xmlns.com/foaf/0.1/homepage")
+    assert (items[0][1].item_list, items[1][1].item_list) == ([{"@value": "foo"}], [{"@id": "bar"}])
+    assert items[2][0] == "http://xmlns.com/foaf/0.1/foo" and isinstance(items[2][1], ld_list)
+    assert items[2][1][0].data_dict == {"http://xmlns.com/foaf/0.1/foobar": [{"@value": "bar"}],
+                                        "http://xmlns.com/foaf/0.1/barfoo": [{"@id": "foo"}]}
 
 
 def test_ref():
@@ -277,13 +299,13 @@ def test_to_python():
     inner_di = ld_dict([{}], parent=di)
     inner_di.update({"xmlns:foobar": "bar", "http://xmlns.com/foaf/0.1/barfoo": {"@id": "foo"}})
     di.update({"http://xmlns.com/foaf/0.1/name": "foo", "xmlns:homepage": {"@id": "bar"}, "xmlns:foo": inner_di})
-    assert di.to_python() == {"xmlns:name": ["foo"], "xmlns:homepage": ["bar"],
-                              "xmlns:foo": [{"xmlns:foobar": ["bar"], "xmlns:barfoo": ["foo"]}]}
+    assert di.to_python() == {"xmlns:name": ["foo"], "xmlns:homepage": [{"@id": "bar"}],
+                              "xmlns:foo": [{"xmlns:foobar": ["bar"], "xmlns:barfoo": [{"@id": "foo"}]}]}
     di.update({"http://spam.eggs/eggs": {
             "@value": "2022-02-22T00:00:00", "@type": "https://schema.org/DateTime"
         }})
-    assert di.to_python() == {"xmlns:name": ["foo"], "xmlns:homepage": ["bar"],
-                              "xmlns:foo": [{"xmlns:foobar": ["bar"], "xmlns:barfoo": ["foo"]}],
+    assert di.to_python() == {"xmlns:name": ["foo"], "xmlns:homepage": [{"@id": "bar"}],
+                              "xmlns:foo": [{"xmlns:foobar": ["bar"], "xmlns:barfoo": [{"@id": "foo"}]}],
                               "http://spam.eggs/eggs": ["2022-02-22T00:00:00"]}
 
 
@@ -354,13 +376,16 @@ def test_from_dict():
 
 def test_is_ld_dict():
     assert not any(ld_dict.is_ld_dict(item) for item in [{}, {"foo": "bar"}, {"@id": "foo"}])
-    assert not any(ld_dict.is_ld_dict(item) for item in [[{"@id": "foo"}], [{"@set": "foo"}], [{}, {}], [], [""]])
-    assert all(ld_dict.is_ld_dict([item]) for item in [{"@id": "foo", "foobar": "bar"}, {"foo": "bar"}])
+    assert not any(ld_dict.is_ld_dict(item) for item in [[{"@set": "foo"}], [{}, {}], [], [""]])
+    assert all(
+        ld_dict.is_ld_dict([item])
+        for item in [{"@id": "foo"}, {"@id": "foo", "foobar": "bar"}, {"foo": "bar"}]
+    )
 
 
 def test_is_json_dict():
     assert not any(ld_dict.is_json_dict(item) for item in [1, "", [], {""}, ld_dict([{}])])
     assert not any(ld_dict.is_json_dict({key: [], "foo": "bar"}) for key in ["@set", "@graph", "@list", "@value"])
-    assert not ld_dict.is_json_dict({"@id": "foo"})
+    assert ld_dict.is_json_dict({"@id": "foo"})
     assert ld_dict.is_json_dict({"@id": "foo", "foobar": "bar"})
     assert ld_dict.is_json_dict({"foo": "bar"})

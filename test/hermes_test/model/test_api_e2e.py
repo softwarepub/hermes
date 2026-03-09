@@ -4,11 +4,22 @@
 
 # SPDX-FileContributor: Michael Fritzsche
 
+from datetime import date
+import json
 import pytest
 import sys
-from hermes.model import SoftwareMetadata
-from hermes.model.context_manager import HermesContext
+from hermes.model import context_manager, SoftwareMetadata
 from hermes.commands import cli
+from pathlib import Path
+
+
+@pytest.fixture
+def sandbox_auth():
+    path = Path("./../auth.txt")
+    if not path.exists():
+        pytest.skip("Local auth token file does not exist.")
+    with path.open() as f:
+        yield f.read()
 
 
 @pytest.mark.parametrize(
@@ -162,7 +173,7 @@ date-released: "2026-01-16" """,
                 "http://schema.org/license": [{"@id": "https://spdx.org/licenses/Apache-2.0"}],
                 "http://schema.org/name": [{"@value": "Test"}],
                 "http://schema.org/url": [
-                    {"@id": 'https://arxiv.org/abs/2201.09015'},
+                    {"@id": "https://arxiv.org/abs/2201.09015"},
                     {"@id": "https://docs.software-metadata.pub/en/latest"}
                 ],
                 "http://schema.org/version": [{"@value": "9.0.1"}]
@@ -182,21 +193,19 @@ def test_cff_harvest(tmp_path, monkeypatch, cff, res):
     sys.argv = ["hermes", "harvest", "--path", str(tmp_path), "--config", str(config_file)]
     result = {}
     try:
-        monkeypatch.setattr(HermesContext.__init__, "__defaults__", (tmp_path.cwd(),))
+        monkeypatch.setattr(context_manager.HermesContext.__init__, "__defaults__", (tmp_path.cwd(),))
         cli.main()
-    except SystemExit:
-        print("TODO: Delete when package is working again or mock cli")
+    except SystemExit as e:
+        if e.code != 0:
+            raise e
     finally:
-        manager = HermesContext()
+        manager = context_manager.HermesContext()
         manager.prepare_step("harvest")
-        with manager["cff"] as cache:
-            result = SoftwareMetadata(cache["codemeta"])
+        result = SoftwareMetadata.load_from_cache(manager, "cff")
         manager.finalize_step("harvest")
         sys.argv = orig_argv
 
-    # FIXME: update to compare the SoftwareMetadata objects instead of the data_dicts (in multiple places)
-    # after merge with refactor/data-model and/or refactor/423-implement-public-api
-    assert result.data_dict == res.data_dict
+    assert result == res
 
 
 @pytest.mark.parametrize(
@@ -343,19 +352,19 @@ def test_codemeta_harvest(tmp_path, monkeypatch, codemeta, res):
     sys.argv = ["hermes", "harvest", "--path", str(tmp_path), "--config", str(config_file)]
     result = {}
     try:
-        monkeypatch.setattr(HermesContext.__init__, "__defaults__", (tmp_path.cwd(),))
+        monkeypatch.setattr(context_manager.HermesContext.__init__, "__defaults__", (tmp_path.cwd(),))
         cli.main()
-    except SystemExit:
-        print("TODO: Delete when package is working again or mock cli")
+    except SystemExit as e:
+        if e.code != 0:
+            raise e
     finally:
-        manager = HermesContext()
+        manager = context_manager.HermesContext()
         manager.prepare_step("harvest")
-        with manager["codemeta"] as cache:
-            result = SoftwareMetadata(cache["codemeta"])
+        result = SoftwareMetadata.load_from_cache(manager, "codemeta")
         manager.finalize_step("harvest")
         sys.argv = orig_argv
 
-    assert result.data_dict == res.data_dict
+    assert result == res
 
 
 @pytest.mark.parametrize(
@@ -431,7 +440,7 @@ def test_codemeta_harvest(tmp_path, monkeypatch, codemeta, res):
 def test_do_nothing_curate(tmp_path, monkeypatch, process_result, res):
     monkeypatch.chdir(tmp_path)
 
-    manager = HermesContext(tmp_path)
+    manager = context_manager.HermesContext(tmp_path)
     manager.prepare_step("process")
     with manager["result"] as cache:
         cache["expanded"] = process_result.ld_value
@@ -445,14 +454,301 @@ def test_do_nothing_curate(tmp_path, monkeypatch, process_result, res):
     sys.argv = ["hermes", "curate", "--path", str(tmp_path), "--config", str(config_file)]
     result = {}
     try:
-        monkeypatch.setattr(HermesContext.__init__, "__defaults__", (tmp_path.cwd(),))
+        monkeypatch.setattr(context_manager.HermesContext.__init__, "__defaults__", (tmp_path.cwd(),))
         cli.main()
-    except SystemExit:
-        manager.prepare_step("curate")
-        with manager["result"] as cache:
-            result = SoftwareMetadata(cache["expanded"][0], cache["context"]["@context"][1])
-        manager.finalize_step("curate")
+    except SystemExit as e:
+        if e.code != 0:
+            raise e
     finally:
+        manager.prepare_step("curate")
+        result = SoftwareMetadata.load_from_cache(manager, "result")
+        manager.finalize_step("curate")
         sys.argv = orig_argv
 
     assert result.data_dict == res.data_dict
+
+
+@pytest.mark.parametrize(
+    "metadata",
+    [
+        SoftwareMetadata({
+            "@type": ["http://schema.org/SoftwareSourceCode"],
+            "http://schema.org/description": [{"@value": "for testing"}],
+            "http://schema.org/name": [{"@value": "Test"}]
+        }),
+    ]
+)
+def test_file_deposit(tmp_path, monkeypatch, metadata):
+    monkeypatch.chdir(tmp_path)
+
+    manager = context_manager.HermesContext(tmp_path)
+    manager.prepare_step("curate")
+    with manager["result"] as cache:
+        cache["codemeta"] = metadata.compact()
+    manager.finalize_step("curate")
+
+    config_file = tmp_path / "hermes.toml"
+    config_file.write_text("[deposit]\ntarget = \"file\"")
+
+    orig_argv = sys.argv[:]
+    sys.argv = ["hermes", "deposit", "--path", str(tmp_path), "--config", str(config_file)]
+    result = {}
+    try:
+        monkeypatch.setattr(context_manager.HermesContext.__init__, "__defaults__", (tmp_path.cwd(),))
+        cli.main()
+    except SystemExit as e:
+        if e.code != 0:
+            raise e
+    finally:
+        with open("codemeta.json", "r") as cache:
+            result = SoftwareMetadata(json.load(cache))
+        sys.argv = orig_argv
+
+    assert result == metadata
+
+
+@pytest.mark.parametrize(
+    "metadata, invenio_metadata",
+    [
+        (
+            SoftwareMetadata({
+                "@type": ["http://schema.org/SoftwareSourceCode"],
+                "http://schema.org/description": [{"@value": "for testing"}],
+                "http://schema.org/name": [{"@value": "Test"}],
+                "http://schema.org/author": [{
+                    "@type": "http://schema.org/Person",
+                    "http://schema.org/familyName": [{"@value": "Test"}],
+                    "http://schema.org/givenName": [{"@value": "Testi"}]
+                }],
+                "http://schema.org/license": [{"@id": "https://spdx.org/licenses/Apache-2.0"}]
+            }),
+            {
+                "upload_type": "software",
+                "publication_date": date.today().isoformat(),
+                "title": "Test",
+                "creators": [{"name": "Test, Testi"}],
+                "description": "for testing",
+                "access_right": "closed",
+                "license": "apache-2.0",
+                "prereserve_doi": True,
+                "related_identifiers": [
+                    {"identifier": "10.5281/zenodo.13311079", "relation": "isCompiledBy", "scheme": "doi"}
+                ]
+            }
+        )
+    ]
+)
+def test_invenio_deposit(tmp_path, monkeypatch, sandbox_auth, metadata, invenio_metadata):
+    monkeypatch.chdir(tmp_path)
+
+    manager = context_manager.HermesContext(tmp_path)
+    manager.prepare_step("curate")
+    with manager["result"] as cache:
+        cache["codemeta"] = metadata.compact()
+    manager.finalize_step("curate")
+
+    (tmp_path / "test.txt").write_text("Test, oh wonderful test!\n")
+
+    config_file = tmp_path / "hermes.toml"
+    config_file.write_text(f"""[deposit]
+target = "invenio"
+[deposit.invenio]
+site_url = "https://sandbox.zenodo.org"
+access_right = "closed"
+auth_token = "{sandbox_auth}"
+files = ["test.txt"]
+[deposit.invenio.api_paths]
+licenses = "api/vocabularies/licenses"
+""")
+
+    orig_argv = sys.argv[:]
+    sys.argv = ["hermes", "deposit", "--path", str(tmp_path), "--config", str(config_file), "--initial"]
+    result = {}
+    try:
+        monkeypatch.setattr(context_manager.HermesContext.__init__, "__defaults__", (tmp_path.cwd(),))
+        cli.main()
+    except SystemExit as e:
+        if e.code != 0:
+            raise e
+    finally:
+        manager.prepare_step("deposit")
+        with manager["invenio"] as cache:
+            result = cache["deposit"]
+        manager.finalize_step("deposit")
+        sys.argv = orig_argv
+
+    # TODO: compare to actually expected value
+    assert result == invenio_metadata
+
+
+@pytest.mark.parametrize(
+    "metadata_in, metadata_out",
+    [
+        (
+            {
+                "cff": SoftwareMetadata({
+                    "@type": ["http://schema.org/SoftwareSourceCode"],
+                    "http://schema.org/description": [{"@value": "for testing"}],
+                    "http://schema.org/name": [{"@value": "Test"}],
+                    "http://schema.org/author": [{
+                        "@type": "http://schema.org/Person",
+                        "http://schema.org/familyName": [{"@value": "Test"}],
+                        "http://schema.org/givenName": [{"@value": "Testi"}]
+                    }],
+                    "http://schema.org/license": [{"@id": "https://spdx.org/licenses/Apache-2.0"}]
+                })
+            },
+            SoftwareMetadata({
+                "@type": ["http://schema.org/SoftwareSourceCode"],
+                "http://schema.org/description": [{"@value": "for testing"}],
+                "http://schema.org/name": [{"@value": "Test"}],
+                "http://schema.org/author": [{
+                    "@type": "http://schema.org/Person",
+                    "http://schema.org/familyName": [{"@value": "Test"}],
+                    "http://schema.org/givenName": [{"@value": "Testi"}]
+                }],
+                "http://schema.org/license": [{"@id": "https://spdx.org/licenses/Apache-2.0"}]
+            })
+        )
+    ]
+)
+def test_process(tmp_path, monkeypatch, metadata_in, metadata_out):
+    monkeypatch.chdir(tmp_path)
+
+    manager = context_manager.HermesContext(tmp_path)
+    manager.prepare_step("harvest")
+    for harvester, result in metadata_in.items():
+        with manager[harvester] as cache:
+            cache["codemeta"] = result.compact()
+            cache["context"] = {"@context": result.full_context}
+            cache["expanded"] = result.ld_value
+    manager.finalize_step("harvest")
+
+    config_file = tmp_path / "hermes.toml"
+    config_file.write_text(f"[harvest]\nsources = [{', '.join(f'\"{harvester}\"' for harvester in metadata_in)}]")
+
+    orig_argv = sys.argv[:]
+    sys.argv = ["hermes", "process", "--path", str(tmp_path), "--config", str(config_file)]
+    result = {}
+    try:
+        monkeypatch.setattr(context_manager.HermesContext.__init__, "__defaults__", (tmp_path.cwd(),))
+        cli.main()
+    except SystemExit as e:
+        if e.code != 0:
+            raise e
+    finally:
+        manager.prepare_step("process")
+        result = SoftwareMetadata.load_from_cache(manager, "result")
+        manager.finalize_step("process")
+        sys.argv = orig_argv
+
+    assert result == metadata_out
+
+
+@pytest.mark.parametrize(
+    "metadata_in, metadata_out",
+    [
+        (
+            {
+                "cff": SoftwareMetadata({
+                    "@type": ["http://schema.org/SoftwareSourceCode"],
+                    "http://schema.org/name": [{"@value": "Test"}],
+                    "http://schema.org/author": [
+                        {
+                            "@type": "http://schema.org/Person",
+                            "http://schema.org/familyName": [{"@value": "Test"}],
+                            "http://schema.org/email": [{"@value": "test.testi@testis.tests"}]
+                        },
+                        {
+                            "@type": "http://schema.org/Person",
+                            "http://schema.org/familyName": [{"@value": "Testers"}]
+                        },
+                        {
+                            "@type": "http://schema.org/Person",
+                            "http://schema.org/familyName": [{"@value": "Tester"}],
+                            "http://schema.org/email": [{"@value": "test@tester.tests"}]
+                        }
+                    ],
+                    "http://schema.org/license": [{"@id": "https://spdx.org/licenses/Apache-2.0"}]
+                }),
+                "codemeta": SoftwareMetadata({
+                    "@type": ["http://schema.org/SoftwareSourceCode"],
+                    "http://schema.org/description": [{"@value": "for testing"}],
+                    "http://schema.org/name": [{"@value": "Test"}, {"@value": "Testis Test"}],
+                    "http://schema.org/author": [
+                        {
+                            "@type": "http://schema.org/Person",
+                            "http://schema.org/familyName": [{"@value": "Test"}],
+                            "http://schema.org/givenName": [{"@value": "Testi"}],
+                            "http://schema.org/email": [
+                                {"@value": "test.testi@testis.tests"},
+                                {"@value": "test.testi@testis.tests2"}
+                            ]
+                        },
+                        {
+                            "@type": "http://schema.org/Person",
+                            "http://schema.org/familyName": [{"@value": "Testers"}]
+                        }
+                    ]
+                })
+            },
+            SoftwareMetadata({
+                "@type": ["http://schema.org/SoftwareSourceCode"],
+                "http://schema.org/description": [{"@value": "for testing"}],
+                "http://schema.org/name": [{"@value": "Test"}, {"@value": "Testis Test"}],
+                "http://schema.org/author": [
+                    {
+                        "@type": "http://schema.org/Person",
+                        "http://schema.org/familyName": [{"@value": "Test"}],
+                        "http://schema.org/givenName": [{"@value": "Testi"}],
+                        "http://schema.org/email": [
+                            {"@value": "test.testi@testis.tests"},
+                            {"@value": "test.testi@testis.tests2"}
+                        ]
+                    },
+                    {
+                        "@type": "http://schema.org/Person",
+                        "http://schema.org/familyName": [{"@value": "Testers"}]
+                    },
+                    {
+                        "@type": "http://schema.org/Person",
+                        "http://schema.org/familyName": [{"@value": "Tester"}],
+                        "http://schema.org/email": [{"@value": "test@tester.tests"}]
+                    }
+                ],
+                "http://schema.org/license": [{"@id": "https://spdx.org/licenses/Apache-2.0"}]
+            })
+        )
+    ]
+)
+def test_process_complex(tmp_path, monkeypatch, metadata_in, metadata_out):
+    monkeypatch.chdir(tmp_path)
+
+    manager = context_manager.HermesContext(tmp_path)
+    manager.prepare_step("harvest")
+    for harvester, result in metadata_in.items():
+        with manager[harvester] as cache:
+            cache["codemeta"] = result.compact()
+            cache["context"] = {"@context": result.full_context}
+            cache["expanded"] = result.ld_value
+    manager.finalize_step("harvest")
+
+    config_file = tmp_path / "hermes.toml"
+    config_file.write_text(f"[harvest]\nsources = [{', '.join(f'\"{harvester}\"' for harvester in metadata_in)}]")
+
+    orig_argv = sys.argv[:]
+    sys.argv = ["hermes", "process", "--path", str(tmp_path), "--config", str(config_file)]
+    result = {}
+    try:
+        monkeypatch.setattr(context_manager.HermesContext.__init__, "__defaults__", (tmp_path.cwd(),))
+        cli.main()
+    except SystemExit as e:
+        if e.code != 0:
+            raise e
+    finally:
+        manager.prepare_step("process")
+        result = SoftwareMetadata.load_from_cache(manager, "result")
+        manager.finalize_step("process")
+        sys.argv = orig_argv
+
+    assert result == metadata_out

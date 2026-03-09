@@ -90,10 +90,7 @@ class ld_dict(ld_container):
         :rtype: ld_list
         """
         full_iri = self.ld_proc.expand_iri(self.active_ctx, key)
-        if full_iri not in self.data_dict:
-            self[full_iri] = []
-        ld_value = self.data_dict[full_iri]
-        return self._to_python(full_iri, ld_value)
+        return self._to_python(full_iri, self.data_dict[full_iri])
 
     def __setitem__(self: Self, key: str, value: Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]) -> None:
         """
@@ -231,6 +228,18 @@ class ld_dict(ld_container):
         if x is NotImplemented:
             return NotImplemented
         return not x
+
+    def __bool__(self):
+        return bool(self.data_dict)
+
+    def setdefault(self, key, default):
+        if key not in self:
+            self[key] = default
+        return self[key]
+
+    def emplace(self, key):
+        if key not in self:
+            self[key] = []
 
     def get(
         self: Self, key: str, default: Any = _NO_DEFAULT
@@ -381,7 +390,7 @@ class ld_dict(ld_container):
 
         # expand value and create an ld_dict from it
         ld_value = cls.ld_proc.expand(ld_data, {"expandContext": full_context, "documentLoader": bundled_loader})
-        ld_value = cls(ld_value, parent=parent, key=key, context=merged_contexts)
+        ld_value = ld_dict(ld_value, parent=parent, key=key, context=merged_contexts)
 
         return ld_value
 
@@ -417,9 +426,6 @@ class ld_dict(ld_container):
             return False
 
         if any(k in ld_value for k in ["@set", "@graph", "@list", "@value"]):
-            return False
-
-        if ['@id'] == [*ld_value.keys()]:
             return False
 
         return True
