@@ -96,17 +96,9 @@ class ld_container:
 
         self.context = context or []
 
-        # Create active context (to use with pyld) depending on the initial variables
-        # Re-use active context from parent if available
-        if self.parent:
-            if self.context:
-                self.active_ctx = self.ld_proc.process_context(
-                    self.parent.active_ctx, self.context, {"documentLoader": bundled_loader}
-                )
-            else:
-                self.active_ctx = parent.active_ctx
-        else:
-            self.active_ctx = self.ld_proc.initial_ctx(self.full_context, {"documentLoader": bundled_loader})
+        # Create active context (to use with pyld) depending on the initial variables.
+        # Don't re-use active context from parent (created some weird in the process step when context is often added).
+        self.active_ctx = self.ld_proc.initial_ctx(self.full_context, {"documentLoader": bundled_loader})
 
     def add_context(self: Self, context: list[Union[str | JSON_LD_CONTEXT_DICT]]) -> None:
         """
@@ -176,7 +168,9 @@ class ld_container:
         return self._data
 
     def _to_python(
-        self: Self, full_iri: str, ld_value: Union[list, dict, str]
+        self: Self,
+        full_iri: str,
+        ld_value: Union[EXPANDED_JSON_LD_VALUE, dict[str, EXPANDED_JSON_LD_VALUE], list[str], str]
     ) -> Union["ld_container", BASIC_TYPE, TIME_TYPE]:
         """
         Returns a pythonized version of the given value pretending the value is in self and full_iri its key.
@@ -187,7 +181,7 @@ class ld_container:
         :type full_iri: str
         :param ld_value: The value thats pythonized value is requested. ld_value has to be valid expanded JSON-LD if it
             was embeded in self._data.
-        :type ld_value: list | dict | str
+        :type ld_value: EXPANDED_JSON_LD_VALUE | dict[str, EXPANDED_JSON_LD_VALUE] | list[str] | str
 
         :return: The pythonized value of the ld_value.
         :rtype: ld_container | BASIC_TYPE | TIME_TYPE
@@ -237,7 +231,7 @@ class ld_container:
         # while searching build a path such that it leads from the found ld_dicts ld_value to selfs data_dict/ item_list
         parent = self
         path = []
-        while parent.__class__.__name__ not in ("ld_dict", "SoftwareMetadata"):
+        while "ld_dict" not in [sub_cls.__name__ for sub_cls in type(parent).mro()]:
             if parent.container_type == "@list":
                 path.extend(["@list", 0])
             elif parent.container_type == "@graph":
@@ -250,7 +244,7 @@ class ld_container:
         # if neither self nor any of its parents is a ld_dict:
         # create a dict with the key of the outer most parent of self and this parents ld_value as a value
         # this dict is stored in an ld_container and simulates the most minimal JSON-LD object possible
-        if parent.__class__.__name__ not in ("ld_dict", "SoftwareMetadata"):
+        if "ld_dict" not in [sub_cls.__name__ for sub_cls in type(parent).mro()]:
             key = self.ld_proc.expand_iri(parent.active_ctx, parent.key)
             parent = ld_container([{key: parent._data}])
         path.append(0)
@@ -277,7 +271,7 @@ class ld_container:
                     [(new_key, temp) for new_key in temp.keys() if isinstance(temp[new_key], special_types)]
                 )
             elif isinstance(temp, ld_container):
-                if temp.__class__.__name__ == "ld_list" and temp.container_type == "@set":
+                if "ld_list" in [sub_cls.__name__ for sub_cls in type(temp).mro()] and temp.container_type == "@set":
                     ref[key] = temp._data
                 else:
                     ref[key] = temp._data[0]

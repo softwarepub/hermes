@@ -299,13 +299,13 @@ def test_to_python():
     inner_di = ld_dict([{}], parent=di)
     inner_di.update({"xmlns:foobar": "bar", "http://xmlns.com/foaf/0.1/barfoo": {"@id": "foo"}})
     di.update({"http://xmlns.com/foaf/0.1/name": "foo", "xmlns:homepage": {"@id": "bar"}, "xmlns:foo": inner_di})
-    assert di.to_python() == {"xmlns:name": ["foo"], "xmlns:homepage": ["bar"],
-                              "xmlns:foo": [{"xmlns:foobar": ["bar"], "xmlns:barfoo": ["foo"]}]}
+    assert di.to_python() == {"xmlns:name": ["foo"], "xmlns:homepage": [{"@id": "bar"}],
+                              "xmlns:foo": [{"xmlns:foobar": ["bar"], "xmlns:barfoo": [{"@id": "foo"}]}]}
     di.update({"http://spam.eggs/eggs": {
             "@value": "2022-02-22T00:00:00", "@type": "https://schema.org/DateTime"
         }})
-    assert di.to_python() == {"xmlns:name": ["foo"], "xmlns:homepage": ["bar"],
-                              "xmlns:foo": [{"xmlns:foobar": ["bar"], "xmlns:barfoo": ["foo"]}],
+    assert di.to_python() == {"xmlns:name": ["foo"], "xmlns:homepage": [{"@id": "bar"}],
+                              "xmlns:foo": [{"xmlns:foobar": ["bar"], "xmlns:barfoo": [{"@id": "foo"}]}],
                               "http://spam.eggs/eggs": ["2022-02-22T00:00:00"]}
 
 
@@ -376,13 +376,16 @@ def test_from_dict():
 
 def test_is_ld_dict():
     assert not any(ld_dict.is_ld_dict(item) for item in [{}, {"foo": "bar"}, {"@id": "foo"}])
-    assert not any(ld_dict.is_ld_dict(item) for item in [[{"@id": "foo"}], [{"@set": "foo"}], [{}, {}], [], [""]])
-    assert all(ld_dict.is_ld_dict([item]) for item in [{"@id": "foo", "foobar": "bar"}, {"foo": "bar"}])
+    assert not any(ld_dict.is_ld_dict(item) for item in [[{"@set": "foo"}], [{}, {}], [], [""]])
+    assert all(
+        ld_dict.is_ld_dict([item])
+        for item in [{"@id": "foo"}, {"@id": "foo", "foobar": "bar"}, {"foo": "bar"}]
+    )
 
 
 def test_is_json_dict():
     assert not any(ld_dict.is_json_dict(item) for item in [1, "", [], {""}, ld_dict([{}])])
     assert not any(ld_dict.is_json_dict({key: [], "foo": "bar"}) for key in ["@set", "@graph", "@list", "@value"])
-    assert not ld_dict.is_json_dict({"@id": "foo"})
+    assert ld_dict.is_json_dict({"@id": "foo"})
     assert ld_dict.is_json_dict({"@id": "foo", "foobar": "bar"})
     assert ld_dict.is_json_dict({"foo": "bar"})

@@ -513,7 +513,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
 
         creators = []
         for author in metadata.get("author", []):
-            if not "Person" in author.get("@type", []):
+            if "Person" not in author.get("@type", []):
                 continue
             creator = {}
             if len(
@@ -527,7 +527,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
                 raise HermesValidationError(f"Author has too many family names: {author}")
             if len(author.get("familyName", [])) == 1:
                 given_names_str = " ".join(author.get("givenName", []))
-                name = f"{author["familyName"][0]}, {given_names_str}"
+                name = f"{author['familyName'][0]}, {given_names_str}"
             elif len(author.get("name", [])) != 1:
                 raise HermesValidationError(f"Author has too many or no names: {author}")
             else:

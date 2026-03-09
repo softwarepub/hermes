@@ -175,6 +175,7 @@ class HermesPlugin(abc.ABC):
 
 
 class HermesHelpSettings(BaseModel):
+    """Intentionally empty settings class for the help command."""
     pass
 
 
@@ -200,3 +201,23 @@ class HermesHelpCommand(HermesCommand):
             # Otherwise, simply show the general help and exit (cleanly).
             self.parser.print_help()
             self.parser.exit()
+
+
+class HermesVersionSettings(BaseModel):
+    """Intentionally empty settings class for the version command."""
+    pass
+
+
+class HermesVersionCommand(HermesCommand):
+    """Show HERMES version and exit."""
+
+    command_name = "version"
+    settings_class = HermesVersionSettings
+
+    def load_settings(self, args: argparse.Namespace):
+        """Pass loading settings as not necessary for this command."""
+        pass
+
+    def __call__(self, args: argparse.Namespace) -> None:
+        self.log.info(metadata.version("hermes"))
+        self.parser.exit()

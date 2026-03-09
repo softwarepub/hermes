@@ -23,7 +23,7 @@ from typing import Generator, Hashable, Union, Self, Any
 class ld_list(ld_container):
     """
     An JSON-LD container resembling a list ("@set", "@list" or "@graph").
-    See also :class:`ld_container`
+    See also :class:`ld_container`.
 
     :ivar container_type: The type of JSON-LD container the list is representing. ("@set", "@list", "graph")
     :ivartype container_type: str
@@ -35,7 +35,7 @@ class ld_list(ld_container):
         self: Self,
         data: Union[list[str], list[dict[str, EXPANDED_JSON_LD_VALUE]]],
         *,
-        parent: Union["ld_container", None] = None,
+        parent: Union[ld_container, None] = None,
         key: Union[str, None] = None,
         index: Union[int, None] = None,
         context: Union[list[Union[str, JSON_LD_CONTEXT_DICT]], None] = None,

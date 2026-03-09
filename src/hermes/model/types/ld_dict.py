@@ -72,6 +72,9 @@ class ld_dict(ld_container):
             return NotImplemented
         return not x
 
+    def __bool__(self):
+        return bool(self.data_dict)
+
     def get(self, key, default=_NO_DEFAULT):
         if key not in self and default is not ld_dict._NO_DEFAULT:
             return default
@@ -147,9 +150,6 @@ class ld_dict(ld_container):
             return False
 
         if any(k in ld_value for k in ["@set", "@graph", "@list", "@value"]):
-            return False
-
-        if ['@id'] == [*ld_value.keys()]:
             return False
 
         return True
