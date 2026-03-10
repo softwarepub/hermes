@@ -15,17 +15,26 @@ class HermesPostprocessPlugin(HermesPlugin):
     pass
 
 
-class _PostprocessSettings(BaseModel):
+class PostprocessSettings(BaseModel):
     """Generic post-processing settings."""
 
-    execute: list = []
+    run: list = []
 
 
 class HermesPostprocessCommand(HermesCommand):
     """Post-process the published metadata after deposition."""
 
     command_name = "postprocess"
-    settings_class = _PostprocessSettings
+    settings_class = PostprocessSettings
 
     def __call__(self, args: argparse.Namespace) -> None:
-        pass
+        self.args = args
+        plugin_names = self.settings.run
+
+        for plugin_name in plugin_names:
+            try:
+                plugin_func = self.plugins[plugin_name]()
+                plugin_func(self)
+            except KeyError as e:
+                self.log.error("Plugin '%s' not found.", plugin_name)
+                self.errors.append(e)

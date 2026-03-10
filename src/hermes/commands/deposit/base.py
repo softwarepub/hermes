@@ -48,7 +48,7 @@ class BaseDepositPlugin(HermesPlugin):
 
         deposit = self.update_metadata()
         self.ctx.prepare_step("deposit")
-        with self.ctx["deposit"] as cache:
+        with self.ctx[command.settings.target] as cache:
             cache["result"] = deposit
         self.ctx.finalize_step("deposit")
         self.delete_artifacts()
