@@ -3,12 +3,13 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # SPDX-FileContributor: Michael Meinel
+# SPDX-FileContributor: Michael Fritzsche
 
 import argparse
 
 from pydantic import BaseModel
 
-from hermes.commands.base import HermesCommand, HermesPlugin
+from ..base import HermesCommand, HermesPlugin
 
 
 class HermesPostprocessPlugin(HermesPlugin):

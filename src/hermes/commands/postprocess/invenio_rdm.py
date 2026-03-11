@@ -3,17 +3,18 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # SPDX-FileContributor: Michael Meinel
+# SPDX-FileContributor: Michael Fritzsche
 # SPDX-FileContributor: Stephan Druskat
 
 import logging
 
 import toml
 
-from hermes.commands.base import HermesCommand
 from hermes.error import MisconfigurationError
 from hermes.model.context_manager import HermesContext
-
+from ..base import HermesCommand
 from .base import HermesPostprocessPlugin
+
 
 _log = logging.getLogger('postprocess.invenio_rdm')
 
@@ -34,7 +35,7 @@ class config_record_id(HermesPostprocessPlugin):
             _log.error("hermes.toml already contains a record_id for Invenio_RDM deposit.")
             raise MisconfigurationError(
                 "Can't overwrite record_id automatically."
-                f"(Tried to overwrite {old_record_id} with {deposition["record_id"]})"
+                f"(Tried to overwrite {old_record_id} with {deposition['record_id']})"
             )
         except KeyError:
             pass
