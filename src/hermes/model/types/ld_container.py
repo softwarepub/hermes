@@ -365,8 +365,8 @@ class ld_container:
         """
         Returns a list that is contains all non-list items from args and all items in the lists in args.
 
-        :param *args: The items that should be put into one list.
-        :type *args: tuple[Any]
+        :param args: The items that should be put into one list.
+        :type args: tuple[Any]
 
         :return: A list containing all non-list items and all items from lists in args. (Same order as in args)
         :rytpe: list[Any]

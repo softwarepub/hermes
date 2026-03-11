@@ -102,7 +102,7 @@ extensions = [
     'sphinx_togglebutton',
     'sphinxcontrib.datatemplates',
     # Custom extensions, see `_ext` directory.
-    # 'plugin_markup',
+    'plugin_markup',
 ]
 
 language = 'en'
@@ -131,6 +131,9 @@ autoapi_type = "python"
 autoapi_dirs = ["../../src"]
 autoapi_root = "api"
 autoapi_ignore = ["*__main__*"]
+autoapi_options = [
+    "members", "undoc-members", "private-members", "show-inheritance", "show-module-summary", "special-members"
+]
 
 # -- Options for HTML output -------------------------------------------------
 

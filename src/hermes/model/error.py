@@ -33,6 +33,7 @@ class HermesContextError(Exception):
     To be able to track and fix the error, you should use this in conjunction with the original exception if applicable:
 
     .. code:: python
+
         try:
              context[term]
         except ValueError as e:
