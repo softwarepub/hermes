@@ -629,7 +629,9 @@ def test_process(tmp_path, monkeypatch, metadata_in, metadata_out):
     manager.finalize_step("harvest")
 
     config_file = tmp_path / "hermes.toml"
-    config_file.write_text(f"[harvest]\nsources = [{', '.join(f'\"{harvester}\"' for harvester in metadata_in)}]")
+    config_file.write_text(
+        "[harvest]\nsources = [" + ", ".join('\"' + f'{harvester}' + '\"' for harvester in metadata_in) + "]"
+    )
 
     orig_argv = sys.argv[:]
     sys.argv = ["hermes", "process", "--path", str(tmp_path), "--config", str(config_file)]
@@ -738,7 +740,9 @@ def test_process_complex(tmp_path, monkeypatch, metadata_in, metadata_out):
     manager.finalize_step("harvest")
 
     config_file = tmp_path / "hermes.toml"
-    config_file.write_text(f"[harvest]\nsources = [{', '.join(f'\"{harvester}\"' for harvester in metadata_in)}]")
+    config_file.write_text(
+        "[harvest]\nsources = [" + ", ".join('\"' + f'{harvester}' + '\"' for harvester in metadata_in) + "]"
+    )
 
     orig_argv = sys.argv[:]
     sys.argv = ["hermes", "process", "--path", str(tmp_path), "--config", str(config_file)]
