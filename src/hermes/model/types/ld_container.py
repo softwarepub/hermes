@@ -17,25 +17,32 @@ if TYPE_CHECKING:
     from .ld_list import ld_list
 
 JSON_LD_CONTEXT_DICT: TypeAlias = dict[str, Union[str, "JSON_LD_CONTEXT_DICT"]]
+""" Type description for a context object in JSON_LD """
 BASIC_TYPE: TypeAlias = Union[str, float, int, bool]
+""" All primitive types in Python recogniced by ld_containers """
 EXPANDED_JSON_LD_VALUE: TypeAlias = list[Union[
     dict[str, Union["EXPANDED_JSON_LD_VALUE", BASIC_TYPE]],
     "EXPANDED_JSON_LD_VALUE",
     str
 ]]
+""" Type description of an expanded JSON_LD object """
 COMPACTED_JSON_LD_VALUE: TypeAlias = Union[
     list[Union[dict[str, Union["COMPACTED_JSON_LD_VALUE", BASIC_TYPE]], BASIC_TYPE]],
     dict[str, Union["COMPACTED_JSON_LD_VALUE", BASIC_TYPE]],
 ]
+""" Type description of an compacted JSON_LD object """
 TIME_TYPE: TypeAlias = Union[datetime, date, time]
+""" All time related types in Python recogniced by ld_Containers """
 JSON_LD_VALUE: TypeAlias = Union[
     list[Union["JSON_LD_VALUE", BASIC_TYPE, TIME_TYPE, "ld_dict", "ld_list"]],
     dict[str, Union["JSON_LD_VALUE", BASIC_TYPE, TIME_TYPE, "ld_dict", "ld_list"]],
 ]
+""" Type description of valid JSON_LD objects that are partially represented by ld_containers """
 PYTHONIZED_LD_CONTAINER: TypeAlias = Union[
     list[Union["PYTHONIZED_LD_CONTAINER", BASIC_TYPE, TIME_TYPE]],
     dict[str, Union["PYTHONIZED_LD_CONTAINER", BASIC_TYPE, TIME_TYPE]],
 ]
+""" Type description of the pythonized from of ld_containers (i.e. if the ld_container(s) is/ are replaced). """
 
 
 class ld_container:
@@ -46,25 +53,14 @@ class ld_container:
     It allows to easily interacts them by hinding all the nesting and automatically mapping
     between different forms.
 
-    :ivar active_ctx: The active context that is used by the json-ld processor.
-    :ivar context: The context exclusive to this ld_container and all its childs
-        (it can still be the same as e.g. parent.context)
-    :ivartype context: list[str | JSON_LD_CONTEXT_DICT]
-    :ivar full_context: The context of this ld_container and all its parents merged into one list.
-    :ivartype full_context: list[str | JSON_LD_CONTEXT_DICT]
-    :ivar index: The index into the parent container if it is a list.
-    :ivartype index: int
-    :ivar key: The key into the inner most parent that is a dict of this ld_container.
-    :ivartype key: str
-    :ivar ld_value: The expanded JSON-LD value this object represents.
-    :ivartype ld_value: EXPANDED_JSON_LD_VALUE
-    :ivar parent: The ld_container this one is directly contained in.
-    :ivartype parent: ld_container
-    :ivar path: The path from the outer most parent to this ld_container.
-    :ivartype path: list[str | int]
-
-    :cvar ld_proc: The JSON-LD processor object for all ld_container.
-    :cvartype ld_proc: JsonLdProcessor
+    Attributes:
+        active_ctx: The active context that is used by the json-ld processor.
+        context (list[str | JSON_LD_CONTEXT_DICT]): The context exclusive to this ld_container and all its childs
+            (it can still be the same as e.g. parent.context)
+        index (int): The index into the parent container if it is a list.
+        key (str): The key into the inner most parent that is a dict of this ld_container.
+        parent (ld_container): The ld_container this one is directly contained in.
+        ld_proc (JsonLdProcessor): (class attribute) The JSON-LD processor object for all ld_container.
     """
 
     ld_proc = JsonLdProcessor()
@@ -81,21 +77,15 @@ class ld_container:
         """
         Create a new instance of an ld_container.
 
-        :param self: The instance of ld_container to be initialized.
-        :type self: Self
-        :param data: The expanded json-ld data that is mapped.
-        :type data: EXPANDED_JSON_LD_VALUE
-        :param parent: parent node of this container.
-        :type parent: ld_dict | ld_list | None
-        :param key: key into the parent container.
-        :type key: str | None
-        :param index: index into the parent container.
-        :type index: int | None
-        :param context: local context for this container.
-        :type context: list[str | JSON_LD_CONTEXT_DICT] | None
+        Args:
+            data (EXPANDED_JSON_LD_VALUE): The expanded json-ld data that is mapped.
+            parent (ld_dict | ld_list | None): parent node of this container.
+            key (str | None): key into the parent container.
+            index (int | None): index into the parent container.
+            context (list[str | JSON_LD_CONTEXT_DICT] | None): local context for this container.
 
-        :return:
-        :rtype: None
+        Returns:
+            None:
         """
         # Store basic data
         self.parent = parent
@@ -113,13 +103,11 @@ class ld_container:
         """
         Add the given context to the ld_container.
 
-        :param self: The ld_container the context should be added to.
-        :type self: Self
-        :param context: The context to be added to self.
-        :type context: list[str | JSON_LD_CONTEXT_DICT]
+        Args:
+            context (list[str | JSON_LD_CONTEXT_DICT]): The context to be added to self.
 
-        :return:
-        :rtype: None
+        Returns:
+            None:
         """
         self.context = self.merge_to_list(self.context, context)
         self.active_ctx = self.ld_proc.process_context(self.active_ctx, context, {"documentLoader": bundled_loader})
@@ -127,14 +115,8 @@ class ld_container:
     @property
     def full_context(self: Self) -> list[Union[str, JSON_LD_CONTEXT_DICT]]:
         """
-        Return the context of the ld_container merged with the full_context of its parent.
-
-        :param self: The ld_container whose full_context is returned
-        :type self: Self
-
-        :return: The context of the ld_container merged with the full_context of its parent via
-            ld_container.merge_to_list or just the context of this ld_container if self.parent is None.
-        :rtype: list[str | JSON_LD_CONTEXT_DICT]
+        list[str | JSON_LD_CONTEXT_DICT]: The context of the ld_container merged with the full_context of its parent
+            via ld_container.merge_to_list or just the context of this ld_container if self.parent is None.
         """
         if self.parent is not None:
             return self.merge_to_list(self.parent.full_context, self.context)
@@ -144,16 +126,10 @@ class ld_container:
     @property
     def path(self: Self) -> list[Union[str, int]]:
         """
-        Create a path representation for this item.
-
-        :param self: The ld_container the path leads to from its outer most parent container.
-        :type self: Self
-
-        :return: The path from selfs outer most parent to it self.
+        list[str | int]: The path from selfs outer most parent to it self.
             Let parent be the outer most parent of self.
             Start with index = 1 and iteratively set parent to parent[path[index]] and then increment index
             until index == len(path) to get parent is self == true.
-        :rtype: list[str | int]
         """
         if self.parent:
             return self.parent.path + [self.key if self.index is None else self.index]
@@ -163,16 +139,10 @@ class ld_container:
     @property
     def ld_value(self: Self) -> EXPANDED_JSON_LD_VALUE:
         """
-        Return a representation that is suitable as a value in expanded JSON-LD of this ld_container.
-
-        :param self: The ld_container whose expanded JSON-LD representation is returned.
-        :type self: Self
-
-        :return: The expanded JSON-LD value of this container.
+        EXPANDED_JSON_LD_VALUE: The expanded JSON-LD value of this container.
             This value is the basis of all operations and a reference to the original is returned and not a copy.
             Do **not** modify unless strictly necessary and you know what you do.
             Otherwise unexpected behavior may occur.
-        :rtype: EXPANDED_JSON_LD_VALUE
         """
         return self._data
 
@@ -184,16 +154,13 @@ class ld_container:
         """
         Returns a pythonized version of the given value pretending the value is in self and full_iri its key.
 
-        :param self: the ld_container ld_value is considered to be in.
-        :type self: Self
-        :param full_iri: The expanded iri of the key of ld_value / self (later if self is not a dictionary).
-        :type full_iri: str
-        :param ld_value: The value thats pythonized value is requested. ld_value has to be valid expanded JSON-LD if it
-            was embeded in self._data.
-        :type ld_value: EXPANDED_JSON_LD_VALUE | dict[str, EXPANDED_JSON_LD_VALUE] | list[str] | str
+        Args:
+            full_iri (str): The expanded iri of the key of ld_value / self (later if self is not a dictionary).
+            ld_value (EXPANDED_JSON_LD_VALUE | dict[str, EXPANDED_JSON_LD_VALUE] | list[str] | str): The value thats
+                pythonized value is requested. ld_value has to be valid expanded JSON-LD if it were inside self._data.
 
-        :return: The pythonized value of the ld_value.
-        :rtype: ld_dict | ld_list | BASIC_TYPE | TIME_TYPE
+        Returns:
+            ld_dict | ld_list | BASIC_TYPE | TIME_TYPE: The pythonized value of the ld_value.
         """
         if full_iri == "@id":
             # values of key "@id" only have to be compacted
@@ -222,19 +189,22 @@ class ld_container:
 
         The result of this function is what value has turned into.
 
-        :param self: The ld_dict or ld_list in which value gets expanded
-        :type self: Self
-        :param value: The value that is to be expanded. Different types are expected based on the type of self:
-            <ul><li>If type(self) == ld_dict: value must be a dict</li>
-            <li>If type(self) == ld_list: value must be a list</li></ul>
-            value will be expanded as if it was the data_dict/ the item_list of self.
-        :type value: JSON_LD_VALUE
+        Args:
+            value (JSON_LD_VALUE): The value that is to be expanded.
+                Different types are expected based on the type of self
 
-        :return: The expanded version of value i.e. the data_dict/ item_list of self if it had been value.
-            The return type is based on the type of self:
-            <ul><li>If type(self) == ld_dict: the returned values type is dict</li>
-            <li>If type(self) == ld_list: the returned values type is list</li></ul>
-        :rtype: EXPANDED_JSON_LD_VALUE | dict[str, EXPANDED_JSON_LD_VALUE]
+                - If type(self) == ld_dict: value must be a dict
+                - If type(self) == ld_list: value must be a list
+
+                value will be expanded as if it was the data_dict/ the item_list of self.
+
+        Returns:
+            EXPANDED_JSON_LD_VALUE | dict[str, EXPANDED_JSON_LD_VALUE]: 
+                The expanded version of value i.e. the data_dict/ item_list of self if it had been value.
+                The return type is based on the type of self:
+
+                - If type(self) == ld_dict: the returned values type is dict
+                - If type(self) == ld_list: the returned values type is list
         """
         # search for an ld_dict that is either self or the inner most parents parent of self that is an ld_dict
         # while searching build a path such that it leads from the found ld_dicts ld_value to selfs data_dict/ item_list
@@ -319,11 +289,8 @@ class ld_container:
         """
         Returns a short string representation of this object.
 
-        :param self: The object whose representation is returned.
-        :type self: Self
-
-        :returns: The short representation of self.
-        :rtype: str
+        Returns:
+            str: The short representation of self.
         """
         return f"{type(self).__name__}({self._data})"
 
@@ -331,11 +298,8 @@ class ld_container:
         """
         Returns a string representation of this object.
 
-        :param self: The object whose representation is returned.
-        :type self: Self
-
-        :returns: The representation of self.
-        :rtype: str
+        Returns:
+            (str): The representation of self.
         """
         return str(self.to_python())
 
@@ -345,13 +309,12 @@ class ld_container:
         """
         Returns the compacted version of the given ld_container using its context only if none was supplied.
 
-        :param self: The ld_container that is to be compacted.
-        :type self: Self
-        :param context: The context to use for the compaction. If None the context of self is used.
-        :type context: list[JSON_LD_CONTEXT_DICT | str] | JSON_LD_CONTEXT_DICT | str | None
+        Args:
+            context (list[JSON_LD_CONTEXT_DICT | str] | JSON_LD_CONTEXT_DICT | str | None):
+                The context to use for the compaction. If None the context of self is used.
 
-        :returns: The compacted version of selfs JSON-LD representation.
-        :rtype: COMPACTED_JSON_LD_VALUE
+        Returns:
+            COMPACTED_JSON_LD_VALUE: The compacted version of selfs JSON-LD representation.
         """
         return self.ld_proc.compact(
             self.ld_value, context or self.context, {"documentLoader": bundled_loader, "skipExpand": True}
@@ -365,11 +328,11 @@ class ld_container:
         """
         Returns a list that is contains all non-list items from args and all items in the lists in args.
 
-        :param args: The items that should be put into one list.
-        :type args: tuple[Any]
+        Args:
+            args (tuple[Any]): The items that should be put into one list.
 
-        :return: A list containing all non-list items and all items from lists in args. (Same order as in args)
-        :rytpe: list[Any]
+        Returns:
+            list[Any]: A list containing all non-list items and all items from lists in args. (Same order as in args)
         """
         # base case for recursion
         if not args:
@@ -386,14 +349,14 @@ class ld_container:
     @classmethod
     def is_ld_node(cls: type[Self], ld_value: Any) -> bool:
         """
-        Returns wheter the given value is considered to be possible of representing an expanded JSON-LD node.<br>
+        Returns wheter the given value is considered to be possible of representing an expanded JSON-LD node.
         I.e. if ld_value is of the form [{a: b, ..., y: z}].
 
-        :param ld_value: The value that is checked.
-        :type ld_value: Any
+        Args:
+            ld_value (Any): The value that is checked.
 
-        :returns: Wheter or not ld_value could represent an expanded JSON-LD node.
-        :rtype: bool
+        Returns:
+            bool: Wheter or not ld_value could represent an expanded JSON-LD node.
         """
         return isinstance(ld_value, list) and len(ld_value) == 1 and isinstance(ld_value[0], dict)
 
@@ -401,28 +364,28 @@ class ld_container:
     def is_ld_id(cls: type[Self], ld_value: Any) -> bool:
         """
         Returns wheter the given value is considered to be possible of representing an expanded JSON-LD node
-        containing only an @id value.<br>
+        containing only an @id value.
         I.e. if ld_value is of the form [{"@id": ...}].
 
-        :param ld_value: The value that is checked.
-        :type ld_value: Any
+        Args:
+            ld_value (Any): The value that is checked.
 
-        :returns: Wheter or not ld_value could represent an expanded JSON-LD node containing only an @id value.
-        :rtype: bool
+        Returns:
+            bool: Wheter or not ld_value could represent an expanded JSON-LD node containing only an @id value.
         """
         return cls.is_ld_node(ld_value) and cls.is_json_id(ld_value[0])
 
     @classmethod
     def is_ld_value(cls: type[Self], ld_value: Any) -> bool:
         """
-        Returns wheter the given value is considered to be possible of representing an expanded JSON-LD value.<br>
+        Returns wheter the given value is considered to be possible of representing an expanded JSON-LD value.
         I.e. if ld_value is of the form [{"@value": a, ..., x: z}].
 
-        :param ld_value: The value that is checked.
-        :type ld_value: Any
+        Args:
+            ld_value (Any): The value that is checked.
 
-        :returns: Wheter or not ld_value could represent an expanded JSON-LD value.
-        :rtype: bool
+        Returns:
+            bool: Wheter or not ld_value could represent an expanded JSON-LD value.
         """
         return cls.is_ld_node(ld_value) and "@value" in ld_value[0]
 
@@ -430,14 +393,14 @@ class ld_container:
     def is_typed_ld_value(cls: type[Self], ld_value: Any) -> bool:
         """
         Returns wheter the given value is considered to be possible of representing an expanded JSON-LD value
-        containing a value type.<br>
+        containing a value type.
         I.e. if ld_value is of the form [{"@value": a, "@type": b, ..., x: z}].
 
-        :param ld_value: The value that is checked.
-        :type ld_value: Any
+        Args:
+            ld_value (Any): The value that is checked.
 
-        :returns: Wheter or not ld_value could represent an expanded JSON-LD value containing a value type.
-        :rtype: bool
+        Returns
+            bool: Wheter or not ld_value could represent an expanded JSON-LD value containing a value type.
         """
         return cls.is_ld_value(ld_value) and "@type" in ld_value[0]
 
@@ -445,28 +408,28 @@ class ld_container:
     def is_json_id(cls: type[Self], ld_value: Any) -> bool:
         """
         Returns wheter the given value is considered to be possible of representing a non-expanded JSON-LD node
-        containing only an @id value.<br>
+        containing only an @id value.
         I.e. if ld_value is of the form {"@id": ...}.
 
-        :param ld_value: The value that is checked.
-        :type ld_value: Any
+        Args:
+            ld_value (Any): The value that is checked.
 
-        :returns: Wheter or not ld_value could represent a non-expanded JSON-LD node containing only an @id value.
-        :rtype: bool
+        Returns:
+            bool: Wheter or not ld_value could represent a non-expanded JSON-LD node containing only an @id value.
         """
         return isinstance(ld_value, dict) and ["@id"] == [*ld_value.keys()]
 
     @classmethod
     def is_json_value(cls: type[Self], ld_value: Any) -> bool:
         """
-        Returns wheter the given value is considered to be possible of representing a non-expanded JSON-LD value.<br>
+        Returns wheter the given value is considered to be possible of representing a non-expanded JSON-LD value.
         I.e. if ld_value is of the form {"@value": b, ..., x: z}.
 
-        :param ld_value: The value that is checked.
-        :type ld_value: Any
+        Args:
+            ld_value (Any): The value that is checked.
 
-        :returns: Wheter or not ld_value could represent a non-expanded JSON-LD value.
-        :rtype: bool
+        Returns:
+            bool: Wheter or not ld_value could represent a non-expanded JSON-LD value.
         """
         return isinstance(ld_value, dict) and "@value" in ld_value
 
@@ -474,14 +437,14 @@ class ld_container:
     def is_typed_json_value(cls: type[Self], ld_value: Any) -> bool:
         """
         Returns wheter the given value is considered to be possible of representing a non-expanded JSON-LD value
-        containing a value type.<br>
+        containing a value type.
         I.e. if ld_value is of the form {"@value": a, "@type": b, ..., x: z}.
 
-        :param ld_value: The value that is checked.
-        :type ld_value: Any
+        Args:
+            ld_value (Any): The value that is checked.
 
-        :returns: Wheter or not ld_value could represent a non-expanded JSON-LD value containing a value type.
-        :rtype: bool
+        Returns:
+            bool: Wheter or not ld_value could represent a non-expanded JSON-LD value containing a value type.
         """
         return cls.is_json_value(ld_value) and "@type" in ld_value
 
@@ -489,14 +452,14 @@ class ld_container:
     def typed_ld_to_py(cls: type[Self], data: list[dict[str, BASIC_TYPE]], **kwargs) -> Union[BASIC_TYPE, TIME_TYPE]:
         """
         Returns the value of the given expanded JSON-LD value containing a value type converted into that type.
-        Meaning the pythonized version of the JSON-LD value data is returned.<br>
+        Meaning the pythonized version of the JSON-LD value data is returned.
         ld_container.is_typed_ld_value(data) must return True.
 
-        :param data: The value that is that is converted into its pythonized from.
-        :type data: list[dict[str, BASIC_TYPE]]
+        Args:
+            data (list[dict[str, BASIC_TYPE]]): The value that is that is converted into its pythonized from.
 
-        :returns: The pythonized version of data.
-        :rtype: BASIC_TYPE | TIME_TYPE
+        Returns:
+            BASIC_TYPE | TIME_TYPE: The pythonized version of data.
         """
         # FIXME: #434 dates are not returned as datetime/ date/ time but as string
         ld_value = data[0]['@value']
@@ -514,13 +477,12 @@ class ld_container:
         If the comparison is inconclusive i.e. exactly one or zero of both values have an "@id" value:
         Return whether or not all other keys exist in both values and all values of the keys are the same.
 
-        :param first: The first value of the comparison
-        :type first: dict[str, Union[BASIC_TYPE, TIME_TYPE]]
-        :param second: The second value of the comparison
-        :type second: dict[str, Union[BASIC_TYPE, TIME_TYPE]]
+        Args:
+            first (dict[str, Union[BASIC_TYPE, TIME_TYPE]]): The first value of the comparison
+            second (dict[str, Union[BASIC_TYPE, TIME_TYPE]]): The second value of the comparison
 
-        :return: Whether the values are considered equal or not.
-        :rtype: bool
+        Returns:
+            bool: Whether the values are considered equal or not.
         """
         # compare @id's
         if "@id" in first and "@id" in second:
