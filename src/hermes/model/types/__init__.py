@@ -26,9 +26,20 @@ _TYPEMAP = [
     (ld_dict.is_json_dict, {"ld_container": lambda c, **kw: ld_dict([c], **kw)}),
     (lambda v: isinstance(v, str), {"python": lambda v, parent, **_: parent.ld_proc.compact_iri(parent.active_ctx, v)}),
 ]
+"""
+A list of tuples each containing a function to check if the conversion function (the second item in the tuple which
+converts the given object into a JSON_LD represented by an ld_container) is applicable for a given pythonized expanded
+JSON_LD value.
+"""
 
 
-def init_typemap():
+def init_typemap() -> None:
+    """
+    A function registering the type conversions in _TYPEMAP with the :class:`JsonLdProcessor` class.
+
+    Returns:
+        None:
+    """
     for typecheck, conversions in _TYPEMAP:
         JsonLdProcessor.register_typemap(typecheck, **conversions)
 

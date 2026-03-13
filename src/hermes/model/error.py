@@ -5,7 +5,7 @@
 # SPDX-FileContributor: Michael Meinel
 # SPDX-FileContributor: Stephan Druskat <stephan.druskat@dlr.de>
 
-import typing as t
+from typing import Any, Union
 
 
 class HermesValidationError(Exception):
@@ -45,15 +45,25 @@ class HermesContextError(Exception):
 class HermesMergeError(Exception):
     """
     This exception should be raised when there is an error during a merge / set operation.
+
+    Attributes:
+        path (list[str | int]): The path where the merge error occured.
+        old_Value (Any): Old value that was stored at `path`.
+        new_value (Any): New value that was to be assinged.
+        tag: Tag data for the new value.
     """
-    def __init__(self, path: t.List[str | int], old_value: t.Any, new_value: t.Any, **kwargs):
+    def __init__(self, path: list[Union[str, int]], old_value: Any, new_value: Any, **kwargs) -> None:
         """
         Create a new merge incident.
 
-        :param path: The path where the merge error occured.
-        :param old_Value: Old value that was stored at `path`.
-        :param new_value: New value that was to be assinged.
-        :param kwargs: Tag data for the new value.
+        Args:
+            path (list[str | int]): The path where the merge error occured.
+            old_Value (Any): Old value that was stored at `path`.
+            new_value (Any): New value that was to be assinged.
+            kwargs: Tag data for the new value.
+
+        Returns:
+            None:
         """
         self.path = path
         self.old_value = old_value

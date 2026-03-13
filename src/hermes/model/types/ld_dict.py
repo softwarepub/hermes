@@ -215,15 +215,47 @@ class ld_dict(ld_container):
             return NotImplemented
         return not x
 
-    def __bool__(self):
+    def __bool__(self: Self) -> bool:
+        """
+        Returns the truth value self would have if it was a normal dict.\n
+        I.e. returns true if no key, value pair is in self.
+
+        Returns:
+            bool: The truth value of self.
+        """
         return bool(self.data_dict)
 
-    def setdefault(self, key, default):
+    def setdefault(
+        self: Self,
+        key: str,
+        default: Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]
+    ) -> ld_list:
+        """
+        Get the value for the given key if self has a value for the key. Otherwise set the value for key to default and
+        then return the value at key in self.
+
+        Args:
+            key (str): The key at which the value is returned.
+            default (JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE | ld_dict | ld_list): The value that is set at key in self
+                if there is no value for key in self.
+
+        Returns:
+            ld_list: The value at key in self (if no value at key in self, it is set to default first).
+        """
         if key not in self:
             self[key] = default
         return self[key]
 
-    def emplace(self, key):
+    def emplace(self: Self, key: str) -> None:
+        """
+        Emplace the value at key in self (it is set to an empty list) if there is no value yet.
+
+        Args:
+            key (str): The key at which the value in self is emplaced.
+
+        Returns:
+            None:
+        """
         if key not in self:
             self[key] = []
 

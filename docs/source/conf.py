@@ -194,7 +194,8 @@ togglebutton_hint = "Click to show screenshot"
 def autoapi_skip_member(app, obj_type, name, obj, skip, options):
     if obj_type == "attribute":
         if any(documented_type in obj.id for documented_type in [
-            "ld_container", "ld_dict", "ld_list", "ld_merge_container", "ld_merge_dict", "ld_merge_list", "ld_context"
+            "ld_container", "ld_dict", "ld_list", "ld_merge_container", "ld_merge_dict", "ld_merge_list", "ld_context",
+            "HermesCache", "HermesContext", "HermesMergeError"
         ]):
             return True
 
