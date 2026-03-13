@@ -7,23 +7,22 @@
 
 from __future__ import annotations
 
-from .ld_container import ld_container
 from collections import deque
+from collections.abc import Generator, Hashable
+from typing import Any, Union, TYPE_CHECKING
+from typing_extensions import Self
 
-from typing import TYPE_CHECKING
+from .ld_container import (
+    ld_container,
+    JSON_LD_CONTEXT_DICT,
+    EXPANDED_JSON_LD_VALUE,
+    PYTHONIZED_LD_CONTAINER,
+    JSON_LD_VALUE,
+    TIME_TYPE,
+    BASIC_TYPE,
+)
 if TYPE_CHECKING:
-    from collections.abc import Generator, Hashable
     from .ld_dict import ld_dict
-    from .ld_container import (
-        JSON_LD_CONTEXT_DICT,
-        EXPANDED_JSON_LD_VALUE,
-        PYTHONIZED_LD_CONTAINER,
-        JSON_LD_VALUE,
-        TIME_TYPE,
-        BASIC_TYPE,
-    )
-    from typing import Any, Union
-    from typing_extensions import Self
 
 
 class ld_list(ld_container):
@@ -31,10 +30,10 @@ class ld_list(ld_container):
     An JSON-LD container resembling a list ("@set", "@list" or "@graph").
     See also :class:`ld_container`.
 
-    :ivar container_type: The type of JSON-LD container the list is representing. ("@set", "@list", "graph")
-    :ivartype container_type: str
-    :ivar item_list: The list of items (in expanded JSON-LD form) that are contained in this ld_list.
-    :ivartype item_list: EXPANDED_JSON_LD_VALUE
+    Attributes:
+        container_type (str): The type of JSON-LD container the list is representing. ("@set", "@list", "graph")
+        item_list (EXPANDED_JSON_LD_VALUE): The list of items (in expanded JSON-LD form)
+            that are contained in this ld_list.
     """
 
     def __init__(
@@ -49,28 +48,24 @@ class ld_list(ld_container):
         """
         Create a new instance of an ld_list.
 
-        :param self: The instance of ld_list to be initialized.
-        :type self: ld_list
-        :param data: The expanded json-ld data that is mapped (must be valid for @set, @list or @graph)
-        :type data: EXPANDED_JSON_LD_VALUE
-        :param parent: parent node of this container.
-        :type parent: ld_dict | ld_list | None
-        :param key: key into the parent container.
-        :type key: str | None
-        :param index: index into the parent container.
-        :type index: int | None
-        :param context: local context for this container.
-        :type context: list[str | JSON_LD_CONTEXT_DICT] | None
+        Args:
+            data (EXPANDED_JSON_LD_VALUE): The expanded json-ld data that is mapped
+                (must be valid for @set, @list or @graph)
+            parent (ld_dict | ld_list | None): parent node of this container.
+            key (str | None): key into the parent container.
+            index (int | None): index into the parent container.
+            context (list[str | JSON_LD_CONTEXT_DICT] | None): local context for this container.
 
-        :return:
-        :rtype: None
+        Returns:
+            None:
 
-        :raises ValueError: If the given key is not a string or None was given.
-        :raises ValueError: If the given data is not a list.
-        :raises ValueError: If the data represents an unexpanded @set. I.e. is of the form [{"@set": [...]}]
-        :raises ValueError: If the given key is "@type" but the container_type not "@set"
-            or a value in the item_list not a string.
-        :raises ValueError: If the given key is not "@type" and any value in the item_list not a dict.
+        Raises:
+            ValueError: If the given key is not a string or None was given.
+            ValueError: If the given data is not a list.
+            ValueError: If the data represents an unexpanded @set. I.e. is of the form [{"@set": [...]}]
+            ValueError: If the given key is "@type" but the container_type not "@set"
+                or a value in the item_list not a string.
+            ValueError: If the given key is not "@type" and any value in the item_list not a dict.
         """
         # check for validity of data
         if not isinstance(key, str):
@@ -105,13 +100,12 @@ class ld_list(ld_container):
         """
         Get the item(s) at position index in a pythonized form.
 
-        :param self: The ld_list the items are taken from.
-        :type self: ld_list
-        :param index: The positon(s) from which the item(s) is/ are taken.
-        :type index: int | slice
+        Args:
+            index (int | slice): The positon(s) from which the item(s) is/ are taken.
 
-        :return: The pythonized item(s) at index.
-        :rtype: BASIC_TYPE | TIME_TYPE | ld_dict | ld_list | list[BASIC_TYPE | TIME_TYPE | ld_dict | ld_list]
+        Returns:
+            BASIC_TYPE | TIME_TYPE | ld_dict | ld_list | list[BASIC_TYPE | TIME_TYPE | ld_dict | ld_list]:
+                The pythonized item(s) at index.
         """
         # handle slices by applying them to a list of indices and then getting the items at those
         if isinstance(index, slice):
@@ -130,15 +124,12 @@ class ld_list(ld_container):
         Set the item(s) at position index to the given value(s).
         All given values are expanded. If any are assimilated by self all items that would be added by this are added.
 
-        :param self: The ld_list the items are set in.
-        :type self: ld_list
-        :param index: The positon(s) at which the item(s) is/ are set.
-        :type index: int | slice
-        :param value: The new value(s).
-        :type value: JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE | ld_dict | ld_list
+        Args:
+            index (int | slice): The positon(s) at which the item(s) is/ are set.
+            value (JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE | ld_dict | ld_list): The new value(s).
 
-        :return:
-        :rtype: None
+        Returns:
+            None:
         """
         if not isinstance(index, slice):
             # expand the value
@@ -166,13 +157,11 @@ class ld_list(ld_container):
         Note that if a deleted object is represented by an ld_container druing this process it will still exist
         and not be modified afterwards.
 
-        :param self: The ld_list the items are deleted from.
-        :type self: ld_list
-        :param index: The positon(s) at which the item(s) is/ are deleted.
-        :type index: int | slice
+        Args:
+            index (int | slice): The positon(s) at which the item(s) is/ are deleted.
 
-        :return:
-        :rtype: None
+        Returns:
+            None:
         """
         del self.item_list[index]
 
@@ -180,11 +169,8 @@ class ld_list(ld_container):
         """
         Returns the number of items in this ld_list.
 
-        :param self: The ld_list whose length is to be returned.
-        :type self: ld_list
-
-        :return: The length of self.
-        :rtype: int
+        Returns:
+            int: The length of self.
         """
         return len(self.item_list)
 
@@ -192,11 +178,8 @@ class ld_list(ld_container):
         """
         Returns an iterator over the pythonized values contained in self.
 
-        :param self: The ld_list over whose items is iterated.
-        :type self: ld_list
-
-        :return: The Iterator over self's values.
-        :rtype: Generator[BASIC_TYPE | TIME_TYPE | ld_dict | ld_list, None, None]
+        Returns:
+            Generator[BASIC_TYPE | TIME_TYPE | ld_dict | ld_list, None, None]: The Iterator over self's values.
         """
         # return an Iterator over each value in self in its pythonized from
         for index, value in enumerate(self.item_list):
@@ -216,13 +199,11 @@ class ld_list(ld_container):
         That means that this value is 'contained' in self.item_list if any object in self.item_list
         has the same @id like it or it xor the object in the item_list has an id an all other values are the same.
 
-        :param self: The ld_list that is checked if it contains value.
-        :type self: ld_list
-        :param value: The object being checked whether or not it is in self.
-        :type value: JSON_LD_VALUE
+        Args:
+            value (JSON_LD_VALUE): The object being checked whether or not it is in self.
 
-        :return: Whether or not value is being considered to be contained in self.
-        :rtype: bool
+        Returns:
+            bool: Whether or not value is being considered to be contained in self.
         """
         # expand value
         expanded_value = self._to_expanded_json([value])
@@ -249,25 +230,28 @@ class ld_list(ld_container):
                      dict[str, Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]]]
     ) -> bool:
         """
-        Returns wheter or not self is considered to be equal to other.<br>
+        Returns wheter or not self is considered to be equal to other.
+
         If other is not an ld_list, it is converted first.
         For each index it is checked if the ids of the items at index in self and other match if both have one,
-        if only one has or neither have an id all other values are compared.<br>
+        if only one has or neither have an id all other values are compared.
+
         Note that due to those circumstances equality is not transitve
-        meaning if a == b and b == c it is not guaranteed that a == c.<br>
+        meaning if a == b and b == c it is not guaranteed that a == c.
+
         If self or other is considered unordered the comparison is more difficult. All items in self are compared
         with all items in other. On the resulting graph given by the realtion == the Hopcroft-Karp algoritm is used
         to determine if there exists a bijection reordering self so that the ordered comparison of self with other
         returns true.
 
-        :param self: The ld_list other is compared to.
-        :type self: ld_list
-        :param other: The list/ container/ ld_list self is compared to.
-        :type other: ld_list | list[JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE | ld_dict | ld_list]
+        Args:
+            other (ld_list | list[JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE | ld_dict | ld_list]): The list/ container/
+                ld_list self is compared to.
 
-        :return: Whether or not self and other are considered equal.
-            If other is of the wrong type return the NotImplemented singleton instead.
-        :rtype: bool
+        Returns:
+            bool:
+                Whether or not self and other are considered equal.
+                If other is of the wrong type return the NotImplemented singleton instead.
         """
         # check if other has an acceptable type
         if not (isinstance(other, (list, ld_list)) or ld_list.is_container(other)):
@@ -363,28 +347,29 @@ class ld_list(ld_container):
         distances: dict[Hashable, Union[int, float]]
     ) -> bool:
         """
-        Completes the BFS step of Hopcroft-Karp. I.e.:<br>
+        Completes the BFS step of Hopcroft-Karp. I.e.:
+
         Finds the shortest path from all unmatched verticies in verticies1 to any unmatched vertex in any value in edges
-        where the connecting paths are alternating between matches and its complement.<br>
+        where the connecting paths are alternating between matches and its complement.
+
         It also marks each vertex in verticies1 with how few verticies from verticies1 have to be passed
         to reach the vertex from an unmatched one in verticies1. This is stored in distances.
 
-        :param verticies1: The set of verticies in the left partition of the bipartite graph.
-        :type verticies1: set[Hashable]
-        :param edges: The edges in the bipartite graph. (As the edges are bidirectional they are expected to be given in
-            this format: Dictionary with keys being the vertices in the left partition and values being tuples
-            of verticies in the right partition.)
-        :type edges: dict[Hashable, tuple[Hashable]]
-        :param matches: The current matching of verticies in the left partition with the ones in the right partition.
-        :type matches: dict[Hashable, Hashable]
-        :param distances: The reference to the dictionary mapping verticies of the left partition to the minimal
-            number of verticies in the left partition that will be passed on a path from an unmatched vertex of the left
-            partition to the vertex that is the key.
-        :type distances: dict[Hashable, Union[int, float]]
+        Args:
+            verticies1 (set[Hashable]): The set of verticies in the left partition of the bipartite graph.
+            edges (dict[Hashable, tuple[Hashable]]): The edges in the bipartite graph. (As the edges are bidirectional
+                they are expected to be given in this format: Dictionary with keys being the vertices in the left
+                partition and values being tuples of verticies in the right partition.)
+            matches (dict[Hashable, Hashable]): The current matching of verticies in the left partition with the ones in
+                the right partition.
+            distances (dict[Hashable, Union[int, float]]): The reference to the dictionary mapping verticies of the left
+                partition to the minimal number of verticies in the left partition that will be passed on a path from an
+                unmatched vertex of the left partition to the vertex that is the key.
 
-        :returns: Wheter or not a alternating path from an unmatched vertex in the left partition to an unmatched vertex
-            in the right partition exists.
-        :rtype: bool
+        Returns:
+            bool:
+                Wheter or not a alternating path from an unmatched vertex in the left partition to an unmatched vertex
+                in the right partition exists.
         """
         # initialize the queue and set the distances to zero for unmatched vertices and to inf for all others
         queue = deque()
@@ -420,27 +405,27 @@ class ld_list(ld_container):
         distances: dict[Hashable, Union[int, float]]
     ) -> bool:
         """
-        Completes the DFS step of Hopcroft-Karp. I.e.:<br>
+        Completes the DFS step of Hopcroft-Karp. I.e.:
+
         Adds all edges on every path with the minimal path length to matches if they would be in the symmetric
         difference of matches and the set of edges on the union of the paths.
 
-        :param ver: The set of verticies in the left partition of the bipartite graph.
-        :type vert: Hashable
-        :param edges: The edges in the bipartite graph. (As the edges are bidirectional they are expected to be given in
-            this format: Dictionary with keys being the vertices in the left partition and values being tuples
-            of verticies in the right partition.)
-        :type edges: dict[Hashable, tuple[Hashable]]
-        :param matches: The current matching of verticies in the left partition with the ones in the right partition.
-        :type matches: dict[Hashable, Hashable]
-        :param distances: The reference to the dictionary mapping verticies of the left partition to the minimal
-            number of verticies in the left partition that will be passed on a path from an unmatched vertex of the left
-            partition to the vertex that is the key. The values will be replaced with float("inf") to mark already
-            visited vertices.
-        :type distances: dict[Hashable, Union[int, float]]
+        Args:
+            ver (Hashable): The set of verticies in the left partition of the bipartite graph.
+            edges (dict[Hashable, tuple[Hashable]]): The edges in the bipartite graph. (As the edges are bidirectional
+                they are expected to be given in this format: Dictionary with keys being the vertices in the left
+                partition and values being tuples of verticies in the right partition.)
+            matches (dict[Hashable, Hashable]): The current matching of verticies in the left partition with the ones in
+                the right partition.
+            distances (dict[Hashable, Union[int, float]]): The reference to the dictionary mapping verticies of the left
+                partition to the minimal number of verticies in the left partition that will be passed on a path from an
+                unmatched vertex of the left partition to the vertex that is the key. The values will be replaced with
+                float("inf") to mark already visited vertices.
 
-        :returns: Wheter or not a path from the unmatched vertex ver in the left partition to an unmatched vertex
-            in the right partition could still exist.
-        :rtype: bool
+        Returns:
+            bool:
+                Wheter or not a path from the unmatched vertex ver in the left partition to an unmatched vertex
+                in the right partition could still exist.
         """
         # recursion base case: None always has a shortest possible path to itself
         if ver is None:
@@ -466,22 +451,22 @@ class ld_list(ld_container):
         edges: dict[Hashable, tuple[Hashable]]
     ) -> int:
         """
-        Implementation of Hopcroft-Karp. I.e.:<br>
+        Implementation of Hopcroft-Karp. I.e.:
+
         Finds how maximal number of edges with the property that no two edges share an endpoint (and startpoint)
-        in the given bipartite graph.<br>
+        in the given bipartite graph.
+
         Note that verticies1 and verticies2 have to be disjoint.
 
-        :param verticies1: The set of verticies in the left partition of the bipartite graph.
-        :type verticies1: set[Hashable]
-        :param verticies2: The set of verticies in the right partition of the bipartite graph.
-        :type verticies2: set[Hashable]
-        :param edges: The edges in the bipartite graph. (As the edges are bidirectional they are expected to be given in
-            this format: Dictionary with keys being the vertices in the left partition and values being tuples
-            of verticies in the right partition.)
-        :type edges: dict[Hashable, tuple[Hashable]]
+        Args:
+            verticies1 (set[Hashable]): The set of verticies in the left partition of the bipartite graph.
+            verticies2 (set[Hashable]): The set of verticies in the right partition of the bipartite graph.
+            edges (dict[Hashable, tuple[Hashable]]): The edges in the bipartite graph. (As the edges are bidirectional
+                they are expected to be given in this format: Dictionary with keys being the vertices in the left
+                partition and values being tuples of verticies in the right partition.)
 
-        :returns: The number of edges.
-        :rtype: int
+        Returns:
+            int: The number of edges.
         """
         # initializes the first matching. None is a imaginary vertex to denote unmatched vertices.
         matches = dict()
@@ -509,16 +494,16 @@ class ld_list(ld_container):
         """
         Returns whether or not self and other not considered to be equal.
         (Returns not self.__eq__(other) if the return type is bool.
-        See ld_list.__eq__ for more details on the comparison.)
+        See :meth:`ld_list.__eq__` for more details on the comparison.)
 
-        :param self: The ld_list other is compared to.
-        :type self: ld_list
-        :param other: The list/ container/ ld_list self is compared to.
-        :type other: ld_list | list[JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE | ld_dict | ld_list]
+        Args:
+            other (ld_list | list[JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE | ld_dict | ld_list]): The list/ container/
+                ld_list self is compared to.
 
-        :return: Whether or not self and other are not considered equal.
-            If other is of the wrong type return the NotImplemented singleton instead.
-        :rtype: bool
+        Returns:
+            bool:
+                Whether or not self and other are not considered equal.
+                If other is of the wrong type return the NotImplemented singleton instead.
         """
         # compare self and other using __eq__
         x = self.__eq__(other)
@@ -532,13 +517,11 @@ class ld_list(ld_container):
         Append the item to the given ld_list self.
         The given value is expanded. If it is assimilated by self all items that would be added by this are added.
 
-        :param self: The ld_list the item is appended to.
-        :type self: ld_list
-        :param value: The new value.
-        :type value: JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE | ld_dict | ld_list
+        Args:
+            value (JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE | ld_dict | ld_list): The new value.
 
-        :return:
-        :rtype: None
+        Returns:
+            None:
         """
         self.item_list.extend(self._to_expanded_json([value]))
 
@@ -547,13 +530,11 @@ class ld_list(ld_container):
         Append the items in value to the given ld_list self.
         The given values are expanded. If any are assimilated by self all items that would be added by this are added.
 
-        :param self: The ld_list the items are appended to.
-        :type self: ld_list
-        :param value: The new values.
-        :type value: list[JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE | ld_dcit | ld_list]
+        Args:
+            value (list[JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE | ld_dcit | ld_list]): The new values.
 
-        :return:
-        :rtype: None
+        Returns:
+            None:
         """
         for item in value:
             self.append(item)
@@ -562,11 +543,8 @@ class ld_list(ld_container):
         """
         Return a fully pythonized version of this object where all ld_container are replaced by lists and dicts.
 
-        :param self: The ld_list whose fully pythonized version is returned.
-        :type self: ld_list
-
-        :return: The fully pythonized version of self.
-        :rtype: list[BASIC_TYPE | TIME_TYPE | PYTHONIZED_LD_CONTAINER]
+        Returns:
+            list[BASIC_TYPE | TIME_TYPE | PYTHONIZED_LD_CONTAINER]: The fully pythonized version of self.
         """
         return [
             item.to_python() if isinstance(item, ld_container) else item
@@ -576,28 +554,28 @@ class ld_list(ld_container):
     @classmethod
     def is_ld_list(cls: type[Self], ld_value: Any) -> bool:
         """
-        Returns wheter the given value is considered to be possible of representing an ld_list.<br>
+        Returns wheter the given value is considered to be possible of representing an ld_list.
         I.e. if ld_value is of the form [{container_type: [...]}] where container_type is '@set', '@list' or '@graph'.
 
-        :param ld_value: The value that is checked.
-        :type ld_value: Any
+        Args:
+            ld_value (Any): The value that is checked.
 
-        :returns: Wheter or not ld_value could represent an ld_list.
-        :rtype: bool
+        Returns:
+            bool: Wheter or not ld_value could represent an ld_list.
         """
         return cls.is_ld_node(ld_value) and cls.is_container(ld_value[0])
 
     @classmethod
     def is_container(cls: type[Self], value: Any) -> bool:
         """
-        Returns wheter the given value is considered to be possible of representing an json-ld container.<br>
+        Returns wheter the given value is considered to be possible of representing an json-ld container.
         I.e. if ld_value is of the form {container_type: [...]} where container_type is '@set', '@list' or '@graph'.
 
-        :param ld_value: The value that is checked.
-        :type ld_value: Any
+        Args:
+            ld_value (Any): The value that is checked.
 
-        :returns: Wheter or not ld_value could represent a json-ld container.
-        :rtype: bool
+        Returns:
+            bool: Wheter or not ld_value could represent a json-ld container.
         """
         return (
             isinstance(value, dict)
@@ -616,30 +594,30 @@ class ld_list(ld_container):
         container_type: str = "@set"
     ) -> ld_list:
         """
-        Creates a ld_list from the given list with the given parent, key, context and container_type.<br>
-        Note that only container_type '@set' is valid for key '@type'.<br>
+        Creates a ld_list from the given list with the given parent, key, context and container_type.
+
+        Note that only container_type '@set' is valid for key '@type'.
+
         Further more note that if parent would assimilate the values in value no new ld_list is created
         and the given values are appended to parent instead and parent is returned.
 
-        :param value: The list of values the ld_list should be created from.
-        :type value: list[JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE]
-        :param parent: The parent container of the new ld_list.<br>If value is assimilated by parent druing JSON-LD
-            expansion parent is extended by value and parent is returned.
-        :type parent: ld_dict | ld_list | None
-        :param key: The key into the inner most parent container representing a dict of the new ld_list.
-        :type: key: str | None
-        :param context: The context for the new list (it will also inherit the context of parent).<br>
-            Note that this context won't be added to parent if value is assimilated by parent and parent is returned.
-        :type context: str | JSON_LD_CONTEXT_DICT | list[str | JSON_LD_CONTEXT_DICT] | None
-        :param container_type: The container type of the new list valid are '@set', '@list' and '@graph'.<br>
-            If value is assimilated by parent and parent is returned the given container_type won't affect
-            the container type of parent.<br> Also note that only '@set' is valid if key is '@type'.
-        :type container_type: str
+        Args:
+            value (list[JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE]): The list of values the ld_list should be created from.
+            parent (ld_dict | ld_list | None): The parent container of the new ld_list. If value is assimilated by
+                parent druing JSON-LD expansion parent is extended by value and parent is returned.
+            key (str | None): The key into the inner most parent container representing a dict of the new ld_list.
+            context (str | JSON_LD_CONTEXT_DICT | list[str | JSON_LD_CONTEXT_DICT] | None): The context for the new list
+                (it will also inherit the context of parent). Note that this context won't be added to parent if value
+                is assimilated by parent and parent is returned.
+            container_type (str): The container type of the new list valid are '@set', '@list' and '@graph'.
+                If value is assimilated by parent and parent is returned the given container_type won't affect
+                the container type of parent. Also note that only '@set' is valid if key is '@type'.
 
-        :return: The new ld_list build from value or if value is assimilated by parent, parent extended by value.
-        :rtype: ld_list
+        Returns:
+            ld_list: The new ld_list build from value or if value is assimilated by parent, parent extended by value.
 
-        :raises ValueError: If key is '@type' and container_type is not '@set'.
+        Raises:
+            ValueError: If key is '@type' and container_type is not '@set'.
         """
         # TODO: handle context if not of type list or None
         # validate container_type
@@ -678,18 +656,19 @@ class ld_list(ld_container):
     @classmethod
     def get_item_list_from_container(cls: type[Self], ld_value: dict[str, list[Any]]) -> list[Any]:
         """
-        Returns the item list from a container, the given ld_value, (i.e. {container_type: item_list}).<br>
+        Returns the item list from a container, the given ld_value, (i.e. {container_type: item_list}).
         Only '@set', '@list' and '@graph' are valid container types.
 
-        :param ld_value: The container whose item list is to be returned.
-        :type ld_value: dict[str, list[Any]]
+        Args:
+            ld_value (dict[str, list[Any]]): The container whose item list is to be returned.
 
-        :returns: The list the container holds.
-        :rtype: list[Any]
+        Returns:
+            list[Any]: The list the container holds.
 
-        :raises ValueError: If the item_container is not a dict.
-        :raises ValueError: If the container_type is not exactly one of '@set', '@list' and '@graph'.
-        :raises ValueError: If the item_list is no list.
+        Raises:
+            ValueError: If the item_container is not a dict.
+            ValueError: If the container_type is not exactly one of '@set', '@list' and '@graph'.
+            ValueError: If the item_list is no list.
         """
         if type(ld_value) != dict:
             raise ValueError(f"The given data {ld_value} is not a dictionary and therefor no container.")
