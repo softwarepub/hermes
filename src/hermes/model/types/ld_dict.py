@@ -7,23 +7,22 @@
 
 from __future__ import annotations
 
-from .pyld_util import bundled_loader
-from .ld_container import ld_container
+from collections.abc import Generator, Iterator, KeysView
+from typing import Any, Literal, Union, TYPE_CHECKING
+from typing_extensions import Self
 
-from typing import TYPE_CHECKING
+from .ld_container import (
+    ld_container,
+    JSON_LD_CONTEXT_DICT,
+    EXPANDED_JSON_LD_VALUE,
+    PYTHONIZED_LD_CONTAINER,
+    JSON_LD_VALUE,
+    TIME_TYPE,
+    BASIC_TYPE,
+)
+from .pyld_util import bundled_loader
 if TYPE_CHECKING:
-    from collections.abc import Generator, Iterator, KeysView
-    from .ld_container import (
-        JSON_LD_CONTEXT_DICT,
-        EXPANDED_JSON_LD_VALUE,
-        PYTHONIZED_LD_CONTAINER,
-        JSON_LD_VALUE,
-        TIME_TYPE,
-        BASIC_TYPE,
-    )
     from .ld_list import ld_list
-    from typing import Any, Union, Literal
-    from typing_extensions import Self
 
 
 class ld_dict(ld_container):
@@ -31,11 +30,10 @@ class ld_dict(ld_container):
     An JSON-LD container resembling a dict.
     See also :class:`ld_container`
 
-    :ivar ref: A dict used to reference this object by its id. (Its form is {"@id": ...})
-    :ivartype ref: dict[Literal["@id"], str]
-
-    :cvar container_type: A type used as a placeholder to represent "no default".
-    :cvartype container_type: type[str]
+    Attributes:
+        data_dict (dict[str, EXPANDED_JSON_LD_VALUE]): The dict of items (in expanded JSON-LD form)
+            that are contained in this ld_dict.
+        _NO_DEFAULT (type[str]): (class attribute) A type used as a placeholder to represent "no default".
     """
     _NO_DEFAULT = type("NO DEFAULT")
 
@@ -51,23 +49,18 @@ class ld_dict(ld_container):
         """
         Create a new instance of an ld_dict.
 
-        :param self: The instance of ld_container to be initialized.
-        :type self: Self
-        :param data: The expanded json-ld data that is mapped.
-        :type data: EXPANDED_JSON_LD_VALUE
-        :param parent: parent node of this container.
-        :type parent: ld_dict | ld_list | None
-        :param key: key into the parent container.
-        :type key: str | None
-        :param index: index into the parent container.
-        :type index: int | None
-        :param context: local context for this container.
-        :type context: list[str | JSON_LD_CONTEXT_DICT] | None
+        Args:
+            data (EXPANDED_JSON_LD_VALUE): The expanded json-ld data that is mapped.
+            parent (ld_dict | ld_list | None): parent node of this container.
+            key (str | None): key into the parent container.
+            index (int | None): index into the parent container.
+            context (list[str | JSON_LD_CONTEXT_DICT] | None): local context for this container.
 
-        :return:
-        :rtype: None
+        Returns:
+            None:
 
-        :raises ValueError: If the given data doesn't represent an ld_dict.
+        Raises:
+            ValueError: If the given data doesn't represent an ld_dict.
         """
         # check for validity of data
         if not self.is_ld_dict(data):
@@ -78,16 +71,14 @@ class ld_dict(ld_container):
 
     def __getitem__(self: Self, key: str) -> ld_list:
         """
-        Get the item with the given key in a pythonized form.
+        Get the item with the given key in a pythonized form.\n
         If self contains no key, value pair with the given key, then an empty list is added as its value and returned.
 
-        :param self: The ld_dict the item is taken from.
-        :type self: ld_dict
-        :param key: The key (compacted or expanded) to the item.
-        :type key: str
+        Args:
+            key (str): The key (compacted or expanded) to the item.
 
-        :return: The pythonized item at the key.
-        :rtype: ld_list
+        Returns:
+            ld_list: The pythonized item at the key.
         """
         full_iri = self.ld_proc.expand_iri(self.active_ctx, key)
         return self._to_python(full_iri, self.data_dict[full_iri])
@@ -97,15 +88,12 @@ class ld_dict(ld_container):
         Set the item at the given key to the given value or delete it if value is None.
         The given value is expanded.
 
-        :param self: The ld_dict the item is set in.
-        :type self: ld_dict
-        :param key: The key at which the item is set.
-        :type key: str
-        :param value: The new value.
-        :type value: JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE | ld_dict | ld_list
+        Args:
+            key (str): The key at which the item is set.
+            value (JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE | ld_dict | ld_list): The new value.
 
-        :return:
-        :rtype: None
+        Returns:
+            None:
         """
         # if the value is None delete the entry instead of updating it, but make sure it exists before deleting
         if value is None and key not in self:
@@ -119,17 +107,15 @@ class ld_dict(ld_container):
 
     def __delitem__(self: Self, key: str) -> None:
         """
-        Delete the key, value pair with the given value pair.
+        Delete the key, value pair with the given value pair.\n
         Note that if a deleted object is represented by an ld_container druing this process it will still exist
         and not be modified afterwards.
 
-        :param self: The ld_dict the key, value pair is deleted from.
-        :type self: ld_dict
-        :param key: The key (expanded or compacted) of the key, value pair that is deleted.
-        :type key: str
+        Args:
+            key (str): The key (expanded or compacted) of the key, value pair that is deleted.
 
-        :return:
-        :rtype: None
+        Returns:
+            None:
         """
         # expand key and delete the key, value pair
         full_iri = self.ld_proc.expand_iri(self.active_ctx, key)
@@ -139,13 +125,11 @@ class ld_dict(ld_container):
         """
         Returns whether or not self contains a key, value pair with the given key.
 
-        :param self: The ld_dict that is checked if it a key, value pair with the given key.
-        :type self: ld_dict
-        :param key: The key for which it is checked if a key, value pair is contained in self.
-        :type key: str
+        Args:
+            key (str): The key for which it is checked if a key, value pair is contained in self.
 
-        :return: Whether or not self contains a key, value pair with the given key.
-        :rtype: bool
+        Returns:
+            bool: Whether or not self contains a key, value pair with the given key.
         """
         # expand the key and check if self contains a key, value pair with it
         full_iri = self.ld_proc.expand_iri(self.active_ctx, key)
@@ -156,21 +140,21 @@ class ld_dict(ld_container):
         self: Self, other: Union[ld_dict, dict[str, Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]]]
     ) -> bool:
         """
-        Returns wheter or not self is considered to be equal to other.<br>
-        If other is not an ld_dict, it is converted first.
-        If an id check is possible return its result otherwise:
+        Returns wheter or not self is considered to be equal to other.\n
+        If other is not an ld_dict, it is converted first.\n
+        If an id check is possible return its result otherwise:\n
         For each key, value pair its value is compared to the value with the same key in other.
+
         Note that due to those circumstances equality is not transitve
-        meaning if a == b and b == c it is not guaranteed that a == c.<br>
+        meaning if a == b and b == c it is not guaranteed that a == c.
 
-        :param self: The ld_dict other is compared to.
-        :type self: ld_dict
-        :param other: The dict/ ld_dict self is compared to.
-        :type other: ld_dict | dict[str, JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE | ld_dict | ld_list]
+        Args:
+            other (ld_dict | dict[str, JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE | ld_dict | ld_list]):
+                The dict/ ld_dict self is compared to.
 
-        :return: Whether or not self and other are considered equal.
-            If other is of the wrong type return the NotImplemented singleton instead.
-        :rtype: bool
+        Returns:
+            bool: Whether or not self and other are considered equal.
+                If other is of the wrong type return the NotImplemented singleton instead.
         """
         # check if other has an acceptable type
         if not isinstance(other, (dict, ld_dict)):
@@ -211,18 +195,18 @@ class ld_dict(ld_container):
         self: Self, other: Union[ld_dict, dict[str, Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]]]
     ) -> bool:
         """
-        Returns whether or not self and other not considered to be equal.
+        Returns whether or not self and other not considered to be equal.\n
         (Returns not self.__eq__(other) if the return type is bool.
-        See ld_list.__eq__ for more details on the comparison.)
+        See :meth:`ld_dict.__eq__` for more details on the comparison.)
 
-        :param self: The ld_dict other is compared to.
-        :type self: ld_dict
-        :param other: The dict/ ld_dict self is compared to.
-        :type other: ld_dict | dict[str, JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE | ld_dict | ld_list]
+        Args:
+            other (ld_dict | dict[str, JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE | ld_dict | ld_list]):
+                The dict/ ld_dict self is compared to.
 
-        :return: Whether or not self and other are not considered equal.
-            If other is of the wrong type return the NotImplemented singleton instead.
-        :rtype: bool
+        Returns:
+            bool:
+                Whether or not self and other are not considered equal. If other is of the wrong type return the
+                NotImplemented singleton instead.
         """
         # compare self and other using __eq__
         x = self.__eq__(other)
@@ -247,18 +231,17 @@ class ld_dict(ld_container):
         self: Self, key: str, default: Any = _NO_DEFAULT
     ) -> Union[ld_list, Any]:
         """
-        Get the item with the given key in a pythonized form using the build in get.
+        Get the item with the given key in a pythonized form using the build in get.\n
         If a KeyError is raised, return the default or reraise it if no default is given.
 
-        :param self: The ld_dict the item is taken from.
-        :type self: ld_dict
-        :param key: The key (compacted or expanded) to the item.
-        :type key: str
+        Args:
+            key (str): The key (compacted or expanded) to the item.
 
-        :return: The pythonized item at the key.
-        :rtype: ld_list
+        Returns:
+            ld_list: The pythonized item at the key.
 
-        :raises KeyError: If the build in get raised a KeyError.
+        Raises:
+            KeyError: If :meth:`__getitem__(key)` raised a KeyError and default isn't set.
         """
         try:
             return self[key]
@@ -274,13 +257,12 @@ class ld_dict(ld_container):
         """
         Set the items at the given keys to the given values or delete it if value is None by using build in set.
 
-        :param self: The ld_dict the items are set in.
-        :type self: ld_dict
-        :param other: The key, value pairs giving the new values and their keys.
-        :type other: ld_dict | dict[str, JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE | ld_dict | ld_list]
+        Args:
+            other (ld_dict | dict[str, JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE | ld_dict | ld_list]):
+                The key, value pairs giving the new values and their keys.
 
-        :return:
-        :rtype: None
+        Returns:
+            None:
         """
         for key, value in other.items():
             self[key] = value
@@ -289,8 +271,8 @@ class ld_dict(ld_container):
         """
         Return the keys of the key, value pairs of self.
 
-        :param self: The ld_dict whose keys are returned.
-        :type self: ld_dict
+        Returns:
+            KeysView[str]: The keys of the values in self.
         """
         return self.data_dict.keys()
 
@@ -298,8 +280,8 @@ class ld_dict(ld_container):
         """
         Return an iterator of the compacted keys of the key, value pairs of self.
 
-        :param self: The ld_dict whose compacted keys are returned.
-        :type self: ld_dict
+        Returns:
+            Iterator[str]: An iterator over the compacted keys in self.
         """
         return map(
             lambda k: self.ld_proc.compact_iri(self.active_ctx, k),
@@ -310,8 +292,8 @@ class ld_dict(ld_container):
         """
         Return an generator of tuples of keys and their values in self.
 
-        :param self: The ld_dict whose items are returned.
-        :type self: ld_dict
+        Returns:
+            Generator[tuple[str, ld_list], None, None]: A Generator over all key, value pairs in self.
         """
         for k in self.data_dict.keys():
             yield k, self[k]
@@ -321,10 +303,11 @@ class ld_dict(ld_container):
         """
         Return the dict used to reference this object by its id. (Its form is {"@id": ...})
 
-        :param self: The ld_dict whose reference is returned.
-        :type self: ld_dict
+        Returns:
+            dict[Literal["@id"], str]: The minimal JSON_LD object referencing self.
 
-        :raises KeyError: If self has no id.
+        Raises:
+            KeyError: If self has no value for "@id".
         """
         return {"@id": self.data_dict['@id']}
 
@@ -332,11 +315,8 @@ class ld_dict(ld_container):
         """
         Return a fully pythonized version of this object where all ld_container are replaced by lists and dicts.
 
-        :param self: The ld_dict whose fully pythonized version is returned.
-        :type self: ld_dict
-
-        :return: The fully pythonized version of self.
-        :rtype: dict[str, BASIC_TYPE | TIME_TYPE | PYTHONIZED_LD_CONTAINER]
+        Returns:
+            dict[str, BASIC_TYPE | TIME_TYPE | PYTHONIZED_LD_CONTAINER]: The fully pythonized version of self.
         """
         res = {}
         for key in self.compact_keys():
@@ -358,22 +338,19 @@ class ld_dict(ld_container):
         ld_type: Union[str, list[str], None] = None
     ) -> ld_dict:
         """
-        Creates a ld_dict from the given dict with the given parent, key, context and ld_type.<br>
+        Creates a ld_dict from the given dict with the given parent, key, context and ld_type.\n
         Uses the expansion of the JSON-LD Processor and not the one of ld_container.
 
-        :param value: The dict of values the ld_dict should be created from.
-        :type value: dict[str, PYTHONIZED_LD_CONTAINER]
-        :param parent: The parent container of the new ld_list.
-        :type parent: ld_dict | ld_list | None
-        :param key: The key into the inner most parent container representing a dict of the new ld_list.
-        :type: key: str | None
-        :param context: The context for the new dict (it will also inherit the context of parent).
-        :type context: str | JSON_LD_CONTEXT_DICT | list[str | JSON_LD_CONTEXT_DICT] | None
-        :param ld_type: Additional value(s) for the new dict.
-        :type ld_type: str | list[str] | None
+        Args:
+            value (dict[str, PYTHONIZED_LD_CONTAINER]): The dict of values the ld_dict should be created from.
+            parent (ld_dict | ld_list | None): The parent container of the new ld_list.
+            key (str | None): The key into the inner most parent container representing a dict of the new ld_list.
+            context (str | JSON_LD_CONTEXT_DICT | list[str | JSON_LD_CONTEXT_DICT] | None):
+                The context for the new dict (it will also inherit the context of parent).
+            ld_type (str | list[str] | None): Additional value(s) for the new dict.
 
-        :return: The new ld_dict build from value.
-        :rtype: ld_dict
+        Returns:
+            ld_dict: The new ld_dict build from value.
         """
         # make a copy of value and add the new type to it.
         ld_data = value.copy()
@@ -399,30 +376,30 @@ class ld_dict(ld_container):
     @classmethod
     def is_ld_dict(cls: type[Self], ld_value: Any) -> bool:
         """
-        Returns wheter the given value is considered to be possible of representing an expanded json-ld dict.<br>
+        Returns wheter the given value is considered to be possible of representing an expanded json-ld dict.\n
         I.e. if ld_value is a list containing a dict containing none of the keys "@set", "@graph", "@list" and "@value"
         and not only the key "@id".
 
-        :param ld_value: The value that is checked.
-        :type ld_value: Any
+        Args:
+            ld_value (Any): The value that is checked.
 
-        :returns: Wheter or not ld_value could represent an expanded json-ld dict.
-        :rtype: bool
+        Returns:
+            bool: Wheter or not ld_value could represent an expanded json-ld dict.
         """
         return cls.is_ld_node(ld_value) and cls.is_json_dict(ld_value[0])
 
     @classmethod
     def is_json_dict(cls: type[Self], ld_value: Any) -> bool:
         """
-        Returns wheter the given value is considered to be possible of representing an expanded json-ld dict.<br>
+        Returns wheter the given value is considered to be possible of representing an expanded json-ld dict.\n
         I.e. if ld_value is a dict containing none of the keys "@set", "@graph", "@list" and "@value"
         and not only the key "@id".
 
-        :param ld_value: The value that is checked.
-        :type ld_value: Any
+        Args:
+            ld_value (Any): The value that is checked.
 
-        :returns: Wheter or not ld_value could represent an expanded json-ld dict.
-        :rtype: bool
+        Returns:
+            bool: Wheter or not ld_value could represent an expanded json-ld dict.
         """
         if not isinstance(ld_value, dict):
             return False

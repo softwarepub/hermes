@@ -121,7 +121,7 @@ class ld_list(ld_container):
         self: Self, index: Union[int, slice], value: Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]
     ) -> None:
         """
-        Set the item(s) at position index to the given value(s).
+        Set the item(s) at position index to the given value(s).\n
         All given values are expanded. If any are assimilated by self all items that would be added by this are added.
 
         Args:
@@ -153,7 +153,7 @@ class ld_list(ld_container):
 
     def __delitem__(self: Self, index: Union[int, slice]) -> None:
         """
-        Delete the item(s) at position index.
+        Delete the item(s) at position index.\n
         Note that if a deleted object is represented by an ld_container druing this process it will still exist
         and not be modified afterwards.
 
@@ -191,10 +191,10 @@ class ld_list(ld_container):
 
     def __contains__(self: Self, value: JSON_LD_VALUE) -> bool:
         """
-        Returns whether or not value is contained in self.
-        Note that it is not directly checked if value is in self.item_list.
+        Returns whether or not value is contained in self.\n
+        Note that it is not directly checked if value is in self.item_list:
         First value is expanded then it is checked if value is in self.item_list.
-        If however value is assimilated by self it is checked if all values are contained in self.item_list.
+        If however value is assimilated by self it is checked if all values are contained in self.item_list.\n
         Also note that the checks whether the expanded value is in self.item_list is based on ld_list.__eq__.
         That means that this value is 'contained' in self.item_list if any object in self.item_list
         has the same @id like it or it xor the object in the item_list has an id an all other values are the same.
@@ -230,15 +230,12 @@ class ld_list(ld_container):
                      dict[str, Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]]]
     ) -> bool:
         """
-        Returns wheter or not self is considered to be equal to other.
-
+        Returns wheter or not self is considered to be equal to other.\n
         If other is not an ld_list, it is converted first.
         For each index it is checked if the ids of the items at index in self and other match if both have one,
-        if only one has or neither have an id all other values are compared.
-
+        if only one has or neither have an id all other values are compared.\n
         Note that due to those circumstances equality is not transitve
-        meaning if a == b and b == c it is not guaranteed that a == c.
-
+        meaning if a == b and b == c it is not guaranteed that a == c.\n
         If self or other is considered unordered the comparison is more difficult. All items in self are compared
         with all items in other. On the resulting graph given by the realtion == the Hopcroft-Karp algoritm is used
         to determine if there exists a bijection reordering self so that the ordered comparison of self with other
@@ -250,7 +247,7 @@ class ld_list(ld_container):
 
         Returns:
             bool:
-                Whether or not self and other are considered equal.
+                Whether or not self and other are considered equal.\n
                 If other is of the wrong type return the NotImplemented singleton instead.
         """
         # check if other has an acceptable type
@@ -347,11 +344,9 @@ class ld_list(ld_container):
         distances: dict[Hashable, Union[int, float]]
     ) -> bool:
         """
-        Completes the BFS step of Hopcroft-Karp. I.e.:
-
+        Completes the BFS step of Hopcroft-Karp. I.e.:\n
         Finds the shortest path from all unmatched verticies in verticies1 to any unmatched vertex in any value in edges
-        where the connecting paths are alternating between matches and its complement.
-
+        where the connecting paths are alternating between matches and its complement.\n
         It also marks each vertex in verticies1 with how few verticies from verticies1 have to be passed
         to reach the vertex from an unmatched one in verticies1. This is stored in distances.
 
@@ -405,8 +400,7 @@ class ld_list(ld_container):
         distances: dict[Hashable, Union[int, float]]
     ) -> bool:
         """
-        Completes the DFS step of Hopcroft-Karp. I.e.:
-
+        Completes the DFS step of Hopcroft-Karp. I.e.:\n
         Adds all edges on every path with the minimal path length to matches if they would be in the symmetric
         difference of matches and the set of edges on the union of the paths.
 
@@ -451,11 +445,9 @@ class ld_list(ld_container):
         edges: dict[Hashable, tuple[Hashable]]
     ) -> int:
         """
-        Implementation of Hopcroft-Karp. I.e.:
-
+        Implementation of Hopcroft-Karp. I.e.:\n
         Finds how maximal number of edges with the property that no two edges share an endpoint (and startpoint)
-        in the given bipartite graph.
-
+        in the given bipartite graph.\n
         Note that verticies1 and verticies2 have to be disjoint.
 
         Args:
@@ -492,7 +484,7 @@ class ld_list(ld_container):
         self: Self, other: Union[ld_list, list[Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]]]
     ) -> bool:
         """
-        Returns whether or not self and other not considered to be equal.
+        Returns whether or not self and other not considered to be equal.\n
         (Returns not self.__eq__(other) if the return type is bool.
         See :meth:`ld_list.__eq__` for more details on the comparison.)
 
@@ -514,7 +506,7 @@ class ld_list(ld_container):
 
     def append(self: Self, value: Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]) -> None:
         """
-        Append the item to the given ld_list self.
+        Append the item to the given ld_list self.\n
         The given value is expanded. If it is assimilated by self all items that would be added by this are added.
 
         Args:
@@ -527,7 +519,7 @@ class ld_list(ld_container):
 
     def extend(self: Self, value: list[Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]]) -> None:
         """
-        Append the items in value to the given ld_list self.
+        Append the items in value to the given ld_list self.\n
         The given values are expanded. If any are assimilated by self all items that would be added by this are added.
 
         Args:
@@ -554,7 +546,7 @@ class ld_list(ld_container):
     @classmethod
     def is_ld_list(cls: type[Self], ld_value: Any) -> bool:
         """
-        Returns wheter the given value is considered to be possible of representing an ld_list.
+        Returns wheter the given value is considered to be possible of representing an ld_list.\n
         I.e. if ld_value is of the form [{container_type: [...]}] where container_type is '@set', '@list' or '@graph'.
 
         Args:
@@ -568,7 +560,7 @@ class ld_list(ld_container):
     @classmethod
     def is_container(cls: type[Self], value: Any) -> bool:
         """
-        Returns wheter the given value is considered to be possible of representing an json-ld container.
+        Returns wheter the given value is considered to be possible of representing an json-ld container.\n
         I.e. if ld_value is of the form {container_type: [...]} where container_type is '@set', '@list' or '@graph'.
 
         Args:
@@ -594,10 +586,8 @@ class ld_list(ld_container):
         container_type: str = "@set"
     ) -> ld_list:
         """
-        Creates a ld_list from the given list with the given parent, key, context and container_type.
-
-        Note that only container_type '@set' is valid for key '@type'.
-
+        Creates a ld_list from the given list with the given parent, key, context and container_type.\n
+        Note that only container_type '@set' is valid for key '@type'.\n
         Further more note that if parent would assimilate the values in value no new ld_list is created
         and the given values are appended to parent instead and parent is returned.
 

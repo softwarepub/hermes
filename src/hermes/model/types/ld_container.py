@@ -47,8 +47,7 @@ PYTHONIZED_LD_CONTAINER: TypeAlias = Union[
 
 class ld_container:
     """
-    Base class for Linked Data containers.
-
+    Base class for Linked Data containers.\n
     A linked data container impelements a view on the expanded form of an JSON-LD document.
     It allows to easily interacts them by hinding all the nesting and automatically mapping
     between different forms.
@@ -178,15 +177,13 @@ class ld_container:
             self: Self, value: JSON_LD_VALUE
     ) -> Union[EXPANDED_JSON_LD_VALUE, dict[str, EXPANDED_JSON_LD_VALUE]]:
         """
-        Returns an expanded version of the given value.
-
+        Returns an expanded version of the given value.\n
         The item_list/ data_dict of self will be substituted with value.
         Value can be an ld_container or contain zero or more.
         Then the _data of the inner most ld_dict that contains or is self will be expanded
         using the JSON_LD-Processor.
         If self and none of self's parents is an ld_dict, use the key from outer most ld_list
-        to generate a minimal dict.
-
+        to generate a minimal dict.\n
         The result of this function is what value has turned into.
 
         Args:
@@ -199,7 +196,7 @@ class ld_container:
                 value will be expanded as if it was the data_dict/ the item_list of self.
 
         Returns:
-            EXPANDED_JSON_LD_VALUE | dict[str, EXPANDED_JSON_LD_VALUE]: 
+            EXPANDED_JSON_LD_VALUE | dict[str, EXPANDED_JSON_LD_VALUE]:
                 The expanded version of value i.e. the data_dict/ item_list of self if it had been value.
                 The return type is based on the type of self:
 
@@ -349,7 +346,7 @@ class ld_container:
     @classmethod
     def is_ld_node(cls: type[Self], ld_value: Any) -> bool:
         """
-        Returns wheter the given value is considered to be possible of representing an expanded JSON-LD node.
+        Returns wheter the given value is considered to be possible of representing an expanded JSON-LD node.\n
         I.e. if ld_value is of the form [{a: b, ..., y: z}].
 
         Args:
@@ -364,7 +361,7 @@ class ld_container:
     def is_ld_id(cls: type[Self], ld_value: Any) -> bool:
         """
         Returns wheter the given value is considered to be possible of representing an expanded JSON-LD node
-        containing only an @id value.
+        containing only an @id value.\n
         I.e. if ld_value is of the form [{"@id": ...}].
 
         Args:
@@ -378,7 +375,7 @@ class ld_container:
     @classmethod
     def is_ld_value(cls: type[Self], ld_value: Any) -> bool:
         """
-        Returns wheter the given value is considered to be possible of representing an expanded JSON-LD value.
+        Returns wheter the given value is considered to be possible of representing an expanded JSON-LD value.\n
         I.e. if ld_value is of the form [{"@value": a, ..., x: z}].
 
         Args:
@@ -393,7 +390,7 @@ class ld_container:
     def is_typed_ld_value(cls: type[Self], ld_value: Any) -> bool:
         """
         Returns wheter the given value is considered to be possible of representing an expanded JSON-LD value
-        containing a value type.
+        containing a value type.\n
         I.e. if ld_value is of the form [{"@value": a, "@type": b, ..., x: z}].
 
         Args:
@@ -408,7 +405,7 @@ class ld_container:
     def is_json_id(cls: type[Self], ld_value: Any) -> bool:
         """
         Returns wheter the given value is considered to be possible of representing a non-expanded JSON-LD node
-        containing only an @id value.
+        containing only an @id value.\n
         I.e. if ld_value is of the form {"@id": ...}.
 
         Args:
@@ -422,7 +419,7 @@ class ld_container:
     @classmethod
     def is_json_value(cls: type[Self], ld_value: Any) -> bool:
         """
-        Returns wheter the given value is considered to be possible of representing a non-expanded JSON-LD value.
+        Returns wheter the given value is considered to be possible of representing a non-expanded JSON-LD value.\n
         I.e. if ld_value is of the form {"@value": b, ..., x: z}.
 
         Args:
@@ -437,7 +434,7 @@ class ld_container:
     def is_typed_json_value(cls: type[Self], ld_value: Any) -> bool:
         """
         Returns wheter the given value is considered to be possible of representing a non-expanded JSON-LD value
-        containing a value type.
+        containing a value type.\n
         I.e. if ld_value is of the form {"@value": a, "@type": b, ..., x: z}.
 
         Args:
@@ -472,8 +469,7 @@ class ld_container:
     ) -> bool:
         """
         Returns whether or not the given expanded JSON-LD values are considered equal.
-        The comparison compares the "@id" values first and returns the result if it is conclusive.
-
+        The comparison compares the "@id" values first and returns the result if it is conclusive.\n
         If the comparison is inconclusive i.e. exactly one or zero of both values have an "@id" value:
         Return whether or not all other keys exist in both values and all values of the keys are the same.
 

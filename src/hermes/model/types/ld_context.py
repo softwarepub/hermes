@@ -47,6 +47,10 @@ class ContextPrefix:
     - as a list of linked data vocabularies, where items can be vocabulary base IRI strings and/or dictionaries mapping
         arbitrary strings used to prefix terms from a specific vocabulary to their respective vocabulary IRI strings.;
     - as a dict mapping prefixes to vocabulary IRIs, where the default vocabulary has a prefix of None.
+
+    Attributes:
+        vocabularies (list[str | dict]): TODO
+        context: TODO
     """
 
     def __init__(self, vocabularies: list[str | dict]):
@@ -55,9 +59,13 @@ class ContextPrefix:
         string is used more than once across all dictionaries in the list, the last item with this key will be included
         in the context.
 
-        :param vocabularies: A list of linked data vocabularies. Items can be vocabulary base IRI strings and/or
-            dictionaries mapping arbitrary strings used to prefix terms from a specific vocabulary to their respective
-            vocabulary IRI strings.
+        Args:
+            vocabularies (list[str | dict]): A list of linked data vocabularies. Items can be vocabulary base IRI
+                strings and/or dictionaries mapping arbitrary strings used to prefix terms from a specific vocabulary to
+                their respective vocabulary IRI strings.
+
+        Returns:
+            None:
         """
         self.vocabularies = vocabularies
         self.context = {}
@@ -81,20 +89,22 @@ class ContextPrefix:
 
         Example uses:
 
-            context = <self>(["iri_default", {"prefix1": "iri1"}])
-            # access qualified term via str
-            term = context["term_in_default_vocabulary"]
-            term = context["prefix1:term"]
-            # access qualified term via tuple
-            term = context["prefix1", "term"]
+            context = <self>(["iri_default", {"prefix1": "iri1"}])\n
+            # access qualified term via str\n
+            term = context["term_in_default_vocabulary"]\n
+            term = context["prefix1:term"]\n
+            # access qualified term via tuple\n
+            term = context["prefix1", "term"]\n
             term = context[None, "term_in_default_vocabulary"]
 
-        :param compressed_term: A term from a vocabulary in the context; terms from the default vocabulary are passed
-            with a prefix of None, or as an unprefixed string, terms from non-default vocabularies are prefixed with the
-            defined prefix for the vocabulary. The term can either be passed in as string <term> if prefix is None, or
-            "<prefix>:<term>", or as a tuple.
+        Args:
+            compressed_term (str | tuple): A term from a vocabulary in the context; terms from the default vocabulary
+                are passed with a prefix of None, or as an unprefixed string, terms from non-default vocabularies are
+                prefixed with the defined prefix for the vocabulary. The term can either be passed in as string <term>
+                if prefix is None, or "<prefix>:<term>", or as a tuple.
 
-        :return: The fully qualified IRI for the passed term
+        Returns:
+            str: The fully qualified IRI for the passed term
         """
         if not isinstance(compressed_term, str):
             prefix, term = compressed_term
