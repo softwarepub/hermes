@@ -57,6 +57,7 @@ def test_process(tmp_path, monkeypatch, metadata_in, metadata_out):
 
     config_file = tmp_path / "hermes.toml"
     config_file.write_text(
+        "[process]\nplugins=[\"codemeta\"]\n"
         "[harvest]\nsources = [" + ", ".join('\"' + f'{harvester}' + '\"' for harvester in metadata_in) + "]"
     )
 
@@ -168,6 +169,7 @@ def test_process_complex(tmp_path, monkeypatch, metadata_in, metadata_out):
 
     config_file = tmp_path / "hermes.toml"
     config_file.write_text(
+        "[process]\nplugins=[\"codemeta\"]\n"
         "[harvest]\nsources = [" + ", ".join('\"' + f'{harvester}' + '\"' for harvester in metadata_in) + "]"
     )
 

@@ -5,6 +5,7 @@
 # SPDX-FileContributor: Michael Meinel
 
 import argparse
+from typing import Union
 
 from pydantic import BaseModel
 
@@ -12,18 +13,21 @@ from hermes.commands.base import HermesCommand, HermesPlugin
 from hermes.model.api import SoftwareMetadata
 from hermes.model.context_manager import HermesContext
 from hermes.model.error import HermesContextError
+from hermes.model.merge.action import MergeAction
 from hermes.model.merge.container import ld_merge_dict
 
 
 class HermesProcessPlugin(HermesPlugin):
+    """ Base plugin that defines additional merge strategies."""
 
-    pass
+    def __call__(self, command: HermesCommand) -> dict[Union[str, None], dict[Union[str, None], MergeAction]]:
+        pass
 
 
 class ProcessSettings(BaseModel):
     """Generic deposition settings."""
 
-    pass
+    plugins: list = []
 
 
 class HermesProcessCommand(HermesCommand):
@@ -36,6 +40,11 @@ class HermesProcessCommand(HermesCommand):
         self.args = args
         ctx = HermesContext()
         merged_doc = ld_merge_dict([{}])
+
+        # add the strategies from the plugins
+        for plugin_name in reversed(self.settings.plugins):
+            additional_strategies = self.plugins[plugin_name]()(self)
+            merged_doc.add_strategy(additional_strategies)
 
         # Get all harvesters
         harvester_names = self.root_settings.harvest.sources

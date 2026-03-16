@@ -15,7 +15,7 @@ from hermes.model.types.ld_container import (
     BASIC_TYPE, EXPANDED_JSON_LD_VALUE, JSON_LD_CONTEXT_DICT, JSON_LD_VALUE, TIME_TYPE
 )
 from hermes.model.types.pyld_util import bundled_loader
-from .strategy import CODEMETA_STRATEGY, PROV_STRATEGY
+from .action import MergeError
 
 if TYPE_CHECKING:
     from .action import MergeAction
@@ -53,7 +53,8 @@ class _ld_merge_container:
                 parent=value.parent,
                 key=value.key,
                 index=value.index,
-                context=value.context
+                context=value.context,
+                strategies=self.strategies
             )
         # replace ld_lists with ld_merge_lists
         if isinstance(value, ld_list) and not isinstance(value, ld_merge_list):
@@ -62,7 +63,8 @@ class _ld_merge_container:
                 parent=value.parent,
                 key=value.key,
                 index=value.index,
-                context=value.context
+                context=value.context,
+                strategies=self.strategies
             )
         return value
 
@@ -71,6 +73,10 @@ class ld_merge_list(_ld_merge_container, ld_list):
     """
     ld_list wrapper to ensure the 'merge_container'-property does not get lost, while merging.
     See also :class:`ld_list` and :class:`ld_merge_container`.
+
+    Attributes:
+        strategies (dict[str | None, dict[str | None, MergeAction]]): The strategies used inside the child
+            ld_merge_dicts.
     """
 
     def __init__(
@@ -80,7 +86,8 @@ class ld_merge_list(_ld_merge_container, ld_list):
         parent: Union[ld_container, None] = None,
         key: Union[str, None] = None,
         index: Union[int, None] = None,
-        context: Union[list[Union[str, JSON_LD_CONTEXT_DICT]], None] = None
+        context: Union[list[Union[str, JSON_LD_CONTEXT_DICT]], None] = None,
+        strategies: dict[Union[str, None], dict[Union[str, None], MergeAction]] = {}
     ) -> None:
         """
         Create a new ld_merge_list.
@@ -93,11 +100,14 @@ class ld_merge_list(_ld_merge_container, ld_list):
             key (str | None): key into the parent container.
             index (int | None): index into the parent container.
             context (list[str | JSON_LD_CONTEXT_DICT] | None): local context for this container.
+            strategies (dict[str | None, dict[str | None, MergeAction]]): The strategies for merging in the childs.
 
         Returns:
             None:
         """
         super().__init__(data, parent=parent, key=key, index=index, context=context)
+
+        self.strategies = strategies
 
 
 class ld_merge_dict(_ld_merge_container, ld_dict):
@@ -117,7 +127,8 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
         parent: Union[ld_dict, ld_list, None] = None,
         key: Union[str, None] = None,
         index: Union[int, None] = None,
-        context: Union[list[Union[str, JSON_LD_CONTEXT_DICT]], None] = None
+        context: Union[list[Union[str, JSON_LD_CONTEXT_DICT]], None] = None,
+        strategies: dict[Union[str, None], dict[Union[str, None], MergeAction]] = {}
     ) -> None:
         """
         Create a new instance of an ld_merge_dict. See also :meth:`ld_dict.__init__`.
@@ -128,6 +139,7 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
             key (str | None): key into the parent container.
             index (int | None): index into the parent container.
             context (list[str | JSON_LD_CONTEXT_DICT] | None): local context for this container.
+            strategies (dict[str | None, dict[str | None, MergeAction]]): The initial strategies.
 
         Returns:
             None:
@@ -141,8 +153,7 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
         self.update_context(ld_context.HERMES_PROV_CONTEXT)
 
         # add strategies
-        self.strategies = {**CODEMETA_STRATEGY}
-        self.add_strategy(PROV_STRATEGY)
+        self.strategies = strategies
 
     def update_context(
         self: Self, other_context: Union[list[Union[str, JSON_LD_CONTEXT_DICT]], None]
@@ -256,15 +267,20 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
         Returns:
             BASIC_TYPE | TIME_TYPE | ld_merge_dict | ld_merge_list:
                 The result of the merge from ``self[key]`` with ``value``.
+
+        Raises:
+            MergeError: If there is no strategy for this key.
         """
         # search for all applicable strategies
-        strategy = {**self.strategies[None]}
+        strategy = {**self.strategies.get(None, {})}
         ld_types = self.data_dict.get('@type', [])
         for ld_type in ld_types:
             strategy.update(self.strategies.get(ld_type, {}))
 
         # choose one merge strategy and return the item returned by following the merge startegy
-        merger = strategy.get(key, strategy[None])
+        merger = strategy.get(key, strategy.get(None, None))
+        if merger is None:
+            raise MergeError(f"Can't merge, no strategy found for key '{key}'.")
         return merger.merge(self, [*self.path, key], self[key], value)
 
     def _add_related(

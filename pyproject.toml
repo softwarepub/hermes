@@ -71,6 +71,8 @@ config_invenio_record_id = "hermes.commands.postprocess.invenio:config_record_id
 config_invenio_rdm_record_id = "hermes.commands.postprocess.invenio_rdm:config_record_id"
 cff_doi = "hermes.commands.postprocess.invenio:cff_doi"
 
+[project.entry-points."hermes.process"]
+codemeta = "hermes.commands.process.standard_merge:CodemetaProcessPlugin"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.1.1"
