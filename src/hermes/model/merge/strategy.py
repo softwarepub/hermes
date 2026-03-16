@@ -5,14 +5,18 @@
 # SPDX-FileContributor: Michael Meinel
 # SPDX-FileContributor: Michael Fritzsche
 
-from ..types.ld_context import iri_map as iri
+from hermes.model.types.ld_context import iri_map as iri
 from .action import Concat, MergeSet
 from .match import match_keys, match_person, match_multiple_types
 
 
 DEFAULT_MATCH = match_keys("@id", fall_back_to_equals=True)
+""" Callable[[Any, Any], bool]: The default match function used for comparison. """
 
 MATCH_FUNCTION_FOR_TYPE = {"schema:Person": match_person}
+"""
+dict[str, Callable[[Any, Any], bool]]: A dict containing for JSON_LD types the match function (not DEFAULT_MATCH).
+"""
 
 ACTIONS = {
     "default": MergeSet(DEFAULT_MATCH),
@@ -79,6 +83,7 @@ ACTIONS = {
         ]
     }
 }
+""" dict[str, MergeAction]: A dict containing some common MergeActions. """
 
 
 PROV_STRATEGY = {
@@ -88,11 +93,13 @@ PROV_STRATEGY = {
         iri["hermes-rt:reject"]: ACTIONS["concat"]
     }
 }
+""" dict[Literal[None], dict[str, MergeAction]]: MergeActions for provenance values. """
 
 
 # Filled with entries for every schema-type that can be found inside an JSON-LD dict of type
 # SoftwareSourceCode or SoftwareApplication using schema and CodeMeta as Context.
 CODEMETA_STRATEGY = {None: {None: ACTIONS["default"]}}
+""" dict[str | None, dict[str | None, MergeAction]]: MergeActions for the standard JSON_LD contexts objects. """
 CODEMETA_STRATEGY[iri["schema:Thing"]] = {iri["schema:owner"]: ACTIONS["OrganizationOrPerson"]}
 
 

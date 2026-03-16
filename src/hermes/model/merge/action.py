@@ -10,8 +10,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Callable, Union
 from typing_extensions import Self
 
-from ..types import ld_dict, ld_list
-from ..types.ld_container import BASIC_TYPE, JSON_LD_VALUE, TIME_TYPE
+from hermes.model.types import ld_dict, ld_list
+from hermes.model.types.ld_container import BASIC_TYPE, JSON_LD_VALUE, TIME_TYPE
 
 if TYPE_CHECKING:
     from .container import ld_merge_dict, ld_merge_list
@@ -35,23 +35,23 @@ class MergeAction:
         An abstract method that needs to be implemented by all subclasses
         to have a generic way to use the merge actions.
 
-        :param target: The ld_merge_dict inside of which the items are merged.
-        :type target: ld_merge_dict
-        :param key: The "path" of keys so that parent[key[-1]] is value and
-            for the outermost parent of target out_parent out_parent[key[0]]...[key[-1]] results in value.
-        :type key: list[str | int]
-        :param value: The value inside target that is to be merged with update.
-        :type value: ld_merge_list
-        :param update: The value that is to be merged into target with value.
-        :type update: BASIC_TYPE | TIME_TYPE | ld_dict | ld_list
+        Args:
+            target (ld_merge_dict): The ld_merge_dict inside of which the items are merged.
+            key (list[str | int]): The "path" of keys so that ``target[key[-1]]`` is ``value`` and for the outermost
+                parent of ``target`` out_parent ``out_parent[key[0]]...[key[-1]]`` results in ``value``.
+            value (ld_merge_list): The value inside ``target`` that is to be merged with ``update``.
+            update (BASIC_TYPE | TIME_TYPE | ld_dict | ld_list): The value that is to be merged into ``target``
+                with ``value``.
 
-        :return: The merged value in an arbitrary format that is supported by :meth:`ld_dict.__setitem__`.
-        :rtype: JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE | ld_dict | ld_list
+        Returns:
+            JSON_LD_VALUE | BASIC_TYPE | TIME_TYPE | ld_dict | ld_list:
+                The merged value in an arbitrary format that is supported by :meth:`ld_dict.__setitem__`.
         """
         raise NotImplementedError()
 
 
 class Reject(MergeAction):
+    """ :class:`MergeAction` providing a merge function for rejecting the incoming item. """
     def merge(
         self: Self,
         target: ld_merge_dict,
@@ -60,21 +60,20 @@ class Reject(MergeAction):
         update: Union[BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]
     ) -> ld_merge_list:
         """
-        Rejects the new data ``update`` and lets target add an entry to itself documenting what data has been rejected.
+        Rejects the new data ``update`` and lets ``target`` add an entry to itself
+        documenting what data has been rejected.
 
-        :param target: The ld_merge_dict inside of which the items are merged.
-        :type target: ld_merge_dict
-        :param key: The "path" of keys so that parent[key[-1]] is value and
-            for the outermost parent of target out_parent out_parent[key[0]]...[key[-1]] results in value.
-        :type key: list[str | int]
-        :param value: The value inside target that is to be merged with update.<br> This value won't be changed.
-        :type value: ld_merge_list
-        :param update: The value that is to be merged into target with value.<br> This value will be rejected.
-        :type update: BASIC_TYPE | TIME_TYPE | ld_dict | ld_list
+        Args:
+            target (ld_merge_dict): The ld_merge_dict inside of which the items are merged.
+            key (list[str | int]): The "path" of keys so that ``target[key[-1]]`` is ``value`` and for the outermost
+                parent of ``target`` out_parent ``out_parent[key[0]]...[key[-1]]`` results in ``value``.
+            value (ld_merge_list): The value inside ``target`` that is to be merged with ``update``.
+                This value won't be changed.
+            update (BASIC_TYPE | TIME_TYPE | ld_dict | ld_list): The value that is to be merged into ``target`` with
+                ``value``. This value will be rejected.
 
-        :return: The merged value.<br>
-            This value will always be value.
-        :rtype: ld_merge_list
+        Returns:
+            ld_merge_list: The merged value. This value will always be ``value``.
         """
         # Add the entry that data has been rejected.
         target.reject(key, update)
@@ -83,6 +82,7 @@ class Reject(MergeAction):
 
 
 class Replace(MergeAction):
+    """ :class:`MergeAction` providing a merge function for replacing the current item with the incoming one. """
     def merge(
         self: Self,
         target: ld_merge_dict,
@@ -92,30 +92,28 @@ class Replace(MergeAction):
     ) -> Union[BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]:
         """
         Replaces the old data ``value`` with the new data ``update``
-        and lets target add an entry to itself documenting what data has been replaced.
+        and lets ``target`` add an entry to itself documenting what data has been replaced.
 
-        :param target: The ld_merge_dict inside of which the items are merged.
-        :type target: ld_merge_dict
-        :param key: The "path" of keys so that parent[key[-1]] is value and
-            for the outermost parent of target out_parent out_parent[key[0]]...[key[-1]] results in value.
-        :type key: list[str | int]
-        :param value: The value inside target that is to be merged with update.<br> This value will bew replaced.
-        :type value: ld_merge_list
-        :param update: The value that is to be merged into target with value.<br>
-            This value will be used instead of value.
-        :type update: BASIC_TYPE | TIME_TYPE | ld_dict | ld_list
+        Args:
+            target (ld_merge_dict): The ld_merge_dict inside of which the items are merged.
+            key (list[str | int]): The "path" of keys so that ``target[key[-1]]`` is ``value`` and for the outermost
+                parent of ``target`` out_parent ``out_parent[key[0]]...[key[-1]]`` results in ``value``.
+            value (ld_merge_list): The value inside ``target`` that is to be merged with ``update``.
+                This value will bew replaced.
+            update (BASIC_TYPE | TIME_TYPE | ld_dict | ld_list): The value that is to be merged into ``target`` with
+                ``value``. This value will be used instead of ``value``.
 
-        :return: The merged value.<br>
-            This value will be update.
-        :rtype: BASIC_TYPE | TIME_TYPE | ld_dict | ld_list
+        Returns:
+            BASIC_TYPE | TIME_TYPE | ld_dict | ld_list: The merged value. This value will be ``update``.
         """
-        # If necessary, add the entry that data has been replaced.
+        # Add the entry that data has been replaced.
         target.replace(key, value)
         # Return the new value.
         return update
 
 
 class Concat(MergeAction):
+    """ :class:`MergeAction` providing a merge function for appending the incoming items to the current items. """
     def merge(
         self: Self,
         target: ld_merge_dict,
@@ -126,19 +124,16 @@ class Concat(MergeAction):
         """
         Concatenates the new data ``update`` to the old data ``value``.
 
-        :param target: The ld_merge_dict inside of which the items are merged.
-        :type target: ld_merge_dict
-        :param key: The "path" of keys so that parent[key[-1]] is value and
-            for the outermost parent of target out_parent out_parent[key[0]]...[key[-1]] results in value.
-        :type key: list[str | int]
-        :param value: The value inside target that is to be merged with update.
-        :type value: ld_merge_list
-        :param update: The value that is to be merged into target with value.
-        :type update: BASIC_TYPE | TIME_TYPE | ld_dict | ld_list
+        Args:
+            target (ld_merge_dict): The ld_merge_dict inside of which the items are merged.
+            key (list[str | int]): The "path" of keys so that ``target[key[-1]]`` is ``value`` and for the outermost
+                parent of ``target`` out_parent ``out_parent[key[0]]...[key[-1]]`` results in ``value``.
+            value (ld_merge_list): The value inside ``target`` that is to be merged with ``update``.
+            update (BASIC_TYPE | TIME_TYPE | ld_dict | ld_list): The value that is to be merged into ``target``
+                with ``value``.
 
-        :return: The merged value.<br>
-            ``value`` concatenated with ``update``.
-        :rtype: ld_merge_list
+        Returns:
+            ld_merge_list: The merged value (``value`` concatenated with ``update``).
         """
         # Concatenate the items and return the result.
         if isinstance(update, (list, ld_list)):
@@ -149,18 +144,27 @@ class Concat(MergeAction):
 
 
 class Collect(MergeAction):
+    """
+    :class:`MergeAction` providing a merge function for appending the incoming items to the current items. But an item
+    will only be appended if it has no match in the list of current items (including the already appended ones).
+
+    Attributes:
+        match (Callable[[Any, Any], bool]): The function used to evaluate equality while merging.
+        reject_incoming (bool): Whether the incoming item in a match should get rejected (True) or replaced (False).
+    """
+
     def __init__(self: Self, match: Callable[[Any, Any], bool], reject_incoming: bool = True) -> None:
         """
         Set the match function for this collect merge action. And the behaivior for matches.
 
-        :param match: The function used to evaluate equality while merging.
-        :type match: Callable[[Any, Any], bool]
-        :param reject_incoming: If an incoming item matches an already collected one, if ``reject_incoming`` True,
-            the incoming item gets rejected, if ``reject_incoming`` False, the match of the incoming item gets replaced.
-        :type reject_incoming: bool
+        Args:
+            match (Callable[[Any, Any], bool]): The function used to evaluate equality while merging.
+            reject_incoming (bool): If an incoming item matches an already collected one, if ``reject_incoming`` True,
+                the incoming item gets rejected, if ``reject_incoming`` False, the match of the incoming item gets
+                replaced.
 
-        :return:
-        :rtype: None
+        Returns:
+            None:
         """
         self.match = match
         self.reject_incoming = reject_incoming
@@ -175,18 +179,16 @@ class Collect(MergeAction):
         """
         Collects the unique items (according to :attr:`match`) from ``value`` and ``update``.
 
-        :param target: The ld_merge_dict inside of which the items are merged.
-        :type target: ld_merge_dict
-        :param key: The "path" of keys so that parent[key[-1]] is value and
-            for the outermost parent of target out_parent out_parent[key[0]]...[key[-1]] results in value.
-        :type key: list[str | int]
-        :param value: The value inside target that is to be merged with update.
-        :type value: ld_merge_list
-        :param update: The value that is to be merged into target with value.
-        :type update: BASIC_TYPE | TIME_TYPE | ld_dict | ld_list
+        Args:
+            target (ld_merge_dict): The ld_merge_dict inside of which the items are merged.
+            key (list[str | int]): The "path" of keys so that ``target[key[-1]]`` is ``value`` and for the outermost
+                parent of ``target`` out_parent ``out_parent[key[0]]...[key[-1]]`` results in ``value``.
+            value (ld_merge_list): The value inside ``target`` that is to be merged with ``update``.
+            update (BASIC_TYPE | TIME_TYPE | ld_dict | ld_list): The value that is to be merged into ``target``
+                with ``value``.
 
-        :return: The merged value.
-        :rtype: ld_merge_list
+        Returns:
+            ld_merge_list: The merged value.
         """
         if not isinstance(update, (list, ld_list)):
             update = [update]
@@ -207,17 +209,27 @@ class Collect(MergeAction):
 
 
 class MergeSet(MergeAction):
+    """
+    :class:`MergeAction` providing a merge function for merging the incoming items with the current items. An item
+    will be appended if it has no match in the list of current items (including the already appended ones), otherwise
+    it will be merged with its first match.
+
+    Attributes:
+        match (Callable[[Any, Any], bool]): The function used to evaluate equality while merging.
+    """
+
     def __init__(self: Self, match: Callable[[Any, Any], bool]) -> None:
         """
         Set the match function for this collect merge action.
 
-        :param match: The function used to evaluate equality while merging.
-        :type match: Callable[[ANy, Any], bool]
+        Args:
+            match (Callable[[Any, Any], bool]): The function used to evaluate equality while merging.
 
-        :return:
-        :rtype: None
+        Returns:
+            None:
         """
         self.match = match
+        """ Callable[[Any, Any], bool]: The function used to evaluate equality while merging. """
 
     def merge(
         self: Self,
@@ -229,18 +241,16 @@ class MergeSet(MergeAction):
         """
         Merges similar items (according to :attr:`match`) from ``value`` and ``update``.
 
-        :param target: The ld_merge_dict inside of which the items are merged.
-        :type target: ld_merge_dict
-        :param key: The "path" of keys so that parent[key[-1]] is value and
-            for the outermost parent of target out_parent out_parent[key[0]]...[key[-1]] results in value.
-        :type key: list[str | int]
-        :param value: The value inside target that is to be merged with update.
-        :type value: ld_merge_list
-        :param update: The value that is to be merged into target with value.
-        :type update: BASIC_TYPE | TIME_TYPE | ld_dict | ld_list
+        Args:
+            target (ld_merge_dict): The ld_merge_dict inside of which the items are merged.
+            key (list[str | int]): The "path" of keys so that ``target[key[-1]]`` is ``value`` and for the outermost
+                parent of ``target`` out_parent out_parent[key[0]]...[key[-1]] results in ``value``.
+            value (ld_merge_list): The value inside ``target`` that is to be merged with ``update``.
+            update (BASIC_TYPE | TIME_TYPE | ld_dict | ld_list): The value that is to be merged into ``target``
+                with ``value``.
 
-        :return: The merged value.
-        :rtype: ld_merge_list
+        Returns:
+            ld_merge_list: The merged value.
         """
         if not isinstance(update, (list, ld_list)):
             update = [update]

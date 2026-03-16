@@ -7,40 +7,41 @@
 
 from typing import Any, Callable
 
-from ..types import ld_dict
+from hermes.model.types import ld_dict
 
 
 def match_keys(*keys: list[str], fall_back_to_equals: bool = False) -> Callable[[Any, Any], bool]:
     """
     Creates a function taking to parameters that returns true
     if both given parameter have at least one common key in the given list of keys
-    and for all common keys in the given list of keys the values of both objects are the same.<br>
+    and for all common keys in the given list of keys the values of both objects are the same.\n
     If fall_back_to_equals is True, the returned function returns the value of normal == comparison
     if no key from keys is in both objects.
 
-    :param keys: The list of important keys for the comparison method.
-    :type keys: list[str]
-    :param fall_back_to_equals: Whether or not a fall back option should be used.
-    :type fall_back_to_equals: bool
+    Args:
+        keys (list[str]): The list of important keys for the comparison method.
+        fall_back_to_equals (bool): Whether or not a fall back option should be used.
 
-    :return: A function comparing two given objects values for the keys in keys.
-    :rtype: Callable[[ld_merge_dict, ld_dict], bool]
+    Returns:
+        Callable[[Any, Any], bool]: A function comparing two given objects values for the keys in keys.
     """
 
     # create and return the match function using the given keys
     def match_func(left: Any, right: Any) -> bool:
         """
-        Compares left to right by checking if a) they have at least one common key in a predetermined list of keys and
-        b) testing if both objects have equal values for all common keys in the predetermined key list.<br>
+        Compares left to right by checking if
+
+        - they have at least one common key in a predetermined list of keys and
+        - testing if both objects have equal values for all common keys in the predetermined key list.
+
         It may fall back on == if no common key in the predetermined list of keys exists.
 
-        :param left: The first object for the comparison.
-        :type left: ld_merge_dict
-        :param right: The second object for the comparison.
-        :type right: ld_dict
+        Args:
+            left (Any): The first object for the comparison.
+            right (Any): The second object for the comparison.
 
-        :return: The result of the comparison.
-        :rtype: bool
+        Returns:
+            bool: The result of the comparison.
         """
         if not (isinstance(left, ld_dict) and isinstance(right, ld_dict)):
             return fall_back_to_equals and (left == right)
@@ -60,19 +61,18 @@ def match_keys(*keys: list[str], fall_back_to_equals: bool = False) -> Callable[
 def match_person(left: Any, right: Any) -> bool:
     """
     Compares two objects assuming they are representing schema:Person's
-    if they are not ld_dicts, == is used as a fallback.<br>
-    If both objects have an @id value, the truth value returned by this function is the comparison of both ids.
+    if they are not ld_dicts, == is used as a fallback.\n
+    If both objects have an @id value, the truth value returned by this function is the comparison of both ids.\n
     If either other has no @id value and both objects have at least one email value,
-    they are considered equal if they have one common email.
+    they are considered equal if they have one common email.\n
     If the equality of the objects is not yet decided, == comparison of the objects is returned.
 
-    :param left: The first object for the comparison.
-    :type left: ld_merge_dict
-    :param right: The second object for the comparison.
-    :type right: ld_dict
+    Args:
+        left (Any): The first object for the comparison.
+        right (Any): The second object for the comparison.
 
-    :return: The result of the comparison.
-    :rtype: bool
+    Returns:
+        bool: The result of the comparison.
     """
     if not (isinstance(left, ld_dict) and isinstance(right, ld_dict)):
         return left == right
@@ -92,28 +92,27 @@ def match_multiple_types(
     """
     Returns a function that compares two objects using the given functions.
 
-    :param functions_for_types: Tuples of type and match_function.
-        The returned function will compare two objects of a the same, given type with the specified function.
-    :type functions_for_types: list[tuple[str, Callable[[Any, Any], bool]]]
-    :param fall_back_function: The fallback for comparison if the objects that are being compared don't have a common
-        type with specified compare function or at least one object is not a JSON-LD dictionary.
-    :type fall_back_function: Callable[[Any, Any], bool]
+    Args:
+        functions_for_types (list[tuple[str, Callable[[Any, Any], bool]]]): Tuples of type and match_function.
+            The returned function will compare two objects of a the same, given type with the specified function.
+        fall_back_function (Callable[[Any, Any], bool]): The fallback for comparison if the objects that are being
+            compared don't have a common type with specified compare function or at least one object
+            is not a JSON-LD dictionary.
 
-    :return: The function that compares the two given objects using the given functions.
-    :rtype: Callable[[Any, Any], bool]
+    Returns:
+        Callable[[Any, Any], bool]: The function that compares the two given objects using the given functions.
     """
 
     # create and return the match function using the given keys
     def match_func(left: Any, right: Any) -> bool:
         """
         Compares two objects using a predetermined function if either objects is not an ld_dict
-        or they don't have a common type in a predetermined list of types.<br>
+        or they don't have a common type in a predetermined list of types.\n
         If the objects are ld_dicts and have the same type with a known comparison function this is used instead.
 
-        :param left: The first object for the comparison.
-        :type left: ld_merge_dict
-        :param right: The second object for the comparison.
-        :type right: ld_dict
+        Args:
+            left (Any): The first object for the comparison.
+            right (Any): The second object for the comparison.
 
         :return: The result of the comparison.
         :rtype: bool

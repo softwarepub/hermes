@@ -8,12 +8,12 @@
 from typing import Union
 from typing_extensions import Self
 
-from hermes.model.context_manager import HermesContext
-from hermes.model.error import HermesContextError
 from hermes.model.types import ld_dict
 from hermes.model.types.ld_container import PYTHONIZED_LD_CONTAINER
 from hermes.model.types.ld_context import ALL_CONTEXTS
 from hermes.model.types.pyld_util import bundled_loader
+from .context_manager import HermesContext
+from .error import HermesContextError
 
 
 class SoftwareMetadata(ld_dict):

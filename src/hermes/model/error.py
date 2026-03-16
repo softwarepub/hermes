@@ -48,7 +48,7 @@ class HermesMergeError(Exception):
 
     Attributes:
         path (list[str | int]): The path where the merge error occured.
-        old_Value (Any): Old value that was stored at `path`.
+        old_value (Any): Old value that was stored at `path`.
         new_value (Any): New value that was to be assinged.
         tag: Tag data for the new value.
     """
@@ -58,7 +58,7 @@ class HermesMergeError(Exception):
 
         Args:
             path (list[str | int]): The path where the merge error occured.
-            old_Value (Any): Old value that was stored at `path`.
+            old_value (Any): Old value that was stored at `path`.
             new_value (Any): New value that was to be assinged.
             kwargs: Tag data for the new value.
 

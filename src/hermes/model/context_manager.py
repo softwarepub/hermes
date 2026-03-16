@@ -11,7 +11,7 @@ from types import TracebackType
 from typing import Union
 from typing_extensions import Self
 
-from hermes.model.error import HermesContextError
+from .error import HermesContextError
 
 
 class HermesCache:
