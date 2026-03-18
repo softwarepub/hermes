@@ -195,7 +195,7 @@ def autoapi_skip_member(app, obj_type, name, obj, skip, options):
     if obj_type == "attribute":
         if any(documented_type in obj.id for documented_type in [
             "Collect", "HermesCache", "HermesContext", "HermesMergeError", "ld_container", "ld_context", "ld_dict",
-            "ld_list", "ld_merge_dict", "MergeSet"
+            "ld_list", "ld_merge_dict", "ld_merge_list", "MergeSet"
         ]):
             return True
 
