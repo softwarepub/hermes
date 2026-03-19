@@ -11,7 +11,6 @@ from pydantic import BaseModel
 from hermes.commands.base import HermesCommand, HermesPlugin
 from hermes.error import HermesPluginRunError, MisconfigurationError
 from hermes.model.context_manager import HermesContext
-from hermes.model.error import HermesValidationError
 from hermes.model import SoftwareMetadata
 
 
@@ -51,7 +50,7 @@ class HermesHarvestCommand(HermesCommand):
             # load plugin
             try:
                 plugin_func = self.plugins[plugin_name]()
-            except KeyError as e:
+            except KeyError:
                 self.log.error(f"Plugin {plugin_name} not found.")
                 raise MisconfigurationError(f"Harvest plugin {plugin_name} not found.")
 

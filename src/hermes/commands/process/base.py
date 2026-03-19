@@ -49,7 +49,7 @@ class HermesProcessCommand(HermesCommand):
             # load plugin
             try:
                 plugin_func = self.plugins[plugin_name]()
-            except KeyError as e:
+            except KeyError:
                 self.log.error(f"Plugin {plugin_name} not found.")
                 raise MisconfigurationError(f"Postprocess plugin {plugin_name} not found.")
 
