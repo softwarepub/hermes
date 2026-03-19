@@ -15,6 +15,7 @@ SPDX-FileContributor: Oliver Bertuch
 [![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
 ![PyPI - Version](https://img.shields.io/pypi/v/hermes)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/hermes)
+[![JuRSE Code Pick - Jan 2026](https://img.shields.io/badge/JuRSE_Code_Pick-Jan_2026-blue)](https://www.fz-juelich.de/en/rse/community-initiatives/jurse-code-of-the-month/january-2026)
 
 # hermes
 
