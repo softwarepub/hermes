@@ -21,6 +21,7 @@ from hermes.commands import (
     HermesProcessCommand, HermesVersionCommand
 )
 from hermes.commands.base import HermesCommand
+from hermes.error import HermesPluginRunError
 
 
 def main() -> None:
@@ -79,16 +80,15 @@ def main() -> None:
 
         log.info("Run subcommand %s", args.command.command_name)
         args.command(args)
+    except HermesPluginRunError as e:
+        log.error("An error occurred during the execution of a plugin %s (Find details in './hermes.log')",
+                  args.command.command_name)
+        log.debug("Original exception was: %s", e)
+        sys.exit(2)
     except Exception as e:
         log.error("An error occurred during execution of %s (Find details in './hermes.log')",
                   args.command.command_name)
         log.debug("Original exception was: %s", e)
-
-        sys.exit(2)
-
-    if args.command.errors:
-        for e in args.command.errors:
-            log.error(e)
         sys.exit(1)
 
     sys.exit(0)

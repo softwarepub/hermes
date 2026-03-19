@@ -78,3 +78,21 @@ class SoftwareMetadata(ld_dict):
             except Exception as e:
                 # No data could be loaded, raise an error instead.
                 raise HermesContextError("There is no (valid) data stored in the cache.") from e
+
+    def write_to_cache(self: Self, ctx: HermesContext, target_dir: str) -> None:
+        """
+        Writes the JSON_LD data of `self` to the given HermesContext object at the given target.\n
+        Note that data is written into "codemeta.json" (compacted value), "context.json" (context value) and
+        "expanded.json" (expanded value).
+
+        Args:
+            ctx (HermesContext): The HERMES cache the data is written to.
+            target_dir (str): The directory the inside the cache the data is written to.
+
+        Returns:
+            None:
+        """
+        with ctx[target_dir] as cache:
+            cache["codemeta"] = self.compact()
+            cache["context"] = {"@context": self.full_context}
+            cache["expanded"] = self.ld_value

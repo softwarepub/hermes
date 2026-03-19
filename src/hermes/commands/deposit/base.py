@@ -11,6 +11,7 @@ import argparse
 from pydantic import BaseModel
 
 from hermes.commands.base import HermesCommand, HermesPlugin
+from hermes.error import HermesPluginRunError, MisconfigurationError
 from hermes.model.context_manager import HermesContext
 from hermes.model import SoftwareMetadata
 from hermes.model.error import HermesValidationError
@@ -29,17 +30,19 @@ class BaseDepositPlugin(HermesPlugin):
         """
         self.command = command
         self.ctx = HermesContext()
+        self.ctx.prepare_step("deposit")
 
         self.ctx.prepare_step("curate")
-        self.metadata = SoftwareMetadata.load_from_cache(self.ctx, "result")
+        try:
+            self.metadata = SoftwareMetadata.load_from_cache(self.ctx, "result")
+        except Exception as e:
+            raise HermesValidationError("The results of the curate step are invalid.") from e
         self.ctx.finalize_step("curate")
 
         self.prepare()
         deposit = self.map_metadata()
-        self.ctx.prepare_step("deposit")
         with self.ctx[command.settings.target] as cache:
             cache["deposit"] = deposit
-        self.ctx.finalize_step("deposit")
 
         if self.is_initial_publication():
             self.create_initial_version()
@@ -47,7 +50,6 @@ class BaseDepositPlugin(HermesPlugin):
             self.create_new_version()
 
         deposit = self.update_metadata()
-        self.ctx.prepare_step("deposit")
         with self.ctx[command.settings.target] as cache:
             cache["result"] = deposit
         self.ctx.finalize_step("deposit")
@@ -133,16 +135,24 @@ class HermesDepositCommand(HermesCommand):
                                     help="Allow initial deposition (i.e., minting a new PID).")
 
     def __call__(self, args: argparse.Namespace) -> None:
+        self.log.info("# Metadata deposition")
         self.args = args
         plugin_name = self.settings.target
 
+        self.log.info("## Load deposit plugin")
+        # load plugin
         try:
             plugin_func = self.plugins[plugin_name]()
         except KeyError as e:
-            self.log.error("Plugin '%s' not found.", plugin_name)
-            self.errors.append(e)
+            self.log.error(f"Plugin {plugin_name} not found.")
+            raise MisconfigurationError(f"Deposit plugin {self.settings.plugin} not found.")
+
+        self.log.info("## Run deposit plugin")
+        # run plugin
         try:
             plugin_func(self)
         except HermesValidationError as e:
-            self.log.error("Error while executing %s: %s", plugin_name, e)
-            self.errors.append(e)
+            self.log.error(f"Error while executing {plugin_name}: {e}")
+            raise HermesPluginRunError(
+                f"Something went wrong while running the curate plugin {self.settings.plugin}"
+            ) from e

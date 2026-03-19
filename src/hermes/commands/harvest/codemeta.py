@@ -40,7 +40,7 @@ class CodeMetaHarvestPlugin(HermesHarvestPlugin):
             raise HermesValidationError(codemeta_file)
 
         codemeta = json.loads(codemeta_str)
-        return SoftwareMetadata(codemeta), {'local_path': str(codemeta_file)}
+        return SoftwareMetadata(codemeta)  # , {'local_path': str(codemeta_file)}
 
     def _validate(self, codemeta_file: pathlib.Path) -> bool:
         with open(codemeta_file, "r") as fi:

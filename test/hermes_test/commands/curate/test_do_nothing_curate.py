@@ -93,7 +93,7 @@ def test_do_nothing_curate(tmp_path, monkeypatch, process_result, res):
     manager.finalize_step("process")
 
     config_file = tmp_path / "hermes.toml"
-    config_file.write_text("")
+    config_file.write_text("[curate]\nplugin = \"pass_curate\"")
 
     orig_argv = sys.argv[:]
     sys.argv = ["hermes", "curate", "--path", str(tmp_path), "--config", str(config_file)]

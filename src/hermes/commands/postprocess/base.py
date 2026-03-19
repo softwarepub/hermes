@@ -9,11 +9,15 @@ import argparse
 
 from pydantic import BaseModel
 
-from ..base import HermesCommand, HermesPlugin
+from hermes.commands.base import HermesCommand, HermesPlugin
+from hermes.error import HermesPluginRunError, MisconfigurationError
 
 
 class HermesPostprocessPlugin(HermesPlugin):
-    pass
+    """ Base plugin for postprocess plugins. """
+
+    def __call__(self, command: HermesCommand) -> None:
+        pass
 
 
 class PostprocessSettings(BaseModel):
@@ -29,13 +33,26 @@ class HermesPostprocessCommand(HermesCommand):
     settings_class = PostprocessSettings
 
     def __call__(self, args: argparse.Namespace) -> None:
+        self.log.info("# Postprocessing")
         self.args = args
         plugin_names = self.settings.run
 
+        self.log.info("## Load and run the plugins")
         for plugin_name in plugin_names:
+            self.log.info(f"### Load {plugin_name} plugin")
+            # load plugin
             try:
                 plugin_func = self.plugins[plugin_name]()
-                plugin_func(self)
             except KeyError as e:
-                self.log.error("Plugin '%s' not found.", plugin_name)
-                self.errors.append(e)
+                self.log.error(f"Plugin {plugin_name} not found.")
+                raise MisconfigurationError(f"Postprocess plugin {plugin_name} not found.")
+
+            self.log.info(f"### Run {plugin_name} plugin")
+            # run plugin
+            try:
+                plugin_func(self)
+            except Exception as e:
+                self.log.error(f"Unknown error while executing the {plugin_name} plugin.")
+                raise HermesPluginRunError(
+                    f"Something went wrong while running the postprocess plugin {plugin_name}"
+                ) from e

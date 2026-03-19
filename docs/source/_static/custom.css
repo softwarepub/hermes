@@ -45,9 +45,14 @@ img {
 }
 
 .bd-sidebar-primary.bd-sidebar {
-    max-width: 340px;
+    max-width: min-content;
+}
+
+.bd-docs-nav {
+    min-width: max-content;
 }
 
 .bd-sidebar-secondary{
-    max-width: min-content;
+    max-width: 15%;
+    width: max-content;
 }
