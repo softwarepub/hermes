@@ -17,6 +17,7 @@ from urllib.parse import parse_qs, urlparse
 
 import requests
 import requests_oauthlib
+from oauthlib.oauth2.rfc6749.errors import CustomOAuth2Error
 
 from . import slim_click as sc
 
@@ -74,6 +75,7 @@ class OauthProcess:
         self.tokens = {}
         self.device_code_url = device_code_url
         self.server: HTTPServer = None
+        self.error_description: str = ""
 
     def create_handler_constructor(self):
         def handler(*args, **kwargs):
@@ -158,7 +160,10 @@ class OauthProcess:
             if "access_token" in token_response_data:
                 return token_response_data
             elif "error" in token_response_data and token_response_data["error"] != "authorization_pending":
-                sc.echo(f"Error: {token_response_data['error']}")
+                sc.echo(f"Error: {token_response_data['error']}", sc.Formats.WARNING)
+                return {}
+            elif self.error_description:
+                sc.echo(f"Error: {self.error_description}", sc.Formats.WARNING)
                 return {}
 
             time.sleep(interval)
@@ -167,7 +172,7 @@ class OauthProcess:
         if self.authorize_url == "":
             sc.echo(f"OAuth is not available for {self.name}")
             return {}
-        sc.echo(f"Opening browser to log into your {self.name} account...")
+        # sc.echo(f"Opening browser to log into your {self.name} account...")
         self.tokens = {}
         server_thread = threading.Thread(target=self.start_server, daemon=True)
         server_thread.start()
@@ -220,9 +225,12 @@ class Handler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         auth_code = parse_qs(parsed.query)["code"][0]
 
-        tokens = self.oauth_process.get_tokens_from_auth_code(auth_code)
-        self.oauth_process.tokens = tokens
-        self.oauth_process.shutdown_event.set()
+        try:
+            tokens = self.oauth_process.get_tokens_from_auth_code(auth_code)
+            self.oauth_process.tokens = tokens
+            self.oauth_process.shutdown_event.set()
+        except CustomOAuth2Error as e:
+            self.oauth_process.error_description = e.description
 
         self.end_headers()
         self.wfile.write(b"You can close this window now.")

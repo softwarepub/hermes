@@ -553,15 +553,13 @@ class HermesInitCommand(HermesCommand):
         jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(""),
                                        block_start_string="{%%", block_end_string="%%}",
                                        variable_start_string="{%", variable_end_string="%}")
-        source_text = Path(ci_file_path).read_text(encoding="utf-8")
-        used_params = jinja2.meta.find_undeclared_variables(jinja_env.parse(source_text))
         template = jinja_env.get_template(str(ci_file_path))
-        missing = [p for p in used_params if p not in self.ci_parameters]
-        if missing:
-            sc.echo(f"CI Template has missing parameters: {missing}", formatting=sc.Formats.WARNING)
         rendered = template.render(self.ci_parameters)
         with open(ci_file_path, 'w') as file:
             file.write(rendered)
+        undeclared_params = jinja2.meta.find_undeclared_variables(jinja_env.parse(rendered))
+        if undeclared_params:
+            sc.echo(f"CI Template has missing parameters: {undeclared_params}", formatting=sc.Formats.WARNING)
 
     def create_zenodo_token(self) -> None:
         """Makes the user create a zenodo token and saves it in self.deposit_platform.token."""
