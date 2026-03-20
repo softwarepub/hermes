@@ -14,7 +14,7 @@ from hermes.commands.deposit.base import BaseDepositPlugin
 
 
 class FileDepositSettings(BaseModel):
-    filename: str = 'codemeta.json'
+    filename: str = 'hermes.json'
 
 
 class FileDepositPlugin(BaseDepositPlugin):

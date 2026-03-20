@@ -33,16 +33,16 @@ And uses the [schmea.org](https://schema.org/) (with prefix "schema") and the [C
 HERMES uses a plugin architecture. Therefore, users are invited to contribute own features.
 
 The structure for every plugin follows the same schema.
-Every plugin is a sub class of a sub class of the `HermesPlugin` class.
-This class implements one abstract method, `__call__`, which needs to be overwritten by every plugin.
-In between the `HermesPlugin` class and the class of a specific plugin there is another class which follows the naming scheme `Hermes{Step}Plugin` where `{Step}` is the step the plugin is for.
+Every plugin is a sub class of a sub class of the {py:class}`~hermes.commands.base.HermesPlugin` class.
+This class implements one abstract method, {py:meth}`~hermes.commands.base.HermesPlugin.__call__`, which needs to be overwritten by every plugin.
+In between the {py:class}`~hermes.commands.base.HermesPlugin` class and the class of a specific plugin there is another class which follows the naming scheme `Hermes{Step}Plugin` where `{Step}` is the step the plugin is for.
 These base classes may implement additional (abstract) methods that may have to be implemented by the plugins class.
 
-The first positional attribute of the `__call__` method is an object of class `Hermes{Step}Command` (where `{Step}` is the step the plugin is for), which is a sub class of `HermesCommand`, which triggered this plugin to run.
+The first positional attribute of the `__call__` method is an object of class `Hermes{Step}Command` (where `{Step}` is the step the plugin is for), which is a sub class of {py:class}`~hermes.commands.base.HermesCommand`, which triggered this plugin to run.
 An exception to this are the deposit plugins. Those don't implement the `__call__` method and instead can implement (and have to implement some) other functions.
 
-The plugin class also uses a derivative of `HermesSettings` to add parameters that can be adapted by the configuration file.
-`HermesSettings` is the base class for command specific settings.
+The plugin class also uses a derivative of {py:class}`~hermes.commands.base.HermesSettings` to add parameters that can be adapted by the configuration file.
+{py:class}`~hermes.commands.base.HermesSettings` is the base class for command specific settings.
 It uses [pydantic](https://docs.pydantic.dev/latest/) [settings](https://docs.pydantic.dev/latest/api/pydantic_settings/) to specify and validate the parameters.
 The user can either set the parameters in the `hermes.toml` or overwrite them in the command line.
 To overwrite a parameter from command line, use the `-O` command line option followed by the dotted parameter name and the value.
@@ -80,7 +80,7 @@ class YourHarvestPlugin(HermesHarvestPlugin):
         return data
 ```
 
-The `__call__` method of harest plugins needs to return a SoftwareMetadata object containing the harvested metadata.
+The {py:meth}`~hermes.commands.harvest.base.HermesHarvestPlugin.__call__` method of harest plugins needs to return a {py:class}`~hermes.model.api.SoftwareMetadata` object containing the harvested metadata.
 For more information on how to use this object see [here](../dev/data_model.md).
 
 ### Process plugin
@@ -110,8 +110,8 @@ class YourProcessPlugin(HermesProcessPlugin):
         return strategies
 ```
 
-The `__call__` method of process plugins needs to return a dictionary mappings strings and/ or `None` to dictionaries mapping strings or `None` to {py:class}`hermes.model.merge.action.MergeAction`.
-If `strategies` looked like this (where `Reject` is imported from `hermes.model.merge.action`)
+The {py:meth}`~hermes.commands.process.base.HermesProcessPlugin.__call__` method of process plugins needs to return a dictionary mappings strings and/ or `None` to dictionaries mapping strings or `None` to {py:class}`~hermes.model.merge.action.MergeAction`.
+If `strategies` looked like this (where {py:class}`~hermes.model.merge.action.Reject` is imported from {py:mod}`hermes.model.merge.action`)
 ```{code-block} python
 strategies = {
     full_type_iri: {
@@ -122,7 +122,7 @@ strategies = {
 }
 ```
 
-HERMES would use the `Reject` strategy for merging values of the key `full_property_iri` in objects of type `full_type_iri`. (A key in strategies being `None` instead of a string indicates to HERMES that its value is to be used as a default [i.e. if no more specific entry exists].)
+HERMES would use the {py:class}`~hermes.model.merge.action.Reject` strategy for merging values of the key `full_property_iri` in objects of type `full_type_iri`. (A key in strategies being `None` instead of a string indicates to HERMES that its value is to be used as a default [i.e. if no more specific entry exists].)
 
 HERMES will prioritize strategies from other plugins depending on the order of the plugins in the `hermes.toml`. Generally the hierarchy is as follows (first most important):
 1. strategies with `full_property_iri` and `full_type_iri` not `None`.
@@ -157,7 +157,7 @@ class YourCuratePlugin(HermesCuratePlugin):
         return data
 ```
 
-The `__call__` method of harest plugins needs to return a SoftwareMetadata object containing the curated metadata.
+The {py:meth}`~hermes.commands.curate.base.HermesCuratePlugin.__call__` method of curate plugins needs to return a {py:class}`~hermes.model.api.SoftwareMetadata` object containing the curated metadata.
 For more information on how to use this object see [here](../dev/data_model.md).
 The returned object may be the object `metadata` passed to `__call__`.
 
@@ -225,7 +225,7 @@ class YourDepositPlugin(HermesDepositPlugin):
 A deposit plugin doesn't implement a `__call__` method like plugins for other steps.
 Instead it can (and in some cases has to) implement methods, which will be called in a predefined order.
 
-The plugin still has access to the command (via self.command) and the metadata for the software (via self.metadata).
+The plugin still has access to the command (via `self.command`) and the metadata for the software (via `self.metadata`).
 
 ### Postprocess plugin
 The class structure of a postprocess plugin should look like this:
@@ -259,7 +259,7 @@ with ctx[deposit_plugin_name] as manager:
 ctx.finalize_step("deposit")
 ```
 
-where `deposit_plugin_name` is the name of the deposit plugin the data is loaded from and HermesContext is {py:class}`hermes.model.context_manager.HermesContext`.
+where `deposit_plugin_name` is the name of the deposit plugin the data is loaded from and {py:class}`~hermes.model.context_manager.HermesContext` is imported from {py:mod}`hermes.model.context_manager`.
 The loaded data is some valid JSON data and has no fixed format.
 
 ## Implement and use plugin specific settings
@@ -376,11 +376,13 @@ target = "{plugin_name}"
 [postprocess]
 run = [ ..., "{plugin_name}", ... ]
 ...
+
 ```
 <br><br>
 ```{admonition} Congratulations!
 You can now write plugins for HERMES.
-Consider publishing it for others to use following this guide. TODO: add link
 ```
+
+Consider publishing it to the [HERMES plugin marketplace](../index.md#plugins) for others to use following this guide. TODO: add link
 
 If you have any questions, wishes or requests, feel free to contact us.

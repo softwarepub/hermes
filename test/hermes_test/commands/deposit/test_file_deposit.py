@@ -45,7 +45,7 @@ def test_file_deposit(tmp_path, monkeypatch, metadata):
         if e.code != 0:
             raise e
     finally:
-        with open("codemeta.json", "r") as cache:
+        with open("hermes.json", "r") as cache:
             result = SoftwareMetadata(json.load(cache))
         sys.argv = orig_argv
 
