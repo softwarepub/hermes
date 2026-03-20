@@ -24,7 +24,6 @@ from . import slim_click as sc
 PREFER_DEVICE_FLOW = True
 DEACTIVATE_BROWSER_OPENING = False
 
-
 def setup_logging_for_oauthlib():
     """
     This makes requests_oauthlib.oauth2_session print all the debug logs onto the console.
@@ -160,10 +159,10 @@ class OauthProcess:
             if "access_token" in token_response_data:
                 return token_response_data
             elif "error" in token_response_data and token_response_data["error"] != "authorization_pending":
-                sc.echo(f"Error: {token_response_data['error']}", sc.Formats.WARNING)
+                sc.echo(f"Device Flow Error: {token_response_data['error']}", sc.Formats.WARNING)
                 return {}
             elif self.error_description:
-                sc.echo(f"Error: {self.error_description}", sc.Formats.WARNING)
+                sc.echo(f"Device Flow Error: {self.error_description}", sc.Formats.WARNING)
                 return {}
 
             time.sleep(interval)
@@ -172,7 +171,7 @@ class OauthProcess:
         if self.authorize_url == "":
             sc.echo(f"OAuth is not available for {self.name}")
             return {}
-        # sc.echo(f"Opening browser to log into your {self.name} account...")
+        sc.echo(f"Opening browser to log into your {self.name} account...")
         self.tokens = {}
         server_thread = threading.Thread(target=self.start_server, daemon=True)
         server_thread.start()
@@ -187,9 +186,9 @@ class OauthProcess:
 
     def get_tokens(self) -> dict[str: str]:
         if PREFER_DEVICE_FLOW:
-            return self.get_tokens_from_device_flow() or self.get_tokens_from_oauth() or {}
+            return self.get_tokens_from_device_flow() or {}
         else:
-            return self.get_tokens_from_oauth() or self.get_tokens_from_device_flow() or {}
+            return self.get_tokens_from_oauth() or {}
 
 
 class Handler(BaseHTTPRequestHandler):

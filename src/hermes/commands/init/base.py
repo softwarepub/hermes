@@ -623,7 +623,8 @@ class HermesInitCommand(HermesCommand):
                                              token=self.tokens[GitHoster.GitHub])
                 oauth_success = True
             else:
-                sc.echo("Something went wrong while doing OAuth. You'll have to do it manually instead.",
+                sc.echo("Something went wrong while doing OAuth. You will have to restart 'hermes init' to try OAuth "
+                        "again. Alternatively you can do it manually instead by executing the following steps:",
                         formatting=sc.Formats.WARNING)
         if not oauth_success:
             sc.echo("Add the {} token{} to your {} under the name {}.".format(
