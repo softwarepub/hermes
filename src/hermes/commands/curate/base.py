@@ -25,7 +25,7 @@ class HermesCuratePlugin(HermesPlugin):
 class CurateSettings(BaseModel):
     """Generic deposition settings."""
 
-    plugin: str = ""
+    plugin: str = "pass_curate"
 
 
 class HermesCurateCommand(HermesCommand):
@@ -51,7 +51,7 @@ class HermesCurateCommand(HermesCommand):
             raise HermesValidationError("The results of the process step are invalid.") from e
         ctx.finalize_step("process")
 
-        self.log.info("## Load curation plugin")
+        self.log.info(f"## Load curation plugin {plugin_name}")
         # load plugin
         try:
             plugin_func = self.plugins[plugin_name]()
@@ -59,7 +59,7 @@ class HermesCurateCommand(HermesCommand):
             self.log.error(f"Plugin {plugin_name} not found.")
             raise MisconfigurationError(f"Curate plugin {plugin_name} not found.")
 
-        self.log.info("## Run curation plugin")
+        self.log.info(f"## Run curation plugin {plugin_name}")
         # run plugin
         try:
             curated_metadata = plugin_func(self, metadata)

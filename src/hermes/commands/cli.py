@@ -12,13 +12,9 @@ import argparse
 import sys
 
 from hermes import logger
-# FIXME: remove comments after new implementation of modules is available
-# from hermes.commands import (HermesHelpCommand, HermesVersionCommand, HermesCleanCommand,
-#                              HermesHarvestCommand, HermesProcessCommand, HermesCurateCommand,
-#                              HermesDepositCommand, HermesPostprocessCommand, HermesInitCommand)
 from hermes.commands import (
-    HermesCurateCommand, HermesDepositCommand, HermesHarvestCommand, HermesHelpCommand, HermesPostprocessCommand,
-    HermesProcessCommand, HermesVersionCommand
+    HermesCurateCommand, HermesCleanCommand, HermesDepositCommand, HermesHarvestCommand, HermesHelpCommand,
+    HermesInitCommand, HermesPostprocessCommand, HermesProcessCommand, HermesVersionCommand
 )
 from hermes.commands.base import HermesCommand
 from hermes.error import HermesPluginRunError
@@ -42,12 +38,12 @@ def main() -> None:
     setting_types = {}
 
     for command in (
-            # HermesCleanCommand(parser),
+            HermesCleanCommand(parser),
             HermesCurateCommand(parser),
             HermesDepositCommand(parser),
             HermesHarvestCommand(parser),
             HermesHelpCommand(parser),
-            # HermesInitCommand(parser),
+            HermesInitCommand(parser),
             HermesPostprocessCommand(parser),
             HermesProcessCommand(parser),
             HermesVersionCommand(parser),

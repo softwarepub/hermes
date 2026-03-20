@@ -37,7 +37,7 @@ def sandbox_auth():
                     "http://schema.org/familyName": [{"@value": "Test"}],
                     "http://schema.org/givenName": [{"@value": "Testi"}]
                 }],
-                "http://schema.org/license": [{"@id": "https://spdx.org/licenses/Apache-2.0"}]
+                "http://schema.org/license": ["https://spdx.org/licenses/Apache-2.0"]
             }),
             {
                 "upload_type": "software",

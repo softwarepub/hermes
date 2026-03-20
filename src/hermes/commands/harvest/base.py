@@ -40,6 +40,9 @@ class HermesHarvestCommand(HermesCommand):
         self.log.info("# Metadata harvesting")
         self.args = args
 
+        if len(self.settings.sources) == 0:
+            self.log.info("# No plugin was configured to be run and loaded.")
+
         # Initialize the harvest cache directory here to indicate the step ran
         ctx = HermesContext()
         ctx.prepare_step('harvest')

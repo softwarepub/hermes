@@ -139,7 +139,7 @@ class HermesDepositCommand(HermesCommand):
         self.args = args
         plugin_name = self.settings.target
 
-        self.log.info("## Load deposit plugin")
+        self.log.info(f"## Load deposit plugin {plugin_name}")
         # load plugin
         try:
             plugin_func = self.plugins[plugin_name]()
@@ -147,7 +147,7 @@ class HermesDepositCommand(HermesCommand):
             self.log.error(f"Plugin {plugin_name} not found.")
             raise MisconfigurationError(f"Deposit plugin {self.settings.plugin} not found.")
 
-        self.log.info("## Run deposit plugin")
+        self.log.info(f"## Run deposit plugin {plugin_name}")
         # run plugin
         try:
             plugin_func(self)

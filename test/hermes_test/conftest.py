@@ -7,6 +7,7 @@
 import os
 import shutil
 import subprocess
+import sys
 
 import pytest
 
@@ -33,7 +34,7 @@ class HermesEnvMock:
 
     def run(self, *args):
         proc = subprocess.Popen(
-            [self.hermes_exe, *args], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            [sys.executable, "-m", self.hermes_exe, *args], stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         proc.wait()
         return proc
