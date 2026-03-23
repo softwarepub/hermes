@@ -13,7 +13,6 @@ from hermes.commands.base import HermesCommand, HermesPlugin
 from hermes.error import HermesPluginRunError, MisconfigurationError
 from hermes.model.api import SoftwareMetadata
 from hermes.model.context_manager import HermesContext
-from hermes.model.error import HermesValidationError
 from hermes.model.merge.action import MergeAction
 from hermes.model.merge.container import ld_merge_dict
 
@@ -28,6 +27,7 @@ class HermesProcessPlugin(HermesPlugin):
 class ProcessSettings(BaseModel):
     """Generic deposition settings."""
 
+    sources: list = []
     plugins: list = []
 
 
@@ -72,19 +72,32 @@ class HermesProcessCommand(HermesCommand):
 
         self.log.info("## Merge the metadata of the harvesters")
         # Get all harvesters
-        harvester_names = self.root_settings.harvest.sources
+        harvester_names = self.settings.sources if self.settings.sources else self.root_settings.harvest.sources
+        merged_any = False
         for harvester in harvester_names:
             self.log.info(f"## Load data from {harvester} plugin")
             # load data from harvester
             try:
                 metadata = SoftwareMetadata.load_from_cache(ctx, harvester)
-            except Exception as e:
-                self.log.error(f"The data from the harvester {harvester} could not be loaded or is invalid.")
-                raise HermesValidationError(f"The results of the harvest plugin {harvester} is invalid.") from e
+            except Exception:
+                # skip this harvester when the data is invalid
+                self.log.warning(f"The data from the harvester {harvester} could not be loaded or is invalid.")
+                self.log.info(f"## Aborting merge for {harvester}")
+                continue
 
             self.log.info(f"## Merge data from {harvester} plugin")
             # merge data into the merge dict
             merged_doc.update(metadata)
+            merged_any = True
+
+        # error if nothing was merged
+        if not merged_any:
+            self.log.error(
+                f"""No metadata has been merged. {
+                    "No harvesters to merge from were supplied" if not harvester_names else
+                    "The merging failed for all harvesters."
+                }"""
+            )
 
         self.log.info("## Store processed metadata")
         # store processed data

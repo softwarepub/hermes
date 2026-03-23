@@ -7,10 +7,15 @@
 # SPDX-FileContributor: Stephan Druskat
 
 import json
+import logging
+import os
 
 from pydantic import BaseModel
 
 from hermes.commands.deposit.base import BaseDepositPlugin
+
+
+_log = logging.getLogger("cli.deposit.file")
 
 
 class FileDepositSettings(BaseModel):
@@ -31,3 +36,4 @@ class FileDepositPlugin(BaseDepositPlugin):
 
         with open(file_config.filename, 'w') as deposition_file:
             json.dump(self.metadata.compact(), deposition_file, indent=2)
+        _log.info(f"The deposited metadata can be found in {os.path.abspath(file_config.filename)}.")

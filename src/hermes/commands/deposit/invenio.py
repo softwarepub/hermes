@@ -311,13 +311,23 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         - update ``self.metadata`` with metadata collected during the checks
         """
 
-        rec_id = self.config.record_id
-        doi = self.config.doi
+        conf_rec_id = self.config.record_id
+        conf_doi = self.config.doi
 
-        codemeta_identifier = self.metadata.get("identifier", None)
-        rec_id, rec_meta = self.resolver.resolve_latest_id(
-            record_id=rec_id, doi=doi, codemeta_identifier=codemeta_identifier
-        )
+        codemeta_identifiers = self.metadata.get("identifier", [None])
+        rec_id, rec_meta = None, {}
+        for codemeta_identifier in codemeta_identifiers:
+            if not isinstance(codemeta_identifier, str):
+                # FIXME: Can also be PropertyValue (i.e. ld_dict), that case has to be handled.
+                codemeta_identifier = None
+            tmp_rec_id, tmp_rec_meta = self.resolver.resolve_latest_id(
+                record_id=conf_rec_id, doi=conf_doi, codemeta_identifier=codemeta_identifier
+            )
+            if tmp_rec_id is not None or tmp_rec_meta != {}:
+                if rec_id != tmp_rec_id or rec_meta != tmp_rec_meta:
+                    # FIXME: Maybe finding different record ids is not fatal?
+                    raise HermesValidationError("Found two different record ids or conflicting metadata.")
+                rec_id, rec_meta = tmp_rec_id, tmp_rec_meta
 
         if len(self.metadata.get("version", [])) > 1:
             raise HermesValidationError("Too many licenses for invenio deposit.")
