@@ -24,6 +24,7 @@ from . import slim_click as sc
 PREFER_DEVICE_FLOW = True
 DEACTIVATE_BROWSER_OPENING = False
 
+
 def setup_logging_for_oauthlib():
     """
     This makes requests_oauthlib.oauth2_session print all the debug logs onto the console.
