@@ -5,13 +5,30 @@
 # SPDX-FileContributor: Michael Fritzsche
 
 
+import csv
 from typing import Any, Callable, Union
+
+import requests
 
 from hermes.commands.base import HermesCommand
 from hermes.model.merge.action import Concat, MergeAction, MergeSet
 from hermes.model.types import ld_dict
 from hermes.model.types.ld_context import iri_map as iri
 from .base import HermesProcessPlugin
+
+
+def match_equals(left: Any, right: Any) -> bool:
+    """
+    Compares two objects with ==.
+
+    Args:
+        left (Any): The first object for the comparison.
+        right (Any): The second object for the comparison.
+
+    Returns:
+        bool: The result of the comparison.
+    """
+    return left == right
 
 
 def match_keys(*keys: list[str], fall_back_to_equals: bool = False) -> Callable[[Any, Any], bool]:
@@ -140,7 +157,7 @@ def match_multiple_types(
 DEFAULT_MATCH = match_keys("@id", fall_back_to_equals=True)
 """ Callable[[Any, Any], bool]: The default match function used for comparison. """
 
-MATCH_FUNCTION_FOR_TYPE = {"schema:Person": match_person}
+MATCH_FUNCTION_FOR_TYPE = {iri["schema:Person"]: match_person}
 """
 dict[str, Callable[[Any, Any], bool]]: A dict containing for JSON_LD types the match function (not DEFAULT_MATCH).
 """
@@ -148,10 +165,10 @@ dict[str, Callable[[Any, Any], bool]]: A dict containing for JSON_LD types the m
 ACTIONS = {
     "default": MergeSet(DEFAULT_MATCH),
     "concat": Concat(),
-    "Person": MergeSet(MATCH_FUNCTION_FOR_TYPE["schema:Person"]),
+    "Person": MergeSet(MATCH_FUNCTION_FOR_TYPE[iri["schema:Person"]]),
     **{
         "Or".join(types): MergeSet(match_multiple_types(
-            *(("schema:" + type, MATCH_FUNCTION_FOR_TYPE.get("schema:" + type, DEFAULT_MATCH)) for type in types)
+            *(("schema:" + type, MATCH_FUNCTION_FOR_TYPE.get(iri["schema:" + type], DEFAULT_MATCH)) for type in types)
         ))
         for types in [
             ("AboutPage", "CreativeWork"),
@@ -844,7 +861,78 @@ CODEMETA_STRATEGY[iri["schema:CreditCard"]] = {
 
 class CodemetaProcessPlugin(HermesProcessPlugin):
     def __call__(self, command: HermesCommand) -> dict[Union[str, None], dict[Union[str, None], MergeAction]]:
-        strats = {**CODEMETA_STRATEGY}
+        try:
+            strats = CodemetaProcessPlugin.get_schema_strategies()
+            strats.update(CodemetaProcessPlugin.get_codemeta_strategies())
+            strats[None] = {None: MergeSet(DEFAULT_MATCH)}
+        except Exception:
+            strats = {**CODEMETA_STRATEGY}
         for key, value in PROV_STRATEGY.items():
             strats[key] = {**value, **strats.get(key, {})}
         return strats
+
+    @classmethod
+    def get_schema_strategies(cls):
+        # get a set of all types that have to be handled separately
+        special_types = set(MATCH_FUNCTION_FOR_TYPE.keys())
+
+        # get and read csv file containing information on schema.org types
+        # switch to schemaorg-current-https-types.csv on change of standard context in HERMES
+        download = requests.get("https://schema.org/version/latest/schemaorg-current-http-types.csv")
+        decoded_content = download.content.decode('utf-8')
+        cr = csv.reader(decoded_content.splitlines(), delimiter=',')
+        # remove the first line (headers)
+        type_table = list(cr)[1:]
+        # build list of all subtypes for every type
+        subtypes_for_types = {}
+        for type_row in type_table:
+            if len(type_row[7]) == 0:
+                # no (direct) subtype
+                subtypes_for_types[type_row[0]] = set()
+            else:
+                # add direct subtypes
+                subtypes_for_types[type_row[0]] = set(type_row[7].split(", "))
+        # only immediate subtypes have been recorded now, add sub...subtypes too
+        for super_type in subtypes_for_types:
+            for other_type in subtypes_for_types:
+                if super_type in subtypes_for_types[other_type]:
+                    subtypes_for_types[other_type].update(subtypes_for_types[super_type])
+
+        # get and read csv file containing information on schema.org properties
+        # switch to schemaorg-current-https-properties.csv on change of standard context in HERMES
+        download = requests.get("https://schema.org/version/latest/schemaorg-current-http-properties.csv")
+        decoded_content = download.content.decode('utf-8')
+        cr = csv.reader(decoded_content.splitlines(), delimiter=',')
+        # remove the first line (headers)
+        property_table = list(cr)[1:]
+        strategies = {}
+        # add the strategies for all properties to all types they can occur in
+        for property_row in property_table:
+            # generate a set of all types this property can have values of
+            shallow_range_types = set(property_row[7].split(", ")) if property_row[7] != "" else set()
+            range_types = shallow_range_types.union(
+                *(subtypes_for_types.get(range_type, set()) for range_type in shallow_range_types)
+            )
+            # get all special types this property can have values of
+            special_range_types = special_types.intersection(range_types)
+            # if there is a special range type this property needs a special match function
+            if len(special_range_types) != 0:
+                # construct the match function
+                match_function = MergeSet(match_multiple_types(
+                    *((range_type, MATCH_FUNCTION_FOR_TYPE[range_type]) for range_type in special_range_types),
+                    fall_back_function=DEFAULT_MATCH
+                ))
+                # iterate over a set of all types this property can occur in
+                shallow_domain_types = set(property_row[6].split(", ")) if property_row[6] != "" else set()
+                for domain_type in shallow_domain_types.union(
+                    *(subtypes_for_types.get(domain_type, set()) for domain_type in shallow_domain_types)
+                ):
+                    # add the match function to the types match functions
+                    strategies.setdefault(domain_type, {})[property_row[0]] = match_function
+        # return the strategies
+        return strategies
+
+    @classmethod
+    def get_codemeta_strategies(cls):
+        # FIXME: implement
+        return {}

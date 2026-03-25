@@ -17,31 +17,39 @@ from hermes.model import context_manager, SoftwareMetadata
     [
         (
             {
-                "cff": SoftwareMetadata({
+                "cff": SoftwareMetadata(
+                    {
+                        "@type": ["http://schema.org/SoftwareSourceCode"],
+                        "http://schema.org/description": [{"@value": "for testing"}],
+                        "http://schema.org/name": [{"@value": "Test"}],
+                        "http://schema.org/author": [
+                            {
+                                "@type": "http://schema.org/Person",
+                                "http://schema.org/familyName": [{"@value": "Test"}],
+                                "http://schema.org/givenName": [{"@value": "Testi"}],
+                            }
+                        ],
+                        "http://schema.org/license": [{"@id": "https://spdx.org/licenses/Apache-2.0"}],
+                    }
+                )
+            },
+            SoftwareMetadata(
+                {
                     "@type": ["http://schema.org/SoftwareSourceCode"],
                     "http://schema.org/description": [{"@value": "for testing"}],
                     "http://schema.org/name": [{"@value": "Test"}],
-                    "http://schema.org/author": [{
-                        "@type": "http://schema.org/Person",
-                        "http://schema.org/familyName": [{"@value": "Test"}],
-                        "http://schema.org/givenName": [{"@value": "Testi"}]
-                    }],
-                    "http://schema.org/license": [{"@id": "https://spdx.org/licenses/Apache-2.0"}]
-                })
-            },
-            SoftwareMetadata({
-                "@type": ["http://schema.org/SoftwareSourceCode"],
-                "http://schema.org/description": [{"@value": "for testing"}],
-                "http://schema.org/name": [{"@value": "Test"}],
-                "http://schema.org/author": [{
-                    "@type": "http://schema.org/Person",
-                    "http://schema.org/familyName": [{"@value": "Test"}],
-                    "http://schema.org/givenName": [{"@value": "Testi"}]
-                }],
-                "http://schema.org/license": [{"@id": "https://spdx.org/licenses/Apache-2.0"}]
-            })
+                    "http://schema.org/author": [
+                        {
+                            "@type": "http://schema.org/Person",
+                            "http://schema.org/familyName": [{"@value": "Test"}],
+                            "http://schema.org/givenName": [{"@value": "Testi"}],
+                        }
+                    ],
+                    "http://schema.org/license": [{"@id": "https://spdx.org/licenses/Apache-2.0"}],
+                }
+            ),
         )
-    ]
+    ],
 )
 def test_process(tmp_path, monkeypatch, metadata_in, metadata_out):
     monkeypatch.chdir(tmp_path)
@@ -57,8 +65,8 @@ def test_process(tmp_path, monkeypatch, metadata_in, metadata_out):
 
     config_file = tmp_path / "hermes.toml"
     config_file.write_text(
-        "[process]\nplugins=[\"codemeta\"]\n"
-        "[harvest]\nsources = [" + ", ".join('\"' + f'{harvester}' + '\"' for harvester in metadata_in) + "]"
+        '[process]\nplugins=["codemeta"]\n'
+        "[harvest]\nsources = [" + ", ".join('"' + f"{harvester}" + '"' for harvester in metadata_in) + "]"
     )
 
     orig_argv = sys.argv[:]
@@ -84,28 +92,54 @@ def test_process(tmp_path, monkeypatch, metadata_in, metadata_out):
     [
         (
             {
-                "cff": SoftwareMetadata({
-                    "@type": ["http://schema.org/SoftwareSourceCode"],
-                    "http://schema.org/name": [{"@value": "Test"}],
-                    "http://schema.org/author": [
-                        {
-                            "@type": "http://schema.org/Person",
-                            "http://schema.org/familyName": [{"@value": "Test"}],
-                            "http://schema.org/email": [{"@value": "test.testi@testis.tests"}]
-                        },
-                        {
-                            "@type": "http://schema.org/Person",
-                            "http://schema.org/familyName": [{"@value": "Testers"}]
-                        },
-                        {
-                            "@type": "http://schema.org/Person",
-                            "http://schema.org/familyName": [{"@value": "Tester"}],
-                            "http://schema.org/email": [{"@value": "test@tester.tests"}]
-                        }
-                    ],
-                    "http://schema.org/license": [{"@id": "https://spdx.org/licenses/Apache-2.0"}]
-                }),
-                "codemeta": SoftwareMetadata({
+                "cff": SoftwareMetadata(
+                    {
+                        "@type": ["http://schema.org/SoftwareSourceCode"],
+                        "http://schema.org/name": [{"@value": "Test"}],
+                        "http://schema.org/author": [
+                            {
+                                "@type": "http://schema.org/Person",
+                                "http://schema.org/familyName": [{"@value": "Test"}],
+                                "http://schema.org/email": [{"@value": "test.testi@testis.tests"}],
+                            },
+                            {
+                                "@type": "http://schema.org/Person",
+                                "http://schema.org/familyName": [{"@value": "Testers"}],
+                            },
+                            {
+                                "@type": "http://schema.org/Person",
+                                "http://schema.org/familyName": [{"@value": "Tester"}],
+                                "http://schema.org/email": [{"@value": "test@tester.tests"}],
+                            },
+                        ],
+                        "http://schema.org/license": [{"@id": "https://spdx.org/licenses/Apache-2.0"}],
+                    }
+                ),
+                "codemeta": SoftwareMetadata(
+                    {
+                        "@type": ["http://schema.org/SoftwareSourceCode"],
+                        "http://schema.org/description": [{"@value": "for testing"}],
+                        "http://schema.org/name": [{"@value": "Test"}, {"@value": "Testis Test"}],
+                        "http://schema.org/author": [
+                            {
+                                "@type": "http://schema.org/Person",
+                                "http://schema.org/familyName": [{"@value": "Test"}],
+                                "http://schema.org/givenName": [{"@value": "Testi"}],
+                                "http://schema.org/email": [
+                                    {"@value": "test.testi@testis.tests"},
+                                    {"@value": "test.testi@testis.tests2"},
+                                ],
+                            },
+                            {
+                                "@type": "http://schema.org/Person",
+                                "http://schema.org/familyName": [{"@value": "Testers"}],
+                            },
+                        ],
+                    }
+                ),
+            },
+            SoftwareMetadata(
+                {
                     "@type": ["http://schema.org/SoftwareSourceCode"],
                     "http://schema.org/description": [{"@value": "for testing"}],
                     "http://schema.org/name": [{"@value": "Test"}, {"@value": "Testis Test"}],
@@ -116,44 +150,121 @@ def test_process(tmp_path, monkeypatch, metadata_in, metadata_out):
                             "http://schema.org/givenName": [{"@value": "Testi"}],
                             "http://schema.org/email": [
                                 {"@value": "test.testi@testis.tests"},
-                                {"@value": "test.testi@testis.tests2"}
-                            ]
+                                {"@value": "test.testi@testis.tests2"},
+                            ],
+                        },
+                        {"@type": "http://schema.org/Person", "http://schema.org/familyName": [{"@value": "Testers"}]},
+                        {
+                            "@type": "http://schema.org/Person",
+                            "http://schema.org/familyName": [{"@value": "Tester"}],
+                            "http://schema.org/email": [{"@value": "test@tester.tests"}],
+                        },
+                    ],
+                    "http://schema.org/license": [{"@id": "https://spdx.org/licenses/Apache-2.0"}],
+                }
+            ),
+        ),
+        (
+            {
+                "python": SoftwareMetadata(
+                    {
+                        "@type": ["http://schema.org/SoftwareSourceCode"],
+                        "http://schema.org/author": [
+                            {
+                                "@type": "http://schema.org/Person",
+                                "http://schema.org/familyName": [{"@value": "Testers"}],
+                            },
+                            {
+                                "@type": "http://schema.org/Person",
+                                "http://schema.org/familyName": [{"@value": "Tester"}],
+                                "http://schema.org/email": [{"@value": "test@tester.tests"}],
+                            },
+                            {
+                                "@type": "http://schema.org/Person",
+                                "http://schema.org/familyName": [{"@value": "Testis"}],
+                                "http://schema.org/email": [{"@value": "testis.testis@tester.tests"}],
+                            },
+                        ],
+                    }
+                ),
+                "cff": SoftwareMetadata(
+                    {
+                        "@type": ["http://schema.org/SoftwareSourceCode"],
+                        "http://schema.org/name": [{"@value": "Test"}],
+                        "http://schema.org/author": [
+                            {
+                                "@type": "http://schema.org/Person",
+                                "http://schema.org/familyName": [{"@value": "Test"}],
+                                "http://schema.org/email": [{"@value": "test.testi@testis.tests"}],
+                            },
+                            {
+                                "@type": "http://schema.org/Person",
+                                "http://schema.org/familyName": [{"@value": "Testers"}],
+                            },
+                            {
+                                "@type": "http://schema.org/Person",
+                                "http://schema.org/familyName": [{"@value": "Tester"}],
+                                "http://schema.org/email": [{"@value": "test@tester.tests"}],
+                            },
+                        ],
+                        "http://schema.org/license": [{"@id": "https://spdx.org/licenses/Apache-2.0"}],
+                    }
+                ),
+                "codemeta": SoftwareMetadata(
+                    {
+                        "@type": ["http://schema.org/SoftwareSourceCode"],
+                        "http://schema.org/description": [{"@value": "for testing"}],
+                        "http://schema.org/name": [{"@value": "Test"}, {"@value": "Testis Test"}],
+                        "http://schema.org/author": [
+                            {
+                                "@type": "http://schema.org/Person",
+                                "http://schema.org/familyName": [{"@value": "Test"}],
+                                "http://schema.org/givenName": [{"@value": "Testi"}],
+                                "http://schema.org/email": [
+                                    {"@value": "test.testi@testis.tests"},
+                                    {"@value": "test.testi@testis.tests2"},
+                                ],
+                            },
+                            {
+                                "@type": "http://schema.org/Person",
+                                "http://schema.org/familyName": [{"@value": "Testers"}],
+                            },
+                        ],
+                    }
+                ),
+            },
+            SoftwareMetadata(
+                {
+                    "@type": ["http://schema.org/SoftwareSourceCode"],
+                    "http://schema.org/description": [{"@value": "for testing"}],
+                    "http://schema.org/name": [{"@value": "Test"}, {"@value": "Testis Test"}],
+                    "http://schema.org/author": [
+                        {
+                            "@type": "http://schema.org/Person",
+                            "http://schema.org/familyName": [{"@value": "Test"}],
+                            "http://schema.org/givenName": [{"@value": "Testi"}],
+                            "http://schema.org/email": [
+                                {"@value": "test.testi@testis.tests"},
+                                {"@value": "test.testi@testis.tests2"},
+                            ],
+                        },
+                        {"@type": "http://schema.org/Person", "http://schema.org/familyName": [{"@value": "Testers"}]},
+                        {
+                            "@type": "http://schema.org/Person",
+                            "http://schema.org/familyName": [{"@value": "Tester"}],
+                            "http://schema.org/email": [{"@value": "test@tester.tests"}],
                         },
                         {
                             "@type": "http://schema.org/Person",
-                            "http://schema.org/familyName": [{"@value": "Testers"}]
-                        }
-                    ]
-                })
-            },
-            SoftwareMetadata({
-                "@type": ["http://schema.org/SoftwareSourceCode"],
-                "http://schema.org/description": [{"@value": "for testing"}],
-                "http://schema.org/name": [{"@value": "Test"}, {"@value": "Testis Test"}],
-                "http://schema.org/author": [
-                    {
-                        "@type": "http://schema.org/Person",
-                        "http://schema.org/familyName": [{"@value": "Test"}],
-                        "http://schema.org/givenName": [{"@value": "Testi"}],
-                        "http://schema.org/email": [
-                            {"@value": "test.testi@testis.tests"},
-                            {"@value": "test.testi@testis.tests2"}
-                        ]
-                    },
-                    {
-                        "@type": "http://schema.org/Person",
-                        "http://schema.org/familyName": [{"@value": "Testers"}]
-                    },
-                    {
-                        "@type": "http://schema.org/Person",
-                        "http://schema.org/familyName": [{"@value": "Tester"}],
-                        "http://schema.org/email": [{"@value": "test@tester.tests"}]
-                    }
-                ],
-                "http://schema.org/license": [{"@id": "https://spdx.org/licenses/Apache-2.0"}]
-            })
-        )
-    ]
+                            "http://schema.org/familyName": [{"@value": "Testis"}],
+                            "http://schema.org/email": [{"@value": "testis.testis@tester.tests"}],
+                        },
+                    ],
+                    "http://schema.org/license": [{"@id": "https://spdx.org/licenses/Apache-2.0"}],
+                }
+            ),
+        ),
+    ],
 )
 def test_process_complex(tmp_path, monkeypatch, metadata_in, metadata_out):
     monkeypatch.chdir(tmp_path)
@@ -169,8 +280,8 @@ def test_process_complex(tmp_path, monkeypatch, metadata_in, metadata_out):
 
     config_file = tmp_path / "hermes.toml"
     config_file.write_text(
-        "[process]\nplugins=[\"codemeta\"]\n"
-        "[harvest]\nsources = [" + ", ".join('\"' + f'{harvester}' + '\"' for harvester in metadata_in) + "]"
+        '[process]\nplugins=["codemeta"]\n'
+        "[harvest]\nsources = [" + ", ".join('"' + f"{harvester}" + '"' for harvester in metadata_in) + "]"
     )
 
     orig_argv = sys.argv[:]
