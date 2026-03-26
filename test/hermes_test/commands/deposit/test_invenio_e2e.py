@@ -19,7 +19,7 @@ def sandbox_auth(pytestconfig):
     if pytestconfig.getoption("sandbox_auth"):
         yield pytestconfig.getoption("sandbox_auth")
     else:
-        pytest.skip("Local auth token file does not exist.")
+        pytest.skip("No auth token was supplied. Hint: Supply it with --sandbox_auth your_token")
 
 
 @pytest.mark.parametrize(

@@ -10,7 +10,6 @@ from typing import Union
 from pydantic import BaseModel
 
 from hermes.commands.base import HermesCommand, HermesPlugin
-from hermes.error import HermesPluginRunError, MisconfigurationError
 from hermes.model.api import SoftwareMetadata
 from hermes.model.context_manager import HermesContext
 from hermes.model.merge.action import MergeAction
@@ -28,7 +27,7 @@ class ProcessSettings(BaseModel):
     """Generic deposition settings."""
 
     sources: list = []
-    plugins: list = []
+    plugins: list = ["codemeta"]
 
 
 class HermesProcessCommand(HermesCommand):
@@ -43,6 +42,7 @@ class HermesProcessCommand(HermesCommand):
         merged_doc = ld_merge_dict([{}])
 
         self.log.info("## Load and run the plugins")
+        any_strategies_loaded = False
         # add the strategies from the plugins
         for plugin_name in reversed(self.settings.plugins):
             self.log.info(f"### Load {plugin_name} plugin")
@@ -50,22 +50,25 @@ class HermesProcessCommand(HermesCommand):
             try:
                 plugin_func = self.plugins[plugin_name]()
             except KeyError:
-                self.log.error(f"Plugin {plugin_name} not found.")
-                raise MisconfigurationError(f"Postprocess plugin {plugin_name} not found.")
+                self.log.warning(f"Plugin {plugin_name} not found, skipping it now.")
+                continue
 
             self.log.info(f"### Run {plugin_name} plugin")
             # run plugin
             try:
                 additional_strategies = plugin_func(self)
-            except Exception as e:
-                self.log.error(f"Unknown error while executing the {plugin_name} plugin.")
-                raise HermesPluginRunError(
-                    f"Something went wrong while running the postprocess plugin {plugin_name}"
-                ) from e
+            except Exception:
+                self.log.warning(f"Unknown error while executing the {plugin_name} plugin, skipping it now.")
+                continue
 
             self.log.info(f"### Add the strategies to the merge document {plugin_name} plugin")
             # add strategies to the merge document
             merged_doc.add_strategy(additional_strategies)
+            any_strategies_loaded = True
+
+        if not any_strategies_loaded:
+            self.log.error("No process plugin was ran successfully.")
+            raise RuntimeError("No process plugin was ran successfully.")
 
         ctx = HermesContext()
         ctx.prepare_step('harvest')
@@ -91,13 +94,14 @@ class HermesProcessCommand(HermesCommand):
             merged_any = True
 
         # error if nothing was merged
-        if not merged_any:
+        if harvester_names and not merged_any:
             self.log.error(
                 f"""No metadata has been merged. {
                     "No harvesters to merge from were supplied" if not harvester_names else
                     "The merging failed for all harvesters."
                 }"""
             )
+            raise RuntimeError("No metadata has been merged.")
 
         self.log.info("## Store processed metadata")
         # store processed data

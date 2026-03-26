@@ -9,7 +9,6 @@ import argparse
 from pydantic import BaseModel
 
 from hermes.commands.base import HermesCommand, HermesPlugin
-from hermes.error import HermesPluginRunError, MisconfigurationError
 from hermes.model.context_manager import HermesContext
 from hermes.model import SoftwareMetadata
 
@@ -42,33 +41,37 @@ class HermesHarvestCommand(HermesCommand):
 
         if len(self.settings.sources) == 0:
             self.log.info("# No plugin was configured to be run and loaded.")
+            return
 
         # Initialize the harvest cache directory here to indicate the step ran
         ctx = HermesContext()
         ctx.prepare_step('harvest')
 
         self.log.info("## Load and run the plugins")
+        harvested_any = False
         for plugin_name in self.settings.sources:
             self.log.info(f"### Load {plugin_name} plugin")
             # load plugin
             try:
                 plugin_func = self.plugins[plugin_name]()
             except KeyError:
-                self.log.error(f"Plugin {plugin_name} not found.")
-                raise MisconfigurationError(f"Harvest plugin {plugin_name} not found.")
+                self.log.warning(f"Plugin {plugin_name} not found, skipping it now.")
+                continue
 
             self.log.info(f"### Run {plugin_name} plugin")
             # run plugin
             try:
                 harvested_data = plugin_func(self)
-            except Exception as e:
-                self.log.error(f"Unknown error while executing the {plugin_name} plugin.")
-                raise HermesPluginRunError(
-                    f"Something went wrong while running the harvest plugin {plugin_name}"
-                ) from e
+            except Exception:
+                self.log.warning(f"Unknown error while executing the {plugin_name} plugin, skipping it now.")
+                continue
 
             self.log.info(f"### Store metadata harvested by {plugin_name} plugin")
             # store harvested data
             harvested_data.write_to_cache(ctx, plugin_name)
+            harvested_any = True
 
         ctx.finalize_step('harvest')
+        if not harvested_any:
+            self.log.error("No harvest plugin ran successfully.")
+            raise RuntimeError("No harvest plugin ran successfully.")
