@@ -20,6 +20,7 @@ from hermes.commands.deposit.base import BaseDepositPlugin
 from hermes.commands.deposit.error import DepositionUnauthorizedError
 from hermes.error import MisconfigurationError
 from hermes.model.error import HermesValidationError
+from hermes.model.types import ld_dict
 from hermes.utils import hermes_doi, hermes_user_agent
 
 
@@ -208,6 +209,9 @@ class InvenioResolver:
 
         if license_url is None:
             return None
+
+        if isinstance(license_url, (dict, ld_dict)) and [*license_url.keys()] == ["@id"]:
+            license_url = license_url["@id"]
 
         if not isinstance(license_url, str):
             raise RuntimeError(

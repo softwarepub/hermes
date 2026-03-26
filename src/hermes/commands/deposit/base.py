@@ -154,5 +154,5 @@ class HermesDepositCommand(HermesCommand):
         except HermesValidationError as e:
             self.log.error(f"Error while executing {plugin_name}: {e}")
             raise HermesPluginRunError(
-                f"Something went wrong while running the curate plugin {self.settings.plugin}"
+                f"Something went wrong while running the deposit plugin {self.settings.plugin}"
             ) from e
