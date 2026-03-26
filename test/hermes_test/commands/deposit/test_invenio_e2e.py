@@ -5,7 +5,6 @@
 # SPDX-FileContributor: Michael Fritzsche
 
 from datetime import date
-from pathlib import Path
 import sys
 
 import pytest
@@ -16,12 +15,11 @@ from hermes.model.api import SoftwareMetadata
 
 
 @pytest.fixture
-def sandbox_auth():
-    path = Path("./../auth.txt")
-    if not path.exists():
+def sandbox_auth(pytestconfig):
+    if pytestconfig.getoption("sandbox_auth"):
+        yield pytestconfig.getoption("sandbox_auth")
+    else:
         pytest.skip("Local auth token file does not exist.")
-    with path.open() as f:
-        yield f.read()
 
 
 @pytest.mark.parametrize(
