@@ -862,8 +862,9 @@ CODEMETA_STRATEGY[iri["schema:CreditCard"]] = {
 class CodemetaProcessPlugin(HermesProcessPlugin):
     def __call__(self, command: HermesCommand) -> dict[Union[str, None], dict[Union[str, None], MergeAction]]:
         try:
-            strats = CodemetaProcessPlugin.get_schema_strategies()
-            strats.update(CodemetaProcessPlugin.get_codemeta_strategies())
+            subtypes_for_types = CodemetaProcessPlugin.get_schema_type_hierarchy()
+            strats = CodemetaProcessPlugin.get_schema_strategies(subtypes_for_types)
+            strats.update(CodemetaProcessPlugin.get_codemeta_strategies(subtypes_for_types))
             strats[None] = {None: MergeSet(DEFAULT_MATCH)}
         except Exception:
             strats = {**CODEMETA_STRATEGY}
@@ -872,10 +873,7 @@ class CodemetaProcessPlugin(HermesProcessPlugin):
         return strats
 
     @classmethod
-    def get_schema_strategies(cls):
-        # get a set of all types that have to be handled separately
-        special_types = set(MATCH_FUNCTION_FOR_TYPE.keys())
-
+    def get_schema_type_hierarchy(cls):
         # get and read csv file containing information on schema.org types
         # switch to schemaorg-current-https-types.csv on change of standard context in HERMES
         download = requests.get("https://schema.org/version/latest/schemaorg-current-http-types.csv")
@@ -897,6 +895,12 @@ class CodemetaProcessPlugin(HermesProcessPlugin):
             for other_type in subtypes_for_types:
                 if super_type in subtypes_for_types[other_type]:
                     subtypes_for_types[other_type].update(subtypes_for_types[super_type])
+        return subtypes_for_types
+
+    @classmethod
+    def get_schema_strategies(cls, subtypes_for_types):
+        # get a set of all types that have to be handled separately
+        special_types = set(MATCH_FUNCTION_FOR_TYPE.keys())
 
         # get and read csv file containing information on schema.org properties
         # switch to schemaorg-current-https-properties.csv on change of standard context in HERMES
@@ -933,6 +937,39 @@ class CodemetaProcessPlugin(HermesProcessPlugin):
         return strategies
 
     @classmethod
-    def get_codemeta_strategies(cls):
-        # FIXME: implement
-        return {}
+    def get_codemeta_strategies(cls, subtypes_for_types):
+        # get a set of all types that have to be handled separately
+        special_types = set(MATCH_FUNCTION_FOR_TYPE.keys())
+
+        # FIXME: change URL on change of context to codemeta 3.0
+        download = requests.get("https://github.com/codemeta/codemeta/blob/2.0/crosswalk.csv")
+        decoded_content = download.content.decode('utf-8')
+        cr = csv.reader(decoded_content.splitlines(), delimiter=',')
+        # remove the first line (headers)
+        property_table = list(cr)[1:]
+        strategies = {}
+        for property_row in property_table:
+            if property_row[0] == "schema" or len(property_row[0]) == 0:
+                # skip empty rows
+                continue
+            # generate a set of all types this property can have values of
+            shallow_range_types = set(iri["schema:" + range_type] for range_type in property_row[2].split(" or "))
+            range_types = shallow_range_types.union(
+                *(subtypes_for_types.get(range_type, set()) for range_type in shallow_range_types)
+            )
+            # get all special types this property can have values of
+            special_range_types = special_types.intersection(range_types)
+            # if there is a special range type this property needs a special match function
+            if len(special_range_types) != 0:
+                # construct the match function
+                match_function = MergeSet(match_multiple_types(
+                    *((range_type, MATCH_FUNCTION_FOR_TYPE[range_type]) for range_type in special_range_types),
+                    fall_back_function=DEFAULT_MATCH
+                ))
+                # iterate over a set of all types this property can occur in
+                shallow_domain_type = {iri[property_row[0]]}
+                for domain_type in shallow_domain_type.union(subtypes_for_types.get(shallow_domain_type, set())):
+                    # add the match function to the types match functions
+                    strategies.setdefault(domain_type, {})[iri[property_row[1]]] = match_function
+        # return the strategies
+        return strategies
