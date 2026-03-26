@@ -329,7 +329,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
             )
             if rec_id is None and rec_meta == {}:
                 rec_id, rec_meta = tmp_rec_id, tmp_rec_meta
-            elif (tmp_rec_id is not None or tmp_rec_meta != {}) and(rec_id != tmp_rec_id or rec_meta != tmp_rec_meta):
+            elif (tmp_rec_id is not None or tmp_rec_meta != {}) and (rec_id != tmp_rec_id or rec_meta != tmp_rec_meta):
                 # FIXME: Maybe finding different record ids is not fatal?
                 raise HermesValidationError("Found two different record ids or conflicting metadata.")
 
