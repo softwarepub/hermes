@@ -10,6 +10,7 @@ from typing import Union
 from pydantic import BaseModel
 
 from hermes.commands.base import HermesCommand, HermesPlugin
+from hermes.error import HermesPluginRunError
 from hermes.model.api import SoftwareMetadata
 from hermes.model.context_manager import HermesContext
 from hermes.model.merge.action import MergeAction
@@ -90,7 +91,11 @@ class HermesProcessCommand(HermesCommand):
 
             self.log.info(f"## Merge data from {harvester} plugin")
             # merge data into the merge dict
-            merged_doc.update(metadata)
+            try:
+                merged_doc.update(metadata)
+            except Exception as e:
+                self.log.error(f"Merging the data from {harvester} plugin resulted in an error.")
+                raise HermesPluginRunError(f"Merging the data from {harvester} plugin failed.") from e
             merged_any = True
 
         # error if nothing was merged
