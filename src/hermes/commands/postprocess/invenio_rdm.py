@@ -8,7 +8,7 @@
 
 import logging
 
-import toml
+import tomlkit
 
 from hermes.error import MisconfigurationError
 from hermes.model.context_manager import HermesContext
@@ -27,7 +27,7 @@ class config_record_id(HermesPostprocessPlugin):
             deposition = manager["result"]
         ctx.finalize_step("deposit")
 
-        conf = toml.load(open('hermes.toml', 'r'))
+        conf = tomlkit.load(open('hermes.toml', 'r'))
         try:
             old_record_id = conf["deposit"]["invenio_rdm"]["record_id"]
             if old_record_id == deposition["record_id"]:
@@ -40,4 +40,4 @@ class config_record_id(HermesPostprocessPlugin):
         except KeyError:
             pass
         conf.setdefault("deposit", {}).setdefault("invenio_rdm", {})["record_id"] = deposition['record_id']
-        toml.dump(conf, open('hermes.toml', 'w'))
+        tomlkit.dump(conf, open('hermes.toml', 'w'))

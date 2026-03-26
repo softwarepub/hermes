@@ -36,16 +36,34 @@ def test_invenio_postprocess(tmp_path, monkeypatch):
 
     config_file = tmp_path / "hermes.toml"
     config_file.write_text(
-        """[postprocess]
-run = ["config_invenio_record_id", "cff_doi", "codemeta_doi"]
+        """# SPDX-FileCopyrightText: 2023 German Aerospace Center (DLR)
+#
+# SPDX-License-Identifier: CC0-1.0
+
+[harvest]
+sources = [ "cff", "toml" ] # ordered priority (first one is most important)
+
+[curate]
+plugin = "pass_curate"
+
+[deposit]
+target = "invenio"
+
 [deposit.invenio]
-site_url = "https://zenodo.org"
+site_url = "https://sandbox.zenodo.org"
+
+[deposit.invenio.api_paths]
+depositions = "api/deposit/depositions"
+licenses = "api/vocabularies/licenses"
+communities = "api/communities"
+
+[postprocess]
+run = ["config_invenio_record_id", "cff_doi", "codemeta_doi"]
 """
     )
 
     orig_argv = sys.argv[:]
     sys.argv = ["hermes", "postprocess", "--path", str(tmp_path), "--config", str(config_file)]
-    print(" ".join(sys.argv))
     result_cff = result_toml = {}
     try:
         monkeypatch.setattr(context_manager.HermesContext.__init__, "__defaults__", (tmp_path.cwd(),))
@@ -60,11 +78,30 @@ site_url = "https://zenodo.org"
         sys.argv = orig_argv
 
     assert result_toml == toml.loads(
-        """[postprocess]
-run = ["config_invenio_record_id", "cff_doi", "codemeta_doi"]
+        """# SPDX-FileCopyrightText: 2023 German Aerospace Center (DLR)
+#
+# SPDX-License-Identifier: CC0-1.0
+
+[harvest]
+sources = [ "cff", "toml" ] # ordered priority (first one is most important)
+
+[curate]
+plugin = "pass_curate"
+
+[deposit]
+target = "invenio"
+
 [deposit.invenio]
-site_url = "https://zenodo.org"
+site_url = "https://sandbox.zenodo.org"
 record_id = "foo"
+
+[deposit.invenio.api_paths]
+depositions = "api/deposit/depositions"
+licenses = "api/vocabularies/licenses"
+communities = "api/communities"
+
+[postprocess]
+run = ["config_invenio_record_id", "cff_doi", "codemeta_doi"]
 """
     )
     assert result_cff == yaml.YAML().load(
