@@ -6,6 +6,7 @@
 # SPDX-FileContributor: Michael Fritzsche
 # SPDX-FileContributor: Stephan Druskat
 
+import json
 import logging
 
 from ruamel.yaml import YAML
@@ -71,5 +72,30 @@ class cff_doi(HermesPostprocessPlugin):
             else:
                 cff['identifiers'] = [new_identifier]
             yaml.dump(cff, open('CITATION.cff', 'w'))
+        except Exception as e:
+            raise RuntimeError("Update of CITATION.cff failed.") from e
+
+
+class codemeta_doi(HermesPostprocessPlugin):
+    def __call__(self, command: HermesCommand):
+        ctx = HermesContext()
+        ctx.prepare_step("deposit")
+        with ctx["invenio"] as manager:
+            deposition = manager["result"]
+        ctx.finalize_step("deposit")
+
+        try:
+            with open("codemeta.json", "r") as file:
+                codemeta = json.load(file)
+            if "@id" not in codemeta:
+                codemeta["@id"] = deposition['doi']
+            if "referencePublication" not in codemeta:
+                codemeta["referencePublication"] = deposition['doi']
+            elif isinstance(codemeta["referencePublication"], list):
+                codemeta["referencePublication"].append(deposition['doi'])
+            else:
+                codemeta["referencePublication"] = [codemeta["referencePublication"], deposition['doi']]
+            with open("codemeta.json", "w") as file:
+                json.dump(codemeta, file)
         except Exception as e:
             raise RuntimeError("Update of CITATION.cff failed.") from e
