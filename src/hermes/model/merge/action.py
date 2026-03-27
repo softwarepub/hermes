@@ -275,6 +275,7 @@ class MergeSet(MergeAction):
         # Return the merged values.
         return value
 
+
 class IdMerge(MergeAction):
     """ :class:`MergeAction` providing a merge function for merging ids, i.e. error if not equals else do nothing. """
     def merge(

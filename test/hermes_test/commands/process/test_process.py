@@ -138,7 +138,7 @@ from hermes.model import context_manager, SoftwareMetadata
                         "legalName": "hermes",
                         "version": "0.9.0"
                     },
-                    extra_vocabs = {"legalName": {"@id": "http://schema.org/name"}}
+                    extra_vocabs={"legalName": {"@id": "http://schema.org/name"}}
                 )
             },
             SoftwareMetadata(
@@ -196,7 +196,7 @@ from hermes.model import context_manager, SoftwareMetadata
                     "legalName": "hermes",
                     "version": "0.9.0"
                 },
-                extra_vocabs = {"legalName": {"@id": "http://schema.org/name"}}
+                extra_vocabs={"legalName": {"@id": "http://schema.org/name"}}
             ),
         )
     ],
