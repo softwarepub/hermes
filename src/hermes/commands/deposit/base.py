@@ -144,7 +144,7 @@ class HermesDepositCommand(HermesCommand):
         try:
             plugin_func = self.plugins[plugin_name]()
         except KeyError:
-            self.log.error(f"Plugin {plugin_name} not found.")
+            self.log.critical(f"## Deposit plugin {plugin_name} not found.")
             raise MisconfigurationError(f"Deposit plugin {self.settings.plugin} not found.")
 
         self.log.info(f"## Run deposit plugin {plugin_name}")
@@ -152,7 +152,7 @@ class HermesDepositCommand(HermesCommand):
         try:
             plugin_func(self)
         except HermesValidationError as e:
-            self.log.error(f"Error while executing {plugin_name}: {e}")
+            self.log.critical(f"## Error while executing {plugin_name} plugin.", exc_info=1)
             raise HermesPluginRunError(
                 f"Something went wrong while running the deposit plugin {self.settings.plugin}"
             ) from e

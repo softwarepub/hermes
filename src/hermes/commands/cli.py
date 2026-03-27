@@ -76,15 +76,20 @@ def main() -> None:
 
         log.info("Run subcommand %s", args.command.command_name)
         args.command(args)
-    except HermesPluginRunError as e:
-        log.error("An error occurred during the execution of a plugin %s (Find details in './hermes.log')",
-                  args.command.command_name)
-        log.debug("Original exception was: %s", e)
+    except HermesPluginRunError:
+        log.critical(
+            "An error occurred during the execution of the %s command (Find details in './hermes.log')",
+            args.command.command_name,
+            exc_info=1
+        )
         sys.exit(2)
-    except Exception as e:
-        log.error("An error occurred during execution of %s (Find details in './hermes.log')",
-                  args.command.command_name)
-        log.debug("Original exception was: %s", e)
+    except Exception:
+        log.critical(
+            "An error occurred during execution of the %s command (Find details in './hermes.log')",
+            args.command.command_name,
+            exc_info=1
+        )
         sys.exit(1)
 
+    log.info("Finished run of %s command successfully.", args.command.command_name)
     sys.exit(0)

@@ -69,7 +69,7 @@ def init_logging():
         _loggers[log_name] = logging.getLogger(log_name)
 
 
-def getLogger(log_name):
+def getLogger(log_name) -> logging.Logger:
     init_logging()
     if log_name not in _loggers:
         _loggers[log_name] = logging.getLogger(log_name)

@@ -9,6 +9,7 @@ import argparse
 from pydantic import BaseModel
 
 from hermes.commands.base import HermesCommand, HermesPlugin
+from hermes.error import HermesPluginRunError, MisconfigurationError
 from hermes.model.context_manager import HermesContext
 from hermes.model import SoftwareMetadata
 
@@ -40,8 +41,8 @@ class HermesHarvestCommand(HermesCommand):
         self.args = args
 
         if len(self.settings.sources) == 0:
-            self.log.info("# No plugin was configured to be run and loaded.")
-            return
+            self.log.critical("# No harvest plugin was configured to be run and loaded.")
+            raise MisconfigurationError("No harvest plugin was configured to be run and loaded.")
 
         # Initialize the harvest cache directory here to indicate the step ran
         ctx = HermesContext()
@@ -55,7 +56,7 @@ class HermesHarvestCommand(HermesCommand):
             try:
                 plugin_func = self.plugins[plugin_name]()
             except KeyError:
-                self.log.warning(f"Plugin {plugin_name} not found, skipping it now.")
+                self.log.error(f"### Plugin {plugin_name} not found, skipping it now.")
                 continue
 
             self.log.info(f"### Run {plugin_name} plugin")
@@ -63,7 +64,7 @@ class HermesHarvestCommand(HermesCommand):
             try:
                 harvested_data = plugin_func(self)
             except Exception:
-                self.log.warning(f"Unknown error while executing the {plugin_name} plugin, skipping it now.")
+                self.log.exception(f"### Unknown error while executing the {plugin_name} plugin, skipping it now.")
                 continue
 
             self.log.info(f"### Store metadata harvested by {plugin_name} plugin")
@@ -73,5 +74,5 @@ class HermesHarvestCommand(HermesCommand):
 
         ctx.finalize_step('harvest')
         if not harvested_any:
-            self.log.error("No harvest plugin ran successfully.")
-            raise RuntimeError("No harvest plugin ran successfully.")
+            self.log.critical("No harvest plugin ran successfully.")
+            raise HermesPluginRunError("No harvest plugin ran successfully.")

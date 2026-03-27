@@ -47,7 +47,10 @@ class HermesCurateCommand(HermesCommand):
         try:
             metadata = SoftwareMetadata.load_from_cache(ctx, "result")
         except Exception as e:
-            self.log.error("The data from the process step could not be loaded or is invalid for some reason.")
+            self.log.critical(
+                "## The data from the process step could not be loaded or is invalid for some reason.",
+                exc_info=1
+            )
             raise HermesValidationError("The results of the process step are invalid.") from e
         ctx.finalize_step("process")
 
@@ -56,7 +59,7 @@ class HermesCurateCommand(HermesCommand):
         try:
             plugin_func = self.plugins[plugin_name]()
         except KeyError:
-            self.log.error(f"Plugin {plugin_name} not found.")
+            self.log.error(f"## Curate plugin {plugin_name} not found.")
             raise MisconfigurationError(f"Curate plugin {plugin_name} not found.")
 
         self.log.info(f"## Run curation plugin {plugin_name}")
@@ -64,7 +67,7 @@ class HermesCurateCommand(HermesCommand):
         try:
             curated_metadata = plugin_func(self, metadata)
         except Exception as e:
-            self.log.error(f"Unknown error while executing the {plugin_name} plugin.")
+            self.log.critical(f"## Unknown error while executing the {plugin_name} plugin.", exc_info=1)
             raise HermesPluginRunError(f"Something went wrong while running the curate plugin {plugin_name}") from e
 
         self.log.info("## Store curated data")
