@@ -11,7 +11,7 @@ from typing import Any, Callable, Union
 import requests
 
 from hermes.commands.base import HermesCommand
-from hermes.model.merge.action import Concat, MergeAction, MergeSet
+from hermes.model.merge.action import Concat, IdMerge, MergeAction, MergeSet
 from hermes.model.types import ld_dict
 from hermes.model.types.ld_context import iri_map as iri
 from .base import HermesProcessPlugin
@@ -242,7 +242,7 @@ PROV_STRATEGY = {
 
 # Filled with entries for every schema-type that can be found inside an JSON-LD dict of type
 # SoftwareSourceCode or SoftwareApplication using schema and CodeMeta as Context.
-CODEMETA_STRATEGY = {None: {None: ACTIONS["default"]}}
+CODEMETA_STRATEGY = {None: {None: ACTIONS["default"], "@id": IdMerge()}}
 """ dict[str | None, dict[str | None, MergeAction]]: MergeActions for the standard JSON_LD contexts objects. """
 CODEMETA_STRATEGY[iri["schema:Thing"]] = {iri["schema:owner"]: ACTIONS["OrganizationOrPerson"]}
 
@@ -865,7 +865,7 @@ class CodemetaProcessPlugin(HermesProcessPlugin):
             subtypes_for_types = CodemetaProcessPlugin.get_schema_type_hierarchy()
             strats = CodemetaProcessPlugin.get_schema_strategies(subtypes_for_types)
             strats.update(CodemetaProcessPlugin.get_codemeta_strategies(subtypes_for_types))
-            strats[None] = {None: MergeSet(DEFAULT_MATCH)}
+            strats[None] = {None: MergeSet(DEFAULT_MATCH), "@id": IdMerge()}
         except Exception:
             strats = {**CODEMETA_STRATEGY}
         for key, value in PROV_STRATEGY.items():
@@ -942,14 +942,14 @@ class CodemetaProcessPlugin(HermesProcessPlugin):
         special_types = set(MATCH_FUNCTION_FOR_TYPE.keys())
 
         # FIXME: change URL on change of context to codemeta 3.0
-        download = requests.get("https://github.com/codemeta/codemeta/blob/2.0/crosswalk.csv")
+        download = requests.get("https://raw.githubusercontent.com/codemeta/codemeta/blob/2.0/crosswalk.csv")
         decoded_content = download.content.decode('utf-8')
         cr = csv.reader(decoded_content.splitlines(), delimiter=',')
         # remove the first line (headers)
         property_table = list(cr)[1:]
         strategies = {}
         for property_row in property_table:
-            if property_row[0] == "schema" or len(property_row[0]) == 0:
+            if property_row[0] in ("schema", ""):
                 # skip empty rows
                 continue
             # generate a set of all types this property can have values of

@@ -28,7 +28,7 @@ class MergeAction:
         self: Self,
         target: ld_merge_dict,
         key: list[Union[str, int]],
-        value: ld_merge_list,
+        value: Union[ld_merge_list, str],
         update: Union[BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]
     ) -> Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]:
         """
@@ -39,7 +39,7 @@ class MergeAction:
             target (ld_merge_dict): The ld_merge_dict inside of which the items are merged.
             key (list[str | int]): The "path" of keys so that ``target[key[-1]]`` is ``value`` and for the outermost
                 parent of ``target`` out_parent ``out_parent[key[0]]...[key[-1]]`` results in ``value``.
-            value (ld_merge_list): The value inside ``target`` that is to be merged with ``update``.
+            value (ld_merge_list | str): The value inside ``target`` that is to be merged with ``update``.
             update (BASIC_TYPE | TIME_TYPE | ld_dict | ld_list): The value that is to be merged into ``target``
                 with ``value``.
 
@@ -56,7 +56,7 @@ class Reject(MergeAction):
         self: Self,
         target: ld_merge_dict,
         key: list[Union[str, int]],
-        value: ld_merge_list,
+        value: Union[ld_merge_list, str],
         update: Union[BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]
     ) -> ld_merge_list:
         """
@@ -67,16 +67,17 @@ class Reject(MergeAction):
             target (ld_merge_dict): The ld_merge_dict inside of which the items are merged.
             key (list[str | int]): The "path" of keys so that ``target[key[-1]]`` is ``value`` and for the outermost
                 parent of ``target`` out_parent ``out_parent[key[0]]...[key[-1]]`` results in ``value``.
-            value (ld_merge_list): The value inside ``target`` that is to be merged with ``update``.
+            value (ld_merge_list | str): The value inside ``target`` that is to be merged with ``update``.
                 This value won't be changed.
             update (BASIC_TYPE | TIME_TYPE | ld_dict | ld_list): The value that is to be merged into ``target`` with
                 ``value``. This value will be rejected.
 
         Returns:
-            ld_merge_list: The merged value. This value will always be ``value``.
+            ld_merge_list | str: The merged value. This value will always be ``value``.
         """
-        # Add the entry that data has been rejected.
-        target.reject(key, update)
+        if value != update:
+            # Add the entry that data has been rejected.
+            target.reject(key, update)
         # Return value unchanged.
         return value
 
@@ -87,7 +88,7 @@ class Replace(MergeAction):
         self: Self,
         target: ld_merge_dict,
         key: list[Union[str, int]],
-        value: ld_merge_list,
+        value: Union[ld_merge_list, str],
         update: Union[BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]
     ) -> Union[BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]:
         """
@@ -98,7 +99,7 @@ class Replace(MergeAction):
             target (ld_merge_dict): The ld_merge_dict inside of which the items are merged.
             key (list[str | int]): The "path" of keys so that ``target[key[-1]]`` is ``value`` and for the outermost
                 parent of ``target`` out_parent ``out_parent[key[0]]...[key[-1]]`` results in ``value``.
-            value (ld_merge_list): The value inside ``target`` that is to be merged with ``update``.
+            value (ld_merge_list | str): The value inside ``target`` that is to be merged with ``update``.
                 This value will bew replaced.
             update (BASIC_TYPE | TIME_TYPE | ld_dict | ld_list): The value that is to be merged into ``target`` with
                 ``value``. This value will be used instead of ``value``.
@@ -106,8 +107,9 @@ class Replace(MergeAction):
         Returns:
             BASIC_TYPE | TIME_TYPE | ld_dict | ld_list: The merged value. This value will be ``update``.
         """
-        # Add the entry that data has been replaced.
-        target.replace(key, value)
+        if value != update:
+            # Add the entry that data has been replaced.
+            target.replace(key, value)
         # Return the new value.
         return update
 
@@ -118,7 +120,7 @@ class Concat(MergeAction):
         self: Self,
         target: ld_merge_dict,
         key: list[Union[str, int]],
-        value: ld_merge_list,
+        value: Union[ld_merge_list, str],
         update: Union[BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]
     ) -> ld_merge_list:
         """
@@ -128,12 +130,12 @@ class Concat(MergeAction):
             target (ld_merge_dict): The ld_merge_dict inside of which the items are merged.
             key (list[str | int]): The "path" of keys so that ``target[key[-1]]`` is ``value`` and for the outermost
                 parent of ``target`` out_parent ``out_parent[key[0]]...[key[-1]]`` results in ``value``.
-            value (ld_merge_list): The value inside ``target`` that is to be merged with ``update``.
+            value (ld_merge_list | str): The value inside ``target`` that is to be merged with ``update``.
             update (BASIC_TYPE | TIME_TYPE | ld_dict | ld_list): The value that is to be merged into ``target``
                 with ``value``.
 
         Returns:
-            ld_merge_list: The merged value (``value`` concatenated with ``update``).
+            ld_merge_list | str: The merged value (``value`` concatenated with ``update``).
         """
         # Concatenate the items and return the result.
         if isinstance(update, (list, ld_list)):
@@ -173,7 +175,7 @@ class Collect(MergeAction):
         self: Self,
         target: ld_merge_dict,
         key: list[Union[str, int]],
-        value: ld_merge_list,
+        value: Union[ld_merge_list, str],
         update: Union[BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]
     ) -> ld_merge_list:
         """
@@ -183,12 +185,12 @@ class Collect(MergeAction):
             target (ld_merge_dict): The ld_merge_dict inside of which the items are merged.
             key (list[str | int]): The "path" of keys so that ``target[key[-1]]`` is ``value`` and for the outermost
                 parent of ``target`` out_parent ``out_parent[key[0]]...[key[-1]]`` results in ``value``.
-            value (ld_merge_list): The value inside ``target`` that is to be merged with ``update``.
+            value (ld_merge_list | str): The value inside ``target`` that is to be merged with ``update``.
             update (BASIC_TYPE | TIME_TYPE | ld_dict | ld_list): The value that is to be merged into ``target``
                 with ``value``.
 
         Returns:
-            ld_merge_list: The merged value.
+            ld_merge_list | str: The merged value.
         """
         if not isinstance(update, (list, ld_list)):
             update = [update]
@@ -235,7 +237,7 @@ class MergeSet(MergeAction):
         self: Self,
         target: ld_merge_dict,
         key: list[Union[str, int]],
-        value: ld_merge_list,
+        value: Union[ld_merge_list, str],
         update: Union[BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]
     ) -> ld_merge_list:
         """
@@ -245,12 +247,12 @@ class MergeSet(MergeAction):
             target (ld_merge_dict): The ld_merge_dict inside of which the items are merged.
             key (list[str | int]): The "path" of keys so that ``target[key[-1]]`` is ``value`` and for the outermost
                 parent of ``target`` out_parent out_parent[key[0]]...[key[-1]] results in ``value``.
-            value (ld_merge_list): The value inside ``target`` that is to be merged with ``update``.
+            value (ld_merge_list | str): The value inside ``target`` that is to be merged with ``update``.
             update (BASIC_TYPE | TIME_TYPE | ld_dict | ld_list): The value that is to be merged into ``target``
                 with ``value``.
 
         Returns:
-            ld_merge_list: The merged value.
+            ld_merge_list | str: The merged value.
         """
         if not isinstance(update, (list, ld_list)):
             update = [update]
@@ -271,4 +273,33 @@ class MergeSet(MergeAction):
             else:
                 value.append(update_item)
         # Return the merged values.
+        return value
+
+class IdMerge(MergeAction):
+    """ :class:`MergeAction` providing a merge function for merging ids, i.e. error if not equals else do nothing. """
+    def merge(
+        self: Self,
+        target: ld_merge_dict,
+        key: list[Union[str, int]],
+        value: Union[ld_merge_list, str],
+        update: Union[BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]
+    ) -> ld_merge_list:
+        """
+        Error if value != update or key != "@id". Else do nothing.
+
+        Args:
+            target (ld_merge_dict): The ld_merge_dict inside of which the items are merged.
+            key (list[str | int]): The "path" of keys so that ``target[key[-1]]`` is ``value`` and for the outermost
+                parent of ``target`` out_parent out_parent[key[0]]...[key[-1]] results in ``value``.
+            value (ld_merge_list | str): The value inside ``target`` that is to be merged with ``update``.
+            update (BASIC_TYPE | TIME_TYPE | ld_dict | ld_list): The value that is to be merged into ``target``
+                with ``value``.
+
+        Returns:
+            ld_merge_list | str: The merged value.
+        """
+        if key[-1] != "@id":
+            raise MergeError("Can't merge non-'@id' values.")
+        if value != update:
+            raise MergeError("Two different '@id' values are merged into the same object.")
         return value

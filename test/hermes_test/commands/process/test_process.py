@@ -48,6 +48,156 @@ from hermes.model import context_manager, SoftwareMetadata
                     "http://schema.org/license": [{"@id": "https://spdx.org/licenses/Apache-2.0"}],
                 }
             ),
+        ),
+        (
+            {
+                "cff": SoftwareMetadata(
+                    {
+                        "type": "SoftwareSourceCode",
+                        "author": [
+                            {
+                                "id": "https://orcid.org/0000-0003-4925-7248",
+                                "type": "Person",
+                                "affiliation": {
+                                    "type": "Organization",
+                                    "name": "German Aerospace Center (DLR)"
+                                },
+                                "email": "stephan.druskat@dlr.de"
+                            },
+                            {
+                                "type": "Person",
+                                "affiliation": {
+                                    "type": "Organization",
+                                    "name": "Forschungszentrum J\u00c3\u00bclich"
+                                },
+                                "email": "o.bertuch@fz-juelich.de",
+                                "givenName": "Oliver"
+                            },
+                            {
+                                "id": "https://orcid.org/0000-0001-8174-7795",
+                                "type": "Person",
+                                "email": "o.knodel@hzdr.de",
+                                "familyName": "Knodel",
+                                "givenName": "Oliver"
+                            }
+                        ],
+                        "description": "Tool to automate software publication. Not stable yet.",
+                        "identifier": "https://doi.org/10.5281/zenodo.13221384",
+                        "license": "https://spdx.org/licenses/Apache-2.0"
+                    }
+                ),
+                "codemeta": SoftwareMetadata(
+                    {
+                        "type": "SoftwareSourceCode",
+                        "author": [
+                            {
+                                "id": "https://orcid.org/0000-0001-6372-3853",
+                                "type": "Person",
+                                "affiliation": {
+                                    "type": "Organization",
+                                    "legalName": "German Aerospace Center (DLR)"
+                                },
+                                "email": "michael.meinel@dlr.de",
+                                "familyName": "Meinel",
+                                "givenName": "Michael"
+                            },
+                            {
+                                "id": "https://orcid.org/0000-0003-4925-7248",
+                                "type": "Person",
+                                "affiliation": {
+                                    "type": "Organization",
+                                    "legalName": "German Aerospace Center (DLR)"
+                                },
+                                "email": "stephan.druskat@dlr.de",
+                                "familyName": "Druskat",
+                                "givenName": "Stephan"
+                            },
+                            {
+                                "id": "https://orcid.org/0000-0002-2702-3419",
+                                "type": "Person",
+                                "affiliation": {
+                                    "type": "Organization",
+                                    "legalName": "Forschungszentrum J\u00c3\u00bclich"
+                                },
+                                "email": "o.bertuch@fz-juelich.de",
+                                "familyName": "Bertuch"
+                            },
+                            {
+                                "id": "https://orcid.org/0000-0001-8174-7795",
+                                "type": "Person",
+                                "affiliation": {
+                                    "type": "Organization",
+                                    "legalName": "Helmholtz-Zentrum Dresden-Rossendorf (HZDR)"
+                                },
+                                "familyName": "Knodel",
+                                "givenName": "Oliver"
+                            }
+                        ],
+                        "identifier": "https://doi.org/10.5281/zenodo.13221384",
+                        "license": "https://spdx.org/licenses/Apache-2.0",
+                        "legalName": "hermes",
+                        "version": "0.9.0"
+                    },
+                    extra_vocabs = {"legalName": {"@id": "http://schema.org/name"}}
+                )
+            },
+            SoftwareMetadata(
+                {
+                    "type": "SoftwareSourceCode",
+                    "schema:author": [
+                        {
+                            "id": "https://orcid.org/0000-0001-6372-3853",
+                            "type": "Person",
+                            "affiliation": {
+                                "type": "Organization",
+                                "legalName": "German Aerospace Center (DLR)"
+                            },
+                            "email": "michael.meinel@dlr.de",
+                            "familyName": "Meinel",
+                            "givenName": "Michael"
+                        },
+                        {
+                            "id": "https://orcid.org/0000-0003-4925-7248",
+                            "type": "Person",
+                            "affiliation": {
+                                "type": "Organization",
+                                "legalName": "German Aerospace Center (DLR)"
+                            },
+                            "email": "stephan.druskat@dlr.de",
+                            "familyName": "Druskat",
+                            "givenName": "Stephan"
+                        },
+                        {
+                            "id": "https://orcid.org/0000-0002-2702-3419",
+                            "type": "Person",
+                            "affiliation": {
+                                "type": "Organization",
+                                "legalName": "Forschungszentrum J\u00c3\u00bclich"
+                            },
+                            "email": "o.bertuch@fz-juelich.de",
+                            "familyName": "Bertuch",
+                            "givenName": "Oliver"
+                        },
+                        {
+                            "id": "https://orcid.org/0000-0001-8174-7795",
+                            "type": "Person",
+                            "affiliation": {
+                                "type": "Organization",
+                                "legalName": "Helmholtz-Zentrum Dresden-Rossendorf (HZDR)"
+                            },
+                            "email": "o.knodel@hzdr.de",
+                            "familyName": "Knodel",
+                            "givenName": "Oliver"
+                        }
+                    ],
+                    "description": "Tool to automate software publication. Not stable yet.",
+                    "identifier": "https://doi.org/10.5281/zenodo.13221384",
+                    "license": "https://spdx.org/licenses/Apache-2.0",
+                    "legalName": "hermes",
+                    "version": "0.9.0"
+                },
+                extra_vocabs = {"legalName": {"@id": "http://schema.org/name"}}
+            ),
         )
     ],
 )
