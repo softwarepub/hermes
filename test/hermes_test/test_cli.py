@@ -18,7 +18,14 @@ def test_hermes_full():
 
 
 def test_hermes_harvest(hermes_env):
-    hermes_env['hermes.toml'] = ""
+    hermes_env['hermes.toml'] = "[harvest]\nsources = [\"cff\"]\n"
+    hermes_env['CITATION.cff'] = """cff-version: 1.2.0
+title: Test
+message: >-
+  test tests
+type: software
+authors:
+  - given-names: Testi"""
 
     with hermes_env:
         result = hermes_env.run("harvest")
@@ -27,8 +34,8 @@ def test_hermes_harvest(hermes_env):
 
 
 def test_hermes_process(hermes_env):
-    hermes_env['hermes.toml'] = ""
-    hermes_env['.hermes/harvest/test.json'] = ""
+    hermes_env['hermes.toml'] = "[process]\nsources = [\"cff\"]"
+    hermes_env['.hermes/harvest/cff/codemeta.json'] = "{}"
 
     with hermes_env:
         result = hermes_env.run("process")
