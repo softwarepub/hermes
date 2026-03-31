@@ -496,7 +496,7 @@ class HermesInitCommand(HermesCommand):
         """Downloads and configures the ci workflow files using templates from the chosen template branch."""
         match self.git_hoster:
             case GitHoster.GitHub:
-                template_url = self.get_template_url("hermes_github.yml")
+                template_url = self.get_template_url("hermes_github.yml.template")
                 ci_file_folder = Path(".github/workflows")
                 ci_file_name = "hermes_github.yml"
                 ci_file_path = ci_file_folder / ci_file_name
@@ -511,8 +511,8 @@ class HermesInitCommand(HermesCommand):
                 self.configure_ci_template(ci_file_path)
                 sc.echo(f"GitHub CI: File was created at {ci_file_path}", formatting=sc.Formats.OKGREEN)
             case GitHoster.GitLab:
-                gitlab_ci_template_url = self.get_template_url("hermes_gitlab.yml")
-                hermes_ci_template_url = self.get_template_url("hermes-ci.yml")
+                gitlab_ci_template_url = self.get_template_url("hermes_gitlab.yml.template")
+                hermes_ci_template_url = self.get_template_url("hermes-ci.yml.template")
                 gitlab_ci_path = Path(".gitlab-ci.yml")
                 gitlab_folder_path = Path("gitlab")
                 hermes_ci_path = gitlab_folder_path / "hermes-ci.yml"
