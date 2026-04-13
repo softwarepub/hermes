@@ -34,7 +34,7 @@ class HermesEnvMock:
 
     def run(self, *args):
         proc = subprocess.Popen(
-            [sys.executable, "-m", self.hermes_exe, *args], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            [sys.executable, "-m", self.hermes_exe, *args], bufsize=-1, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         proc.wait()
         return proc
