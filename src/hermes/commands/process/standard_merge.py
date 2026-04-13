@@ -11,7 +11,7 @@ from typing import Any, Callable, Union
 import requests
 
 from hermes.commands.base import HermesCommand
-from hermes.model.merge.action import Concat, IdMerge, MergeAction, MergeSet
+from hermes.model.merge.action import Concat, IdMerge, MergeAction, MergeSet, Reject
 from hermes.model.types import ld_dict
 from hermes.model.types.ld_context import iri_map as iri
 from .base import HermesProcessPlugin
@@ -865,7 +865,15 @@ class CodemetaProcessPlugin(HermesProcessPlugin):
             subtypes_for_types = CodemetaProcessPlugin.get_schema_type_hierarchy()
             strats = CodemetaProcessPlugin.get_schema_strategies(subtypes_for_types)
             strats.update(CodemetaProcessPlugin.get_codemeta_strategies(subtypes_for_types))
-            strats[None] = {None: MergeSet(DEFAULT_MATCH), "@id": IdMerge()}
+            strats[None] = {
+                None: MergeSet(DEFAULT_MATCH),
+                "@id": IdMerge(),
+                **{
+                    iri[f"schema:{term}"]: Reject() for term in (
+                        "version", "name", "givenName", "familyName", "description", "license"
+                    )
+                }
+            }
         except Exception:
             strats = {**CODEMETA_STRATEGY}
         for key, value in PROV_STRATEGY.items():
@@ -942,7 +950,7 @@ class CodemetaProcessPlugin(HermesProcessPlugin):
         special_types = set(MATCH_FUNCTION_FOR_TYPE.keys())
 
         # FIXME: change URL on change of context to codemeta 3.0
-        download = requests.get("https://raw.githubusercontent.com/codemeta/codemeta/blob/2.0/crosswalk.csv")
+        download = requests.get("https://raw.githubusercontent.com/codemeta/codemeta/2.0/crosswalk.csv")
         decoded_content = download.content.decode('utf-8')
         cr = csv.reader(decoded_content.splitlines(), delimiter=',')
         # remove the first line (headers)
