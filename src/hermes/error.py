@@ -4,5 +4,9 @@
 
 # SPDX-FileContributor: David Pape
 
-class HermesMisconfigurationError(Exception):
+class MisconfigurationError(Exception):
+    pass
+
+
+class HermesPluginRunError(Exception):
     pass

@@ -1,3 +1,10 @@
+# SPDX-FileCopyrightText: 2026 German Aerospace Center (DLR)
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# SPDX-FileContributor: Michael Fritzsche
+# SPDX-FileContributor: Stephan Druskat
+
 import pytest
 
 from hermes.model import SoftwareMetadata
@@ -53,23 +60,25 @@ def test_init_nested_object():
 
 def test_append():
     data = SoftwareMetadata()
-    data["schema:foo"].append("a")
-    assert type(data["schema:foo"]) is ld_list
-    assert data["schema:foo"][0] == "a" and data["schema:foo"].item_list == [{"@value": "a"}]
-    data["schema:foo"].append("b")
-    assert type(data["schema:foo"]) is ld_list
-    assert data["schema:foo"] == [{"@value": "a"}, {"@value": "b"}]
-    data["schema:foo"].append("c")
-    assert data["schema:foo"] == [{"@value": "a"}, {"@value": "b"}, {"@value": "c"}]
+    data.emplace("schema:name")
+    data["schema:name"].append("a")
+    assert type(data["schema:name"]) is ld_list
+    assert data["schema:name"][0] == "a" and data["schema:name"] == ["a"]
+    data["schema:name"].append("b")
+    assert type(data["schema:name"]) is ld_list and data["schema:name"] == ["a", "b"]
+    data.emplace("schema:name")
+    data["schema:name"].append("c")
+    assert data["schema:name"] == ["a", "b", "c"]
+
     data = SoftwareMetadata()
-    data["schema:foo"].append({"schema:name": "bar"})
-    assert type(data["schema:foo"]) is ld_list and type(data["schema:foo"][0]) is ld_dict
-    assert data["schema:foo"] == [{"http://schema.org/name": [{"@value": "bar"}]}]
-    data["schema:foo"].append({"schema:name": "bar"})
-    assert type(data["schema:foo"]) is ld_list
-    assert data["schema:foo"] == 2 * [{"http://schema.org/name": [{"@value": "bar"}]}]
-    data["schema:foo"].append({"schema:name": "bar"})
-    assert data["schema:foo"] == 3 * [{"http://schema.org/name": [{"@value": "bar"}]}]
+    data.setdefault("schema:Person", []).append({"schema:name": "foo"})
+    assert type(data["schema:Person"]) is ld_list and type(data["schema:Person"][0]) is ld_dict
+    assert data["schema:Person"][0] == {"http://schema.org/name": ["foo"]}
+    data["schema:Person"].append({"schema:name": "foo"})
+    assert type(data["schema:Person"]) is ld_list
+    assert data["schema:Person"] == 2 * [{"http://schema.org/name": ["foo"]}]
+    data["schema:Person"].append({"schema:name": "foo"})
+    assert data["schema:Person"] == 3 * [{"http://schema.org/name": ["foo"]}]
 
 
 def test_iterative_assignment():
@@ -95,7 +104,7 @@ def test_usage():
     data["author"][0]["email"].append("foo@baz.com")
     assert len(data["author"]) == 2
     assert len(data["author"][0]["email"]) == 2
-    assert len(data["author"][1]["email"]) == 0
+    assert len(data["author"][1].get("email", [])) == 0
     harvest = {
         "authors": [
             {"name": "Foo", "affiliation": ["Uni A", "Lab B"], "kw": ["a", "b", "c"]},
@@ -104,15 +113,19 @@ def test_usage():
         ]
     }
     for author in harvest["authors"]:
-        for exist_author in data["author"]:
-            if author["name"] in exist_author["name"]:
-                exist_author["affiliation"] = author.get("affiliation", [])
-                exist_author["email"].extend(email if isinstance((email := author.get("email", [])), list) else [email])
-                exist_author["schema:knowsAbout"].extend(kw if isinstance((kw := author.get("kw", [])), list) else [kw])
+        for exist_author in data.get("author", []):
+            if author["name"] in exist_author.get("name", []):
+                exist_author["affiliation"] = author["affiliation"]
+                if "email" in author:
+                    exist_author.emplace("email")
+                    exist_author["email"].append(author["email"])
+                if "kw" in author:
+                    exist_author.emplace("schema:knowsAbout")
+                    exist_author["schema:knowsAbout"].extend(author["kw"])
                 break
         else:
-            data["author"].append(author)
-    assert len(data["author"]) == 3
+            data.setdefault("author", []).append(author)
+    assert len(data.get("author", [])) == 3
     foo, bar, baz = data["author"]
     assert foo["name"][0] == "Foo"
     assert foo["affiliation"] == ["Uni A", "Lab B"]
@@ -123,14 +136,13 @@ def test_usage():
     assert bar["email"] == ["bar@c.edu"]
     assert baz["name"][0] == "Baz"
     assert baz["affiliation"] == ["Lab E"]
-    assert len(baz["schema:knowsAbout"]) == 0
-    assert len(baz["email"]) == 0
+    assert len(baz.get("schema:knowsAbout", [])) == 0
+    assert len(baz.get("email", [])) == 0
     for author in data["author"]:
         assert "name" in author
-        assert "email" in author
-        if author["schema:knowsAbout"] == ["egg"]:
+        if "Baz" not in author["name"]:
+            assert "email" in author
+        if "schema:knowsAbout" not in author:
             # FIXME: None has to be discussed
-            # json-ld processor just removes it in expansion
             author["schema:knowsAbout"] = None
         author["schema:pronouns"] = "they/them"
-    assert len(bar["schema:knowsAbout"]) == 0

@@ -7,7 +7,8 @@
 import pytest
 from pathlib import Path
 
-from hermes.model.context_manager import HermesContext, HermesCache, HermesContexError
+from hermes.model.context_manager import HermesContext, HermesCache
+from hermes.model.error import HermesContextError
 
 
 def test_context_hermes_dir_default():
@@ -30,7 +31,7 @@ def test_context_get_error():
     ctx = HermesContext()
     ctx.prepare_step("ham")
     ctx.finalize_step("ham")
-    with pytest.raises(HermesContexError, match="Prepare a step first."):
+    with pytest.raises(HermesContextError, match="Prepare a step first."):
         ctx["spam"]._cache_dir == Path('./.hermes/spam').absolute()
 
 

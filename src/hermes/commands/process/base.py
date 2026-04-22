@@ -5,24 +5,30 @@
 # SPDX-FileContributor: Michael Meinel
 
 import argparse
-import json
-import sys
+from typing import Union
 
 from pydantic import BaseModel
 
 from hermes.commands.base import HermesCommand, HermesPlugin
-from hermes.model.context import HermesHarvestContext, CodeMetaContext
+from hermes.error import HermesPluginRunError, MisconfigurationError
+from hermes.model.api import SoftwareMetadata
+from hermes.model.context_manager import HermesContext
+from hermes.model.merge.action import MergeAction
+from hermes.model.merge.container import ld_merge_dict
 
 
 class HermesProcessPlugin(HermesPlugin):
+    """ Base plugin that defines additional merge strategies."""
 
-    pass
+    def __call__(self, command: HermesCommand) -> dict[Union[str, None], dict[Union[str, None], MergeAction]]:
+        pass
 
 
 class ProcessSettings(BaseModel):
     """Generic deposition settings."""
 
-    pass
+    sources: list = []
+    plugins: list = ["codemeta"]
 
 
 class HermesProcessCommand(HermesCommand):
@@ -32,43 +38,90 @@ class HermesProcessCommand(HermesCommand):
     settings_class = ProcessSettings
 
     def __call__(self, args: argparse.Namespace) -> None:
-        self.args = args
-        ctx = CodeMetaContext()
+        self.log.info("# Metadata processing")
+        merged_doc = ld_merge_dict([{}])
 
-        if not (ctx.hermes_dir / "harvest").exists():
-            self.log.error("You must run the harvest command before process")
-            sys.exit(1)
+        if not self.settings.plugins:
+            self.log.critical(
+                "# It was explicitly configured that no process plugin should be used."
+                " Hint: Do not configure anything to use standard 'codemeta' plugin."
+            )
+            raise MisconfigurationError("Explicit configuration to use no process plugin.")
 
         # Get all harvesters
-        harvester_names = self.root_settings.harvest.sources
-        harvester_names.reverse()   # Switch order for priority handling
+        harvester_names = self.settings.sources if self.settings.sources else self.root_settings.harvest.sources
+        if not harvester_names:
+            self.log.critical("# No harvesters to merge from were configured.")
+            raise MisconfigurationError("No harvesters to merge from were configured.")
 
-        for harvester in harvester_names:
-            self.log.info("## Process data from %s", harvester)
-
-            harvest_context = HermesHarvestContext(ctx, harvester, {})
+        self.log.info("## Load and run the plugins")
+        any_strategies_loaded = False
+        # add the strategies from the plugins
+        for plugin_name in reversed(self.settings.plugins):
+            self.log.info(f"### Load {plugin_name} plugin")
+            # load plugin
             try:
-                harvest_context.load_cache()
-            # when the harvest step ran, but there is no cache file, this is a serious flaw
-            except FileNotFoundError:
-                self.log.warning("No output data from harvester %s found, skipping", harvester)
+                plugin_func = self.plugins[plugin_name]()
+            except KeyError:
+                self.log.error(f"### Plugin {plugin_name} not found, skipping it now.")
                 continue
 
-            ctx.merge_from(harvest_context)
-            ctx.merge_contexts_from(harvest_context)
+            self.log.info(f"### Run {plugin_name} plugin")
+            # run plugin
+            try:
+                additional_strategies = plugin_func(self)
+            except Exception:
+                self.log.exception(f"### Unknown error while executing the {plugin_name} plugin, skipping it now.")
+                continue
 
-        if ctx._errors:
-            self.log.error('Errors during merge')
-            self.errors.extend(ctx._errors)
+            self.log.info(f"### Add the strategies to the merge document {plugin_name} plugin")
+            # add strategies to the merge document
+            merged_doc.add_strategy(additional_strategies)
+            any_strategies_loaded = True
 
-            for ep, error in ctx._errors:
-                self.log.info("    - %s: %s", ep.name, error)
+        if not any_strategies_loaded:
+            self.log.critical("## No process plugin was ran successfully.")
+            raise HermesPluginRunError("No process plugin was ran successfully.")
 
-        tags_path = ctx.get_cache('process', 'tags', create=True)
-        with tags_path.open('w') as tags_file:
-            json.dump(ctx.tags, tags_file, indent=2)
+        ctx = HermesContext()
+        ctx.prepare_step('harvest')
 
-        ctx.prepare_codemeta()
+        # merge data from harvesters
+        self.log.info("## Merge the metadata of the harvesters")
+        merged_any = False
+        for harvester in harvester_names:
+            self.log.info(f"### Load data from {harvester} plugin")
+            # load data from harvester
+            try:
+                metadata = SoftwareMetadata.load_from_cache(ctx, harvester)
+            except Exception:
+                # skip this harvester when the data is invalid
+                self.log.exception(
+                    f"### The data from the harvester {harvester} could not be loaded or is invalid, skipping it now."
+                )
+                continue
 
-        with open(ctx.get_cache("process", ctx.hermes_name, create=True), 'w') as codemeta_file:
-            json.dump(ctx._data, codemeta_file, indent=2)
+            self.log.info(f"### Merge data from {harvester} plugin")
+            # merge data into the merge dict
+            try:
+                merged_doc.update(metadata)
+            except Exception as e:
+                self.log.critical(f"### Merging the data from {harvester} plugin resulted in an error.", exc_info=True)
+                raise RuntimeError(f"Merging the data from {harvester} plugin failed.") from e
+            merged_any = True
+
+        # error if nothing was merged
+        if not merged_any:
+            self.log.critical("No metadata has been merged, the loading of the data failed for all harvesters.")
+            raise RuntimeError("No metadata has been merged.")
+
+        self.log.info("## Store processed metadata")
+        # store processed data
+        ctx.prepare_step("process")
+        with ctx["result"] as result_ctx:
+            result_ctx["codemeta"] = merged_doc.compact()
+            result_ctx["context"] = {"@context": merged_doc.full_context}
+            result_ctx["expanded"] = merged_doc.ld_value
+        ctx.finalize_step("process")
+
+        ctx.finalize_step("harvest")
