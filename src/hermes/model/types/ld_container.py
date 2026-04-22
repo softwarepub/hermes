@@ -5,6 +5,8 @@
 # SPDX-FileContributor: Michael Meinel
 # SPDX-FileContributor: Michael Fritzsche
 
+# flake8: noqa: C901
+
 from __future__ import annotations
 
 from datetime import date, datetime, time
