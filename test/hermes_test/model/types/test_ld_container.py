@@ -107,7 +107,7 @@ class TestLdContainer:
         assert cont._to_python("http://spam.eggs/ham",
                                [{"@id": "http://spam.eggs/spam"}]) == [{"@id": "http://spam.eggs/spam"}]
         assert cont._to_python("http://spam.eggs/ham",
-                               {"@id": "http://spam.eggs/identifier"}) == "http://spam.eggs/identifier"
+                               {"@id": "http://spam.eggs/identifier"}) == {"@id": "http://spam.eggs/identifier"}
 
     def test_to_python_basic_value(self, mock_context):
         cont = ld_container([{}], context=[mock_context])

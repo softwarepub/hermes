@@ -6,8 +6,6 @@
 
 import pytest
 
-from unittest import mock
-
 from pyld import jsonld
 from hermes.model.types import pyld_util
 

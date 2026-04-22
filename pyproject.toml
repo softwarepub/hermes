@@ -63,14 +63,20 @@ codemeta = "hermes.commands.harvest.codemeta:CodeMetaHarvestPlugin"
 [project.entry-points."hermes.deposit"]
 file = "hermes.commands.deposit.file:FileDepositPlugin"
 invenio = "hermes.commands.deposit.invenio:InvenioDepositPlugin"
-invenio_rdm = "hermes.commands.deposit.invenio_rdm:IvenioRDMDepositPlugin"
+invenio_rdm = "hermes.commands.deposit.invenio_rdm:InvenioRDMDepositPlugin"
 rodare = "hermes.commands.deposit.rodare:RodareDepositPlugin"
 
 [project.entry-points."hermes.postprocess"]
 config_invenio_record_id = "hermes.commands.postprocess.invenio:config_record_id"
 config_invenio_rdm_record_id = "hermes.commands.postprocess.invenio_rdm:config_record_id"
 cff_doi = "hermes.commands.postprocess.invenio:cff_doi"
+codemeta_doi = "hermes.commands.postprocess.invenio:codemeta_doi"
 
+[project.entry-points."hermes.process"]
+codemeta = "hermes.commands.process.standard_merge:CodemetaProcessPlugin"
+
+[project.entry-points."hermes.curate"]
+pass_curate = "hermes.commands.curate.pass_curate:DoNothingCuratePlugin"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.1.1"
@@ -78,6 +84,7 @@ pytest-cov = "^3.0.0"
 taskipy = "^1.10.3"
 flake8 = "^5.0.4"
 requests-mock = "^1.10.0"
+pytest-httpserver = "^1.1.5"
 
 # Packages for developers for creating documentation
 [tool.poetry.group.docs]

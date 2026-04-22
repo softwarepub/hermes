@@ -3,24 +3,41 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # SPDX-FileContributor: Michael Meinel
+# SPDX-FileContributor: Michael Fritzsche
 # SPDX-FileContributor: Stephan Druskat
 
-import json
 import logging
 
-import toml
+import tomlkit
+
+from hermes.error import MisconfigurationError
+from hermes.model.context_manager import HermesContext
+from ..base import HermesCommand
+from .base import HermesPostprocessPlugin
 
 
-_log = logging.getLogger('deposit.invenio_rdm')
+_log = logging.getLogger('postprocess.invenio_rdm')
 
 
-def config_record_id(ctx):
-    deposition_path = ctx.get_cache('deposit', 'deposit')
-    with deposition_path.open("r") as deposition_file:
-        deposition = json.load(deposition_file)
-    conf = ctx.config.hermes
-    try:
-        conf['deposit']['invenio_rdm']['record_id'] = deposition['record_id']
-        toml.dump(conf, open('hermes.toml', 'w'))
-    except KeyError:
-        raise RuntimeError("No deposit.invenio_rdm configuration available to store record id in")
+class config_record_id(HermesPostprocessPlugin):
+    def __call__(self, command: HermesCommand):
+        ctx = HermesContext()
+        ctx.prepare_step("deposit")
+        with ctx["invenio_rdm"] as manager:
+            deposition = manager["result"]
+        ctx.finalize_step("deposit")
+
+        conf = tomlkit.load(open('hermes.toml', 'r'))
+        try:
+            old_record_id = conf["deposit"]["invenio_rdm"]["record_id"]
+            if old_record_id == deposition["record_id"]:
+                return
+            _log.error("hermes.toml already contains a record_id for Invenio_RDM deposit.")
+            raise MisconfigurationError(
+                "Can't overwrite record_id automatically."
+                f"(Tried to overwrite {old_record_id} with {deposition['record_id']})"
+            )
+        except KeyError:
+            pass
+        conf.setdefault("deposit", {}).setdefault("invenio_rdm", {})["record_id"] = deposition['record_id']
+        tomlkit.dump(conf, open('hermes.toml', 'w'))

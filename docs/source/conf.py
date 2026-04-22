@@ -39,7 +39,7 @@ def read_from_pyproject(file_path="../../pyproject.toml"):
         data = toml.load(file_path)
 
         # Navigate to the authors metadata
-        metadata = data.get("tool", {}).get("poetry", {})
+        metadata = data.get("project", {})
         if not metadata:
             return "No metadata found in pyproject.toml"
         return metadata
@@ -56,7 +56,7 @@ def read_authors_from_pyproject():
     if not authors:
         return "No authors metadata found in pyproject.toml"
     # Convert the list of authors to a comma-separated string
-    return ", ".join([a.split(" <")[0] for a in authors])
+    return ", ".join([author["name"] for author in authors])
 
 def read_version_from_pyproject():
     metadata = read_from_pyproject()
@@ -73,7 +73,7 @@ copyright = '2025 by Forschungszentrum Jülich (FZJ), German Aerospace Center (D
 author = read_authors_from_pyproject()
 
 # The full version, including alpha/beta/rc tags
-release = read_version_from_pyproject()
+version = release = read_version_from_pyproject()
 
 
 # -- General configuration ---------------------------------------------------
@@ -102,7 +102,7 @@ extensions = [
     'sphinx_togglebutton',
     'sphinxcontrib.datatemplates',
     # Custom extensions, see `_ext` directory.
-    # 'plugin_markup',
+    'plugin_markup',
 ]
 
 language = 'en'
@@ -131,6 +131,9 @@ autoapi_type = "python"
 autoapi_dirs = ["../../src"]
 autoapi_root = "api"
 autoapi_ignore = ["*__main__*"]
+autoapi_options = [
+    "members", "undoc-members", "private-members", "special-members", "show-inheritance", "show-module-summary"
+]
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -161,6 +164,7 @@ html_theme_options = {
     "repository_url": "https://github.com/hermes-hmc/hermes",
     "use_repository_button": True,
     "navigation_with_keys": False,
+    "max_navbar_depth": -1
 }
 
 html_css_files = [
@@ -182,3 +186,20 @@ ogp_type = "website"
 # -- Options for sphinx-togglebutton -----------------------------------------
 
 togglebutton_hint = "Click to show screenshot"
+
+
+# TODO: remove this workaround and remove "undoc-members" from autoapi_options once everything is documented
+# This removes all generated entries for known documented classes (because autoapi will add all attributes
+# it finds in the code no matter if they are described in a class doc string or not).
+def autoapi_skip_member(app, obj_type, name, obj, skip, options):
+    if obj_type == "attribute":
+        if any(documented_type in obj.id for documented_type in [
+            "Collect", "HermesCache", "HermesContext", "HermesMergeError", "ld_container", "ld_context", "ld_dict",
+            "ld_list", "ld_merge_dict", "ld_merge_list", "MergeSet"
+        ]):
+            return True
+
+    return skip
+
+def setup(app):
+    app.connect("autoapi-skip-member", autoapi_skip_member)
