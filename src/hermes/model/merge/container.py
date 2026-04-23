@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, Union
+from typing import TYPE_CHECKING, Any, Callable, Optional, Union
 from typing_extensions import Self
 
 from hermes.model.types import ld_container, ld_context, ld_dict, ld_list
@@ -15,8 +15,8 @@ from hermes.model.types.ld_container import (
     BASIC_TYPE, EXPANDED_JSON_LD_VALUE, JSON_LD_CONTEXT_DICT, JSON_LD_VALUE, TIME_TYPE
 )
 from hermes.model.types.pyld_util import bundled_loader
-from .action import MergeError
 
+from .action import MergeError
 if TYPE_CHECKING:
     from .action import MergeAction
 
@@ -83,11 +83,11 @@ class ld_merge_list(_ld_merge_container, ld_list):
         self: "ld_merge_list",
         data: Union[list[str], list[dict[str, EXPANDED_JSON_LD_VALUE]]],
         *,
-        parent: Union[ld_container, None] = None,
-        key: Union[str, None] = None,
-        index: Union[int, None] = None,
-        context: Union[list[Union[str, JSON_LD_CONTEXT_DICT]], None] = None,
-        strategies: dict[Union[str, None], dict[Union[str, None], MergeAction]] = {}
+        parent: Optional[ld_container] = None,
+        key: Optional[str] = None,
+        index: Optional[int] = None,
+        context: Optional[list[Union[str, JSON_LD_CONTEXT_DICT]]] = None,
+        strategies: dict[Optional[str], dict[Optional[str], MergeAction]] = {}
     ) -> None:
         """
         Create a new ld_merge_list.
@@ -124,11 +124,11 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
         self: Self,
         data: list[dict[str, EXPANDED_JSON_LD_VALUE]],
         *,
-        parent: Union[ld_dict, ld_list, None] = None,
-        key: Union[str, None] = None,
-        index: Union[int, None] = None,
-        context: Union[list[Union[str, JSON_LD_CONTEXT_DICT]], None] = None,
-        strategies: dict[Union[str, None], dict[Union[str, None], MergeAction]] = {}
+        parent: Optional[Union[ld_dict, ld_list]] = None,
+        key: Optional[str] = None,
+        index: Optional[int] = None,
+        context: Optional[list[Union[str, JSON_LD_CONTEXT_DICT]]] = None,
+        strategies: dict[Optional[str], dict[Optional[str], MergeAction]] = {}
     ) -> None:
         """
         Create a new instance of an ld_merge_dict. See also :meth:`ld_dict.__init__`.
@@ -199,7 +199,7 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
         # this works implicitly because ld_dict.update invokes self.__setitem__ which is overwritten by ld_merge_dict
         super().update(other)
 
-    def add_strategy(self: Self, strategy: dict[Union[str, None], dict[Union[str, None], MergeAction]]) -> None:
+    def add_strategy(self: Self, strategy: dict[Optional[str], dict[Optional[str], MergeAction]]) -> None:
         """
         Adds ``strategy`` to the ``self.strategies``.
 

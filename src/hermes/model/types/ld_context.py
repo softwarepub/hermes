@@ -4,6 +4,7 @@
 
 # SPDX-FileContributor: Michael Meinel
 # SPDX-FileContributor: Stephan Druskat <stephan.druskat@dlr.de>
+# SPDX-FileContributor: Michael Fritzsche
 
 from typing import Union
 from typing_extensions import Self
@@ -69,7 +70,7 @@ class ContextPrefix:
         context dict[str | None, str]: The mapping of prefix its expanded IRI.
     """
 
-    def __init__(self: Self, vocabularies: list[str | dict]) -> None:
+    def __init__(self: Self, vocabularies: list[Union[str, dict]]) -> None:
         """
         If the list contains more than one string item, the last one will be used as the default vocabulary. If a prefix
         string is used more than once across all dictionaries in the list, the last item with this key will be included
@@ -86,10 +87,12 @@ class ContextPrefix:
         self.vocabularies = vocabularies
         self.context = {}
 
+        # add every entry in the vocabulary to the context
         for vocab in self.vocabularies:
             if isinstance(vocab, str):
                 vocab = {None: vocab}
 
+            # add all prefix, base_iri pairs from vocab to context
             self.context.update(
                 {
                     prefix: base_iri
@@ -98,7 +101,7 @@ class ContextPrefix:
                 }
             )
 
-    def __getitem__(self: Self, compressed_term: str | tuple) -> str:
+    def __getitem__(self: Self, compressed_term: Union[str, tuple]) -> str:
         """
         Gets the fully qualified IRI for a term from a vocabulary inside the initialized context.
         The vocabulary must have been added to the context at initialization.
@@ -121,7 +124,11 @@ class ContextPrefix:
 
         Returns:
             str: The fully qualified IRI for the passed term
+
+        Raises:
+            HermesContextError: If the compressed term is '' or its prefix can't be expanded.
         """
+        # seperate the prefix from the term
         if not isinstance(compressed_term, str):
             prefix, term = compressed_term
         elif ":" in compressed_term:
@@ -133,11 +140,13 @@ class ContextPrefix:
         else:
             raise HermesContextError(compressed_term)
 
+        # expand the prefix
         try:
             base_iri = self.context[prefix]
         except KeyError as ke:
             raise HermesContextError(prefix) from ke
 
+        # return the expanded term
         return base_iri + term
 
 

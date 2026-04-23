@@ -3,12 +3,13 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # SPDX-FileContributor: Michael Meinel
+# SPDX-FileContributor: Michael Fritzsche
 
 import json
 import os.path
 from pathlib import Path
 from types import TracebackType
-from typing import Union
+from typing import Optional
 from typing_extensions import Self
 
 from .error import HermesContextError
@@ -42,11 +43,14 @@ class HermesCache:
         Returns:
             None:
         """
+        # check if the cache_dir exists
         if self._cache_dir.is_dir():
+            # load all files from the cache dir and cache the contents
             for filepath in self._cache_dir.glob('*'):
                 basename, _ = os.path.splitext(filepath.name)
                 self._cached_data[basename] = json.load(filepath.open('r'))
 
+        # return the cache object
         return self
 
     def __getitem__(self: Self, item: str) -> dict:
@@ -59,11 +63,14 @@ class HermesCache:
         Returns:
             dict: The JSON value in the given file.
         """
+        # check whether or not the given file was already loaded
         if item not in self._cached_data:
+            # construct the file path as well as load and cache the file
             filepath = self._cache_dir / f'{item}.json'
             if filepath.is_file():
                 self._cached_data[item] = json.load(filepath.open('r'))
 
+        # return the loaded json
         return self._cached_data[item]
 
     def __setitem__(self: Self, key: str, value: dict) -> None:
@@ -78,13 +85,14 @@ class HermesCache:
         Returns:
             None:
         """
+        # update the value of the cache
         self._cached_data[key] = value
 
     def __exit__(
         self: Self,
-        exc_type: Union[type[BaseException], None],
-        exc_val: Union[BaseException, None],
-        exc_tb: Union[TracebackType, None]
+        exc_type: Optional[type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType]
     ) -> None:
         """
         Updates the files from the cache.
@@ -98,9 +106,12 @@ class HermesCache:
             None:
         """
         if exc_type is None:
+            # If the exit did not happen because of an exception:
+            # create the cache dir (if necessary) and write the cached json data
             self._cache_dir.mkdir(exist_ok=True, parents=True)
 
             for basename, data in self._cached_data.items():
+                # create complete file path and write the data
                 cachefile = self._cache_dir / f'{basename}.json'
                 json.dump(data, cachefile.open('w'))
 
@@ -158,10 +169,12 @@ class HermesContext:
             ValueError: If no step can be removed.
             ValueError: If the given step is not the last one.
         """
+        # check if the given step was prepared last
         if len(self._current_step) < 1:
             raise ValueError("There is no step to end.")
         if self._current_step[-1] != step:
             raise ValueError(f"Cannot end step {step} while in {self._current_step[-1]}.")
+        # remove the last step (i.e. the given one)
         self._current_step.pop()
 
     def __getitem__(self: Self, source_name: str) -> HermesCache:
@@ -177,7 +190,9 @@ class HermesContext:
         Raises:
             HermesContextError: If no step has been prepared (i.e. no current cache dir is set).
         """
+        # check if a step is prepared
         if len(self._current_step) < 1:
             raise HermesContextError("Prepare a step first.")
+        # build the dir of the cache and return the HermesCache for it
         subdir = self.cache_dir / self._current_step[-1] / source_name
         return HermesCache(subdir)

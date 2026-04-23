@@ -8,7 +8,7 @@
 from __future__ import annotations
 
 from collections.abc import Generator, Iterator, KeysView
-from typing import Any, Literal, Union, TYPE_CHECKING
+from typing import Any, Literal, Optional, Union, TYPE_CHECKING
 from typing_extensions import Self
 
 from .ld_container import (
@@ -41,10 +41,10 @@ class ld_dict(ld_container):
         self: Self,
         data: list[dict[str, EXPANDED_JSON_LD_VALUE]],
         *,
-        parent: Union[ld_dict, ld_list, None] = None,
-        key: Union[str, None] = None,
-        index: Union[int, None] = None,
-        context: Union[list[Union[str, JSON_LD_CONTEXT_DICT]], None] = None
+        parent: Optional[Union[ld_dict, ld_list]] = None,
+        key: Optional[str] = None,
+        index: Optional[int] = None,
+        context: Optional[list[Union[str, JSON_LD_CONTEXT_DICT]]] = None
     ) -> None:
         """
         Create a new instance of an ld_dict.
@@ -133,7 +133,6 @@ class ld_dict(ld_container):
         """
         # expand the key and check if self contains a key, value pair with it
         full_iri = self.ld_proc.expand_iri(self.active_ctx, key)
-        # FIXME: is that good?
         return full_iri in self.data_dict
 
     def __eq__(
@@ -364,10 +363,10 @@ class ld_dict(ld_container):
         cls: type[Self],
         value: dict[str, PYTHONIZED_LD_CONTAINER],
         *,
-        parent: Union[ld_dict, ld_list, None] = None,
-        key: Union[str, None] = None,
-        context: Union[str, JSON_LD_CONTEXT_DICT, list[Union[str, JSON_LD_CONTEXT_DICT]], None] = None,
-        ld_type: Union[str, list[str], None] = None
+        parent: Optional[Union[ld_dict, ld_list]] = None,
+        key: Optional[str] = None,
+        context: Optional[Union[str, JSON_LD_CONTEXT_DICT, list[Union[str, JSON_LD_CONTEXT_DICT]]]] = None,
+        ld_type: Optional[Union[str, list[str]]] = None
     ) -> ld_dict:
         """
         Creates a ld_dict from the given dict with the given parent, key, context and ld_type.\n

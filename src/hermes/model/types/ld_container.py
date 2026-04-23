@@ -10,7 +10,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime, time
-from typing import Any, TypeAlias, TYPE_CHECKING, Union
+from typing import Any, Optional, TypeAlias, TYPE_CHECKING, Union
 from typing_extensions import Self
 
 from .pyld_util import JsonLdProcessor, bundled_loader
@@ -70,10 +70,10 @@ class ld_container:
         self: Self,
         data: EXPANDED_JSON_LD_VALUE,
         *,
-        parent: Union[ld_dict, ld_list, None] = None,
-        key: Union[str, None] = None,
-        index: Union[int, None] = None,
-        context: Union[list[Union[str, JSON_LD_CONTEXT_DICT]], None] = None,
+        parent: Optional[Union[ld_dict, ld_list]] = None,
+        key: Optional[str] = None,
+        index: Optional[int] = None,
+        context: Optional[list[Union[str, JSON_LD_CONTEXT_DICT]]] = None,
     ) -> None:
         """
         Create a new instance of an ld_container.
@@ -303,7 +303,7 @@ class ld_container:
         return str(self.to_python())
 
     def compact(
-        self: Self, context: Union[list[Union[JSON_LD_CONTEXT_DICT, str]], JSON_LD_CONTEXT_DICT, str, None] = None
+        self: Self, context: Optional[Union[list[Union[JSON_LD_CONTEXT_DICT, str]], JSON_LD_CONTEXT_DICT, str]] = None
     ) -> COMPACTED_JSON_LD_VALUE:
         """
         Returns the compacted version of the given ld_container using its context only if none was supplied.

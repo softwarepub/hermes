@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from collections import deque
 from collections.abc import Generator, Hashable
-from typing import Any, Union, TYPE_CHECKING
+from typing import Any, Optional, Union, TYPE_CHECKING
 from typing_extensions import Self
 
 from .ld_container import (
@@ -42,10 +42,10 @@ class ld_list(ld_container):
         self: Self,
         data: EXPANDED_JSON_LD_VALUE,
         *,
-        parent: Union[ld_dict, ld_list, None] = None,
-        key: Union[str, None] = None,
-        index: Union[int, None] = None,
-        context: Union[list[Union[str, JSON_LD_CONTEXT_DICT]], None] = None,
+        parent: Optional[Union[ld_dict, ld_list]] = None,
+        key: Optional[str] = None,
+        index: Optional[int] = None,
+        context: Optional[list[Union[str, JSON_LD_CONTEXT_DICT]]] = None,
     ) -> None:
         """
         Create a new instance of an ld_list.
@@ -132,6 +132,9 @@ class ld_list(ld_container):
 
         Returns:
             None:
+
+        Raises:
+            TypeError: If a slice is not assigned an iterable.
         """
         if not isinstance(index, slice):
             # expand the value
@@ -582,9 +585,9 @@ class ld_list(ld_container):
         cls: type[Self],
         value: list[Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE]],
         *,
-        parent: Union[ld_dict, ld_list, None] = None,
-        key: Union[str, None] = None,
-        context: Union[str, JSON_LD_CONTEXT_DICT, list[Union[str, JSON_LD_CONTEXT_DICT]], None] = None,
+        parent: Optional[Union[ld_dict, ld_list]] = None,
+        key: Optional[str] = None,
+        context: Optional[Union[str, JSON_LD_CONTEXT_DICT, list[Union[str, JSON_LD_CONTEXT_DICT]]]] = None,
         container_type: str = "@set"
     ) -> ld_list:
         """

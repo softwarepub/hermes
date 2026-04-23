@@ -12,6 +12,7 @@ from hermes.model.types import ld_dict
 from hermes.model.types.ld_container import PYTHONIZED_LD_CONTAINER
 from hermes.model.types.ld_context import ALL_CONTEXTS
 from hermes.model.types.pyld_util import bundled_loader
+
 from .context_manager import HermesContext
 from .error import HermesContextError
 
@@ -37,7 +38,9 @@ class SoftwareMetadata(ld_dict):
         Returns:
             None:
         """
+        # create context object
         ctx = ALL_CONTEXTS + [{**extra_vocabs}] if extra_vocabs is not None else ALL_CONTEXTS
+        # initialize underlying ld_dict
         super().__init__([ld_dict.from_dict(data, context=ctx).data_dict if data else {}], context=ctx)
 
     @classmethod
@@ -92,7 +95,9 @@ class SoftwareMetadata(ld_dict):
         Returns:
             None:
         """
+        # open cache dir
         with ctx[target_dir] as cache:
+            # write expanded, context and compact version of self
             cache["codemeta"] = self.compact()
             cache["context"] = {"@context": self.full_context}
             cache["expanded"] = self.ld_value
