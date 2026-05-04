@@ -589,7 +589,7 @@ class ld_list(ld_container):
         key: Optional[str] = None,
         context: Optional[Union[str, JSON_LD_CONTEXT_DICT, list[Union[str, JSON_LD_CONTEXT_DICT]]]] = None,
         container_type: str = "@set"
-    ) -> ld_list:
+    ) -> Self:
         """
         Creates a ld_list from the given list with the given parent, key, context and container_type.\n
         Note that only container_type '@set' is valid for key '@type'.\n
