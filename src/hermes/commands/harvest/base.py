@@ -79,10 +79,18 @@ class HermesHarvestCommand(HermesCommand):
             except Exception:
                 self.log.exception(f"### Unknown error while executing the {plugin_name} plugin, skipping it now.")
                 continue
+
+            self.log.info(f"### Store metadata harvested by {plugin_name} plugin")
+            # store harvested data
+            harvested_data.write_to_cache(ctx, plugin_name)
+            harvested_any = True
+
             self.remove_provenance_info_for_plugin(prov_doc, plugin_name)
 
             plugin = prov_doc.add_hermes_plugin("harvest", plugin_name)
-            plugin_io_operations = plugin_func.io_operations # liste von drei Tupeln (input_file, load_function, output)
+            plugin_io_operations = plugin_func.io_operations
+            outputs = []
+            io_ops = []
             for plugin_io_operation in plugin_io_operations:
                 loaded_source = prov_doc.add_entity()
                 loaded_source.update(plugin_io_operation[0])
@@ -97,11 +105,52 @@ class HermesHarvestCommand(HermesCommand):
                     "prov:wasGeneratedBy": io_op.ref
                 })
                 loaded_data.update(plugin_io_operations[2])
+                outputs.append(loaded_data.ref)
+                io_ops.append(io_op.ref)
 
-            self.log.info(f"### Store metadata harvested by {plugin_name} plugin")
-            # store harvested data
-            harvested_data.write_to_cache(ctx, plugin_name)
-            harvested_any = True
+            map_activity = prov_doc.add_activity()
+            map_activity.update({
+                "prov:wasInformedBy": io_ops,
+                "prov:used": outputs,
+                "prov:wasAssociatedWith": plugin.ref
+            })
+            data_output = prov_doc.add_entity()
+            data_output.update({
+                "prov:wasAttributedTo": plugin.ref,
+                "prov:wasGeneratedBy": map_activity.ref,
+                "prov:wasDerivedFrom": outputs
+            })
+
+            write = prov_doc.add_activity()
+            write.update({
+                "prov:wasAssociatedWith": [
+                    prov_doc.shallow_search({
+                        "schema:name": lambda doc, node: node["schema:name"][0].find("harvest command") != -1
+                    })[0].ref,
+                    prov_doc.shallow_search({
+                        "schema:name": lambda doc, node: node["schema:name"][0].find(" cache") != -1
+                    })[0].ref,
+                    plugin.ref
+                ],
+                "prov:used": data_output.ref,
+                "prov:wasInformedBy": map_activity.ref
+            })
+            # TODO: add more info
+            write_output = prov_doc.add_entity()
+            write_output.update({
+                "prov:wasGeneratedBy": write.ref, "prov:wasDerivedFrom": data_output.ref
+            })
+            write_output = prov_doc.add_entity()
+            write_output.update({
+                "prov:wasGeneratedBy": write.ref, "prov:wasDerivedFrom": data_output.ref
+            })
+            write_output = prov_doc.add_entity()
+            write_output.update({
+                "prov:wasGeneratedBy": write.ref, "prov:wasDerivedFrom": data_output.ref
+            })
+
+        with ctx["provenance"] as cache:
+            cache["codemeta"] = prov_doc.ld_value
 
         ctx.finalize_step('harvest')
         if not harvested_any:
@@ -114,11 +163,14 @@ class HermesHarvestCommand(HermesCommand):
         with ctx["provenance"] as cache:
             try:
                 ld_prov_doc = ld_prov_list.from_list(cache["codemeta"], container_type="@graph", context=ALL_CONTEXTS)
-                return ld_prov_doc, ld_prov_doc.shallow_search({"schema:name": lambda doc, node: node["schema:name"][0].find("harvest base plugin") != -1})[0]
+                return ld_prov_doc, ld_prov_doc.shallow_search({
+                    "schema:name": lambda doc, node: node["schema:name"][0].find("harvest base plugin") != -1
+                })[0]
             except KeyError:
                 pass
         prov_doc = ld_prov_list()
         prov_doc.init_hermes_agents()
+        prov_doc.add_hermes_command("harvest")
         return prov_doc, prov_doc.add_hermes_base_plugin("harvest")
 
     def remove_provenance_info_for_plugin(self, prov_doc, plugin) -> None:

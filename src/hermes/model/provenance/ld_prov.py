@@ -108,8 +108,8 @@ class ld_prov_list(ld_list):
             "schema:name": f"{utils.hermes_name} {step} command",
             "schema:version": utils.hermes_version,
             "prov:actedOnBehalfOf": self.shallow_search(
-                {"schema:name": (lambda doc, node: node["schema:name"] == utils.hermes_name)}
-            )
+                {"schema:name": (lambda doc, node: node["schema:name"][0] == utils.hermes_name)}
+            )[0].ref
         })
         node["@type"].append("schema:SoftwareApplication")
         return node
@@ -120,8 +120,8 @@ class ld_prov_list(ld_list):
             "schema:name": f"{utils.hermes_name} {step} base plugin",
             "schema:version": utils.hermes_version,
             "prov:actedOnBehalfOf": self.shallow_search(
-                {"schema:name": (lambda doc, node: node["schema:name"] == f"{utils.hermes_name} {step} command")}
-            )
+                {"schema:name": (lambda doc, node: node["schema:name"][0] == f"{utils.hermes_name} {step} command")}
+            )[0].ref
         })
         node["@type"].append("schema:SoftwareApplication")
         return node
@@ -132,8 +132,8 @@ class ld_prov_list(ld_list):
         node.update({
             "schema:name": f"{utils.hermes_name} {step} plugin '{name}'",
             "prov:actedOnBehalfOf": self.shallow_search(
-                {"schema:name": (lambda doc, node: node["schema:name"] == f"{utils.hermes_name} {step} base plugin")}
-            )
+                {"schema:name": (lambda doc, node: node["schema:name"][0] == f"{utils.hermes_name} {step} base plugin")}
+            )[0].ref
         })
         node["@type"].append("schema:SoftwareApplication")
         return node
