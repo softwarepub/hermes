@@ -12,7 +12,7 @@ from hermes.commands.base import HermesCommand, HermesPlugin
 from hermes.error import HermesPluginRunError, MisconfigurationError
 from hermes.model.context_manager import HermesContext
 from hermes.model import SoftwareMetadata
-from hermes.model.provenance.ld_prov import ld_prov_list, ld_prov_node
+from hermes.model.provenance.ld_prov import ld_prov_list
 from hermes.model.types.ld_context import ALL_CONTEXTS
 
 
@@ -50,7 +50,8 @@ class HermesHarvestCommand(HermesCommand):
     def __call__(self, args: argparse.Namespace) -> None:
         self.args = args
         self.log.info("# Load provenance from old harvest or create new document.")
-        prov_doc, base_plugin = self.init_provenance_document()
+        prov_doc = self.init_provenance_document()
+        base_plugin = prov_doc.get_hermes_base_plugin("harvest")
 
         self.log.info("# Metadata harvesting")
         if len(self.settings.sources) == 0:
@@ -92,60 +93,48 @@ class HermesHarvestCommand(HermesCommand):
             outputs = []
             io_ops = []
             for plugin_io_operation in plugin_io_operations:
-                loaded_source = prov_doc.add_entity()
-                loaded_source.update(plugin_io_operation[0])
-                io_op = prov_doc.add_activity()
-                plugin_io_operation[1]["prov:wasAssociatedWith"] = [base_plugin.ref, plugin.ref]
-                plugin_io_operation[1]["prov:used"] = loaded_source.ref
-                io_op.update(plugin_io_operation[1])
-                loaded_data = prov_doc.add_entity()
+                loaded_source = prov_doc.add_entity(data=plugin_io_operation[0])
+                plugin_io_operation[1].update(
+                    {"prov:wasAssociatedWith": [base_plugin.ref, plugin.ref], "prov:used": loaded_source.ref}
+                )
+                io_op = prov_doc.add_activity(data=plugin_io_operation[1])
                 plugin_io_operation[2].update({
                     "prov:wasAttributedTo": plugin.ref,
                     "prov:wasDerivedFrom": loaded_source.ref,
                     "prov:wasGeneratedBy": io_op.ref
                 })
-                loaded_data.update(plugin_io_operations[2])
+                loaded_data = prov_doc.add_entity(data=plugin_io_operations[2])
                 outputs.append(loaded_data.ref)
                 io_ops.append(io_op.ref)
 
-            map_activity = prov_doc.add_activity()
-            map_activity.update({
+            map_activity = prov_doc.add_activity(data={
                 "prov:wasInformedBy": io_ops,
                 "prov:used": outputs,
                 "prov:wasAssociatedWith": plugin.ref
             })
-            data_output = prov_doc.add_entity()
-            data_output.update({
+            data_output = prov_doc.add_entity(data={
                 "prov:wasAttributedTo": plugin.ref,
                 "prov:wasGeneratedBy": map_activity.ref,
                 "prov:wasDerivedFrom": outputs
             })
 
-            write = prov_doc.add_activity()
-            write.update({
+            write = prov_doc.add_activity(data={
                 "prov:wasAssociatedWith": [
-                    prov_doc.shallow_search({
-                        "schema:name": lambda doc, node: node["schema:name"][0].find("harvest command") != -1
-                    })[0].ref,
-                    prov_doc.shallow_search({
-                        "schema:name": lambda doc, node: node["schema:name"][0].find(" cache") != -1
-                    })[0].ref,
+                    prov_doc.get_hermes_command("harvest").ref,
+                    prov_doc.get_hermes_cache().ref,
                     plugin.ref
                 ],
                 "prov:used": data_output.ref,
                 "prov:wasInformedBy": map_activity.ref
             })
             # TODO: add more info
-            write_output = prov_doc.add_entity()
-            write_output.update({
+            prov_doc.add_entity(data={
                 "prov:wasGeneratedBy": write.ref, "prov:wasDerivedFrom": data_output.ref
             })
-            write_output = prov_doc.add_entity()
-            write_output.update({
+            prov_doc.add_entity(data={
                 "prov:wasGeneratedBy": write.ref, "prov:wasDerivedFrom": data_output.ref
             })
-            write_output = prov_doc.add_entity()
-            write_output.update({
+            prov_doc.add_entity(data={
                 "prov:wasGeneratedBy": write.ref, "prov:wasDerivedFrom": data_output.ref
             })
 
@@ -157,39 +146,37 @@ class HermesHarvestCommand(HermesCommand):
             self.log.critical("No harvest plugin ran successfully.")
             raise HermesPluginRunError("No harvest plugin ran successfully.")
 
-    def init_provenance_document(self) -> tuple[ld_prov_list, ld_prov_node]:
+    def init_provenance_document(self) -> ld_prov_list:
         ctx = HermesContext()
         ctx.prepare_step("harvest")
         with ctx["provenance"] as cache:
             try:
                 ld_prov_doc = ld_prov_list.from_list(cache["codemeta"], container_type="@graph", context=ALL_CONTEXTS)
-                return ld_prov_doc, ld_prov_doc.shallow_search({
-                    "schema:name": lambda doc, node: node["schema:name"][0].find("harvest base plugin") != -1
-                })[0]
+                return ld_prov_doc
             except KeyError:
                 pass
         prov_doc = ld_prov_list()
         prov_doc.init_hermes_agents()
-        prov_doc.add_hermes_command("harvest")
-        return prov_doc, prov_doc.add_hermes_base_plugin("harvest")
+        return prov_doc
 
-    def remove_provenance_info_for_plugin(self, prov_doc, plugin) -> None:
-        plugin = prov_doc.shallow_search({
-            "schema:name": (lambda doc, node: f"harvest plugin {plugin}" in node["schema:name"]),
-        })
-        if len(plugin) == 0:
+    def remove_provenance_info_for_plugin(self, prov_doc: ld_prov_list, plugin) -> None:
+        plugin = prov_doc.get_hermes_plugin("harvest", plugin)
+        if plugin is None:
             return
         # two passes are needed because the nodes are nested exactly two levels
-        related = prov_doc.shallow_search({
-            "prov:wasAssociatedWith": (lambda doc, node: plugin.ref in node["prov:wasAssociatedWith"]),
-            "prov:wasAttributedTo": (lambda doc, node: plugin.ref in node["prov:wasAttributedTo"])
-        })
+        related = prov_doc.shallow_search(lambda doc, node: (
+            ("prov:wasAssociatedWith" in node and plugin.ref in node["prov:wasAssociatedWith"]) or
+            ("prov:wasAttributedTo" in node and plugin.ref in node["prov:wasAttributedTo"])
+        ))
+        if len(related) == 0:
+            del prov_doc[plugin.index]
+            return
         ids = [plugin.ref, *(rel.ref for rel in related)]
-        related = prov_doc.shallow_search({
-            f"prov:{key}": (lambda doc, node: any(id in node[f"prov:{key}"] for id in ids)) for key in [
+        related = prov_doc.shallow_search(lambda doc, node: any(
+            (f"prov:{key}" in node and id in node[f"prov:{key}"]) for id in ids for key in [
                 "wasAssociatedWith", "wasAttributedTo", "wasGeneratedBy", "used", "wasDerivedFrom", "wasInformedBy"
             ]
-        })
+        ))
         for item in related:
-            items = prov_doc.shallow_search({"@id": (lambda doc, node: node["@id"] == item["@id"])})
+            items = prov_doc.shallow_search(lambda doc, node: ("@id" in node and node["@id"] == item["@id"]))
             del prov_doc[items[0].index]
