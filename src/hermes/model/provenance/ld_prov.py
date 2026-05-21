@@ -132,21 +132,21 @@ class ld_prov_list(ld_list):
         return node
 
     def shallow_search(self, query) -> list[ld_dict]:
-        return [item for item in self if query(self, item)]
+        return [item for item in self if query(item)]
 
     def get_hermes(self) -> ld_dict:
-        return self.shallow_search(lambda doc, node: ("@id" in node and node["@id"] == ld_prov_list.HERMES_ID))[0]
+        return self.shallow_search(lambda node: ("@id" in node and node["@id"] == ld_prov_list.HERMES_ID))[0]
 
     def get_hermes_cache(self) -> ld_dict:
-        return self.shallow_search(lambda doc, node: ("@id" in node and node["@id"] == ld_prov_list.HERMES_CACHE_ID))[0]
+        return self.shallow_search(lambda node: ("@id" in node and node["@id"] == ld_prov_list.HERMES_CACHE_ID))[0]
 
     def get_hermes_base_plugin(self, step) -> ld_dict:
-        return self.shallow_search(lambda doc, node: (
+        return self.shallow_search(lambda node: (
             "@id" in node and node["@id"] == ld_prov_list.HERMES_BASE_PLUGIN_ID_FORMAT.format(step=step)
         ))[0]
 
     def get_hermes_plugin(self, step, name) -> Union[ld_dict, None]:
-        search_result = self.shallow_search(lambda doc, node: (
+        search_result = self.shallow_search(lambda node: (
             "@id" in node and node["@id"] == ld_prov_list.HERMES_PLUGIN_ID_FORMAT.format(step=step, name=name)
         ))
         if search_result:
@@ -154,6 +154,6 @@ class ld_prov_list(ld_list):
         return None
 
     def get_hermes_command(self, step) -> ld_dict:
-        return self.shallow_search(lambda doc, node: (
+        return self.shallow_search(lambda node: (
             "@id" in node and node["@id"] == ld_prov_list.HERMES_COMMAND_ID_FORMAT.format(step=step)
         ))[0]

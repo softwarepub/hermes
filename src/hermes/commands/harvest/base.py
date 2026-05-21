@@ -128,13 +128,19 @@ class HermesHarvestCommand(HermesCommand):
             })
             # TODO: add more info
             prov_doc.add_entity(data={
-                "prov:wasGeneratedBy": write.ref, "prov:wasDerivedFrom": data_output.ref
+                "prov:wasGeneratedBy": write.ref,
+                "prov:wasDerivedFrom": data_output.ref,
+                "prov:wasAttributedTo": prov_doc.get_hermes_cache().ref
             })
             prov_doc.add_entity(data={
-                "prov:wasGeneratedBy": write.ref, "prov:wasDerivedFrom": data_output.ref
+                "prov:wasGeneratedBy": write.ref,
+                "prov:wasDerivedFrom": data_output.ref,
+                "prov:wasAttributedTo": prov_doc.get_hermes_cache().ref
             })
             prov_doc.add_entity(data={
-                "prov:wasGeneratedBy": write.ref, "prov:wasDerivedFrom": data_output.ref
+                "prov:wasGeneratedBy": write.ref,
+                "prov:wasDerivedFrom": data_output.ref,
+                "prov:wasAttributedTo": prov_doc.get_hermes_cache().ref
             })
 
         with ctx["provenance"] as cache:
@@ -162,7 +168,7 @@ class HermesHarvestCommand(HermesCommand):
         if plugin is None:
             return
         # two passes are needed because the nodes are nested exactly two levels
-        related = prov_doc.shallow_search(lambda doc, node: (
+        related = prov_doc.shallow_search(lambda node: (
             ("prov:wasAssociatedWith" in node and plugin.ref in node["prov:wasAssociatedWith"]) or
             ("prov:wasAttributedTo" in node and plugin.ref in node["prov:wasAttributedTo"])
         ))
@@ -170,11 +176,11 @@ class HermesHarvestCommand(HermesCommand):
             del prov_doc[plugin.index]
             return
         ids = [plugin.ref, *(rel.ref for rel in related)]
-        related = prov_doc.shallow_search(lambda doc, node: any(
+        related = prov_doc.shallow_search(lambda node: any(
             (f"prov:{key}" in node and id in node[f"prov:{key}"]) for id in ids for key in [
                 "wasAssociatedWith", "wasAttributedTo", "wasGeneratedBy", "used", "wasDerivedFrom", "wasInformedBy"
             ]
         ))
         for item in related:
-            items = prov_doc.shallow_search(lambda doc, node: ("@id" in node and node["@id"] == item["@id"]))
+            items = prov_doc.shallow_search(lambda node: ("@id" in node and node["@id"] == item["@id"]))
             del prov_doc[items[0].index]
