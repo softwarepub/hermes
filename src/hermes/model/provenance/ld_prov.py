@@ -25,14 +25,29 @@ class ld_prov_list(ld_list):
 
     def __init__(
         self: Self,
-        *,
         data: EXPANDED_JSON_LD_VALUE = [{"@graph": []}],
+        *,
         parent: Optional[Union[ld_dict, ld_list]] = None,
         key: Optional[str] = PROV_DOC_IRI,
         index: Optional[int] = None,
         context: Optional[list[Union[str, JSON_LD_CONTEXT_DICT]]] = ALL_CONTEXTS
     ) -> None:
-        super().__init__([{"@graph": []}], parent=parent, key=key, index=index, context=context)
+        super().__init__(data, parent=parent, key=key, index=index, context=context)
+
+    @classmethod
+    def load_ld_prov_list(cls, data) -> "ld_prov_list":
+        if cls.INDICES != {}:
+            raise RuntimeError("Only zero or one objects of class 'ld_prov_list' may exist at every point in time.")
+        prov_list = cls.from_list(data[0]["@graph"], container_type="@graph", context=ALL_CONTEXTS, key=cls.PROV_DOC_IRI)
+        for item in prov_list:
+            if not ("@id" in item and item["@id"].startswith("_:")):
+                continue
+            item_id = item["@id"][2:].split("/")
+            if not (len(item_id) == 2 and item_id[1].isnumeric()):
+                continue
+            if cls.INDICES.get(item_id[0], 0) < int(item_id[1]):
+                cls.INDICES[item_id[0]] = int(item_id[1])
+        return prov_list
 
     def next_node_iri(self, type) -> str:
         if type not in ld_prov_list.INDICES:

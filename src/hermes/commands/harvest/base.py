@@ -139,7 +139,7 @@ class HermesHarvestCommand(HermesCommand):
             })
 
         with ctx["provenance"] as cache:
-            cache["codemeta"] = prov_doc.ld_value
+            cache["result"] = prov_doc.ld_value
 
         ctx.finalize_step('harvest')
         if not harvested_any:
@@ -151,8 +151,7 @@ class HermesHarvestCommand(HermesCommand):
         ctx.prepare_step("harvest")
         with ctx["provenance"] as cache:
             try:
-                ld_prov_doc = ld_prov_list.from_list(cache["codemeta"], container_type="@graph", context=ALL_CONTEXTS)
-                return ld_prov_doc
+                return ld_prov_list.load_ld_prov_list(cache["result"])
             except KeyError:
                 pass
         prov_doc = ld_prov_list()
