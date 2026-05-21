@@ -38,7 +38,9 @@ class ld_prov_list(ld_list):
     def load_ld_prov_list(cls, data) -> "ld_prov_list":
         if cls.INDICES != {}:
             raise RuntimeError("Only zero or one objects of class 'ld_prov_list' may exist at every point in time.")
-        prov_list = cls.from_list(data[0]["@graph"], container_type="@graph", context=ALL_CONTEXTS, key=cls.PROV_DOC_IRI)
+        prov_list = cls.from_list(
+            data[0]["@graph"], key=cls.PROV_DOC_IRI, context=ALL_CONTEXTS, container_type="@graph"
+        )
         for item in prov_list:
             if not ("@id" in item and item["@id"].startswith("_:")):
                 continue

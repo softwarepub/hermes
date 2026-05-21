@@ -13,7 +13,6 @@ from hermes.error import HermesPluginRunError, MisconfigurationError
 from hermes.model.context_manager import HermesContext
 from hermes.model import SoftwareMetadata
 from hermes.model.provenance.ld_prov import ld_prov_list
-from hermes.model.types.ld_context import ALL_CONTEXTS
 
 
 class HermesHarvestPlugin(HermesPlugin):
