@@ -316,7 +316,7 @@ class ld_container:
             COMPACTED_JSON_LD_VALUE: The compacted version of selfs JSON-LD representation.
         """
         return self.ld_proc.compact(
-            self.ld_value, context or self.context, {"documentLoader": bundled_loader, "skipExpand": True}
+            self.ld_value, context or self.full_context, {"documentLoader": bundled_loader, "skipExpand": True}
         )
 
     def to_python(self):
