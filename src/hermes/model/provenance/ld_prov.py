@@ -61,9 +61,9 @@ class ld_prov_list(ld_list):
         self.append(data)
         activity = self[-1]
         if "@type" not in data:
-            activity["@type"] = "prov:Activity"
+            activity["@type"] = ["prov:Activity", "schema:Action"]
         else:
-            activity["@type"].append("prov:Activity")
+            activity["@type"].extend(["prov:Activity", "schema:Action"])
         if "@id" not in data:
             activity["@id"] = self.next_node_iri("Activity")
         return activity
@@ -72,9 +72,9 @@ class ld_prov_list(ld_list):
         self.append(data)
         agent = self[-1]
         if "@type" not in data:
-            agent["@type"] = "prov:Agent"
+            agent["@type"] = ["prov:Agent", "schema:SoftwareApplication"]
         else:
-            agent["@type"].append("prov:Agent")
+            agent["@type"].extend(["prov:Agent", "schema:SoftwareApplication"])
         if "@id" not in data:
             agent["@id"] = self.next_node_iri("Agent")
         return agent
@@ -83,9 +83,9 @@ class ld_prov_list(ld_list):
         self.append(data)
         entity = self[-1]
         if "@type" not in data:
-            entity["@type"] = "prov:Entity"
+            entity["@type"] = ["prov:Entity", "schema:Thing"]
         else:
-            entity["@type"].append("prov:Entity")
+            entity["@type"].extend(["prov:Entity", "schema:Thing"])
         if "@id" not in data:
             entity["@id"] = self.next_node_iri("Entity")
         return entity

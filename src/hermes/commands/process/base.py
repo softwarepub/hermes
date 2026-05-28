@@ -229,7 +229,7 @@ class HermesProcessCommand(HermesCommand):
                 return ld_prov_list.load_ld_prov_list(cache["result"])
             except Exception:
                 self.log.warning(
-                    "The provenance data from the harvest step could not be loaded."
+                    "The provenance data from the harvest step could not be loaded. "
                     "Processing will proceed without collecting provenance data.",
                     exc_info=1
                 )

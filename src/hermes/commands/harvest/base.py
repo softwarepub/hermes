@@ -5,6 +5,7 @@
 # SPDX-FileContributor: Michael Meinel
 
 import argparse
+import datetime
 
 from pydantic import BaseModel
 
@@ -28,9 +29,11 @@ class HermesHarvestPlugin(HermesPlugin):
         pass
 
     def load():
+        # TODO: Implement
         pass
 
     def write():
+        # TODO: Implement
         pass
 
 
@@ -75,14 +78,17 @@ class HermesHarvestCommand(HermesCommand):
             self.log.info(f"### Run {plugin_name} plugin")
             # run plugin
             try:
-                harvested_data = plugin_func(self)
+                harvested_data: SoftwareMetadata = plugin_func(self)
             except Exception:
                 self.log.exception(f"### Unknown error while executing the {plugin_name} plugin, skipping it now.")
                 continue
+            returned_at_time = datetime.datetime.now().isoformat()
 
             self.log.info(f"### Store metadata harvested by {plugin_name} plugin")
             # store harvested data
+            begin_store_at_time = datetime.datetime.now().isoformat()
             harvested_data.write_to_cache(ctx, plugin_name)
+            stored_at_time = datetime.datetime.now().isoformat()
             harvested_any = True
 
             self.remove_provenance_info_for_plugin(prov_doc, plugin_name)
@@ -107,40 +113,64 @@ class HermesHarvestCommand(HermesCommand):
                 io_ops.append(io_op.ref)
 
             map_activity = prov_doc.add_activity(data={
+                "schema:description": "Maps the loaded data to the JSON-LD contexts vocabulary.",
                 "prov:wasInformedBy": io_ops,
                 "prov:used": outputs,
-                "prov:wasAssociatedWith": plugin.ref
+                "prov:wasAssociatedWith": plugin.ref,
+                "prov:startedAtTime": returned_at_time
             })
             data_output = prov_doc.add_entity(data={
+                "schema:description": "the harvested metadata",
                 "prov:wasAttributedTo": plugin.ref,
                 "prov:wasGeneratedBy": map_activity.ref,
-                "prov:wasDerivedFrom": outputs
+                "prov:wasDerivedFrom": outputs,
+                "prov:generatedAtTime": returned_at_time
             })
 
             write = prov_doc.add_activity(data={
+                "schema:description": "Writes the harvested metadata into the HERMES cache.",
                 "prov:wasAssociatedWith": [
                     prov_doc.get_hermes_command("harvest").ref,
                     prov_doc.get_hermes_cache().ref,
                     plugin.ref
                 ],
                 "prov:used": data_output.ref,
-                "prov:wasInformedBy": map_activity.ref
-            })
-            # TODO: add more info
-            prov_doc.add_entity(data={
-                "prov:wasGeneratedBy": write.ref,
-                "prov:wasDerivedFrom": data_output.ref,
-                "prov:wasAttributedTo": prov_doc.get_hermes_cache().ref
+                "prov:wasInformedBy": map_activity.ref,
+                "prov:startedAtTime": begin_store_at_time,
+                "prov:endedAtTime": stored_at_time
             })
             prov_doc.add_entity(data={
+                "@type": "schema:CreativeWork",
+                "schema:description": "The compacted version of the harvested metadata.",
+                "schema:text": str(harvested_data.compact()),
+                "schema:encodingFormat": "application/json",
+                "schema:url": (ctx.cache_dir / "harvest" / plugin_name / "codemeta.json").as_uri(),
                 "prov:wasGeneratedBy": write.ref,
                 "prov:wasDerivedFrom": data_output.ref,
-                "prov:wasAttributedTo": prov_doc.get_hermes_cache().ref
+                "prov:wasAttributedTo": prov_doc.get_hermes_cache().ref,
+                "prov:generatedAtTime": stored_at_time
             })
             prov_doc.add_entity(data={
+                "@type": "schema:CreativeWork",
+                "schema:description": "The context of the harvested metadata.",
+                "schema:text": str({"@context": harvested_data.full_context}),
+                "schema:encodingFormat": "application/json",
+                "schema:url": (ctx.cache_dir / "harvest" / plugin_name / "context.json").as_uri(),
                 "prov:wasGeneratedBy": write.ref,
                 "prov:wasDerivedFrom": data_output.ref,
-                "prov:wasAttributedTo": prov_doc.get_hermes_cache().ref
+                "prov:wasAttributedTo": prov_doc.get_hermes_cache().ref,
+                "prov:generatedAtTime": stored_at_time
+            })
+            prov_doc.add_entity(data={
+                "@type": "schema:CreativeWork",
+                "schema:description": "The expanded version of the harvested metadata.",
+                "schema:text": str(harvested_data.ld_value),
+                "schema:encodingFormat": "application/json",
+                "schema:url": (ctx.cache_dir / "harvest" / plugin_name / "expanded.json").as_uri(),
+                "prov:wasGeneratedBy": write.ref,
+                "prov:wasDerivedFrom": data_output.ref,
+                "prov:wasAttributedTo": prov_doc.get_hermes_cache().ref,
+                "prov:generatedAtTime": stored_at_time
             })
 
         with ctx["provenance"] as cache:
@@ -181,6 +211,7 @@ class HermesHarvestCommand(HermesCommand):
                 "wasAssociatedWith", "wasAttributedTo", "wasGeneratedBy", "used", "wasDerivedFrom", "wasInformedBy"
             ]
         ))
+        del prov_doc[plugin.index]
         for item in related:
             items = prov_doc.shallow_search(lambda node: ("@id" in node and node["@id"] == item["@id"]))
             del prov_doc[items[0].index]
