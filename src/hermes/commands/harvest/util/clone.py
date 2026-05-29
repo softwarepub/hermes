@@ -29,29 +29,29 @@ def _normalize_clone_url(url: str) -> str:
     Normalization rules:
       - For SSH and HTTPS, append ".git" when missing (common, but not required by all hosts).
     """
-    s = str(url).strip()
+    stripped_url = str(url).strip()
     
     # SSH scp-style: git@github.com:org/repo
-    if re.match(r'^[\w.-]+@[\w.-]+:.*', s):
-        return s if s.endswith('.git') else s + '.git'
+    if re.match(r'^[\w.-]+@[\w.-]+:.*', stripped_url):
+        return stripped_url if stripped_url.endswith('.git') else stripped_url + '.git'
     
     # file:// URLs should be passed as-is.
-    if s.startswith('file://'):
-        return s
+    if stripped_url.startswith('file://'):
+        return stripped_url
     
     # If it's an existing local path
-    if os.path.exists(s):
-        return s
+    if os.path.exists(stripped_url):
+        return stripped_url
     
     # Parse normal URLs (http/https).
-    p = urlparse(s)
-    if p.scheme in ('http', 'https'):
-        path = p.path if p.path.endswith('.git') else (p.path.rstrip('/') + '.git')
-        return f"{p.scheme}://{p.netloc}{path}"
+    parsed_url = urlparse(stripped_url)
+    if parsed_url.scheme in ('http', 'https'):
+        path = parsed_url.path if parsed_url.path.endswith('.git') else (parsed_url.path.rstrip('/') + '.git')
+        return f"{parsed_url.scheme}://{parsed_url.netloc}{path}"
     
     # If the user already provided a .git suffix but it isn't http/https, accept it as-is.
-    if s.endswith('.git'):
-        return s
+    if stripped_url.endswith('.git'):
+        return stripped_url
     raise ValueError(f"Unsupported repository URL format: {url!r}")
 
 def _clear_readonly(func, path, excinfo):
