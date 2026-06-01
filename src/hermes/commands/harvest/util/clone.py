@@ -15,6 +15,9 @@ import stat
 from pathlib import Path
 from urllib.parse import urlparse
 from typing import Sequence
+import logging
+
+logger = logging.getLogger(__name__)
 
 # ---------------- utilities ----------------
 
@@ -129,7 +132,12 @@ def rmtree_with_retries(path: Path, retries: int = 6, initial_wait: float = 0.1)
             if not path.exists():
                 return
         except Exception as e:
-            print(f"warn: rmtree attempt {attempt} failed for {path!s}: {e!r}")
+            logger.warning(
+                "rmtree attempt %d failed for %s: %r",
+                attempt,
+                path,
+                e,
+            )
         time.sleep(wait)
         wait *= 2
 
@@ -146,8 +154,11 @@ def rmtree_with_retries(path: Path, retries: int = 6, initial_wait: float = 0.1)
 
     # If still present, report and exit without raising.
     if path.exists():
-        print(f"error: failed to remove temp dir {path!s} after {retries} attempts. "
-              f"Please remove it manually. (Often caused by antivirus or open handles.)")
+        logger.error(
+        "Failed to remove temp dir %s after %d attempts. ",
+        path,
+        retries,
+    )
 
 def _move_or_copy(src: Path, dst: Path):
     """
@@ -186,7 +197,6 @@ def clone_repository(
     *,
     root_only: bool = False,
     include_files: Sequence[str] | None = None,
-    verbose: bool = False,
 ) -> None:
     """
     Clone a Git repository into a destination directory with optional
@@ -211,7 +221,6 @@ def clone_repository(
         insecure_ssl:   Disable SSL verification for Git (not recommended).
         root_only:      Restrict checkout to root-level files only.
         include_files:  Specific file patterns to include in sparse checkout.
-        verbose:        Print command execution details and warnings.
 
     Raises:
         RuntimeError: If both optimized and fallback clones fail,
@@ -227,8 +236,7 @@ def clone_repository(
     # Some GitLab setups have compatibility issues with partial/shallow clones
     is_gitlab = "gitlab.com" in url.lower()
     if is_gitlab:
-        if verbose:
-            print("⚠️ GitLab detected: disabling --depth and --filter=blob:none for safety.")
+        logger.info("GitLab detected: disabling --depth and --filter=blob:none.")
         depth = None
         filter_blobs = False
 
@@ -266,8 +274,7 @@ def clone_repository(
         tmp = Path(tempfile.mkdtemp(prefix="clone_tmp_", dir=str(parent)))
         created_temp_dirs.append(tmp)
         cmd = build_cmd_for(tmp, optimized)
-        if verbose:
-            print("running:", " ".join(cmd))
+        logger.info("Running: %s", " ".join(cmd))
         proc = subprocess.run(cmd, capture_output=True, text=True, env=env)
         return proc.returncode, proc, tmp
 
@@ -275,9 +282,7 @@ def clone_repository(
         # First attempt: optimized clone
         rc1, p1, tmp1 = attempt_clone(optimized=True)
         if rc1 != 0:
-            if verbose:
-                print("warn: optimized clone failed. stderr:")
-                print(p1.stderr.strip() or "(no stderr)")
+            logger.warning("Optimized clone failed. stderr:\n%s", p1.stderr.strip() or "(no stderr)")
             # Second attempt: plain clone
             rc2, p2, tmp2 = attempt_clone(optimized=False)
             if rc2 != 0:
@@ -296,8 +301,7 @@ def clone_repository(
                     rmtree_with_retries(dest_path)
 
             _move_or_copy(tmp2, dest_path)
-            if verbose:
-                print("✅ Repository cloned successfully (fallback/full clone).")
+            logger.info("Repository cloned successfully (fallback/full clone).")
             return
 
         # Optimized clone succeeded
@@ -308,8 +312,7 @@ def clone_repository(
                 rmtree_with_retries(dest_path)
 
         _move_or_copy(tmp1, dest_path)
-        if verbose:
-            print("✅ Repository cloned successfully (optimized clone).")
+        logger.info("Repository cloned successfully (optimized clone).")
 
         # if sparse/root_only/include_files were requested, apply sparse-checkout
         if sparse or root_only or (include_files and len(include_files) > 0):
@@ -332,15 +335,14 @@ def clone_repository(
                         ["git", "-C", str(dest_path), "sparse-checkout", "set", "--no-cone", *patterns],
                         check=True
                     )
-                    if verbose:
-                        print("📁 Sparse checkout applied:", patterns)
+                    logger.info("Sparse checkout applied: %s", patterns)
             except subprocess.CalledProcessError as e:
-                print("warn: sparse-checkout setup failed:", e)
+                logger.warning("Sparse-checkout setup failed: %s", e)
 
     finally:
-        # Always attempt to clean up temporary directories
-        for t in created_temp_dirs:
+        # Clean up temporary directory created for clone attempts.
+        for temp_dir in created_temp_dirs:
             try:
-                rmtree_with_retries(t)
+                rmtree_with_retries(temp_dir)
             except Exception as e:
-                print(f"warn: final cleanup failed for {t}: {e!r}")
+                logger.warning("Final cleanup failed for %s: %r", temp_dir, e)
