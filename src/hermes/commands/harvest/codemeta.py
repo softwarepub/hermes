@@ -34,7 +34,7 @@ class CodeMetaHarvestPlugin(HermesHarvestPlugin):
             )
 
         # Read the content
-        codemeta_str = codemeta_file.read_text()
+        codemeta_str = self.load(pathlib.Path.read_text, codemeta_file)
 
         if not self._validate(codemeta_file):
             raise HermesValidationError(codemeta_file)

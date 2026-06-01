@@ -6,6 +6,8 @@
 
 import argparse
 import datetime
+from io import IOBase
+from pathlib import Path
 
 from pydantic import BaseModel
 
@@ -28,9 +30,24 @@ class HermesHarvestPlugin(HermesPlugin):
     def __call__(self, command: HermesCommand) -> SoftwareMetadata:
         pass
 
-    def load():
-        # TODO: Implement
-        pass
+    def load(self, func, source, *args, **kwargs):
+        source_metadata = {"schema:description": "metadata source"}
+        if isinstance(source, IOBase):
+            source_metadata["schema:url"] = Path(source.name).absolute().as_uri()
+        elif isinstance(source, Path):
+            source_metadata["schema:url"] = source.absolute().as_uri()
+        elif isinstance(source, str):
+            source_metadata["schema:url"] = Path(source).absolute().as_uri()
+        io_operation = { 
+            "schema:description": "Load operation called with ("
+                f"{source_metadata['schema:url'] if 'schema:url' in source_metadata else str(source)}"
+                f"{', ' + str(args) if args else ''}{', ' + str(kwargs) if kwargs else ''}).",
+            "schema:name": f"{func.__module__}.{func.__qualname__}"
+        }
+        result = func(source, *args, **kwargs)
+        loaded_metadata = {"schema:description": "the loaded data", "schema:text": str(result)}
+        self.io_operations.append((source_metadata, io_operation, loaded_metadata))
+        return result
 
     def write():
         # TODO: Implement
@@ -108,7 +125,7 @@ class HermesHarvestCommand(HermesCommand):
                     "prov:wasDerivedFrom": loaded_source.ref,
                     "prov:wasGeneratedBy": io_op.ref
                 })
-                loaded_data = prov_doc.add_entity(data=plugin_io_operations[2])
+                loaded_data = prov_doc.add_entity(data=plugin_io_operation[2])
                 outputs.append(loaded_data.ref)
                 io_ops.append(io_op.ref)
 
@@ -144,7 +161,7 @@ class HermesHarvestCommand(HermesCommand):
                 "schema:description": "The compacted version of the harvested metadata.",
                 "schema:text": str(harvested_data.compact()),
                 "schema:encodingFormat": "application/json",
-                "schema:url": (ctx.cache_dir / "harvest" / plugin_name / "codemeta.json").as_uri(),
+                "schema:url": (ctx.cache_dir / "harvest" / plugin_name / "codemeta.json").absolute().as_uri(),
                 "prov:wasGeneratedBy": write.ref,
                 "prov:wasDerivedFrom": data_output.ref,
                 "prov:wasAttributedTo": prov_doc.get_hermes_cache().ref,
@@ -155,7 +172,7 @@ class HermesHarvestCommand(HermesCommand):
                 "schema:description": "The context of the harvested metadata.",
                 "schema:text": str({"@context": harvested_data.full_context}),
                 "schema:encodingFormat": "application/json",
-                "schema:url": (ctx.cache_dir / "harvest" / plugin_name / "context.json").as_uri(),
+                "schema:url": (ctx.cache_dir / "harvest" / plugin_name / "context.json").absolute().as_uri(),
                 "prov:wasGeneratedBy": write.ref,
                 "prov:wasDerivedFrom": data_output.ref,
                 "prov:wasAttributedTo": prov_doc.get_hermes_cache().ref,
@@ -166,7 +183,7 @@ class HermesHarvestCommand(HermesCommand):
                 "schema:description": "The expanded version of the harvested metadata.",
                 "schema:text": str(harvested_data.ld_value),
                 "schema:encodingFormat": "application/json",
-                "schema:url": (ctx.cache_dir / "harvest" / plugin_name / "expanded.json").as_uri(),
+                "schema:url": (ctx.cache_dir / "harvest" / plugin_name / "expanded.json").absolute().as_uri(),
                 "prov:wasGeneratedBy": write.ref,
                 "prov:wasDerivedFrom": data_output.ref,
                 "prov:wasAttributedTo": prov_doc.get_hermes_cache().ref,
@@ -197,7 +214,6 @@ class HermesHarvestCommand(HermesCommand):
         plugin = prov_doc.get_hermes_plugin("harvest", plugin)
         if plugin is None:
             return
-        # two passes are needed because the nodes are nested exactly two levels
         related = prov_doc.shallow_search(lambda node: (
             ("prov:wasAssociatedWith" in node and plugin.ref in node["prov:wasAssociatedWith"]) or
             ("prov:wasAttributedTo" in node and plugin.ref in node["prov:wasAttributedTo"])
@@ -206,7 +222,9 @@ class HermesHarvestCommand(HermesCommand):
             del prov_doc[plugin.index]
             return
         ids = [plugin.ref, *(rel.ref for rel in related)]
-        related = prov_doc.shallow_search(lambda node: any(
+        used_entities = [rel["prov:used"][0]["@id"] for rel in related if "prov:used" in rel]
+        related = prov_doc.shallow_search(lambda node: node["@id"] in used_entities)
+        related += prov_doc.shallow_search(lambda node: any(
             (f"prov:{key}" in node and id in node[f"prov:{key}"]) for id in ids for key in [
                 "wasAssociatedWith", "wasAttributedTo", "wasGeneratedBy", "used", "wasDerivedFrom", "wasInformedBy"
             ]
@@ -214,4 +232,5 @@ class HermesHarvestCommand(HermesCommand):
         del prov_doc[plugin.index]
         for item in related:
             items = prov_doc.shallow_search(lambda node: ("@id" in node and node["@id"] == item["@id"]))
-            del prov_doc[items[0].index]
+            if len(items) == 1:
+                del prov_doc[items[0].index]

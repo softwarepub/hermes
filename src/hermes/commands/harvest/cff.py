@@ -43,7 +43,7 @@ class CffHarvestPlugin(HermesHarvestPlugin):
                                         'Aborting harvesting for this metadata source.')
 
         # Read the content
-        cff_data = cff_file.read_text()
+        cff_data = self.load(pathlib.Path.read_text, cff_file)
         cff_dict = self._load_cff_from_file(cff_data)
 
         if command.settings.cff.enable_validation:
