@@ -57,7 +57,7 @@ class HermesHarvestCommand(HermesCommand):
                 log.info(f"Cloning repository {args.url} into {temp_path}")
                 
                 try:
-                    clone_repository(args.url, temp_path, recursive=True, depth=1, filter_blobs=True, sparse=False, verbose=True)
+                    clone_repository(args.url, temp_path, recursive=True, depth=1, filter_blobs=True, sparse=False)
                 except Exception as exc:
                     print("ERROR:", exc)
                 args.path = temp_path  # Overwrite args.path to temp directory
