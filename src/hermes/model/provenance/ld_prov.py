@@ -127,7 +127,7 @@ class ld_prov_list(ld_list):
             "@id": ld_prov_list.HERMES_PLUGIN_ID_FORMAT.format(step=step, name=name),
             "@type": "schema:SoftwareApplication",
             "schema:name": f"{utils.hermes_name} {step} plugin '{name}'",
-            "prov:actedOnBehalfOf": self.get_hermes_base_plugin(step)
+            "prov:actedOnBehalfOf": self.get_hermes_base_plugin(step).ref
         })
         return node
 

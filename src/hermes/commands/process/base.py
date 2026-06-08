@@ -10,6 +10,7 @@ from typing import Optional
 from pydantic import BaseModel
 
 from hermes.commands.base import HermesCommand, HermesPlugin
+from hermes.commands.harvest.base import remove_harvest_plugin_from_prov_doc
 from hermes.error import HermesPluginRunError, MisconfigurationError
 from hermes.model.api import SoftwareMetadata
 from hermes.model.context_manager import HermesContext
@@ -46,7 +47,7 @@ class HermesProcessCommand(HermesCommand):
             hermes_cache = prov_doc.get_hermes_cache()
 
         self.log.info("# Metadata processing")
-        merged_doc = ld_merge_dict([{}])
+        merged_doc = ld_merge_dict([{}], prov_doc)
 
         if not self.settings.plugins:
             self.log.critical(
@@ -119,7 +120,6 @@ class HermesProcessCommand(HermesCommand):
         # merge data from harvesters
         self.log.info("## Merge the metadata of the harvesters")
         merged_any = False
-        merge_action, merged_data = None, None
         for harvester in harvester_names:
             self.log.info(f"### Load data from {harvester} plugin")
             # load data from harvester
@@ -127,56 +127,56 @@ class HermesProcessCommand(HermesCommand):
                 metadata = SoftwareMetadata.load_from_cache(ctx, harvester)
             except Exception:
                 # skip this harvester when the data is invalid
+                if prov_doc is not None:
+                    remove_harvest_plugin_from_prov_doc(prov_doc, harvester)
                 self.log.exception(
                     f"### The data from the harvester {harvester} could not be loaded or is invalid, skipping it now."
                 )
                 continue
+
+            if prov_doc is not None:
+                harvest_plugin = prov_doc.get_hermes_plugin("harvest", harvester)
+                harvest_command = prov_doc.get_hermes_command("harvest")
+                store_action = prov_doc.shallow_search(lambda node: (
+                    "prov:wasAssociatedWith" in node and
+                    node["prov:wasAssociatedWith"] == [harvest_plugin.ref, hermes_cache.ref, harvest_command.ref]
+                ))[0]
+                stored_results = [
+                    result.ref for result in prov_doc.shallow_search(lambda node: (
+                        "prov:wasGeneratedBy" in node and node["prov:wasGeneratedBy"] == [store_action.ref]
+                    ))
+                ]
+                new_action = prov_doc.add_activity(data={  # load of new data
+                    "prov:wasAssociatedWith": [process_command.ref, hermes_cache.ref],
+                    "prov:used": stored_results
+                })
+                new_data = prov_doc.add_entity(data={  # new data to be merged
+                    "prov:wasAttributedTo": plugin.ref,
+                    "prov:wasGeneratedBy": new_action.ref,
+                    "prov:wasDerivedFrom": stored_results
+                })
+                if merged_any:
+                    # One pass must have been completed already.
+                    new_action = prov_doc.add_activity(data={
+                        "prov:used": [last_data.ref, new_data.ref],
+                        "prov:wasInformedBy": [last_action.ref, new_action.ref],
+                        "prov:wasAssociatedWith": process_command.ref
+                    })  # initial merge action of the merge
+                    merged_doc.prov_objects = [new_action, new_data, last_data]
 
             self.log.info(f"### Merge data from {harvester} plugin")
             # merge data into the merge dict
             try:
                 merged_doc.update(metadata)
             except Exception as e:
+                # TODO: Maybe this state is recoverable by starting over again and skipping this plugin.
                 self.log.critical(f"### Merging the data from {harvester} plugin resulted in an error.", exc_info=True)
                 raise RuntimeError(f"Merging the data from {harvester} plugin failed.") from e
-            merged_any = True
 
-            if prov_doc is None:
-                continue
-            harvest_plugin = prov_doc.get_hermes_plugin("harvest", harvester)
-            harvest_command = prov_doc.get_hermes_command("harvest")
-            store_action = prov_doc.shallow_search(lambda node: (
-                "prov:wasAssociatedWith" in node and
-                node["prov:wasAssociatedWith"] == [harvest_plugin.ref, hermes_cache.ref, harvest_command.ref]
-            ))[0]
-            stored_results = [
-                result.ref for result in prov_doc.shallow_search(
-                    lambda node: ("prov:wasGeneratedBy" in node and node["prov:wasGeneratedBy"] == store_action.ref)
-                )
-            ]
-            new_data_load = prov_doc.add_activity(data={
-                "prov:wasAssociatedWith": [process_command.ref, hermes_cache.ref],
-                "prov:used": stored_results
-            })
-            new_data = prov_doc.add_entity(data={
-                "prov:wasAttributedTo": plugin.ref,
-                "prov:wasGeneratedBy": new_data_load.ref,
-                "prov:wasDerivedFrom": stored_results
-            })
-            if merged_data is None:
-                merged_data = new_data
-                merge_action = new_data_load
-                continue
-            merge_action = prov_doc.add_activity(data={
-                "prov:used": [merged_data.ref, new_data.ref, merged_strategies.ref],
-                "prov:wasInformedBy": [merge_action.ref, new_data_load.ref],
-                "prov:wasAssociatedWith": process_command.ref
-            })
-            merged_data = prov_doc.add_entity(data={
-                "prov:wasDerivedFrom": [merged_data.ref, new_data.ref],
-                "prov:wasGeneratedBy": merge_action.ref,
-                "prov:wasAttributedTo": process_command.ref
-            })
+            if prov_doc is not None:
+                last_action = merged_doc.prov_objects[0] if merged_any else new_action
+                last_data = merged_doc.prov_objects[2] if merged_any else new_data
+            merged_any = True
 
         # error if nothing was merged
         if not merged_any:
@@ -194,23 +194,23 @@ class HermesProcessCommand(HermesCommand):
         if prov_doc is not None:
             write = prov_doc.add_activity(data={
                 "prov:wasAssociatedWith": [process_command.ref, hermes_cache.ref, plugin.ref],
-                "prov:used": merged_data.ref,
-                "prov:wasInformedBy": merge_action.ref
+                "prov:used": last_data.ref,
+                "prov:wasInformedBy": last_action.ref
             })
             # TODO: add more info
             prov_doc.add_entity(data={
                 "prov:wasGeneratedBy": write.ref,
-                "prov:wasDerivedFrom": merged_data.ref,
+                "prov:wasDerivedFrom": last_data.ref,
                 "prov:wasAttributedTo": hermes_cache.ref
             })
             prov_doc.add_entity(data={
                 "prov:wasGeneratedBy": write.ref,
-                "prov:wasDerivedFrom": merged_data.ref,
+                "prov:wasDerivedFrom": last_data.ref,
                 "prov:wasAttributedTo": hermes_cache.ref
             })
             prov_doc.add_entity(data={
                 "prov:wasGeneratedBy": write.ref,
-                "prov:wasDerivedFrom": merged_data.ref,
+                "prov:wasDerivedFrom": last_data.ref,
                 "prov:wasAttributedTo": hermes_cache.ref
             })
 

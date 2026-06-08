@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Callable, Optional, Union
 from typing_extensions import Self
 
+from hermes.model.provenance.ld_prov import ld_prov_list
 from hermes.model.types import ld_container, ld_context, ld_dict, ld_list
 from hermes.model.types.ld_container import (
     BASIC_TYPE, EXPANDED_JSON_LD_VALUE, JSON_LD_CONTEXT_DICT, JSON_LD_VALUE, TIME_TYPE
@@ -50,6 +51,8 @@ class _ld_merge_container:
         if isinstance(value, ld_dict) and not isinstance(value, ld_merge_dict):
             value = ld_merge_dict(
                 value.ld_value,
+                self.prov_doc,
+                self.prov_objects,
                 parent=value.parent,
                 key=value.key,
                 index=value.index,
@@ -60,6 +63,8 @@ class _ld_merge_container:
         if isinstance(value, ld_list) and not isinstance(value, ld_merge_list):
             value = ld_merge_list(
                 value.ld_value,
+                self.prov_doc,
+                self.prov_objects,
                 parent=value.parent,
                 key=value.key,
                 index=value.index,
@@ -82,6 +87,8 @@ class ld_merge_list(_ld_merge_container, ld_list):
     def __init__(
         self: "ld_merge_list",
         data: Union[list[str], list[dict[str, EXPANDED_JSON_LD_VALUE]]],
+        prov_doc: ld_prov_list = None,
+        prov_objects: list[ld_dict] = 3*[None],
         *,
         parent: Optional[ld_container] = None,
         key: Optional[str] = None,
@@ -108,6 +115,8 @@ class ld_merge_list(_ld_merge_container, ld_list):
         super().__init__(data, parent=parent, key=key, index=index, context=context)
 
         self.strategies = strategies
+        self.prov_doc = prov_doc
+        self.prov_objects = prov_objects
 
 
 class ld_merge_dict(_ld_merge_container, ld_dict):
@@ -123,6 +132,8 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
     def __init__(
         self: Self,
         data: list[dict[str, EXPANDED_JSON_LD_VALUE]],
+        prov_doc: ld_prov_list = None,
+        prov_objects: list[ld_dict] = 3*[None],
         *,
         parent: Optional[Union[ld_dict, ld_list]] = None,
         key: Optional[str] = None,
@@ -154,6 +165,8 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
 
         # add strategies
         self.strategies = strategies
+        self.prov_doc = prov_doc
+        self.prov_objects = prov_objects
 
     def update_context(
         self: Self, other_context: Union[list[Union[str, JSON_LD_CONTEXT_DICT]], None]
@@ -225,9 +238,32 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
         """
         # create the new item if self[key] and value have to be merged.
         if key in self:
-            value = self._merge_item(key, value)
+            if self.prov_objects[0] is not None:
+                last_merged_data = self.prov_objects[2]
+            merge_activity, value = self._merge_item(key, value)
+            if self.prov_objects[0] is not None:
+                create_new_merged_data = last_merged_data is self.prov_objects[2]
+        elif self.prov_objects[0] is not None:
+            merge_activity = self.prov_doc.add_activity(data={
+                "schema:name": "merge",
+                "schema:description": "foo",
+                "prov:used": {"@list": [self.prov_objects[2].ref, str(self.path+[key])]},
+                "prov:wasInformedBy": self.prov_objects[0].ref
+            })
+            create_new_merged_data = True
         # update the entry of self[key]
         super().__setitem__(key, value)
+        if self.prov_objects[0] is None:
+            return
+        self.prov_objects[0] = merge_activity
+        if create_new_merged_data:
+            self.prov_objects[2] = self.prov_doc.add_entity(data={
+                "prov:wasAttributedTo": self.prov_doc.get_hermes_command("process").ref,
+                "prov:wasGeneratedBy": merge_activity.ref,
+                "prov:wasDerivedFrom": {"@list": [self.prov_objects[1].ref, self.prov_objects[2].ref]}
+            })
+        else:
+            self.prov_objects[2]["prov:wasGeneratedBy"].append(merge_activity.ref)
 
     def match(
         self: Self,
@@ -281,7 +317,18 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
         merger = strategy.get(key, strategy.get(None, None))
         if merger is None:
             raise MergeError(f"Can't merge, no strategy found for key '{key}'.")
-        return merger.merge(self, [*self.path, key], self[key], value)
+        if self.prov_objects[0] is not None:
+            merge_activity = self.prov_doc.add_activity(data={
+                "schema:name": "merge",
+                "schema:description": "foo",
+                "prov:wasAssociatedWith": self.prov_doc.get_hermes_command("process").ref,
+                "prov:used": {"@list": [self.prov_objects[1].ref, self.prov_objects[2].ref, str(self.path+[key])]},
+                "prov:wasInformedBy": self.prov_objects[0].ref
+            })
+            self.prov_objects[0] = merge_activity
+        else:
+            merge_activity = None
+        return merge_activity, merger.merge(self, [*self.path, key], self[key], value)
 
     def _add_related(
         self: Self, rel: str, key: str, value: Union[BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]

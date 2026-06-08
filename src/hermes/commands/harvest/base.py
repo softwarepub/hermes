@@ -38,10 +38,10 @@ class HermesHarvestPlugin(HermesPlugin):
             source_metadata["schema:url"] = source.absolute().as_uri()
         elif isinstance(source, str):
             source_metadata["schema:url"] = Path(source).absolute().as_uri()
-        io_operation = { 
+        io_operation = {
             "schema:description": "Load operation called with ("
-                f"{source_metadata['schema:url'] if 'schema:url' in source_metadata else str(source)}"
-                f"{', ' + str(args) if args else ''}{', ' + str(kwargs) if kwargs else ''}).",
+            f"{source_metadata['schema:url'] if 'schema:url' in source_metadata else str(source)}"
+            f"{', ' + str(args) if args else ''}{', ' + str(kwargs) if kwargs else ''}).",
             "schema:name": f"{func.__module__}.{func.__qualname__}"
         }
         result = func(source, *args, **kwargs)
@@ -58,6 +58,32 @@ class HarvestSettings(BaseModel):
     """Generic harvesting settings."""
 
     sources: list[str] = []
+
+
+def remove_harvest_plugin_from_prov_doc(prov_doc: ld_prov_list, plugin: str) -> None:
+    plugin = prov_doc.get_hermes_plugin("harvest", plugin)
+    if plugin is None:
+        return
+    related = prov_doc.shallow_search(lambda node: (
+        ("prov:wasAssociatedWith" in node and plugin.ref in node["prov:wasAssociatedWith"]) or
+        ("prov:wasAttributedTo" in node and plugin.ref in node["prov:wasAttributedTo"])
+    ))
+    if len(related) == 0:
+        del prov_doc[plugin.index]
+        return
+    ids = [plugin.ref, *(rel.ref for rel in related)]
+    used_entities = [rel["prov:used"][0]["@id"] for rel in related if "prov:used" in rel]
+    related = prov_doc.shallow_search(lambda node: node["@id"] in used_entities)
+    related += prov_doc.shallow_search(lambda node: any(
+        (f"prov:{key}" in node and id in node[f"prov:{key}"]) for id in ids for key in [
+            "wasAssociatedWith", "wasAttributedTo", "wasGeneratedBy", "used", "wasDerivedFrom", "wasInformedBy"
+        ]
+    ))
+    del prov_doc[plugin.index]
+    for item in related:
+        items = prov_doc.shallow_search(lambda node: ("@id" in node and node["@id"] == item["@id"]))
+        if len(items) == 1:
+            del prov_doc[items[0].index]
 
 
 class HermesHarvestCommand(HermesCommand):
@@ -108,7 +134,7 @@ class HermesHarvestCommand(HermesCommand):
             stored_at_time = datetime.datetime.now().isoformat()
             harvested_any = True
 
-            self.remove_provenance_info_for_plugin(prov_doc, plugin_name)
+            remove_harvest_plugin_from_prov_doc(prov_doc, plugin_name)
 
             plugin = prov_doc.add_hermes_plugin("harvest", plugin_name)
             plugin_io_operations = plugin_func.io_operations
@@ -159,7 +185,7 @@ class HermesHarvestCommand(HermesCommand):
             prov_doc.add_entity(data={
                 "@type": "schema:CreativeWork",
                 "schema:description": "The compacted version of the harvested metadata.",
-                "schema:text": str(harvested_data.compact()),
+                "schema:text": str(harvested_data.compact()),  # TODO: maybe "prov:value" instead?
                 "schema:encodingFormat": "application/json",
                 "schema:url": (ctx.cache_dir / "harvest" / plugin_name / "codemeta.json").absolute().as_uri(),
                 "prov:wasGeneratedBy": write.ref,
@@ -170,7 +196,7 @@ class HermesHarvestCommand(HermesCommand):
             prov_doc.add_entity(data={
                 "@type": "schema:CreativeWork",
                 "schema:description": "The context of the harvested metadata.",
-                "schema:text": str({"@context": harvested_data.full_context}),
+                "schema:text": str({"@context": harvested_data.full_context}),  # TODO: maybe "prov:value" instead?
                 "schema:encodingFormat": "application/json",
                 "schema:url": (ctx.cache_dir / "harvest" / plugin_name / "context.json").absolute().as_uri(),
                 "prov:wasGeneratedBy": write.ref,
@@ -181,7 +207,7 @@ class HermesHarvestCommand(HermesCommand):
             prov_doc.add_entity(data={
                 "@type": "schema:CreativeWork",
                 "schema:description": "The expanded version of the harvested metadata.",
-                "schema:text": str(harvested_data.ld_value),
+                "schema:text": str(harvested_data.ld_value),  # TODO: maybe "prov:value" instead?
                 "schema:encodingFormat": "application/json",
                 "schema:url": (ctx.cache_dir / "harvest" / plugin_name / "expanded.json").absolute().as_uri(),
                 "prov:wasGeneratedBy": write.ref,
@@ -209,28 +235,3 @@ class HermesHarvestCommand(HermesCommand):
         prov_doc = ld_prov_list()
         prov_doc.init_hermes_agents()
         return prov_doc
-
-    def remove_provenance_info_for_plugin(self, prov_doc: ld_prov_list, plugin) -> None:
-        plugin = prov_doc.get_hermes_plugin("harvest", plugin)
-        if plugin is None:
-            return
-        related = prov_doc.shallow_search(lambda node: (
-            ("prov:wasAssociatedWith" in node and plugin.ref in node["prov:wasAssociatedWith"]) or
-            ("prov:wasAttributedTo" in node and plugin.ref in node["prov:wasAttributedTo"])
-        ))
-        if len(related) == 0:
-            del prov_doc[plugin.index]
-            return
-        ids = [plugin.ref, *(rel.ref for rel in related)]
-        used_entities = [rel["prov:used"][0]["@id"] for rel in related if "prov:used" in rel]
-        related = prov_doc.shallow_search(lambda node: node["@id"] in used_entities)
-        related += prov_doc.shallow_search(lambda node: any(
-            (f"prov:{key}" in node and id in node[f"prov:{key}"]) for id in ids for key in [
-                "wasAssociatedWith", "wasAttributedTo", "wasGeneratedBy", "used", "wasDerivedFrom", "wasInformedBy"
-            ]
-        ))
-        del prov_doc[plugin.index]
-        for item in related:
-            items = prov_doc.shallow_search(lambda node: ("@id" in node and node["@id"] == item["@id"]))
-            if len(items) == 1:
-                del prov_doc[items[0].index]
