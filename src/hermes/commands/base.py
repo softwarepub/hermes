@@ -11,9 +11,9 @@ import pathlib
 from importlib import metadata
 from typing import Type, Union
 
-import toml
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
+import tomlkit
 
 
 class HermesSettings(BaseSettings):
@@ -131,7 +131,7 @@ class HermesCommand(abc.ABC):
     def load_settings(self, args: argparse.Namespace):
         """Load settings from the configuration file (passed in from command line)."""
 
-        toml_data = toml.load(args.path / args.config)
+        toml_data = tomlkit.load((args.path / args.config).open()).unwrap()
         self.root_settings = HermesCommand.settings_class.model_validate(toml_data)
         self.settings = getattr(self.root_settings, self.command_name)
 

@@ -22,7 +22,8 @@
 #
 import os
 import sys
-import toml
+
+import tomlkit
 
 sys.path.insert(0, os.path.abspath('../../src'))
 sys.path.append(os.path.abspath('_ext'))
@@ -36,7 +37,7 @@ def read_from_pyproject(file_path="../../pyproject.toml"):
     """
     try:
         # Load the pyproject.toml file
-        data = toml.load(file_path)
+        data = tomlkit.load(open(file_path, 'r')).unwrap()
 
         # Navigate to the authors metadata
         metadata = data.get("project", {})
@@ -45,7 +46,7 @@ def read_from_pyproject(file_path="../../pyproject.toml"):
         return metadata
     except FileNotFoundError:
         return f"The file {file_path} was not found."
-    except toml.TomlDecodeError:
+    except tomlkit.exceptions.TOMLKitError:
         return f"Failed to parse {file_path}. Ensure it is a valid TOML file."
     except Exception as e:
         return f"An unexpected error occurred: {e}"
