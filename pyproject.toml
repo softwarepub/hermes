@@ -77,7 +77,7 @@ codemeta_doi = "hermes.commands.postprocess.invenio:codemeta_doi"
 codemeta = "hermes.commands.process.standard_merge:CodemetaProcessPlugin"
 
 [project.entry-points."hermes.curate"]
-pass_curate = "hermes.commands.curate.pass_curate:DoNothingCuratePlugin"
+pass_curate = "hermes.commands.curate.pass_curate:PassCuratePlugin"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.1.1"

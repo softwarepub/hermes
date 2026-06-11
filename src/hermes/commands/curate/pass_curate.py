@@ -4,12 +4,12 @@ from hermes.model import SoftwareMetadata
 from .base import HermesCurateCommand, HermesCuratePlugin
 
 
-class DoNothingCurateSettings(BaseModel):
+class PassCurateSettings(BaseModel):
     pass
 
 
-class DoNothingCuratePlugin(HermesCuratePlugin):
-    settings_class = DoNothingCurateSettings
+class PassCuratePlugin(HermesCuratePlugin):
+    settings_class = PassCurateSettings
 
     def __call__(self, command: HermesCurateCommand, metadata: SoftwareMetadata) -> SoftwareMetadata:
         return metadata
