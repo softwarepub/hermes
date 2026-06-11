@@ -14,10 +14,29 @@ SPDX-FileContributor: Stephan Druskat <stephan.druskat@dlr.de>
 It is based on [**JSON-LD (JSON Linked Data)**](https://json-ld.org/), and
 the public API simplifies interaction with the data model through Python code.
 
-Output of the different `hermes` commands consequently is valid JSON-LD, serialized as JSON, that is cached in 
-subdirectories of the `.hermes/` directory that is created in the root of the project directory.
+Output of the different `hermes` subcommands consequently are valid JSON-LD files that are cached in
+subdirectories of the `.hermes/` directory that is created in the root of the project directory (see following diagram).
+```
+.hermes
+│  audit.log
+├──curate
+│  └──result
+│     ├──codemeta.json
+│     ├──context.json
+│     └──expanded.json
+├──harvest
+│  └──cff <- for every plugin one folder
+│     ├──codemeta.json
+|     ├──context.json
+│     └──expanded.json
+└──process
+   └──result
+      ├──codemeta.json
+      ├──context.json
+      └──expanded.json
+```
 
-The cache is purely for internal purposes, its data should not be interacted with.
+The cache should only be interacted with via the `hermes` libraries.
 
 Depending on whether you develop a plugin for `hermes`, or you develop `hermes` itself, you need to know either [_some_](#json-ld-for-plugin-developers),
 or _quite a few_ things about JSON-LD.
@@ -29,7 +48,7 @@ even if you have no previous experience with JSON-LD.
 ## The data model for plugin developers
 
 If you develop a plugin for `hermes`, you will only need to work with a single Python class and the public API 
-it provides: {class}`hermes.model.SoftwareMetadata`.
+it provides: {class}`hermes.model.api.SoftwareMetadata`.
 
 To work with this class, it is necessary that you know _some_ things about JSON-LD.
 
@@ -48,8 +67,6 @@ Work in progress.
 `hermes` aims to hide as much of the data model as possible behind a public API
 to avoid that plugin developers have to deal with some of the more complex features of JSON-LD.
 
-#### Model instances in different types of plugin
-
 You can extend `hermes` with plugins for three different commands: `harvest`, `curate`, `deposit`.
 
 The commands differ in how they work with instances of the data model.
@@ -60,20 +77,18 @@ and return a single model instance.
 - `deposit` plugins are passed a single existing model instance (the output of `curate`),
 and return a single model instance.
 
-#### How plugins work with the API
-
 ```{important}
-Plugins access the data model _exclusively_ through the API class {class}`hermes.model.SoftwareMetadata`.
+Plugins access the data model _exclusively_ through the API class {class}`hermes.model.api.SoftwareMetadata`.
 ```
  
 The following sections show how this class works. 
 
-##### Creating a data model instance
+#### Creating a data model instance
 
 Model instances are primarily created in `harvest` plugins, but may also be created in other plugins to map
 existing data into.
 
-To create a new model instance, initialize {class}`hermes.model.SoftwareMetadata`:
+To create a new model instance, initialize {class}`hermes.model.api.SoftwareMetadata`:
 
 ```{code-block} python
 :caption: Initializing a default data model instance
@@ -121,9 +136,9 @@ data = SoftwareMetadata(extra_vocabs={"foo": "https://bar.net/schema.jsonld"})
 data["foo:name"] = ...
 ```
 
-##### Adding data
+#### Adding data
 
-Once you have an instance of {class}`hermes.model.SoftwareMetadata`, you can add data to it,
+Once you have an instance of {class}`hermes.model.api.SoftwareMetadata`, you can add data to it,
 i.e., metadata that describes software:
 
 ```{code-block} python
@@ -136,7 +151,7 @@ data["author"] = {"name": "Shakespeare"}  # An object value that uses terms avai
 # Cf. "Accessing data" below
 ```
 
-##### Accessing data
+#### Accessing data
 
 You need to be able to access data in the data model instance to add, edit or remove data.
 Data can be accessed by using term strings, similar to how values in Python `dict`s are accessed by keys.
@@ -162,7 +177,7 @@ Therefore, you access data in the same way you would access data from a Python `
 2. You can use a list-like API to interact with data objects, e.g.,
 `data["name"].append("Hamilton")`, `data["name"].extend(["Hamilton", "Knuth"])`, `for name in data["name"]: ...`, etc.
 
-##### Interacting with data
+#### Interacting with data
 
 The following longer example shows different ways that you can interact with `SoftwareMetadata` objects and the data API.
 
@@ -233,14 +248,8 @@ if all(["hamilton" in email for email in data["author"][1]["email"]]):
 
 The example continues to show how to assert data values.
 
-As mentioned in the [introduction to the data model](#data-model), 
-`hermes` uses a JSON-LD-like internal data model. 
-The API class {class}`hermes.model.SoftwareMetadata` hides many
-of the more complex aspects of JSON-LD and makes it easy to work
-with the data model.
-
-So the API class hides the internal model objects.
-Therefore, they work as you would expect from plain
+The API class hides the internal model objects.
+Therefore, they do not only work as you would expect from plain
 Python data:
 
 ```{code-block} python
@@ -283,4 +292,4 @@ except AssertionError:
 
 ## See Also
 
-- API reference: {class}`hermes.model.SoftwareMetadata`
+- API reference: {class}`hermes.model.api.SoftwareMetadata`

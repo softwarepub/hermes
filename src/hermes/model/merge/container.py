@@ -91,7 +91,7 @@ class ld_merge_list(_ld_merge_container, ld_list):
     ) -> None:
         """
         Create a new ld_merge_list.
-        For further information on this function and the errors it throws see :meth:`ld_list.__init__`.
+        For further information on this function and the exceptions it raises see :meth:`ld_list.__init__`.
 
         Args:
             data (list[str] | list[dict[str, BASIC_TYPE | EXPANDED_JSON_LD_VALUE]]):
