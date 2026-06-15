@@ -32,7 +32,7 @@ from hermes.model import hermes_cache, SoftwareMetadata
                             {
                                 "@id": "_:author_1",
                                 "@type": ["http://schema.org/Person"],
-                                "http://schema.org/email": [{"@value": "test.testi@test.testi"}],
+                                "http://schema.org/email": [{"@value": "test.testi@example.com"}],
                                 "http://schema.org/familyName": [{"@value": "Testi"}],
                                 "http://schema.org/givenName": [{"@value": "Test"}]
                             }
@@ -44,7 +44,7 @@ from hermes.model import hermes_cache, SoftwareMetadata
                     {
                         "@id": "_:contributor_1",
                         "@type": ["http://schema.org/Person"],
-                        "http://schema.org/email": [{"@value": "test.testi@test.testi"}],
+                        "http://schema.org/email": [{"@value": "test.testi@example.com"}],
                         "http://schema.org/familyName": [{"@value": "Testi"}],
                         "http://schema.org/givenName": [{"@value": "Test"}]
                     }

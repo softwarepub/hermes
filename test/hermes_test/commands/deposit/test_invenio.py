@@ -44,28 +44,28 @@ def depositor():
 
 @pytest.mark.skip(reason="pydantic-settings need to be refactored")
 def test_resolve_doi(requests_mock, resolver):
-    requests_mock.get('https://doi.org/123.45/foo.bar-6789',
+    requests_mock.get('https://doi.org/123.45/example.com-6789',
                       status_code=302,
                       headers={'Location': 'https://invenio.example.com/record/6789'})
     requests_mock.get('https://invenio.example.com/record/6789')
 
-    assert resolver.resolve_doi('123.45/foo.bar-6789') == '6789'
+    assert resolver.resolve_doi('123.45/example.com-6789') == '6789'
 
 
 @pytest.mark.skip(reason="pydantic-settings need to be refactored")
 def test_resolve_doi_wrong_host(requests_mock, resolver):
-    requests_mock.get('https://doi.org/123.45/foo.bar-6789',
+    requests_mock.get('https://doi.org/123.45/example.com-6789',
                       status_code=302,
                       headers={'Location': 'https://not.invenio.example.com/record/6789'})
     requests_mock.get('https://not.invenio.example.com/record/6789')
 
     with pytest.raises(ValueError):
-        resolver.resolve_doi('123.45/foo.bar-6789')
+        resolver.resolve_doi('123.45/example.com-6789')
 
 
 @pytest.mark.skip(reason="pydantic-settings need to be refactored")
 def test_resolve_doi_unknown(requests_mock, resolver):
-    requests_mock.get('https://doi.org/123.45/foo.bar-6789',
+    requests_mock.get('https://doi.org/123.45/example.com-6789',
                       status_code=302,
                       headers={'Location': 'https://datacite.org/404.html'})
 
@@ -73,7 +73,7 @@ def test_resolve_doi_unknown(requests_mock, resolver):
     requests_mock.get('https://datacite.org/404.html', status_code=200)
 
     with pytest.raises(ValueError):
-        resolver.resolve_doi('123.45/foo.bar-6789')
+        resolver.resolve_doi('123.45/example.com-6789')
 
 
 @pytest.mark.skip(reason="pydantic-settings need to be refactored")

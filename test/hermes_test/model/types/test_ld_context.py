@@ -151,7 +151,7 @@ def test_get_item_from_expanded_fail(ctx):
     Tests that context raises on unsupported expanded term input.
     """
     with pytest.raises(HermesCacheError):
-        ctx["https://foo.bar/baz"]
+        ctx["https://example.com/baz"]
 
 
 @pytest.mark.parametrize(

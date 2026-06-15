@@ -152,7 +152,7 @@ type: software
 authors:
   - given-names: Test
     family-names: Testi
-    email: test.testi@test.testi
+    email: test.testi@example.com
     affiliation: German Aerospace Center (DLR)
 identifiers:
   - type: url
@@ -181,7 +181,7 @@ date-released: "2026-01-16" """,
                                         "http://schema.org/name": [{"@value": "German Aerospace Center (DLR)"}]
                                     }
                                 ],
-                                "http://schema.org/email": [{"@value": "test.testi@test.testi"}],
+                                "http://schema.org/email": [{"@value": "test.testi@example.com"}],
                                 "http://schema.org/familyName": [{"@value": "Testi"}],
                                 "http://schema.org/givenName": [{"@value": "Test"}]
                             }

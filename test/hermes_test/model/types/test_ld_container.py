@@ -90,7 +90,7 @@ class TestLdContainer:
 
     def test_to_python_id(self, mock_context):
         cont = ld_container([{}], context=[mock_context])
-        assert cont._to_python("@id", "http://spam.eggs/ham") == "http://spam.eggs/ham"
+        assert cont._to_python("@id", "http://example.com/ham") == "http://example.com/ham"
 
     def test_to_python_id_with_prefix(self, mock_context):
         cont = ld_container([{}], context=[mock_context, {"prefix": self.url}])
@@ -99,32 +99,32 @@ class TestLdContainer:
     def test_to_python_type(self, mock_context):
         cont = ld_dict([{"@type": ["@id"]}], context=[mock_context])
         assert cont._to_python("@type", ["@id"]) == ['@id']
-        cont = ld_dict([{"@type": ["@id", "http://spam.eggs/Egg"]}], context=[mock_context])
-        assert cont._to_python("@type", ["@id", "http://spam.eggs/Egg"]) == ["@id", "Egg"]
+        cont = ld_dict([{"@type": ["@id", "http://example.com/Egg"]}], context=[mock_context])
+        assert cont._to_python("@type", ["@id", "http://example.com/Egg"]) == ["@id", "Egg"]
 
     def test_to_python_id_value(self, mock_context):
         cont = ld_dict([{}], context=[mock_context])
-        assert cont._to_python("http://spam.eggs/ham",
-                               [{"@id": "http://spam.eggs/spam"}]) == [{"@id": "http://spam.eggs/spam"}]
-        assert cont._to_python("http://spam.eggs/ham",
-                               {"@id": "http://spam.eggs/identifier"}) == {"@id": "http://spam.eggs/identifier"}
+        assert cont._to_python("http://example.com/ham",
+                               [{"@id": "http://example.com/spam"}]) == [{"@id": "http://example.com/spam"}]
+        assert cont._to_python("http://example.com/ham",
+                               {"@id": "http://example.com/identifier"}) == {"@id": "http://example.com/identifier"}
 
     def test_to_python_basic_value(self, mock_context):
         cont = ld_container([{}], context=[mock_context])
-        assert cont._to_python("http://soam.eggs/spam", {"@value": "bacon"}) == 'bacon'
-        assert cont._to_python("http://spam.eggs/spam", {"@value": True}) is True
-        assert cont._to_python("http://spam.eggs/spam", {"@value": 123}) == 123
+        assert cont._to_python("http://example.net/spam", {"@value": "bacon"}) == 'bacon'
+        assert cont._to_python("http://example.com/spam", {"@value": True}) is True
+        assert cont._to_python("http://example.com/spam", {"@value": 123}) == 123
 
     def test_to_python_datetime_value(self, mock_context):
         cont = ld_container([{}], context=[mock_context])
-        assert cont._to_python("http://spam.eggs/eggs", {
+        assert cont._to_python("http://example.com/eggs", {
             "@value": "2022-02-22T00:00:00", "@type": "https://schema.org/DateTime"
         }) == "2022-02-22T00:00:00"  # TODO: #434 typed date is returned as string instead of date
 
     def test_to_python_error(self, mock_context):
         cont = ld_container([{}], context=[mock_context])
         with pytest.raises(TypeError):
-            cont._to_python("http://spam.eggs/eggs", set())
+            cont._to_python("http://example.com/eggs", set())
 
     def test_to_expanded_id(self, mock_context):
         cont = ld_dict([{}], context=[mock_context])
@@ -143,32 +143,32 @@ class TestLdContainer:
 
     def test_to_expanded_type(self, mock_context):
         cont = ld_dict([{}], context=[mock_context])
-        assert cont._to_expanded_json({"@type": "Egg"}) == {"@type": ["http://spam.eggs/Egg"]}
-        assert cont._to_expanded_json({"@type": ["Egg", "@id"]}) == {"@type": ["http://spam.eggs/Egg", "@id"]}
+        assert cont._to_expanded_json({"@type": "Egg"}) == {"@type": ["http://example.com/Egg"]}
+        assert cont._to_expanded_json({"@type": ["Egg", "@id"]}) == {"@type": ["http://example.com/Egg", "@id"]}
 
     def test_to_expanded_id_value(self, mock_context):
         cont = ld_dict([{}], context=[mock_context])
-        assert cont._to_expanded_json({"ham": "spam"}) == {"http://spam.eggs/ham": [{"@id": "spam"}]}
+        assert cont._to_expanded_json({"ham": "spam"}) == {"http://example.com/ham": [{"@id": "spam"}]}
 
     def test_to_expanded_basic_value(self, mock_context):
         cont = ld_dict([{}], context=[mock_context])
-        assert cont._to_expanded_json({"spam": "bacon"}) == {"http://spam.eggs/spam": [{"@value": "bacon"}]}
-        assert cont._to_expanded_json({"spam": 123}) == {"http://spam.eggs/spam": [{"@value": 123}]}
-        assert cont._to_expanded_json({"spam": True}) == {"http://spam.eggs/spam": [{"@value": True}]}
+        assert cont._to_expanded_json({"spam": "bacon"}) == {"http://example.com/spam": [{"@value": "bacon"}]}
+        assert cont._to_expanded_json({"spam": 123}) == {"http://example.com/spam": [{"@value": 123}]}
+        assert cont._to_expanded_json({"spam": True}) == {"http://example.com/spam": [{"@value": True}]}
 
     def test_to_expanded_datetime_value(self, mock_context):
         cont = ld_dict([{}], context=[mock_context])
-        assert cont._to_expanded_json({"eggs": datetime(2022, 2, 22)}) == {"http://spam.eggs/eggs": [{"@list": [
+        assert cont._to_expanded_json({"eggs": datetime(2022, 2, 22)}) == {"http://example.com/eggs": [{"@list": [
             {"@value": "2022-02-22T00:00:00", "@type": "https://schema.org/DateTime"}
         ]}]}
         cont = ld_dict([{}], context=[mock_context])
-        assert cont._to_expanded_json({"eggs": time(5, 4, 3)}) == {"http://spam.eggs/eggs": [{"@list": [
+        assert cont._to_expanded_json({"eggs": time(5, 4, 3)}) == {"http://example.com/eggs": [{"@list": [
             {"@value": "05:04:03", "@type": "https://schema.org/Time"}
         ]}]}
 
     def test_compact(self, mock_context):
-        cont = ld_container([{"http://spam.eggs/eggs": [{"@list": [{"@value": "a"}]}],
-                              "http://spam.eggs/spam": [{"@value": "bacon"}]}])
+        cont = ld_container([{"http://example.com/eggs": [{"@list": [{"@value": "a"}]}],
+                              "http://example.com/spam": [{"@value": "bacon"}]}])
         assert cont.compact([mock_context]) == {"@context": mock_context, "spam": "bacon", "eggs": ["a"]}
 
     def test_is_ld_id(self):

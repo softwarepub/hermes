@@ -250,7 +250,7 @@ def test_process(tmp_path, monkeypatch, metadata_in, metadata_out):
                             {
                                 "@type": "http://schema.org/Person",
                                 "http://schema.org/familyName": [{"@value": "Test"}],
-                                "http://schema.org/email": [{"@value": "test.testi@testis.tests"}],
+                                "http://schema.org/email": [{"@value": "test.testi@example.com"}],
                             },
                             {
                                 "@type": "http://schema.org/Person",
@@ -259,7 +259,7 @@ def test_process(tmp_path, monkeypatch, metadata_in, metadata_out):
                             {
                                 "@type": "http://schema.org/Person",
                                 "http://schema.org/familyName": [{"@value": "Tester"}],
-                                "http://schema.org/email": [{"@value": "test@tester.tests"}],
+                                "http://schema.org/email": [{"@value": "test@example.net"}],
                             },
                         ],
                         "http://schema.org/license": [{"@id": "https://spdx.org/licenses/Apache-2.0"}],
@@ -276,8 +276,8 @@ def test_process(tmp_path, monkeypatch, metadata_in, metadata_out):
                                 "http://schema.org/familyName": [{"@value": "Test"}],
                                 "http://schema.org/givenName": [{"@value": "Testi"}],
                                 "http://schema.org/email": [
-                                    {"@value": "test.testi@testis.tests"},
-                                    {"@value": "test.testi@testis.tests2"},
+                                    {"@value": "test.testi@example.com"},
+                                    {"@value": "test.testi@example.edu"},
                                 ],
                             },
                             {
@@ -299,15 +299,15 @@ def test_process(tmp_path, monkeypatch, metadata_in, metadata_out):
                             "http://schema.org/familyName": [{"@value": "Test"}],
                             "http://schema.org/givenName": [{"@value": "Testi"}],
                             "http://schema.org/email": [
-                                {"@value": "test.testi@testis.tests"},
-                                {"@value": "test.testi@testis.tests2"},
+                                {"@value": "test.testi@example.com"},
+                                {"@value": "test.testi@example.edu"},
                             ],
                         },
                         {"@type": "http://schema.org/Person", "http://schema.org/familyName": [{"@value": "Testers"}]},
                         {
                             "@type": "http://schema.org/Person",
                             "http://schema.org/familyName": [{"@value": "Tester"}],
-                            "http://schema.org/email": [{"@value": "test@tester.tests"}],
+                            "http://schema.org/email": [{"@value": "test@example.net"}],
                         },
                     ],
                     "http://schema.org/license": [{"@id": "https://spdx.org/licenses/Apache-2.0"}],
@@ -327,12 +327,12 @@ def test_process(tmp_path, monkeypatch, metadata_in, metadata_out):
                             {
                                 "@type": "http://schema.org/Person",
                                 "http://schema.org/familyName": [{"@value": "Tester"}],
-                                "http://schema.org/email": [{"@value": "test@tester.tests"}],
+                                "http://schema.org/email": [{"@value": "test@example.net"}],
                             },
                             {
                                 "@type": "http://schema.org/Person",
                                 "http://schema.org/familyName": [{"@value": "Testis"}],
-                                "http://schema.org/email": [{"@value": "testis.testis@tester.tests"}],
+                                "http://schema.org/email": [{"@value": "testis.testis@example.net"}],
                             },
                         ],
                     }
@@ -345,7 +345,7 @@ def test_process(tmp_path, monkeypatch, metadata_in, metadata_out):
                             {
                                 "@type": "http://schema.org/Person",
                                 "http://schema.org/familyName": [{"@value": "Test"}],
-                                "http://schema.org/email": [{"@value": "test.testi@testis.tests"}],
+                                "http://schema.org/email": [{"@value": "test.testi@example.com"}],
                             },
                             {
                                 "@type": "http://schema.org/Person",
@@ -354,7 +354,7 @@ def test_process(tmp_path, monkeypatch, metadata_in, metadata_out):
                             {
                                 "@type": "http://schema.org/Person",
                                 "http://schema.org/familyName": [{"@value": "Tester"}],
-                                "http://schema.org/email": [{"@value": "test@tester.tests"}],
+                                "http://schema.org/email": [{"@value": "test@example.net"}],
                             },
                         ],
                         "http://schema.org/license": [{"@id": "https://spdx.org/licenses/Apache-2.0"}],
@@ -371,8 +371,8 @@ def test_process(tmp_path, monkeypatch, metadata_in, metadata_out):
                                 "http://schema.org/familyName": [{"@value": "Test"}],
                                 "http://schema.org/givenName": [{"@value": "Testi"}],
                                 "http://schema.org/email": [
-                                    {"@value": "test.testi@testis.tests"},
-                                    {"@value": "test.testi@testis.tests2"},
+                                    {"@value": "test.testi@example.com"},
+                                    {"@value": "test.testi@example.edu"},
                                 ],
                             },
                             {
@@ -394,20 +394,20 @@ def test_process(tmp_path, monkeypatch, metadata_in, metadata_out):
                             "http://schema.org/familyName": [{"@value": "Test"}],
                             "http://schema.org/givenName": [{"@value": "Testi"}],
                             "http://schema.org/email": [
-                                {"@value": "test.testi@testis.tests"},
-                                {"@value": "test.testi@testis.tests2"},
+                                {"@value": "test.testi@example.com"},
+                                {"@value": "test.testi@example.edu"},
                             ],
                         },
                         {"@type": "http://schema.org/Person", "http://schema.org/familyName": [{"@value": "Testers"}]},
                         {
                             "@type": "http://schema.org/Person",
                             "http://schema.org/familyName": [{"@value": "Tester"}],
-                            "http://schema.org/email": [{"@value": "test@tester.tests"}],
+                            "http://schema.org/email": [{"@value": "test@example.net"}],
                         },
                         {
                             "@type": "http://schema.org/Person",
                             "http://schema.org/familyName": [{"@value": "Testis"}],
-                            "http://schema.org/email": [{"@value": "testis.testis@tester.tests"}],
+                            "http://schema.org/email": [{"@value": "testis.testis@example.net"}],
                         },
                     ],
                     "http://schema.org/license": [{"@id": "https://spdx.org/licenses/Apache-2.0"}],

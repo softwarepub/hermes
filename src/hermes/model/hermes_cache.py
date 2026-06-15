@@ -19,6 +19,9 @@ class HermesCache:
     """
     The HermesCache supplies the user with easy (read and write) access to the JSON files in the cache.
 
+    A HermesCache object should only be obtained from an HermesCacheManager object because this ensures the correct
+    cache directory is used.
+
     Attributes:
         _cache_dir (Path): The directory the cache is located at.
         _cached_data (dict[str, dict]): The cache of the files in the cache. The key is the filename.

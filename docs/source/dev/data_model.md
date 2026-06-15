@@ -123,7 +123,7 @@ provided as JSON-LD:
 :caption: Injecting additional schemas
 from hermes.model import SoftwareMetadata
 
-# Contents served at https://bar.net/schema.jsonld:
+# Contents served at https://example.com/schema.jsonld:
 # {
 #    "@context":
 #    {
@@ -131,7 +131,7 @@ from hermes.model import SoftwareMetadata
 #    }
 # }
 
-data = SoftwareMetadata(extra_vocabs={"foo": "https://bar.net/schema.jsonld"})
+data = SoftwareMetadata(extra_vocabs={"foo": "https://example.com/schema.jsonld"})
 
 data["foo:name"] = ...
 ```
@@ -197,16 +197,16 @@ data["author"] = {"name": "Shakespeare"}
 data["author"].append({"name": "Hamilton"})
 # [{'name': ['Shakespeare']}, {'name': ['Hamilton']}]
 
-data["author"][0]["email"] = "shakespeare@baz.net"
-# [{'name': ['Shakespeare'], 'email': ['shakespeare@baz.net']}, {'name': ['Hamilton']}]
+data["author"][0]["email"] = "shakespeare@example.net"
+# [{'name': ['Shakespeare'], 'email': ['shakespeare@example.net']}, {'name': ['Hamilton']}]
 
-data["author"][1]["email"].append("hamilton@baz.net")
-# [{'name': ['Shakespeare'], 'email': ['shakespeare@baz.net']}, {'name': ['Hamilton'], 'email': ['hamilton@baz.net']}]
+data["author"][1]["email"].append("hamilton@example.net")
+# [{'name': ['Shakespeare'], 'email': ['shakespeare@example.net']}, {'name': ['Hamilton'], 'email': ['hamilton@example.net']}]
 
-data["author"][1]["email"].extend(["hamilton@spam.org", "hamilton@eggs.com"])
+data["author"][1]["email"].extend(["hamilton@example.org", "hamilton@example.com"])
 # [
-#   {'name': ['Shakespeare'], 'email': ['shakespeare@baz.net']},
-#   {'name': ['Hamilton'], 'email': ['hamilton@baz.net', 'hamilton@spam.org', 'hamilton@eggs.com']}
+#   {'name': ['Shakespeare'], 'email': ['shakespeare@example.net']},
+#   {'name': ['Hamilton'], 'email': ['hamilton@example.net', 'hamilton@example.org', 'hamilton@example.com']}
 # ]
 ```
 
@@ -257,7 +257,7 @@ Python data:
 :emphasize-lines: 5,13 
 try:
     assert (
-            {'name': ['Shakespeare'], 'email': ['shakespeare@baz.net']}
+            {'name': ['Shakespeare'], 'email': ['shakespeare@example.net']}
             in
             data["author"]
     )
@@ -274,13 +274,13 @@ except AssertionError:
 #        {'@list': [
 #            {
 #                'http://schema.org/name': [{'@value': 'Shakespeare'}],
-#                'http://schema.org/email': [{'@value': 'shakespeare@baz.net'}]
+#                'http://schema.org/email': [{'@value': 'shakespeare@example.net'}]
 #            },
 #            {
 #                'http://schema.org/name': [{'@value': 'Hamilton'}],
 #                'http://schema.org/email': [
 #                    {'@list': [
-#                        {'@value': 'hamilton@baz.net'}, {'@value': 'hamilton@spam.org'}, {'@value': 'hamilton@eggs.com'}
+#                        {'@value': 'hamilton@example.net'}, {'@value': 'hamilton@example.org'}, {'@value': 'hamilton@example.com'}
 #                    ]}
 #                ]
 #            }]
