@@ -9,7 +9,7 @@ import sys
 import pytest
 
 from hermes.commands import cli
-from hermes.model import context_manager, SoftwareMetadata
+from hermes.model import hermes_cache, SoftwareMetadata
 
 
 @pytest.mark.parametrize(
@@ -204,7 +204,7 @@ from hermes.model import context_manager, SoftwareMetadata
 def test_process(tmp_path, monkeypatch, metadata_in, metadata_out):
     monkeypatch.chdir(tmp_path)
 
-    manager = context_manager.HermesContext(tmp_path)
+    manager = hermes_cache.HermesCacheManager(tmp_path)
     manager.prepare_step("harvest")
     for harvester, result in metadata_in.items():
         with manager[harvester] as cache:
@@ -223,7 +223,7 @@ def test_process(tmp_path, monkeypatch, metadata_in, metadata_out):
     sys.argv = ["hermes", "process", "--path", str(tmp_path), "--config", str(config_file)]
     result = {}
     try:
-        monkeypatch.setattr(context_manager.HermesContext.__init__, "__defaults__", (tmp_path.cwd(),))
+        monkeypatch.setattr(hermes_cache.HermesCacheManager.__init__, "__defaults__", (tmp_path.cwd(),))
         cli.main()
     except SystemExit as e:
         if e.code != 0:
@@ -419,7 +419,7 @@ def test_process(tmp_path, monkeypatch, metadata_in, metadata_out):
 def test_process_complex(tmp_path, monkeypatch, metadata_in, metadata_out):
     monkeypatch.chdir(tmp_path)
 
-    manager = context_manager.HermesContext(tmp_path)
+    manager = hermes_cache.HermesCacheManager(tmp_path)
     manager.prepare_step("harvest")
     for harvester, result in metadata_in.items():
         with manager[harvester] as cache:
@@ -438,7 +438,7 @@ def test_process_complex(tmp_path, monkeypatch, metadata_in, metadata_out):
     sys.argv = ["hermes", "process", "--path", str(tmp_path), "--config", str(config_file)]
     result = {}
     try:
-        monkeypatch.setattr(context_manager.HermesContext.__init__, "__defaults__", (tmp_path.cwd(),))
+        monkeypatch.setattr(hermes_cache.HermesCacheManager.__init__, "__defaults__", (tmp_path.cwd(),))
         cli.main()
     except SystemExit as e:
         if e.code != 0:

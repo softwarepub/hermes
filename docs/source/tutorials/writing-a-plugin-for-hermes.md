@@ -252,14 +252,14 @@ class YourPostprocessPlugin(HermesPostprocessPlugin):
 The metadata from a deposit plugin can be loaded via
 
 ```python
-ctx = HermesContext()
+ctx = HermesCacheManager()
 ctx.prepare_step("deposit")
 with ctx[deposit_plugin_name] as manager:
     deposition = manager["result"]
 ctx.finalize_step("deposit")
 ```
 
-where `deposit_plugin_name` is the name of the deposit plugin the data is loaded from and {py:class}`~hermes.model.context_manager.HermesContext` is imported from {py:mod}`hermes.model.context_manager`.
+where `deposit_plugin_name` is the name of the deposit plugin the data is loaded from and {py:class}`~hermes.model.hermes_cache.HermesCacheManager` is imported from {py:mod}`hermes.model.hermes_cache`.
 The loaded data is some valid JSON data and has no fixed format.
 
 ## Implement and use plugin specific settings

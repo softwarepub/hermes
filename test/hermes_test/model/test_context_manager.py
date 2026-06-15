@@ -7,43 +7,43 @@
 import pytest
 from pathlib import Path
 
-from hermes.model.context_manager import HermesContext, HermesCache
-from hermes.model.error import HermesContextError
+from hermes.model.hermes_cache import HermesCacheManager, HermesCache
+from hermes.model.error import HermesCacheError
 
 
 def test_context_hermes_dir_default():
-    ctx = HermesContext()
+    ctx = HermesCacheManager()
     assert ctx.cache_dir == Path('./.hermes').absolute()
 
 
 def test_context_hermes_dir_custom():
-    ctx = HermesContext(Path('spam'))
+    ctx = HermesCacheManager(Path('spam'))
     assert ctx.cache_dir == Path('spam') / '.hermes'
 
 
 def test_get_context_default():
-    ctx = HermesContext()
+    ctx = HermesCacheManager()
     ctx.prepare_step("ham")
     assert ctx["spam"]._cache_dir == Path('./.hermes/ham/spam').absolute()
 
 
 def test_context_get_error():
-    ctx = HermesContext()
+    ctx = HermesCacheManager()
     ctx.prepare_step("ham")
     ctx.finalize_step("ham")
-    with pytest.raises(HermesContextError, match="Prepare a step first."):
+    with pytest.raises(HermesCacheError, match="Prepare a step first."):
         ctx["spam"]._cache_dir == Path('./.hermes/spam').absolute()
 
 
 def test_finalize_context_one_item():
-    ctx = HermesContext()
+    ctx = HermesCacheManager()
     ctx.prepare_step("ham")
     ctx.finalize_step("ham")
     assert ctx._current_step == []
 
 
 def test_finalize_context():
-    ctx = HermesContext()
+    ctx = HermesCacheManager()
     ctx.prepare_step("ham")
     ctx.prepare_step("spam")
     ctx.finalize_step("spam")
@@ -52,20 +52,20 @@ def test_finalize_context():
 
 
 def test_finalize_context_error_no_item():
-    ctx = HermesContext()
+    ctx = HermesCacheManager()
     with pytest.raises(ValueError, match="There is no step to end."):
         ctx.finalize_step("spam")
 
 
 def test_finalize_context_error():
-    ctx = HermesContext()
+    ctx = HermesCacheManager()
     ctx.prepare_step("ham")
     with pytest.raises(ValueError, match="Cannot end step spam while in ham."):
         ctx.finalize_step("spam")
 
 
 def test_cache(tmpdir):
-    ctx = HermesContext(Path(tmpdir))
+    ctx = HermesCacheManager(Path(tmpdir))
     ctx.prepare_step("ham")
     with ctx["spam"] as c:
         c["bacon"] = {"data": "goose", "num": 2}

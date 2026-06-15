@@ -24,7 +24,7 @@ class HermesValidationError(Exception):
     pass
 
 
-class HermesContextError(Exception):
+class HermesCacheError(Exception):
     """
     This exception should be raised when interacting with the model context.
     # TODO Change class name and docstring if we decide to call it differently
@@ -37,7 +37,7 @@ class HermesContextError(Exception):
         try:
              context[term]
         except ValueError as e:
-            raise HermesContextError(term) from e
+            raise HermesCacheError(term) from e
     """
     pass
 

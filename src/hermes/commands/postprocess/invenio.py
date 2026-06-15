@@ -13,7 +13,7 @@ from ruamel.yaml import YAML
 import tomlkit
 
 from hermes.error import MisconfigurationError
-from hermes.model.context_manager import HermesContext
+from hermes.model.hermes_cache import HermesCacheManager
 from ..base import HermesCommand
 from .base import HermesPostprocessPlugin
 
@@ -23,7 +23,7 @@ _log = logging.getLogger('postprocess.invenio')
 
 class config_record_id(HermesPostprocessPlugin):
     def __call__(self, command: HermesCommand):
-        ctx = HermesContext()
+        ctx = HermesCacheManager()
         ctx.prepare_step("deposit")
         with ctx["invenio"] as manager:
             deposition = manager["result"]
@@ -47,7 +47,7 @@ class config_record_id(HermesPostprocessPlugin):
 
 class cff_doi(HermesPostprocessPlugin):
     def __call__(self, command: HermesCommand):
-        ctx = HermesContext()
+        ctx = HermesCacheManager()
         ctx.prepare_step("deposit")
         with ctx["invenio"] as manager:
             deposition = manager["result"]
@@ -78,7 +78,7 @@ class cff_doi(HermesPostprocessPlugin):
 
 class codemeta_doi(HermesPostprocessPlugin):
     def __call__(self, command: HermesCommand):
-        ctx = HermesContext()
+        ctx = HermesCacheManager()
         ctx.prepare_step("deposit")
         with ctx["invenio"] as manager:
             deposition = manager["result"]

@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from hermes.commands.base import HermesCommand, HermesPlugin
 from hermes.error import HermesPluginRunError, MisconfigurationError
 from hermes.model.api import SoftwareMetadata
-from hermes.model.context_manager import HermesContext
+from hermes.model.hermes_cache import HermesCacheManager
 from hermes.model.merge.action import MergeAction
 from hermes.model.merge.container import ld_merge_dict
 
@@ -83,7 +83,7 @@ class HermesProcessCommand(HermesCommand):
             self.log.critical("## No process plugin was ran successfully.")
             raise HermesPluginRunError("No process plugin was ran successfully.")
 
-        ctx = HermesContext()
+        ctx = HermesCacheManager()
         ctx.prepare_step('harvest')
 
         # merge data from harvesters

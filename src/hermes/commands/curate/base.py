@@ -11,7 +11,7 @@ from pydantic import BaseModel
 from hermes.commands.base import HermesCommand, HermesPlugin
 from hermes.error import HermesPluginRunError, MisconfigurationError
 from hermes.model import SoftwareMetadata
-from hermes.model.context_manager import HermesContext
+from hermes.model.hermes_cache import HermesCacheManager
 from hermes.model.error import HermesValidationError
 
 
@@ -38,7 +38,7 @@ class HermesCurateCommand(HermesCommand):
         self.log.info("# Metadata curation")
         plugin_name = self.settings.plugin
 
-        ctx = HermesContext()
+        ctx = HermesCacheManager()
         ctx.prepare_step("curate")
 
         self.log.info("## Load processed metadata")

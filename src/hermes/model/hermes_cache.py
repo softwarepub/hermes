@@ -12,7 +12,7 @@ from types import TracebackType
 from typing import Optional
 from typing_extensions import Self
 
-from .error import HermesContextError
+from .error import HermesCacheError
 
 
 class HermesCache:
@@ -116,9 +116,9 @@ class HermesCache:
                 json.dump(data, cachefile.open('w'))
 
 
-class HermesContext:
+class HermesCacheManager:
     """
-    The HermesContext supplies the user with easy access to the HERMES cache.
+    The HermesCacheManager supplies the user with easy access to the HERMES cache.
 
     Attributes:
         project_dir (Path): The directory the project is located in.
@@ -130,7 +130,7 @@ class HermesContext:
 
     def __init__(self: Self, project_dir: Path = Path.cwd()) -> None:
         """
-        Creates a new instance of the HermesContext.
+        Creates a new instance of the HermesCacheManager.
 
         Args:
             project_dir (Path): The directory the project is located in.
@@ -188,11 +188,11 @@ class HermesContext:
             HermesCache: The HermesCache object of the cache.
 
         Raises:
-            HermesContextError: If no step has been prepared (i.e. no current cache dir is set).
+            HermesCacheError: If no step has been prepared (i.e. no current cache dir is set).
         """
         # check if a step is prepared
         if len(self._current_step) < 1:
-            raise HermesContextError("Prepare a step first.")
+            raise HermesCacheError("Prepare a step first.")
         # build the dir of the cache and return the HermesCache for it
         subdir = self.cache_dir / self._current_step[-1] / source_name
         return HermesCache(subdir)

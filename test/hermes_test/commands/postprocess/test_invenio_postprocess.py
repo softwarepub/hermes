@@ -11,7 +11,7 @@ from ruamel import yaml
 import tomlkit
 
 from hermes.commands import cli
-from hermes.model import context_manager
+from hermes.model import hermes_cache
 
 
 def test_invenio_postprocess(tmp_path, monkeypatch):
@@ -66,7 +66,7 @@ run = ["config_invenio_record_id", "cff_doi", "codemeta_doi"]
     sys.argv = ["hermes", "postprocess", "--path", str(tmp_path), "--config", str(config_file)]
     result_cff = result_toml = {}
     try:
-        monkeypatch.setattr(context_manager.HermesContext.__init__, "__defaults__", (tmp_path.cwd(),))
+        monkeypatch.setattr(hermes_cache.HermesCacheManager.__init__, "__defaults__", (tmp_path.cwd(),))
         cli.main()
     except SystemExit as e:
         if e.code != 0:
