@@ -11,20 +11,20 @@ SPDX-FileContributor: Nitai Heeb
 SPDX-FileContributor: Oliver Bertuch
 -->
 
-# Write a plugin for HERMES
- 
+# HERMES plugins
 
-This tutorial will present the basic steps for writing additional plugins that are not shipped with `HERMES` but can be made availabe for others through the [HERMES marketplace](../index.md#plugins).
+
+This reference will present the basic structure of additional plugins that are not shipped with `HERMES` but can be made availabe for others through the [HERMES marketplace](../index.md#plugins).
 
 The full code and structure of a harvest plugin is available at [hermes-plugin-git](https://github.com/softwarepub/hermes-plugin-git).
 This plugin extracts information from the local git history.
 The hermes-plugin-git will help to gather contribution and branch metadata.
 
 ```{note}
-To follow this tutorial you should be familiar with HERMES. 
-If you never used HERMES before, you might want to check the tutorial: [Automated Publication with HERMES](./automated-publication-with-ci).
+You should be familiar with HERMES before learning about how the structure of plugins.
+If you never used HERMES before, you might want to check the tutorial: [Automated Publication with HERMES](./../tutorials/automated-publication-with-ci).
 
-Also all metadata directly handled by HERMES is [JSON-LD](https://json-ld.org/) so you should be familiar with [how it is used by HERMES](../dev/data_model.md) when writing a plugin.
+Also all metadata directly handled by HERMES is [JSON-LD](https://json-ld.org/) so you should be familiar with [how it is used by HERMES](./data_model.md) when writing a plugin.
 And uses the [schema.org](https://schema.org/) (with prefix "schema") and the [CodeMeta](https://codemeta.github.io/) (without prefix) context.
 ```
 
@@ -81,7 +81,7 @@ class YourHarvestPlugin(HermesHarvestPlugin):
 ```
 
 The {py:meth}`~hermes.commands.harvest.base.HermesHarvestPlugin.__call__` method of harvest plugins needs to return a {py:class}`~hermes.model.api.SoftwareMetadata` object containing the harvested metadata.
-For more information on how to use this object see [here](../dev/data_model.md).
+For more information on how to use this object see [here](./data_model.md).
 
 ### Process plugin
 The class structure of a process plugin should look like this:
@@ -111,6 +111,9 @@ class YourProcessPlugin(HermesProcessPlugin):
 ```
 
 The {py:meth}`~hermes.commands.process.base.HermesProcessPlugin.__call__` method of process plugins needs to return a dictionary mappings strings and/ or `None` to dictionaries mapping strings or `None` to {py:class}`~hermes.model.merge.action.MergeAction`.
+Alone the data structure isn't enough to understand how this object is supposed to represent the merge strategies.
+The following example will illustrate the sematics of each layer within the dictionary.
+
 If `strategies` looked like this (where {py:class}`~hermes.model.merge.action.Reject` is imported from {py:mod}`hermes.model.merge.action`)
 ```{code-block} python
 strategies = {
@@ -158,7 +161,7 @@ class YourCuratePlugin(HermesCuratePlugin):
 ```
 
 The {py:meth}`~hermes.commands.curate.base.HermesCuratePlugin.__call__` method of curate plugins needs to return a {py:class}`~hermes.model.api.SoftwareMetadata` object containing the curated metadata.
-For more information on how to use this object see [here](../dev/data_model.md).
+For more information on how to use this object see [here](./data_model.md).
 The returned object may be the object `metadata` passed to `__call__`.
 
 ### Deposit plugin
@@ -308,7 +311,7 @@ We will discuss the exact step after showing the other `pyproject.toml` configur
 You have to run poetry install to add and install all entrypoints declared in the pyproject.toml.
 ```
 
-### Write Plugin to be included in HERMES
+### Include Plugin into HERMES
 This variant is used to contribute to the HERMES community or adapt the HERMES workflow for own purposes.
 If you want to contribute, see the [Contribution Guidelines](https://docs.software-metadata.pub/en/latest/dev/contribute.html).
 After cloning the HERMES workflow repository you can adapt the pyproject.toml.
