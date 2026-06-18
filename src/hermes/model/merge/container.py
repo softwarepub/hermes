@@ -24,28 +24,28 @@ if TYPE_CHECKING:
 class _ld_merge_container:
     """
     Abstract base class for ld_merge_dict and ld_merge_list,
-    providing the merge containers with an override of :meth:`ld_container._to_python`.
+    providing the merge containers with an override of :meth:`ld_container._to_native_python`.
     See also :class:`ld_dict`, :class:`ld_list` and :class:`ld_container`.
     """
 
-    def _to_python(
+    def _to_native_python(
         self: Self,
         full_iri: str,
         ld_value: Union[EXPANDED_JSON_LD_VALUE, dict[str, EXPANDED_JSON_LD_VALUE], list[str], str]
     ) -> Union["ld_merge_dict", "ld_merge_list", BASIC_TYPE, TIME_TYPE]:
         """
-        Returns a pythonized version of ``ld_value`` pretending the value is in ``self`` and ``full_iri`` its key.
+        Returns a native python version of ``ld_value`` pretending the value is in ``self`` and ``full_iri`` its key.
 
         Args:
             full_iri (str): The expanded iri of the key of ``ld_value`` / ``self`` (later if self is not a dictionary).
             ld_value (EXPANDED_JSON_LD_VALUE | dict[str, EXPANDED_JSON_LD_VALUE] | list[str] | str):
-                The value thats pythonized value is requested. ``ld_value`` has to be valid expanded JSON-LD if it
+                The value thats native python value is requested. ``ld_value`` has to be valid expanded JSON-LD if it
                 was embeded in ``self._data``.
 
         Returns:
-            ld_merge_dict | ld_merge_list | BASIC_TYPE | TIME_TYPE: The pythonized value of ``ld_value``.
+            ld_merge_dict | ld_merge_list | BASIC_TYPE | TIME_TYPE: The native python value of ``ld_value``.
         """
-        value = super()._to_python(full_iri, ld_value)
+        value = super()._to_native_python(full_iri, ld_value)
         # replace ld_dicts with ld_merge_dicts
         if isinstance(value, ld_dict) and not isinstance(value, ld_merge_dict):
             value = ld_merge_dict(

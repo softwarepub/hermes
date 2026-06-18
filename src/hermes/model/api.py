@@ -9,7 +9,7 @@ from typing import Union
 from typing_extensions import Self
 
 from hermes.model.types import ld_dict
-from hermes.model.types.ld_container import PYTHONIZED_LD_CONTAINER
+from hermes.model.types.ld_container import NATIVE_LD_CONTAINER
 from hermes.model.types.ld_context import ALL_CONTEXTS
 from hermes.model.types.pyld_util import bundled_loader
 
@@ -25,14 +25,14 @@ class SoftwareMetadata(ld_dict):
 
     def __init__(
         self: Self,
-        data: Union[dict[str, PYTHONIZED_LD_CONTAINER], None] = None,
+        data: Union[dict[str, NATIVE_LD_CONTAINER], None] = None,
         extra_vocabs: Union[dict[str, str], None] = None
     ) -> None:
         """
         Create a new instance of an SoftwareMetadata.
 
         Args:
-            data (dict[str, PYTHONIZED_LD_CONTAINER] | None): The data the SoftwareMetadata object starts out with.
+            data (dict[str, NATIVE_LD_CONTAINER] | None): The data the SoftwareMetadata object starts out with.
             extra_vocabs (dict[str, str] | None): Extra JSON_LD context for the object.
 
         Returns:

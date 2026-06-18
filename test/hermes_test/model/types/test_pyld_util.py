@@ -28,7 +28,7 @@ def test_mock_document_expanded(ld_proc, mock_document):
 def test_initial_context(ld_proc, httpserver, mock_document):
     with pytest.raises(jsonld.JsonLdError):
         active_ctx = ld_proc.initial_ctx(
-            [{"s": "www.spam.de"}],
+            [{"s": "www.example.com"}],
             {"documentLoader": pyld_util.bundled_loader}
         )
     url = httpserver.url_for("/")

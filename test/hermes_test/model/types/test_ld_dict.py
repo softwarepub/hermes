@@ -294,19 +294,25 @@ def test_ref():
         di.ref
 
 
-def test_to_python():
+def test_to_native_python():
     di = ld_dict([{}], context=[{"xmlns": "http://xmlns.com/foaf/0.1/"}])
     inner_di = ld_dict([{}], parent=di)
     inner_di.update({"xmlns:foobar": "bar", "http://xmlns.com/foaf/0.1/barfoo": {"@id": "foo"}})
     di.update({"http://xmlns.com/foaf/0.1/name": "foo", "xmlns:homepage": {"@id": "bar"}, "xmlns:foo": inner_di})
-    assert di.to_python() == {"xmlns:name": ["foo"], "xmlns:homepage": [{"@id": "bar"}],
-                              "xmlns:foo": [{"xmlns:foobar": ["bar"], "xmlns:barfoo": [{"@id": "foo"}]}]}
+    assert di.to_native_python() == {
+        "xmlns:name": ["foo"],
+        "xmlns:homepage": [{"@id": "bar"}],
+        "xmlns:foo": [{"xmlns:foobar": ["bar"], "xmlns:barfoo": [{"@id": "foo"}]}]
+    }
     di.update({"http://example.com/eggs": {
             "@value": "2022-02-22T00:00:00", "@type": "https://schema.org/DateTime"
-        }})
-    assert di.to_python() == {"xmlns:name": ["foo"], "xmlns:homepage": [{"@id": "bar"}],
-                              "xmlns:foo": [{"xmlns:foobar": ["bar"], "xmlns:barfoo": [{"@id": "foo"}]}],
-                              "http://example.com/eggs": ["2022-02-22T00:00:00"]}
+    }})
+    assert di.to_native_python() == {
+        "xmlns:name": ["foo"],
+        "xmlns:homepage": [{"@id": "bar"}],
+        "xmlns:foo": [{"xmlns:foobar": ["bar"], "xmlns:barfoo": [{"@id": "foo"}]}],
+        "http://example.com/eggs": ["2022-02-22T00:00:00"]
+    }
 
 
 def test_from_dict():

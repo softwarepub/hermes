@@ -268,13 +268,13 @@ def test_extend():
     assert li[-1].data_dict == {"@type": ["A"], "https://schema.org/name": [{"@value": "a"}]} and len(li) == 3
 
 
-def test_to_python():
+def test_to_native_python():
     li = ld_list([{"@list": []}], key="https://schema.org/name", context=[{"schema": "https://schema.org/"}])
     li.append("foo")
     li.append(ld_dict([{"@type": ["A"], "https://schema.org/name": [{"@value": "a"}]}], parent=li))
     li.append(["a"])
     assert li[1]["@type"].item_list == ["A"]
-    assert li.to_python() == ["foo", {"@type": ["A"], "schema:name": ["a"]}, ["a"]]
+    assert li.to_native_python() == ["foo", {"@type": ["A"], "schema:name": ["a"]}, ["a"]]
 
 
 def test_is_ld_list():

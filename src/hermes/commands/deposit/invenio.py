@@ -616,7 +616,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         if len(keywords) == 0:
             keywords = None
         else:
-            keywords = keywords.to_python()
+            keywords = keywords.to_native_python()
 
         # TODO: Use the fields currently set to `None`.
         # Some more fields are available but they most likely don't relate to software

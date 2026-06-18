@@ -18,7 +18,7 @@ from .ld_container import (
     ld_container,
     JSON_LD_CONTEXT_DICT,
     EXPANDED_JSON_LD_VALUE,
-    PYTHONIZED_LD_CONTAINER,
+    NATIVE_LD_CONTAINER,
     JSON_LD_VALUE,
     TIME_TYPE,
     BASIC_TYPE,
@@ -100,21 +100,21 @@ class ld_list(ld_container):
         self: Self, index: Union[int, slice]
     ) -> Union[BASIC_TYPE, TIME_TYPE, ld_dict, ld_list, list[Union[BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]]]:
         """
-        Get the item(s) at position index in a pythonized form.
+        Get the item(s) at position index in their native python version.
 
         Args:
             index (int | slice): The positon(s) from which the item(s) is/ are taken.
 
         Returns:
             BASIC_TYPE | TIME_TYPE | ld_dict | ld_list | list[BASIC_TYPE | TIME_TYPE | ld_dict | ld_list]:
-                The pythonized item(s) at index.
+                The item(s) at index in the native python version.
         """
         # handle slices by applying them to a list of indices and then getting the items at those
         if isinstance(index, slice):
             return [self[i] for i in [*range(len(self))][index]]
 
-        # get the item from the item_list and pythonize it. If necessary add the index.
-        item = self._to_python(self.key, self.item_list[index])
+        # get the item from the item_list and convert it into its native python version. If necessary add the index.
+        item = self._to_native_python(self.key, self.item_list[index])
         if isinstance(item, ld_container):
             item.index = index
         return item
@@ -181,14 +181,14 @@ class ld_list(ld_container):
 
     def __iter__(self: Self) -> Generator[Union[BASIC_TYPE, TIME_TYPE, ld_dict, ld_list], None, None]:
         """
-        Returns an iterator over the pythonized values contained in self.
+        Returns an iterator over the native python version of the values contained in self.
 
         Returns:
             Generator[BASIC_TYPE | TIME_TYPE | ld_dict | ld_list, None, None]: The Iterator over self's values.
         """
-        # return an Iterator over each value in self in its pythonized from
+        # return an Iterator over each value in self in its native python version
         for index, value in enumerate(self.item_list):
-            item = self._to_python(self.key, value)
+            item = self._to_native_python(self.key, value)
             # add which entry an ld_container is stored at, if item is an ld_container
             if isinstance(item, ld_container):
                 item.index = index
@@ -536,15 +536,15 @@ class ld_list(ld_container):
         for item in value:
             self.append(item)
 
-    def to_python(self: Self) -> list[Union[BASIC_TYPE, TIME_TYPE, PYTHONIZED_LD_CONTAINER]]:
+    def to_native_python(self: Self) -> list[Union[BASIC_TYPE, TIME_TYPE, NATIVE_LD_CONTAINER]]:
         """
-        Return a fully pythonized version of this object where all ld_container are replaced by lists and dicts.
+        Return a native python version of this object where all ld_container are replaced by lists and dicts.
 
         Returns:
-            list[BASIC_TYPE | TIME_TYPE | PYTHONIZED_LD_CONTAINER]: The fully pythonized version of self.
+            list[BASIC_TYPE | TIME_TYPE | NATIVE_LD_CONTAINER]: The native python version of self.
         """
         return [
-            item.to_python() if isinstance(item, ld_container) else item
+            item.to_native_python() if isinstance(item, ld_container) else item
             for item in self
         ]
 
