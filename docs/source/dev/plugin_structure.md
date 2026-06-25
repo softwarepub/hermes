@@ -89,7 +89,7 @@ The class structure of a process plugin should look like this:
 ```{code-block} python
 from typing import Union
 
-from hermes.commands.process.base import HermesProcessCommand, HermesProcessPlugin
+from hermes.commands.process.base import HermesProcessCommand, HermesProcessPlugin, ObjectStrategies
 from hermes.model.merge.action import MergeAction
 from pydantic import BaseModel
 
@@ -102,7 +102,7 @@ class YourProcessSettings(BaseModel):
 class YourProcessPlugin(HermesProcessPlugin):
     settings_class = YourProcessSettings
 
-    def __call__(self, command: HermesProcessCommand) -> dict[Union[str, None], dict[Union[str, None], MergeAction]]:
+    def __call__(self, command: HermesProcessCommand) -> ObjectStrategies:
         strategies = {}
 
         # TODO: define the merge strategies that will be used by HERMES
@@ -110,8 +110,8 @@ class YourProcessPlugin(HermesProcessPlugin):
         return strategies
 ```
 
-The {py:meth}`~hermes.commands.process.base.HermesProcessPlugin.__call__` method of process plugins needs to return a dictionary mappings strings and/ or `None` to dictionaries mapping strings or `None` to {py:class}`~hermes.model.merge.action.MergeAction`.
-Alone the data structure isn't enough to understand how this object is supposed to represent the merge strategies.
+The {py:meth}`~hermes.commands.process.base.HermesProcessPlugin.__call__` method of process plugins needs to return `ObjectStrategies`, a dictionary mapping strings and/ or `None` to dictionaries mapping strings or `None` to {py:class}`~hermes.model.merge.action.MergeAction`.
+Alone this data structure, `ObjectStrategies` isn't enough to understand how this object is supposed to represent the merge strategies.
 The following example will illustrate the sematics of each layer within the dictionary.
 
 If `strategies` looked like this (where {py:class}`~hermes.model.merge.action.Reject` is imported from {py:mod}`hermes.model.merge.action`)

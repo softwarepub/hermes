@@ -5,7 +5,7 @@
 # SPDX-FileContributor: Michael Meinel
 
 import argparse
-from typing import Union
+from typing import TypeAlias, Union
 
 from pydantic import BaseModel
 
@@ -16,11 +16,20 @@ from hermes.model.hermes_cache import HermesCacheManager
 from hermes.model.merge.action import MergeAction
 from hermes.model.merge.container import ld_merge_dict
 
+PropertyIRI: TypeAlias = Union[str, None]
+""" Type description for the iri of a JSON-LD property (or None indicating a 'joker') """
+ObjectTypeIRI: TypeAlias = Union[str, None]
+""" Type description for the iri of a JSON-LD type (or None indicating a 'joker') """
+PropertyStrategies: TypeAlias = dict[PropertyIRI, MergeAction]
+""" Type description for mapping PropertyTypeIRIs to MergeActions """
+ObjectStrategies: TypeAlias = dict[ObjectTypeIRI, PropertyStrategies]
+""" Type description for mapping ObjectTypeIRIs to PropertyStrategies """
+
 
 class HermesProcessPlugin(HermesPlugin):
     """ Base plugin that defines additional merge strategies."""
 
-    def __call__(self, command: HermesCommand) -> dict[Union[str, None], dict[Union[str, None], MergeAction]]:
+    def __call__(self, command: HermesCommand) -> ObjectStrategies:
         pass
 
 
