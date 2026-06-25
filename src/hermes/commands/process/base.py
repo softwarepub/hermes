@@ -16,13 +16,11 @@ from hermes.model.hermes_cache import HermesCacheManager
 from hermes.model.merge.action import MergeAction
 from hermes.model.merge.container import ld_merge_dict
 
-PropertyIRI: TypeAlias = Union[str, None]
-""" Type description for the iri of a JSON-LD property (or None indicating a 'joker') """
-ObjectTypeIRI: TypeAlias = Union[str, None]
-""" Type description for the iri of a JSON-LD type (or None indicating a 'joker') """
-PropertyStrategies: TypeAlias = dict[PropertyIRI, MergeAction]
+TypeIRI: TypeAlias = Union[str, None]
+""" Type description for the iri of a JSON-LD property or object type (or None indicating a 'joker') """
+PropertyStrategies: TypeAlias = dict[TypeIRI, MergeAction]
 """ Type description for mapping PropertyTypeIRIs to MergeActions """
-ObjectStrategies: TypeAlias = dict[ObjectTypeIRI, PropertyStrategies]
+ObjectStrategies: TypeAlias = dict[TypeIRI, PropertyStrategies]
 """ Type description for mapping ObjectTypeIRIs to PropertyStrategies """
 
 
