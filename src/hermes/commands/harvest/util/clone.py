@@ -10,7 +10,6 @@ import re
 import shutil
 import subprocess
 import tempfile
-import time
 import stat
 from pathlib import Path
 from urllib.parse import urlparse
@@ -59,7 +58,7 @@ def _normalize_clone_url(url: str) -> str:
 
 def _clear_readonly(func, path, excinfo):
     """
-    Error handler for `shutil.rmtree(..., onerror=...)`.
+     Error handler for `shutil.rmtree(..., onexc=...)`.
 
     Purpose:
       Some platforms/tools (notably Windows, antivirus scanners, or git itself) can leave files
@@ -75,6 +74,7 @@ def _clear_readonly(func, path, excinfo):
     # make the path writable.
     try:
         os.chmod(path, stat.S_IWRITE)
+        func(path)
     except Exception:
         pass
     # retry deletion.
@@ -85,81 +85,19 @@ def _clear_readonly(func, path, excinfo):
             os.remove(path)
     except Exception:
         pass
-
-def rmtree_with_retries(path: Path, retries: int = 6, initial_wait: float = 0.1):
+    
+def rmtree_with_readonly(path: Path) -> None:
     """
-    Recursive directory deletion with retries and read-only handling, for environments where temporary directories may be locked
-    or marked read-only (e.g., Windows, CI systems, antivirus interference).
+    Remove a directory tree, handling read-only files when needed.
 
-    Behavior:
-      - If `path` doesn't exist: return immediately.
-      - Attempts deletion up to `retries` times.
-      - Between attempts, sleeps with exponential backoff:
-          wait = initial_wait, then wait *= 2 each retry.
-      - Makes files/directories writable before trying `shutil.rmtree`.
-      - Uses `_clear_readonly` for additional resilience.
-      - Never raises: logs warnings/errors and returns.
-
-    Parameters:
-      path:         Directory to remove.
-      retries:      Number of attempts before giving up.
-      initial_wait: Starting sleep duration (seconds) for exponential backoff.
+    This is intended for directories created by git clones or temporary
+    working directories where files may be marked read-only.
     """
     if not path.exists():
         return
 
-    wait = initial_wait
-    for attempt in range(1, retries + 1):
-        try:
-            # Ensure files are writable where possible
-            for root, dirs, files in os.walk(path, topdown=False):
-                for name in files:
-                    p = os.path.join(root, name)
-                    try:
-                        os.chmod(p, stat.S_IWRITE)
-                    except Exception:
-                        pass
-                for name in dirs:
-                    p = os.path.join(root, name)
-                    try:
-                        os.chmod(p, stat.S_IWRITE)
-                    except Exception:
-                        pass
-
-            shutil.rmtree(path, onerror=_clear_readonly)
-            
-            # If deletion succeeded, stop.
-            if not path.exists():
-                return
-        except Exception as e:
-            logger.warning(
-                "rmtree attempt %d failed for %s: %r",
-                attempt,
-                path,
-                e,
-            )
-        time.sleep(wait)
-        wait *= 2
-
-    try:
-        alt = path.with_name(path.name + "_TO_DELETE")
-        try:
-            os.replace(str(path), str(alt))
-            shutil.rmtree(alt, onerror=_clear_readonly)
-            return
-        except Exception:
-            pass
-    except Exception:
-        pass
-
-    # If still present, report and exit without raising.
-    if path.exists():
-        logger.error(
-        "Failed to remove temp dir %s after %d attempts. ",
-        path,
-        retries,
-    )
-
+    shutil.rmtree(path, onexc=_clear_readonly)
+ 
 def _move_or_copy(src: Path, dst: Path):
     """
     Move a directory into place, falling back to copy+delete when a move isn't possible.
@@ -181,7 +119,7 @@ def _move_or_copy(src: Path, dst: Path):
     except Exception:
         # Cross-device or permission failure — fall back to copy + cleanup
         shutil.copytree(str(src), str(dst))
-        rmtree_with_retries(src)
+        rmtree_with_readonly(src)
 
 # ---------------- clone logic ----------------
 
@@ -298,7 +236,7 @@ def clone_repository(
                 if any(dest_path.iterdir()):
                     raise RuntimeError(f"Destination '{dest_path}' already exists and is not empty. Won't overwrite.")
                 else:
-                    rmtree_with_retries(dest_path)
+                    rmtree_with_readonly(dest_path)
 
             _move_or_copy(tmp2, dest_path)
             logger.info("Repository cloned successfully (fallback/full clone).")
@@ -309,7 +247,7 @@ def clone_repository(
             if any(dest_path.iterdir()):
                 raise RuntimeError(f"Destination '{dest_path}' already exists and is not empty. Won't overwrite.")
             else:
-                rmtree_with_retries(dest_path)
+                rmtree_with_readonly(dest_path)
 
         _move_or_copy(tmp1, dest_path)
         logger.info("Repository cloned successfully (optimized clone).")
@@ -343,6 +281,6 @@ def clone_repository(
         # Clean up temporary directory created for clone attempts.
         for temp_dir in created_temp_dirs:
             try:
-                rmtree_with_retries(temp_dir)
+                rmtree_with_readonly(temp_dir)
             except Exception as e:
                 logger.warning("Final cleanup failed for %s: %r", temp_dir, e)
