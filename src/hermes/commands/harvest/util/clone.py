@@ -179,10 +179,6 @@ def clone_repository(
         filter_blobs = False
 
     env = os.environ.copy()
-    if insecure_ssl:
-        # Disables SSL verification (security risk; use only when necessary)
-        env["GIT_SSL_NO_VERIFY"] = "1"
-
     created_temp_dirs: list[Path] = []  
 
     def build_cmd_for(temp_path: Path, optimized: bool):
