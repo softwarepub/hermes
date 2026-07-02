@@ -245,9 +245,10 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
                 create_new_merged_data = last_merged_data is self.prov_objects[2]
         elif self.prov_objects[0] is not None:
             merge_activity = self.prov_doc.add_activity(data={
-                "schema:name": "merge",
-                "schema:description": "foo",
-                "prov:used": {"@list": [self.prov_objects[2].ref, str(self.path+[key])]},
+                "schema:name": f"merge values at {str(self.path+[key])}",
+                "schema:description": f"inserting value in the second 'used' value at {str(self.path+[key])} into the "
+                                       "first 'used' value at the same point",
+                "prov:used": {"@list": [self.prov_objects[2].ref, self.prov_objects[1].ref]},
                 "prov:wasInformedBy": self.prov_objects[0].ref
             })
             create_new_merged_data = True
@@ -257,7 +258,13 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
             return
         self.prov_objects[0] = merge_activity
         if create_new_merged_data:
+            outer_most_parent = self
+            while outer_most_parent.parent != None:
+                outer_most_parent = outer_most_parent.parent
             self.prov_objects[2] = self.prov_doc.add_entity(data={
+                "@type": "schema:CreativeWork",
+                "schema:description": f"software metadata after merge of values at {str(self.path+[key])}",
+                "schema:text": str(outer_most_parent.compact()),  # TODO: maybe "prov:value" instead?
                 "prov:wasAttributedTo": self.prov_doc.get_hermes_command("process").ref,
                 "prov:wasGeneratedBy": merge_activity.ref,
                 "prov:wasDerivedFrom": {"@list": [self.prov_objects[1].ref, self.prov_objects[2].ref]}
@@ -319,10 +326,15 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
             raise MergeError(f"Can't merge, no strategy found for key '{key}'.")
         if self.prov_objects[0] is not None:
             merge_activity = self.prov_doc.add_activity(data={
-                "schema:name": "merge",
-                "schema:description": "foo",
+                "schema:name": f"merge values at {str(self.path+[key])}",
+                "schema:description": f"merge value in the second 'used' value at {str(self.path+[key])} into the "
+                                       "first 'used' value at the same point using the third 'used' value",
                 "prov:wasAssociatedWith": self.prov_doc.get_hermes_command("process").ref,
-                "prov:used": {"@list": [self.prov_objects[1].ref, self.prov_objects[2].ref, str(self.path+[key])]},
+                "prov:used": {"@list": [
+                    self.prov_objects[2].ref,
+                    self.prov_objects[1].ref,
+                    f"{merger.merge.__module__}.{merger.merge.__qualname__}"
+                ]},
                 "prov:wasInformedBy": self.prov_objects[0].ref
             })
             self.prov_objects[0] = merge_activity

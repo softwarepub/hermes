@@ -5,6 +5,7 @@
 # SPDX-FileContributor: Michael Meinel
 
 import argparse
+import datetime
 from typing import Optional
 
 from pydantic import BaseModel
@@ -91,20 +92,27 @@ class HermesProcessCommand(HermesCommand):
             if prov_doc is None:
                 continue
             plugin = prov_doc.add_hermes_plugin("process", plugin_name)
-            new_strategy_generation = prov_doc.add_activity(data={"prov:wasAssociatedWith": plugin.ref})
-            new_strategies = prov_doc.add_entity(
-                data={"prov:wasAttributedTo": plugin.ref, "prov:wasGeneratedBy": new_strategy_generation.ref}
-            )
+            new_strategy_generation = prov_doc.add_activity(data={
+                "schema:description": "generate new merge strategies",
+                "prov:wasAssociatedWith": plugin.ref
+            })
+            new_strategies = prov_doc.add_entity(data={  # TODO: record strategies
+                "schema:description": f"new merge strategies of plugin {plugin_name}",
+                "prov:wasAttributedTo": plugin.ref,
+                "prov:wasGeneratedBy": new_strategy_generation.ref
+            })
             if merged_strategies is None:
                 merged_strategies = new_strategies
                 strategy_action = new_strategy_generation
                 continue
             strategy_action = prov_doc.add_activity(data={
+                "schema:description": "merging the new strategies into the others",
                 "prov:used": [merged_strategies.ref, new_strategies.ref],
                 "prov:wasInformedBy": [strategy_action.ref, new_strategy_generation.ref],
                 "prov:wasAssociatedWith": process_command.ref
             })
-            merged_strategies = prov_doc.add_entity(data={
+            merged_strategies = prov_doc.add_entity(data={  # TODO: record strategies
+                "schema:description": "the merge strategies of multiple plugins merged together",
                 "prov:wasDerivedFrom": [merged_strategies.ref, new_strategies.ref],
                 "prov:wasGeneratedBy": strategy_action.ref,
                 "prov:wasAttributedTo": process_command.ref
@@ -147,10 +155,14 @@ class HermesProcessCommand(HermesCommand):
                     ))
                 ]
                 new_action = prov_doc.add_activity(data={  # load of new data
+                    "schema:description": f"loads the data from {harvester} plugin",
                     "prov:wasAssociatedWith": [process_command.ref, hermes_cache.ref],
                     "prov:used": stored_results
                 })
                 new_data = prov_doc.add_entity(data={  # new data to be merged
+                    "@type": "schema:CreativeWork",
+                    "schema:description": f"data loaded from {harvester} plugin",
+                    "schema:text": str(metadata.compact()),  # TODO: maybe "prov:value" instead?
                     "prov:wasAttributedTo": plugin.ref,
                     "prov:wasGeneratedBy": new_action.ref,
                     "prov:wasDerivedFrom": stored_results
@@ -158,11 +170,12 @@ class HermesProcessCommand(HermesCommand):
                 if merged_any:
                     # One pass must have been completed already.
                     new_action = prov_doc.add_activity(data={
+                        "schema:description": "merges the old data object with the new data",
                         "prov:used": [last_data.ref, new_data.ref],
                         "prov:wasInformedBy": [last_action.ref, new_action.ref],
                         "prov:wasAssociatedWith": process_command.ref
                     })  # initial merge action of the merge
-                    merged_doc.prov_objects = [new_action, new_data, last_data]
+                    merged_doc.prov_objects = [new_action, new_data, last_data]  # set the starting objects of the merge
 
             self.log.info(f"### Merge data from {harvester} plugin")
             # merge data into the merge dict
@@ -186,32 +199,55 @@ class HermesProcessCommand(HermesCommand):
         self.log.info("## Store processed metadata")
         # store processed data
         ctx.prepare_step("process")
+        begin_store_at_time = datetime.datetime.now().isoformat()
         with ctx["result"] as result_ctx:
             result_ctx["codemeta"] = merged_doc.compact()
             result_ctx["context"] = {"@context": merged_doc.full_context}
             result_ctx["expanded"] = merged_doc.ld_value
+        stored_at_time = datetime.datetime.now().isoformat()
 
         if prov_doc is not None:
             write = prov_doc.add_activity(data={
+                "schema:description": "Writes the processed metadata into the HERMES cache.",
                 "prov:wasAssociatedWith": [process_command.ref, hermes_cache.ref, plugin.ref],
                 "prov:used": last_data.ref,
-                "prov:wasInformedBy": last_action.ref
+                "prov:wasInformedBy": last_action.ref,
+                "prov:startedAtTime": begin_store_at_time,
+                "prov:endedAtTime": stored_at_time
             })
             # TODO: add more info
             prov_doc.add_entity(data={
+                "@type": "schema:CreativeWork",
+                "schema:description": "The compacted version of the processed metadata.",
+                "schema:text": str(merged_doc.compact()),  # TODO: maybe "prov:value" instead?
+                "schema:encodingFormat": "application/json",
+                "schema:url": (ctx.cache_dir / "process" / "result" / "codemeta.json").absolute().as_uri(),
                 "prov:wasGeneratedBy": write.ref,
                 "prov:wasDerivedFrom": last_data.ref,
-                "prov:wasAttributedTo": hermes_cache.ref
+                "prov:wasAttributedTo": hermes_cache.ref,
+                "prov:generatedAtTime": stored_at_time
             })
             prov_doc.add_entity(data={
+                "@type": "schema:CreativeWork",
+                "schema:description": "The context of the processed metadata.",
+                "schema:text": str({"@context": merged_doc.full_context}),  # TODO: maybe "prov:value" instead?
+                "schema:encodingFormat": "application/json",
+                "schema:url": (ctx.cache_dir / "process" / "result" / "context.json").absolute().as_uri(),
                 "prov:wasGeneratedBy": write.ref,
                 "prov:wasDerivedFrom": last_data.ref,
-                "prov:wasAttributedTo": hermes_cache.ref
+                "prov:wasAttributedTo": hermes_cache.ref,
+                "prov:generatedAtTime": stored_at_time
             })
             prov_doc.add_entity(data={
+                "@type": "schema:CreativeWork",
+                "schema:description": "The expanded version of the processed metadata.",
+                "schema:text": str(merged_doc.ld_value),  # TODO: maybe "prov:value" instead?
+                "schema:encodingFormat": "application/json",
+                "schema:url": (ctx.cache_dir / "process" / "result" / "expanded.json").absolute().as_uri(),
                 "prov:wasGeneratedBy": write.ref,
                 "prov:wasDerivedFrom": last_data.ref,
-                "prov:wasAttributedTo": hermes_cache.ref
+                "prov:wasAttributedTo": hermes_cache.ref,
+                "prov:generatedAtTime": stored_at_time
             })
 
             with ctx["provenance"] as cache:
