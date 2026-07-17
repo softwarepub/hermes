@@ -340,8 +340,10 @@ def test_from_dict():
 
     di = ld_dict.from_dict({
         "http://xmlns.com/foaf/0.1/name": [{"@value": "foo"}],
-        "http://xmlns.com/foaf/0.1/foo": [{"http://xmlns.com/foaf/0.1/barfoo": [{"@id": "https://example.org/foo"}],
-        "http://xmlns.com/foaf/0.1/fooba": [{"@value": "ba"}]}]
+        "http://xmlns.com/foaf/0.1/foo": [{
+            "http://xmlns.com/foaf/0.1/barfoo": [{"@id": "https://example.org/foo"}],
+            "http://xmlns.com/foaf/0.1/fooba": [{"@value": "ba"}]
+        }]
     })
     assert di.active_ctx == {"mappings": {}} and di.context == di.full_context == []
     assert di.index is di.key is di.parent is None
