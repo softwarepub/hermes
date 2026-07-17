@@ -9,6 +9,7 @@
 from datetime import datetime, time
 
 import pytest
+from pyld import jsonld
 
 from hermes.model.types.ld_container import ld_container
 from hermes.model.types.ld_dict import ld_dict
@@ -18,8 +19,8 @@ from hermes.model.types.ld_dict import ld_dict
 example extended json ld:
         [{
       "http://schema.org/name": [{"@value": "bacon"}],
-      "eggs": [{"@id": "spam"}],
-      "green": [{"@id": "png"}]
+      "eggs": [{"@id": f"{jsonld.DEFAULT_BASE_IRI}spam"}],
+      "green": [{"@id": f"{jsonld.DEFAULT_BASE_IRI}png"}]
         }]
 '''
 
@@ -135,15 +136,13 @@ class TestLdContainer:
         cont = ld_dict([{}], context=[mock_context])
         assert cont._to_expanded_json({"@id": f"{self.url}identifier"}) == {"@id": f"{self.url}identifier"}
 
-        # Regression test: "ham" is vocabulary and must not be expanded.
-        assert cont._to_expanded_json({"@id": "ham"}) == {"@id": "ham"}
+        assert cont._to_expanded_json({"@id": "ham"}) == {"@id": f"{jsonld.DEFAULT_BASE_IRI}ham"}
 
     def test_to_expanded_id_with_prefix(self, mock_context):
         cont = ld_dict([{}], context=[mock_context, {"prefix": self.url}])
         assert cont._to_expanded_json({"@id": "prefix:identifier"}) == {"@id": f"{self.url}identifier"}
 
-        # Regression test: "ham" should still not be expaned, but "prefix:ham" should be.
-        assert cont._to_expanded_json({"@id": "ham"}) == {"@id": "ham"}
+        assert cont._to_expanded_json({"@id": "ham"}) == {"@id": f"{jsonld.DEFAULT_BASE_IRI}ham"}
         assert cont._to_expanded_json({"@id": "prefix:ham"}) == {"@id": f"{self.url}ham"}
 
     def test_to_expanded_type(self, mock_context):
@@ -153,7 +152,9 @@ class TestLdContainer:
 
     def test_to_expanded_id_value(self, mock_context):
         cont = ld_dict([{}], context=[mock_context])
-        assert cont._to_expanded_json({"ham": "spam"}) == {"http://example.com/ham": [{"@id": "spam"}]}
+        assert cont._to_expanded_json({"ham": "spam"}) == {
+            "http://example.com/ham": [{"@id": f"{jsonld.DEFAULT_BASE_IRI}spam"}]
+        }
 
     def test_to_expanded_basic_value(self, mock_context):
         cont = ld_dict([{}], context=[mock_context])

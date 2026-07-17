@@ -171,13 +171,13 @@ def test_build_in_contains():
 def test_build_in_comparison():
     di = ld_dict([{}], context={"schema": "https://schema.org/"})
     assert di != 1 and di != [] and di != ""
-    di["@id"] = "foo"
+    di["@id"] = "https://example.org/foo"
     di["schema:name"] = "bar"
-    assert di == {"@id": "foo"}
+    assert di == {"@id": "https://example.org/foo"}
     # Fail probably because of bug in ld_dict
     # that is fixed on refactor/data-model after merge of refactor/384-test-ld_dict
-    assert di == {"@id": "foo", "schema:name": "bar"}
-    assert di == {"@id": "foo", "schema:name": "b"}
+    assert di == {"@id": "https://example.org/foo", "schema:name": "bar"}
+    assert di == {"@id": "https://example.org/foo", "schema:name": "b"}
     assert di == {"schema:name": "bar"}
     di = ld_dict([{}], context={"schema": "https://schema.org/"})
     di["schema:Person"] = {"schema:name": "foo"}
@@ -233,16 +233,23 @@ def test_update():
                             "http://xmlns.com/foaf/0.1/bacon": [{"@value": "eggs"}]}
 
     di2 = ld_dict([{"http://xmlns.com/foaf/0.1/foobar": [{"@value": "bar"}],
-                    "http://xmlns.com/foaf/0.1/barfoo": [{"@id": "foo"}]}],
+                    "http://xmlns.com/foaf/0.1/barfoo": [{"@id": "https://example.org/foo"}]}],
                   context=[{"xmlns": "http://xmlns.com/foaf/0.1/"}], parent=di, key="http://xmlns.com/foaf/0.1/foo")
 
-    di.update({"http://xmlns.com/foaf/0.1/name": "foo", "xmlns:homepage": {"@id": "bar"},
-               "xmlns:foo": di2})
-    assert di.data_dict == {"http://xmlns.com/foaf/0.1/name": [{"@value": "foo"}],
-                            "http://xmlns.com/foaf/0.1/homepage": [{"@id": "bar"}],
-                            "http://xmlns.com/foaf/0.1/bacon": [{"@value": "eggs"}],
-                            "http://xmlns.com/foaf/0.1/foo": [{"http://xmlns.com/foaf/0.1/foobar": [{"@value": "bar"}],
-                                                               "http://xmlns.com/foaf/0.1/barfoo": [{"@id": "foo"}]}]}
+    di.update({
+        "http://xmlns.com/foaf/0.1/name": "foo",
+        "xmlns:homepage": {"@id": "https://example.org/bar"},
+        "xmlns:foo": di2
+    })
+    assert di.data_dict == {
+        "http://xmlns.com/foaf/0.1/name": [{"@value": "foo"}],
+        "http://xmlns.com/foaf/0.1/homepage": [{"@id": "https://example.org/bar"}],
+        "http://xmlns.com/foaf/0.1/bacon": [{"@value": "eggs"}],
+        "http://xmlns.com/foaf/0.1/foo": [{
+            "http://xmlns.com/foaf/0.1/foobar": [{"@value": "bar"}],
+            "http://xmlns.com/foaf/0.1/barfoo": [{"@id": "https://example.org/foo"}]
+        }]
+    }
 
     with pytest.raises(AttributeError):
         di.update(["", ""])
@@ -274,14 +281,20 @@ def test_compact_keys():
 def test_items():
     di = ld_dict([{}], context=[{"xmlns": "http://xmlns.com/foaf/0.1/"}])
     inner_di = ld_dict([{}], parent=di, key="http://xmlns.com/foaf/0.1/foo")
-    inner_di.update({"xmlns:foobar": "bar", "http://xmlns.com/foaf/0.1/barfoo": {"@id": "foo"}})
-    di.update({"http://xmlns.com/foaf/0.1/name": "foo", "xmlns:homepage": {"@id": "bar"}, "xmlns:foo": inner_di})
+    inner_di.update({"xmlns:foobar": "bar", "http://xmlns.com/foaf/0.1/barfoo": {"@id": "https://example.org/foo"}})
+    di.update({
+        "http://xmlns.com/foaf/0.1/name": "foo",
+        "xmlns:homepage": {"@id": "https://example.org/bar"},
+        "xmlns:foo": inner_di}
+    )
     items = [*di.items()]
     assert (items[0][0], items[1][0]) == ("http://xmlns.com/foaf/0.1/name", "http://xmlns.com/foaf/0.1/homepage")
-    assert (items[0][1].item_list, items[1][1].item_list) == ([{"@value": "foo"}], [{"@id": "bar"}])
+    assert (items[0][1].item_list, items[1][1].item_list) == ([{"@value": "foo"}], [{"@id": "https://example.org/bar"}])
     assert items[2][0] == "http://xmlns.com/foaf/0.1/foo" and isinstance(items[2][1], ld_list)
-    assert items[2][1][0].data_dict == {"http://xmlns.com/foaf/0.1/foobar": [{"@value": "bar"}],
-                                        "http://xmlns.com/foaf/0.1/barfoo": [{"@id": "foo"}]}
+    assert items[2][1][0].data_dict == {
+        "http://xmlns.com/foaf/0.1/foobar": [{"@value": "bar"}],
+        "http://xmlns.com/foaf/0.1/barfoo": [{"@id": "https://example.org/foo"}]
+    }
 
 
 def test_ref():
@@ -297,50 +310,60 @@ def test_ref():
 def test_to_native_python():
     di = ld_dict([{}], context=[{"xmlns": "http://xmlns.com/foaf/0.1/"}])
     inner_di = ld_dict([{}], parent=di)
-    inner_di.update({"xmlns:foobar": "bar", "http://xmlns.com/foaf/0.1/barfoo": {"@id": "foo"}})
-    di.update({"http://xmlns.com/foaf/0.1/name": "foo", "xmlns:homepage": {"@id": "bar"}, "xmlns:foo": inner_di})
+    inner_di.update({"xmlns:foobar": "bar", "http://xmlns.com/foaf/0.1/barfoo": {"@id": "https://example.org/foo"}})
+    di.update({
+        "http://xmlns.com/foaf/0.1/name": "foo",
+        "xmlns:homepage": {"@id": "https://example.org/bar"},
+        "xmlns:foo": inner_di
+    })
     assert di.to_native_python() == {
         "xmlns:name": ["foo"],
-        "xmlns:homepage": [{"@id": "bar"}],
-        "xmlns:foo": [{"xmlns:foobar": ["bar"], "xmlns:barfoo": [{"@id": "foo"}]}]
+        "xmlns:homepage": [{"@id": "https://example.org/bar"}],
+        "xmlns:foo": [{"xmlns:foobar": ["bar"], "xmlns:barfoo": [{"@id": "https://example.org/foo"}]}]
     }
     di.update({"http://example.com/eggs": {
             "@value": "2022-02-22T00:00:00", "@type": "https://schema.org/DateTime"
     }})
     assert di.to_native_python() == {
         "xmlns:name": ["foo"],
-        "xmlns:homepage": [{"@id": "bar"}],
-        "xmlns:foo": [{"xmlns:foobar": ["bar"], "xmlns:barfoo": [{"@id": "foo"}]}],
+        "xmlns:homepage": [{"@id": "https://example.org/bar"}],
+        "xmlns:foo": [{"xmlns:foobar": ["bar"], "xmlns:barfoo": [{"@id": "https://example.org/foo"}]}],
         "http://example.com/eggs": ["2022-02-22T00:00:00"]
     }
 
 
 def test_from_dict():
-    di = ld_dict.from_dict({"@type": "xmlns:hompage", "@id": "foo"})
-    assert di.data_dict == {"@type": ["xmlns:hompage"], "@id": "foo"}
+    di = ld_dict.from_dict({"@type": "xmlns:hompage", "@id": "https://example.org/foo"})
+    assert di.data_dict == {"@type": ["xmlns:hompage"], "@id": "https://example.org/foo"}
     assert di.active_ctx == {"mappings": {}} and di.context == di.full_context == []
     assert di.index is di.key is di.parent is None
 
-    di = ld_dict.from_dict({"http://xmlns.com/foaf/0.1/name": [{"@value": "foo"}],
-                            "http://xmlns.com/foaf/0.1/foo": [{"http://xmlns.com/foaf/0.1/barfoo": [{"@id": "foo"}],
-                                                               "http://xmlns.com/foaf/0.1/fooba": [{"@value": "ba"}]}]})
+    di = ld_dict.from_dict({
+        "http://xmlns.com/foaf/0.1/name": [{"@value": "foo"}],
+        "http://xmlns.com/foaf/0.1/foo": [{"http://xmlns.com/foaf/0.1/barfoo": [{"@id": "https://example.org/foo"}],
+        "http://xmlns.com/foaf/0.1/fooba": [{"@value": "ba"}]}]
+    })
     assert di.active_ctx == {"mappings": {}} and di.context == di.full_context == []
     assert di.index is di.key is di.parent is None
 
-    di = ld_dict.from_dict({"@type": "xmlns:hompage", "@id": "foo"}, ld_type="xmlns:webpage")
-    assert di.data_dict == {"@type": ["xmlns:webpage", "xmlns:hompage"], "@id": "foo"}
+    di = ld_dict.from_dict({"@type": "xmlns:hompage", "@id": "https://example.org/foo"}, ld_type="xmlns:webpage")
+    assert di.data_dict == {"@type": ["xmlns:webpage", "xmlns:hompage"], "@id": "https://example.org/foo"}
     assert di.active_ctx == {"mappings": {}} and di.context == di.full_context == []
     assert di.index is di.key is di.parent is None
 
-    di = ld_dict.from_dict({"@context": [{"schema": "https://schema.org/"}], "@type": "schema:Thing", "@id": "foo"})
-    assert di.data_dict == {"@type": ["https://schema.org/Thing"], "@id": "foo"}
+    di = ld_dict.from_dict({
+        "@context": [{"schema": "https://schema.org/"}], "@type": "schema:Thing", "@id": "https://example.org/foo"
+    })
+    assert di.data_dict == {"@type": ["https://schema.org/Thing"], "@id": "https://example.org/foo"}
     assert di.context == di.full_context == [{"schema": "https://schema.org/"}]
     assert di.index is di.key is di.parent is None
 
     outer_di = di
-    di = ld_dict.from_dict({"@context": [{"schema": "https://schema.org/"}], "@type": "schema:Action",
-                            "schema:name": "foo"},
-                           parent=outer_di, key="schema:result")
+    di = ld_dict.from_dict(
+        {"@context": [{"schema": "https://schema.org/"}], "@type": "schema:Action", "schema:name": "foo"},
+        parent=outer_di,
+        key="schema:result"
+    )
     assert di.data_dict == {"@type": ["https://schema.org/Action"], "https://schema.org/name": [{"@value": "foo"}]}
     assert di.full_context == 2 * [{"schema": "https://schema.org/"}]
     assert di.context == [{"schema": "https://schema.org/"}] and di.key == "schema:result" and di.index is None
@@ -365,11 +388,14 @@ def test_from_dict():
     assert di.context == [{"schema": "https://schema.org/"},
                           {"schema": "https://schema.org/", "xmlns": "http://xmlns.com/foaf/0.1/"}]
 
-    outer_di = ld_dict.from_dict({"@context": [{"schema": "https://schema.org/"}],
-                                  "@type": "schema:Thing", "@id": "foo"})
-    di = ld_dict.from_dict({"@context": {"schema": "https://schema.org/"}, "@type": "schema:Action",
-                            "schema:name": "foo"},
-                           parent=outer_di, key="schema:result")
+    outer_di = ld_dict.from_dict(
+        {"@context": [{"schema": "https://schema.org/"}], "@type": "schema:Thing", "@id": "https://example.org/foo"}
+    )
+    di = ld_dict.from_dict(
+        {"@context": {"schema": "https://schema.org/"}, "@type": "schema:Action", "schema:name": "foo"},
+        parent=outer_di,
+        key="schema:result"
+    )
     assert di.data_dict == {"@type": ["https://schema.org/Action"], "https://schema.org/name": [{"@value": "foo"}]}
     assert di.full_context == 2 * [{"schema": "https://schema.org/"}]
     assert di.context == [{"schema": "https://schema.org/"}] and di.key == "schema:result" and di.index is None
