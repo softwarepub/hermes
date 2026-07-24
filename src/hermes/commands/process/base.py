@@ -163,7 +163,7 @@ class HermesProcessCommand(HermesCommand):
                     "@type": "schema:CreativeWork",
                     "schema:description": f"data loaded from {harvester} plugin",
                     "schema:text": str(metadata.compact()),  # TODO: maybe "prov:value" instead?
-                    "prov:wasAttributedTo": plugin.ref,
+                    "prov:wasAttributedTo": [process_command.ref, hermes_cache.ref],
                     "prov:wasGeneratedBy": new_action.ref,
                     "prov:wasDerivedFrom": stored_results
                 })
@@ -209,7 +209,7 @@ class HermesProcessCommand(HermesCommand):
         if prov_doc is not None:
             write = prov_doc.add_activity(data={
                 "schema:description": "Writes the processed metadata into the HERMES cache.",
-                "prov:wasAssociatedWith": [process_command.ref, hermes_cache.ref, plugin.ref],
+                "prov:wasAssociatedWith": [process_command.ref, hermes_cache.ref],
                 "prov:used": last_data.ref,
                 "prov:wasInformedBy": last_action.ref,
                 "prov:startedAtTime": begin_store_at_time,
@@ -269,3 +269,5 @@ class HermesProcessCommand(HermesCommand):
                     "Processing will proceed without collecting provenance data.",
                     exc_info=1
                 )
+            finally:
+                ctx.finalize_step("harvest")
