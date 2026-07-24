@@ -91,7 +91,7 @@ class HermesCurateCommand(HermesCommand):
         stored_at_time = datetime.datetime.now().isoformat()
 
         if prov_doc is not None:
-            curate_plugin = prov_doc.add_hermes_plugin("curate", plugin_name)
+            curate_plugin = prov_doc.add_hermes_plugin("curate", plugin_name, plugin_func)
             store_action_of_process = prov_doc.shallow_search(lambda node: (
                 "prov:wasAssociatedWith" in node and
                 node["prov:wasAssociatedWith"] == [process_command.ref, hermes_cache.ref] and

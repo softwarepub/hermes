@@ -91,7 +91,7 @@ class HermesProcessCommand(HermesCommand):
 
             if prov_doc is None:
                 continue
-            plugin = prov_doc.add_hermes_plugin("process", plugin_name)
+            plugin = prov_doc.add_hermes_plugin("process", plugin_name, plugin_func)
             new_strategy_generation = prov_doc.add_activity(data={
                 "schema:description": "generate new merge strategies",
                 "prov:wasAssociatedWith": plugin.ref

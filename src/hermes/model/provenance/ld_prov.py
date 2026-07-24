@@ -4,6 +4,7 @@
 
 # SPDX-FileContributor: Michael Fritzsche
 
+from importlib.metadata import metadata
 from typing import Optional, Union
 from typing_extensions import Self
 
@@ -121,14 +122,19 @@ class ld_prov_list(ld_list):
                 "prov:actedOnBehalfOf": command.ref
             })
 
-    def add_hermes_plugin(self, step, name) -> ld_dict:
-        # TODO: add version
-        node = self.add_agent(data={
+    def add_hermes_plugin(self, step, name, plugin) -> ld_dict:
+        data = {
             "@id": ld_prov_list.HERMES_PLUGIN_ID_FORMAT.format(step=step, name=name),
             "@type": "schema:SoftwareApplication",
-            "schema:name": f"{utils.hermes_name} {step} plugin '{name}'",
+            "schema:name": f"{plugin.__module__}.{plugin.__class__.__qualname__}",
+            "schema:description": f"{utils.hermes_name} {step} plugin '{name}'",
             "prov:actedOnBehalfOf": self.get_hermes_base_plugin(step).ref
-        })
+        }
+        try:
+            data["version"] = metadata(plugin.__module__)["version"]
+        except Exception:
+            pass
+        node = self.add_agent(data=data)
         return node
 
     def shallow_search(self, query) -> list[ld_dict]:

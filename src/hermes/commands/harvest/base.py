@@ -37,20 +37,25 @@ class HermesHarvestPlugin(HermesPlugin):
         elif isinstance(source, Path):
             source_metadata["schema:url"] = source.absolute().as_uri()
         elif isinstance(source, str):
-            source_metadata["schema:url"] = Path(source).absolute().as_uri()
+            try:
+                source_metadata["schema:url"] = Path(source).absolute().as_uri()
+            except Exception:
+                source_metadata["schema:url"] = source
         io_operation = {
             "schema:description": "Load operation called with ("
             f"{source_metadata['schema:url'] if 'schema:url' in source_metadata else str(source)}"
             f"{', ' + str(args) if args else ''}{', ' + str(kwargs) if kwargs else ''}).",
             "schema:name": f"{func.__module__}.{func.__qualname__}"
         }
+        io_operation["prov:startedAtTime"] = datetime.datetime.now().isoformat()
         result = func(source, *args, **kwargs)
+        io_operation["prov:endedAtTime"] = datetime.datetime.now().isoformat()
         loaded_metadata = {"schema:description": "the loaded data", "schema:text": str(result)}
         self.io_operations.append((source_metadata, io_operation, loaded_metadata))
         return result
 
     def write():
-        # TODO: Implement
+        # TODO: Is this needed? If yes, it needs to be implemented
         pass
 
 
@@ -136,7 +141,7 @@ class HermesHarvestCommand(HermesCommand):
 
             remove_harvest_plugin_from_prov_doc(prov_doc, plugin_name)
 
-            plugin = prov_doc.add_hermes_plugin("harvest", plugin_name)
+            plugin = prov_doc.add_hermes_plugin("harvest", plugin_name, plugin_func)
             plugin_io_operations = plugin_func.io_operations
             outputs = []
             io_ops = []
