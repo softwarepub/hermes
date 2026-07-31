@@ -102,6 +102,8 @@ class HermesHarvestCommand(HermesCommand):
         self.log.info("# Load provenance from old harvest or create new document.")
         prov_doc = self.init_provenance_document()
         base_plugin = prov_doc.get_hermes_base_plugin("harvest")
+        prov_doc.add_hermes_settings(self)
+        prov_doc.add_settings_to_command("harvest", self)
 
         self.log.info("# Metadata harvesting")
         if len(self.settings.sources) == 0:
@@ -141,7 +143,7 @@ class HermesHarvestCommand(HermesCommand):
 
             remove_harvest_plugin_from_prov_doc(prov_doc, plugin_name)
 
-            plugin = prov_doc.add_hermes_plugin("harvest", plugin_name, plugin_func)
+            plugin = prov_doc.add_hermes_plugin("harvest", plugin_name, plugin_func, self)
             plugin_io_operations = plugin_func.io_operations
             outputs = []
             io_ops = []

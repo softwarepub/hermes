@@ -41,9 +41,12 @@ class HermesProcessCommand(HermesCommand):
     settings_class = ProcessSettings
 
     def __call__(self, args: argparse.Namespace) -> None:
+        self.args = args
         self.log.info("# Load provenance data from harvest step")
         prov_doc = self.load_prov_doc()
         if prov_doc is not None:
+            prov_doc.add_hermes_settings(self)
+            prov_doc.add_settings_to_command("process", self)
             process_command = prov_doc.get_hermes_command("process")
             hermes_cache = prov_doc.get_hermes_cache()
 
@@ -91,7 +94,7 @@ class HermesProcessCommand(HermesCommand):
 
             if prov_doc is None:
                 continue
-            plugin = prov_doc.add_hermes_plugin("process", plugin_name, plugin_func)
+            plugin = prov_doc.add_hermes_plugin("process", plugin_name, plugin_func, self)
             new_strategy_generation = prov_doc.add_activity(data={
                 "schema:description": "generate new merge strategies",
                 "prov:wasAssociatedWith": plugin.ref

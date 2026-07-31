@@ -38,9 +38,12 @@ class HermesCurateCommand(HermesCommand):
     settings_class = CurateSettings
 
     def __call__(self, args: argparse.Namespace) -> None:
+        self.args = args
         self.log.info("# Load provenance data from process step")
         prov_doc = self.load_prov_doc()
         if prov_doc is not None:
+            prov_doc.add_hermes_settings(self)
+            prov_doc.add_settings_to_command("curate", self)
             curate_command = prov_doc.get_hermes_command("curate")
             curate_base_plugin = prov_doc.get_hermes_base_plugin("curate")
             process_command = prov_doc.get_hermes_command("process")
@@ -91,7 +94,7 @@ class HermesCurateCommand(HermesCommand):
         stored_at_time = datetime.datetime.now().isoformat()
 
         if prov_doc is not None:
-            curate_plugin = prov_doc.add_hermes_plugin("curate", plugin_name, plugin_func)
+            curate_plugin = prov_doc.add_hermes_plugin("curate", plugin_name, plugin_func, self)
             store_action_of_process = prov_doc.shallow_search(lambda node: (
                 "prov:wasAssociatedWith" in node and
                 node["prov:wasAssociatedWith"] == [process_command.ref, hermes_cache.ref] and

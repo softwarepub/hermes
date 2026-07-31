@@ -9,8 +9,9 @@ from typing import Optional, Union
 from typing_extensions import Self
 
 from hermes import utils
+from hermes.commands.base import HermesCommand, HermesPlugin
 from hermes.model.types import ld_dict, ld_list
-from hermes.model.types.ld_container import EXPANDED_JSON_LD_VALUE, JSON_LD_CONTEXT_DICT
+from hermes.model.types.ld_container import BASIC_TYPE, EXPANDED_JSON_LD_VALUE, JSON_LD_CONTEXT_DICT
 from hermes.model.types.ld_context import ALL_CONTEXTS, iri_map
 
 
@@ -122,14 +123,99 @@ class ld_prov_list(ld_list):
                 "prov:actedOnBehalfOf": command.ref
             })
 
-    def add_hermes_plugin(self, step, name, plugin) -> ld_dict:
+    def add_hermes_settings(self, command: HermesCommand) -> None:
+        hermes = self.get_hermes()
+        hermes.emplace("schema:supportingData")
+        hermes["schema:supportingData"].append({
+            "@type": "schema:DataFeed",
+            "schema:dataFeedElement": [
+                {
+                    "@type": "schema:DataFeedItem",
+                    "schema:name": name,
+                    "schema:item": [
+                        {
+                            "@type": "schema:Item",
+                            "schema:description": value
+                        }
+                    ],
+                    "schema:description": "setting provided by command line (or its default value)"
+                }
+                for name, value in [
+                    ("path", command.args.path.absolute().as_uri()),
+                    ("config", command.args.config.absolute().as_uri()),
+                    ("options", str(command.args.options))
+                ]
+            ],
+            "schema:description": f"options for run {len(hermes['schema:supportingData']) + 1} of some hermes step"
+        })
+        for name, values in command.root_settings.model_dump(mode="json").items():
+            if not isinstance(values, list):
+                values = [values]
+            hermes["schema:supportingData"][-1]["schema:dataFeedElement"].append({
+                "@type": "schema:DataFeedItem",
+                "schema:name": name,
+                "schema:item": [
+                    {
+                        "@type": "schema:Item",
+                        "schema:description": value
+                    }
+                    for value in values
+                ],
+                "schema:description": "setting loaded from the config file"
+            })
+
+    def add_settings_to_command(self, step: str, command: HermesCommand) -> None:
+        command_prov = self.get_hermes_command(step)
+        command_prov.emplace("schema:supportingData")
+        command_prov["schema:supportingData"].append({
+            "@type": "schema:DataFeed",
+            "schema:dataFeedElement": [],
+            "schema:description": f"options for run {len(command_prov['schema:supportingData']) + 1} of step {step}"
+        })
+        for name, values in command.settings.model_dump(mode="json").items():
+            if not isinstance(values, list):
+                values = [values]
+            command_prov["schema:supportingData"][-1]["schema:dataFeedElement"].append({
+                "@type": "schema:DataFeedItem",
+                "schema:name": name,
+                "schema:item": [
+                    {
+                        "@type": "schema:Item",
+                        "schema:description": value
+                    }
+                    for value in values
+                ]
+            })
+
+    def add_hermes_plugin(self, step: str, name: str, plugin: HermesPlugin, command: HermesCommand) -> ld_dict:
         data = {
             "@id": ld_prov_list.HERMES_PLUGIN_ID_FORMAT.format(step=step, name=name),
             "@type": "schema:SoftwareApplication",
             "schema:name": f"{plugin.__module__}.{plugin.__class__.__qualname__}",
             "schema:description": f"{utils.hermes_name} {step} plugin '{name}'",
+            "schema:supportingData": {
+                "@type": "schema:DataFeed",
+                "schema:dataFeedElement": []
+            },
             "prov:actedOnBehalfOf": self.get_hermes_base_plugin(step).ref
         }
+        try:
+            for name, values in getattr(command.settings, name).model_dump(mode="json").items():
+                if not isinstance(values, list):
+                    values = [values]
+                data["schema:supportingData"]["schema:dataFeedElement"].append({
+                    "@type": "schema:DataFeedItem",
+                    "schema:name": name,
+                    "schema:item": [
+                        {
+                            "@type": "schema:Item",
+                            "schema:description": value
+                        }
+                        for value in values
+                    ]
+                })
+        except Exception:
+            del data["schema:supportingData"]
         try:
             data["version"] = metadata(plugin.__module__)["version"]
         except Exception:
