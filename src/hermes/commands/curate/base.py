@@ -112,7 +112,7 @@ class HermesCurateCommand(HermesCommand):
                 "@type": "schema:CreativeWork",
                 "schema:description": "data loaded from process step",
                 "schema:text": loaded_metadata_str,  # TODO: maybe "prov:value" instead?
-                "prov:wasAttributedTo": [curate_command.ref, curate_plugin.ref, hermes_cache.ref],
+                "prov:wasAttributedTo": hermes_cache.ref,
                 "prov:wasGeneratedBy": load_action.ref,
                 "prov:wasDerivedFrom": stored_results_of_process
             })
@@ -127,7 +127,7 @@ class HermesCurateCommand(HermesCommand):
             })
             write = prov_doc.add_activity(data={
                 "schema:description": "Writes the processed metadata into the HERMES cache.",
-                "prov:wasAssociatedWith": [process_command.ref, hermes_cache.ref, curate_plugin.ref],
+                "prov:wasAssociatedWith": [curate_command.ref, hermes_cache.ref],
                 "prov:used": curated_data.ref,
                 "prov:startedAtTime": begin_store_at_time,
                 "prov:endedAtTime": stored_at_time
@@ -180,7 +180,7 @@ class HermesCurateCommand(HermesCommand):
                 return ld_prov_list.load_ld_prov_list(cache["result"])
             except Exception:
                 self.log.warning(
-                    "The provenance data from the harvest step could not be loaded. "
+                    "The provenance data from the process step could not be loaded. "
                     "Processing will proceed without collecting provenance data.",
                     exc_info=1
                 )

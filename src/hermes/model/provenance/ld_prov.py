@@ -170,8 +170,9 @@ class ld_prov_list(ld_list):
         command_prov["schema:supportingData"].append({
             "@type": "schema:DataFeed",
             "schema:dataFeedElement": [],
-            "schema:description": f"options for run {len(command_prov['schema:supportingData']) + 1} of step {step}"
-        })
+            "schema:description": f"options for run {len(command_prov['schema:supportingData']) + 1} of step {step} out"
+                                  f" of {len(self.get_hermes()['schema:supportingData'])} runs of some hermes step"
+        })  # Needs add_hermes_settings to be called before add_settings_to_command is called!
         for name, values in command.settings.model_dump(mode="json").items():
             if not isinstance(values, list):
                 values = [values]
