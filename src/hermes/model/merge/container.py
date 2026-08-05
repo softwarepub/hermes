@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import datetime
 from typing import TYPE_CHECKING, Any, Callable, Optional, Union
 from typing_extensions import Self
 
@@ -237,6 +238,7 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
                 ``self[key]``.
         """
         # create the new item if self[key] and value have to be merged.
+        merge_start = datetime.datetime.now().isoformat()
         if key in self:
             if self.prov_objects[0] is not None:
                 last_merged_data = self.prov_objects[2]
@@ -254,8 +256,12 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
             create_new_merged_data = True
         # update the entry of self[key]
         super().__setitem__(key, value)
+        merge_end = datetime.datetime.now().isoformat()
         if self.prov_objects[0] is None:
             return
+        if merge_activity is not None:
+            merge_activity["prov:startedAtTime"] = merge_start
+            merge_activity["prov:endedAtTime"] = merge_end
         self.prov_objects[0] = merge_activity
         if create_new_merged_data:
             outer_most_parent = self
@@ -267,7 +273,8 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
                 "schema:text": str(outer_most_parent.compact()),  # TODO: maybe "prov:value" instead?
                 "prov:wasAttributedTo": self.prov_doc.get_hermes_command("process").ref,
                 "prov:wasGeneratedBy": merge_activity.ref,
-                "prov:wasDerivedFrom": {"@list": [self.prov_objects[1].ref, self.prov_objects[2].ref]}
+                "prov:wasDerivedFrom": {"@list": [self.prov_objects[1].ref, self.prov_objects[2].ref]},
+                "prov:generatedAtTime": merge_end
             })
         else:
             self.prov_objects[2]["prov:wasGeneratedBy"].append(merge_activity.ref)

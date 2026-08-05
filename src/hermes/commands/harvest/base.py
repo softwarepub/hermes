@@ -167,10 +167,12 @@ class HermesHarvestCommand(HermesCommand):
                 "prov:wasInformedBy": io_ops,
                 "prov:used": outputs,
                 "prov:wasAssociatedWith": plugin.ref,
-                "prov:startedAtTime": returned_at_time
+                "prov:endedAtTime": returned_at_time
             })
             data_output = prov_doc.add_entity(data={
+                "@type": "schema:CreativeWork",
                 "schema:description": "the harvested metadata",
+                "schema:text": str(harvested_data.compact()),  # TODO: maybe "prov:value" instead?
                 "prov:wasAttributedTo": plugin.ref,
                 "prov:wasGeneratedBy": map_activity.ref,
                 "prov:wasDerivedFrom": outputs,

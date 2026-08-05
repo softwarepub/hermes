@@ -59,7 +59,9 @@ class HermesCurateCommand(HermesCommand):
         # load processed data
         ctx.prepare_step("process")
         try:
+            begin_load_at_time = datetime.datetime.now().isoformat()
             metadata = SoftwareMetadata.load_from_cache(ctx, "result")
+            end_load_at_time = datetime.datetime.now().isoformat()
         except Exception as e:
             self.log.critical(
                 "## The data from the process step could not be loaded or is invalid for some reason.",
@@ -83,6 +85,7 @@ class HermesCurateCommand(HermesCommand):
         # run plugin
         try:
             curated_metadata = plugin_func(self, metadata)
+            end_curation_time = datetime.datetime.now().isoformat()
         except Exception as e:
             self.log.critical(f"## Unknown error while executing the {plugin_name} plugin.", exc_info=1)
             raise HermesPluginRunError(f"Something went wrong while running the curate plugin {plugin_name}") from e
@@ -106,7 +109,9 @@ class HermesCurateCommand(HermesCommand):
             load_action = prov_doc.add_activity(data={
                 "schema:description": "loads the data from process step",
                 "prov:wasAssociatedWith": [process_command.ref, hermes_cache.ref],
-                "prov:used": stored_results_of_process
+                "prov:used": stored_results_of_process,
+                "prov:startedAtTime": begin_load_at_time,
+                "prov:endedAtTime": end_load_at_time
             })
             loaded_data = prov_doc.add_entity(data={
                 "@type": "schema:CreativeWork",
@@ -114,7 +119,8 @@ class HermesCurateCommand(HermesCommand):
                 "schema:text": loaded_metadata_str,  # TODO: maybe "prov:value" instead?
                 "prov:wasAttributedTo": hermes_cache.ref,
                 "prov:wasGeneratedBy": load_action.ref,
-                "prov:wasDerivedFrom": stored_results_of_process
+                "prov:wasDerivedFrom": stored_results_of_process,
+                "prov:generatedAtTime": end_load_at_time
             })
             curated_data = prov_doc.add_entity(data={
                 "@type": "schema:CreativeWork",
@@ -123,7 +129,8 @@ class HermesCurateCommand(HermesCommand):
                 "prov:wasAttributedTo": [curate_plugin.ref, curate_base_plugin.ref, curate_command.ref],
                 "prov:wasInfluencedBy": curate_plugin.ref,
                 "prov:wasGeneratedBy": load_action.ref,
-                "prov:wasDerivedFrom": loaded_data.ref
+                "prov:wasDerivedFrom": loaded_data.ref,
+                "prov:generatedAtTime": end_curation_time
             })
             write = prov_doc.add_activity(data={
                 "schema:description": "Writes the processed metadata into the HERMES cache.",

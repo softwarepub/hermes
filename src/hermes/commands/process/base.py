@@ -82,14 +82,18 @@ class HermesProcessCommand(HermesCommand):
             self.log.info(f"### Run {plugin_name} plugin")
             # run plugin
             try:
+                generate_strategies_start = datetime.datetime.now().isoformat()
                 additional_strategies = plugin_func(self)
+                generate_strategies_end = datetime.datetime.now().isoformat()
             except Exception:
                 self.log.exception(f"### Unknown error while executing the {plugin_name} plugin, skipping it now.")
                 continue
 
             self.log.info(f"### Add the strategies to the merge document {plugin_name} plugin")
             # add strategies to the merge document
+            merge_strategies_start = datetime.datetime.now().isoformat()
             merged_doc.add_strategy(additional_strategies)
+            merge_strategies_end = datetime.datetime.now().isoformat()
             any_strategies_loaded = True
 
             if prov_doc is None:
@@ -97,12 +101,15 @@ class HermesProcessCommand(HermesCommand):
             plugin = prov_doc.add_hermes_plugin("process", plugin_name, plugin_func, self)
             new_strategy_generation = prov_doc.add_activity(data={
                 "schema:description": "generate new merge strategies",
-                "prov:wasAssociatedWith": plugin.ref
+                "prov:wasAssociatedWith": plugin.ref,
+                "prov:startedAtTime": generate_strategies_start,
+                "prov:endedAtTime": generate_strategies_end
             })
             new_strategies = prov_doc.add_entity(data={  # TODO: record strategies
                 "schema:description": f"new merge strategies of plugin {plugin_name}",
                 "prov:wasAttributedTo": plugin.ref,
-                "prov:wasGeneratedBy": new_strategy_generation.ref
+                "prov:wasGeneratedBy": new_strategy_generation.ref,
+                "prov:generatedAtTime": generate_strategies_end
             })
             if merged_strategies is None:
                 merged_strategies = new_strategies
@@ -112,13 +119,16 @@ class HermesProcessCommand(HermesCommand):
                 "schema:description": "merging the new strategies into the others",
                 "prov:used": [merged_strategies.ref, new_strategies.ref],
                 "prov:wasInformedBy": [strategy_action.ref, new_strategy_generation.ref],
-                "prov:wasAssociatedWith": process_command.ref
+                "prov:wasAssociatedWith": process_command.ref,
+                "prov:startedAtTime": merge_strategies_start,
+                "prov:endedAtTime": merge_strategies_end
             })
             merged_strategies = prov_doc.add_entity(data={  # TODO: record strategies
                 "schema:description": "the merge strategies of multiple plugins merged together",
                 "prov:wasDerivedFrom": [merged_strategies.ref, new_strategies.ref],
                 "prov:wasGeneratedBy": strategy_action.ref,
-                "prov:wasAttributedTo": process_command.ref
+                "prov:wasAttributedTo": process_command.ref,
+                "prov:generatedAtTime": merge_strategies_end
             })
 
         if not any_strategies_loaded:
@@ -135,7 +145,9 @@ class HermesProcessCommand(HermesCommand):
             self.log.info(f"### Load data from {harvester} plugin")
             # load data from harvester
             try:
+                load_start = datetime.datetime.now().isoformat()
                 metadata = SoftwareMetadata.load_from_cache(ctx, harvester)
+                load_end = datetime.datetime.now().isoformat()
             except Exception:
                 # skip this harvester when the data is invalid
                 if prov_doc is not None:
@@ -160,7 +172,9 @@ class HermesProcessCommand(HermesCommand):
                 new_action = prov_doc.add_activity(data={  # load of new data
                     "schema:description": f"loads the data from {harvester} plugin",
                     "prov:wasAssociatedWith": [process_command.ref, hermes_cache.ref],
-                    "prov:used": stored_results
+                    "prov:used": stored_results,
+                    "prov:startedAtTime": load_start,
+                    "prov:endedAtTime": load_end
                 })
                 new_data = prov_doc.add_entity(data={  # new data to be merged
                     "@type": "schema:CreativeWork",
@@ -168,7 +182,8 @@ class HermesProcessCommand(HermesCommand):
                     "schema:text": str(metadata.compact()),  # TODO: maybe "prov:value" instead?
                     "prov:wasAttributedTo": [process_command.ref, hermes_cache.ref],
                     "prov:wasGeneratedBy": new_action.ref,
-                    "prov:wasDerivedFrom": stored_results
+                    "prov:wasDerivedFrom": stored_results,
+                    "prov:generatedAtTime": load_end
                 })
                 if merged_any:
                     # One pass must have been completed already.
@@ -183,13 +198,18 @@ class HermesProcessCommand(HermesCommand):
             self.log.info(f"### Merge data from {harvester} plugin")
             # merge data into the merge dict
             try:
+                merge_start = datetime.datetime.now().isoformat()
                 merged_doc.update(metadata)
+                merge_end = datetime.datetime.now().isoformat()
             except Exception as e:
                 # TODO: Maybe this state is recoverable by starting over again and skipping this plugin.
                 self.log.critical(f"### Merging the data from {harvester} plugin resulted in an error.", exc_info=True)
                 raise RuntimeError(f"Merging the data from {harvester} plugin failed.") from e
 
             if prov_doc is not None:
+                if merged_any:
+                    new_action["prov:startedAtTime"] = merge_start
+                    new_action["prov:endedAtTime"] = merge_end
                 last_action = merged_doc.prov_objects[0] if merged_any else new_action
                 last_data = merged_doc.prov_objects[2] if merged_any else new_data
             merged_any = True

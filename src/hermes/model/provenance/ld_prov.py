@@ -218,7 +218,7 @@ class ld_prov_list(ld_list):
         except Exception:
             del data["schema:supportingData"]
         try:
-            data["version"] = metadata(plugin.__module__)["version"]
+            data["schema:softwareVersion"] = metadata(plugin.__module__)["version"]
         except Exception:
             pass
         node = self.add_agent(data=data)
