@@ -248,8 +248,8 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
         elif self.prov_objects[0] is not None:
             merge_activity = self.prov_doc.add_activity(data={
                 "schema:name": f"merge values at {str(self.path+[key])}",
-                "schema:description": f"inserting value in the second 'used' value at {str(self.path+[key])} into the "
-                                       "first 'used' value at the same point",
+                "schema:description": f"Inserting value in the second 'used' value at {str(self.path+[key])} into the "
+                                       "first 'used' value at the same point, no merger needed.",
                 "prov:used": {"@list": [self.prov_objects[2].ref, self.prov_objects[1].ref]},
                 "prov:wasInformedBy": self.prov_objects[0].ref
             })
@@ -324,8 +324,14 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
         # search for all applicable strategies
         strategy = {**self.strategies.get(None, {})}
         ld_types = self.data_dict.get('@type', [])
+        type_of_used_strategy = None
+        key_of_used_strategy = None
         for ld_type in ld_types:
             strategy.update(self.strategies.get(ld_type, {}))
+            if key in self.strategies.get(ld_type, {}):
+                type_of_used_strategy = ld_type
+                key_of_used_strategy = key
+
 
         # choose one merge strategy and return the item returned by following the merge startegy
         merger = strategy.get(key, strategy.get(None, None))
@@ -334,13 +340,13 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
         if self.prov_objects[0] is not None:
             merge_activity = self.prov_doc.add_activity(data={
                 "schema:name": f"merge values at {str(self.path+[key])}",
-                "schema:description": f"merge value in the second 'used' value at {str(self.path+[key])} into the "
-                                       "first 'used' value at the same point using the third 'used' value",
+                "schema:description": f"Merge value in the second 'used' value at {str(self.path+[key])} into the "
+                                      f"first 'used' value at the same point using the merger {merger} for type "
+                                      f"{type_of_used_strategy} and key {key_of_used_strategy}",
                 "prov:wasAssociatedWith": self.prov_doc.get_hermes_command("process").ref,
                 "prov:used": {"@list": [
                     self.prov_objects[2].ref,
-                    self.prov_objects[1].ref,
-                    f"{merger.merge.__module__}.{merger.merge.__qualname__}"
+                    self.prov_objects[1].ref
                 ]},
                 "prov:wasInformedBy": self.prov_objects[0].ref
             })

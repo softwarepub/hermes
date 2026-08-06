@@ -49,6 +49,16 @@ class MergeAction:
         """
         raise NotImplementedError()
 
+    def __repr__(self) -> str:
+        """
+        A generic stringify method for MergeActions.
+        Please overwrite this method if your MergeAction should be represented differently in the provenance data.
+        (I.e. if not all important attributes are recorded or some attributes string representation is not adequat.)
+        """
+        if self.__dict__:
+            return f"{self.__module__}.{self.__class__.__qualname__} with attributes {str(self.__dict__)}"
+        return f"{self.__module__}.{self.__class__.__qualname__}"
+
 
 class Reject(MergeAction):
     """ :class:`MergeAction` providing a merge function for rejecting the incoming item. """
@@ -209,6 +219,10 @@ class Collect(MergeAction):
 
         return value
 
+    def __repr__(self):
+        return f"{self.__module__}.{self.__class__.__qualname__} with attributes " \
+            f"{{'match': {self.match.__module__}.{self.match.__qualname__}, 'reject_incoming': {self.reject_incoming}}}"
+
 
 class MergeSet(MergeAction):
     """
@@ -274,6 +288,10 @@ class MergeSet(MergeAction):
                 value.append(update_item)
         # Return the merged values.
         return value
+
+    def __repr__(self):
+        return f"{self.__module__}.{self.__class__.__qualname__} with attributes " \
+            f"{{'match': {self.match.__module__}.{self.match.__qualname__}}}"
 
 
 class IdMerge(MergeAction):

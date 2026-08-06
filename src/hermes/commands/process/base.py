@@ -106,7 +106,9 @@ class HermesProcessCommand(HermesCommand):
                 "prov:endedAtTime": generate_strategies_end
             })
             new_strategies = prov_doc.add_entity(data={  # TODO: record strategies
+                "@type": "schema:CreativeWork",
                 "schema:description": f"new merge strategies of plugin {plugin_name}",
+                "schema:text": str(additional_strategies),  # TODO: maybe "prov:value" instead?
                 "prov:wasAttributedTo": plugin.ref,
                 "prov:wasGeneratedBy": new_strategy_generation.ref,
                 "prov:generatedAtTime": generate_strategies_end
@@ -125,6 +127,7 @@ class HermesProcessCommand(HermesCommand):
             })
             merged_strategies = prov_doc.add_entity(data={  # TODO: record strategies
                 "schema:description": "the merge strategies of multiple plugins merged together",
+                "schema:text": str(merged_doc.strategies),  # TODO: maybe "prov:value" instead?
                 "prov:wasDerivedFrom": [merged_strategies.ref, new_strategies.ref],
                 "prov:wasGeneratedBy": strategy_action.ref,
                 "prov:wasAttributedTo": process_command.ref,
