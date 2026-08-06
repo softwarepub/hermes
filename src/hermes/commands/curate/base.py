@@ -59,9 +59,9 @@ class HermesCurateCommand(HermesCommand):
         # load processed data
         ctx.prepare_step("process")
         try:
-            begin_load_at_time = datetime.datetime.now().isoformat()
+            begin_load_at_time = datetime.datetime.now()
             metadata = SoftwareMetadata.load_from_cache(ctx, "result")
-            end_load_at_time = datetime.datetime.now().isoformat()
+            end_load_at_time = datetime.datetime.now()
         except Exception as e:
             self.log.critical(
                 "## The data from the process step could not be loaded or is invalid for some reason.",
@@ -85,16 +85,16 @@ class HermesCurateCommand(HermesCommand):
         # run plugin
         try:
             curated_metadata = plugin_func(self, metadata)
-            end_curation_time = datetime.datetime.now().isoformat()
+            end_curation_time = datetime.datetime.now()
         except Exception as e:
             self.log.critical(f"## Unknown error while executing the {plugin_name} plugin.", exc_info=1)
             raise HermesPluginRunError(f"Something went wrong while running the curate plugin {plugin_name}") from e
 
         self.log.info("## Store curated data")
         # store metadata
-        begin_store_at_time = datetime.datetime.now().isoformat()
+        begin_store_at_time = datetime.datetime.now()
         curated_metadata.write_to_cache(ctx, "result")
-        stored_at_time = datetime.datetime.now().isoformat()
+        stored_at_time = datetime.datetime.now()
 
         if prov_doc is not None:
             curate_plugin = prov_doc.add_hermes_plugin("curate", plugin_name, plugin_func, self)

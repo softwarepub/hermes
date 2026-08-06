@@ -82,18 +82,18 @@ class HermesProcessCommand(HermesCommand):
             self.log.info(f"### Run {plugin_name} plugin")
             # run plugin
             try:
-                generate_strategies_start = datetime.datetime.now().isoformat()
+                generate_strategies_start = datetime.datetime.now()
                 additional_strategies = plugin_func(self)
-                generate_strategies_end = datetime.datetime.now().isoformat()
+                generate_strategies_end = datetime.datetime.now()
             except Exception:
                 self.log.exception(f"### Unknown error while executing the {plugin_name} plugin, skipping it now.")
                 continue
 
             self.log.info(f"### Add the strategies to the merge document {plugin_name} plugin")
             # add strategies to the merge document
-            merge_strategies_start = datetime.datetime.now().isoformat()
+            merge_strategies_start = datetime.datetime.now()
             merged_doc.add_strategy(additional_strategies)
-            merge_strategies_end = datetime.datetime.now().isoformat()
+            merge_strategies_end = datetime.datetime.now()
             any_strategies_loaded = True
 
             if prov_doc is None:
@@ -148,9 +148,9 @@ class HermesProcessCommand(HermesCommand):
             self.log.info(f"### Load data from {harvester} plugin")
             # load data from harvester
             try:
-                load_start = datetime.datetime.now().isoformat()
+                load_start = datetime.datetime.now()
                 metadata = SoftwareMetadata.load_from_cache(ctx, harvester)
-                load_end = datetime.datetime.now().isoformat()
+                load_end = datetime.datetime.now()
             except Exception:
                 # skip this harvester when the data is invalid
                 if prov_doc is not None:
@@ -201,9 +201,9 @@ class HermesProcessCommand(HermesCommand):
             self.log.info(f"### Merge data from {harvester} plugin")
             # merge data into the merge dict
             try:
-                merge_start = datetime.datetime.now().isoformat()
+                merge_start = datetime.datetime.now()
                 merged_doc.update(metadata)
-                merge_end = datetime.datetime.now().isoformat()
+                merge_end = datetime.datetime.now()
             except Exception as e:
                 # TODO: Maybe this state is recoverable by starting over again and skipping this plugin.
                 self.log.critical(f"### Merging the data from {harvester} plugin resulted in an error.", exc_info=True)
@@ -225,12 +225,12 @@ class HermesProcessCommand(HermesCommand):
         self.log.info("## Store processed metadata")
         # store processed data
         ctx.prepare_step("process")
-        begin_store_at_time = datetime.datetime.now().isoformat()
+        begin_store_at_time = datetime.datetime.now()
         with ctx["result"] as result_ctx:
             result_ctx["codemeta"] = merged_doc.compact()
             result_ctx["context"] = {"@context": merged_doc.full_context}
             result_ctx["expanded"] = merged_doc.ld_value
-        stored_at_time = datetime.datetime.now().isoformat()
+        stored_at_time = datetime.datetime.now()
 
         if prov_doc is not None:
             write = prov_doc.add_activity(data={

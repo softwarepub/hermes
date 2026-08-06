@@ -238,7 +238,7 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
                 ``self[key]``.
         """
         # create the new item if self[key] and value have to be merged.
-        merge_start = datetime.datetime.now().isoformat()
+        merge_start = datetime.datetime.now()
         if key in self:
             if self.prov_objects[0] is not None:
                 last_merged_data = self.prov_objects[2]
@@ -256,7 +256,7 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
             create_new_merged_data = True
         # update the entry of self[key]
         super().__setitem__(key, value)
-        merge_end = datetime.datetime.now().isoformat()
+        merge_end = datetime.datetime.now()
         if self.prov_objects[0] is None:
             return
         if merge_activity is not None:

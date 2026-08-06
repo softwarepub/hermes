@@ -13,6 +13,8 @@ from datetime import date, datetime, time
 from typing import Any, Optional, TypeAlias, TYPE_CHECKING, Union
 from typing_extensions import Self
 
+from hermes.model.types.ld_context import iri_map
+
 from .pyld_util import JsonLdProcessor, bundled_loader
 if TYPE_CHECKING:
     from .ld_dict import ld_dict
@@ -462,6 +464,12 @@ class ld_container:
         """
         # FIXME: #434 dates are not returned as datetime/ date/ time but as string
         ld_value = data[0]['@value']
+        if iri_map["schema:DateTime"] == data[0]['@type']:
+            ld_value = datetime.fromisoformat(ld_value)
+        elif iri_map["schema:Date"] == data[0]['@type']:
+            ld_value = date.fromisoformat(ld_value)
+        elif iri_map["schema:Time"] == data[0]['@type']:
+            ld_value = time.fromisoformat(ld_value)
 
         return ld_value
 

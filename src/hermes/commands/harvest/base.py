@@ -47,9 +47,9 @@ class HermesHarvestPlugin(HermesPlugin):
             f"{', ' + str(args) if args else ''}{', ' + str(kwargs) if kwargs else ''}).",
             "schema:name": f"{func.__module__}.{func.__qualname__}"
         }
-        io_operation["prov:startedAtTime"] = datetime.datetime.now().isoformat()
+        io_operation["prov:startedAtTime"] = datetime.datetime.now()
         result = func(source, *args, **kwargs)
-        io_operation["prov:endedAtTime"] = datetime.datetime.now().isoformat()
+        io_operation["prov:endedAtTime"] = datetime.datetime.now()
         loaded_metadata = {"schema:description": "the loaded data", "schema:text": str(result)}
         self.io_operations.append((source_metadata, io_operation, loaded_metadata))
         return result
@@ -132,13 +132,13 @@ class HermesHarvestCommand(HermesCommand):
             except Exception:
                 self.log.exception(f"### Unknown error while executing the {plugin_name} plugin, skipping it now.")
                 continue
-            returned_at_time = datetime.datetime.now().isoformat()
+            returned_at_time = datetime.datetime.now()
 
             self.log.info(f"### Store metadata harvested by {plugin_name} plugin")
             # store harvested data
-            begin_store_at_time = datetime.datetime.now().isoformat()
+            begin_store_at_time = datetime.datetime.now()
             harvested_data.write_to_cache(ctx, plugin_name)
-            stored_at_time = datetime.datetime.now().isoformat()
+            stored_at_time = datetime.datetime.now()
             harvested_any = True
 
             remove_harvest_plugin_from_prov_doc(prov_doc, plugin_name)
@@ -233,7 +233,8 @@ class HermesHarvestCommand(HermesCommand):
             self.log.critical("No harvest plugin ran successfully.")
             raise HermesPluginRunError("No harvest plugin ran successfully.")
 
-    def init_provenance_document(self) -> ld_prov_list:
+    @classmethod
+    def init_provenance_document(cls) -> ld_prov_list:
         ctx = HermesContext()
         ctx.prepare_step("harvest")
         with ctx["provenance"] as cache:

@@ -38,9 +38,9 @@ class BaseDepositPlugin(HermesPlugin):
 
         self.ctx.prepare_step("curate")
         try:
-            start_of_load = datetime.datetime.now().isoformat()
+            start_of_load = datetime.datetime.now()
             self.metadata = SoftwareMetadata.load_from_cache(self.ctx, "result")
-            end_of_load = datetime.datetime.now().isoformat()
+            end_of_load = datetime.datetime.now()
         except Exception as e:
             raise HermesValidationError("The results of the curate step are invalid.") from e
         self.ctx.finalize_step("curate")
@@ -78,13 +78,13 @@ class BaseDepositPlugin(HermesPlugin):
             })
 
         self.prepare()
-        start_of_map = datetime.datetime.now().isoformat()
+        start_of_map = datetime.datetime.now()
         deposit = self.map_metadata()
-        end_of_map = datetime.datetime.now().isoformat()
+        end_of_map = datetime.datetime.now()
         with self.ctx[target] as cache:
-            start_of_store = datetime.datetime.now().isoformat()
+            start_of_store = datetime.datetime.now()
             cache["deposit"] = deposit
-            end_of_store = datetime.datetime.now().isoformat()
+            end_of_store = datetime.datetime.now()
 
         if prov_doc is not None:
             map_action = prov_doc.add_activity(data={
@@ -128,11 +128,11 @@ class BaseDepositPlugin(HermesPlugin):
             self.create_new_version()
 
         updated_deposit = self.update_metadata()
-        end_of_update_map = datetime.datetime.now().isoformat()
+        end_of_update_map = datetime.datetime.now()
         with self.ctx[target] as cache:
-            start_of_second_store = datetime.datetime.now().isoformat()
+            start_of_second_store = datetime.datetime.now()
             cache["result"] = updated_deposit
-            end_of_second_store = datetime.datetime.now().isoformat()
+            end_of_second_store = datetime.datetime.now()
         self.ctx.finalize_step("deposit")
 
         if prov_doc is not None:
