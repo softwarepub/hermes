@@ -26,9 +26,7 @@ class InvenioMerge(MergeAction):
         value: Union[ld_merge_list, str],
         update: Union[BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]
     ) -> ld_merge_list:
-        print(key, value, update)
         types = target.get("@type", [])
-        print(types)
         if key[-1] == iri["schema:license"] and (iri["schema:SoftwareSourceCode"] in types or iri["schema:SoftwareApplication"] in types):
             if len(value) == 1:
                 if isinstance(value[0], str) or (
@@ -74,7 +72,6 @@ class InvenioMerge(MergeAction):
                 return []
             target.reject(key, update)
             return value
-        print("fail")
 
 
 class InvenioProcessPlugin(HermesProcessPlugin):

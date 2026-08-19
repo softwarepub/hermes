@@ -192,11 +192,12 @@ class HermesProcessCommand(HermesCommand):
                     # One pass must have been completed already.
                     new_action = prov_doc.add_activity(data={
                         "schema:description": "merges the old data object with the new data",
-                        "prov:used": [last_data.ref, new_data.ref],
-                        "prov:wasInformedBy": [last_action.ref, new_action.ref],
+                        "prov:used": [last_data.ref, new_data.ref, merged_strategies.ref],
+                        "prov:wasInformedBy": [last_action.ref, new_action.ref, strategy_action.ref],
                         "prov:wasAssociatedWith": process_command.ref
                     })  # initial merge action of the merge
-                    merged_doc.prov_objects = [new_action, new_data, last_data]  # set the starting objects of the merge
+                    # set the starting objects of the merge
+                    merged_doc.prov_objects = [new_action, new_data, last_data, merged_strategies, strategy_action]
 
             self.log.info(f"### Merge data from {harvester} plugin")
             # merge data into the merge dict

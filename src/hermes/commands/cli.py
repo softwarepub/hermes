@@ -14,7 +14,7 @@ import sys
 from hermes import logger
 from hermes.commands import (
     HermesCurateCommand, HermesCleanCommand, HermesDepositCommand, HermesHarvestCommand, HermesHelpCommand,
-    HermesInitCommand, HermesPostprocessCommand, HermesProcessCommand, HermesVersionCommand
+    HermesInitCommand, HermesPostprocessCommand, HermesProcessCommand, HermesReportCommand, HermesVersionCommand
 )
 from hermes.commands.base import HermesCommand
 from hermes.error import HermesPluginRunError
@@ -46,6 +46,7 @@ def main() -> None:
             HermesInitCommand(parser),
             HermesPostprocessCommand(parser),
             HermesProcessCommand(parser),
+            HermesReportCommand(parser),
             HermesVersionCommand(parser),
     ):
         if command.settings_class is not None:

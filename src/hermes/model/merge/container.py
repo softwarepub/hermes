@@ -250,8 +250,12 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
                 "schema:name": f"merge values at {str(self.path+[key])}",
                 "schema:description": f"Inserting value in the second 'used' value at {str(self.path+[key])} into the "
                                        "first 'used' value at the same point, no merger needed.",
-                "prov:used": {"@list": [self.prov_objects[2].ref, self.prov_objects[1].ref]},
-                "prov:wasInformedBy": self.prov_objects[0].ref
+                "prov:used": {"@list": [
+                    self.prov_objects[2].ref,
+                    self.prov_objects[1].ref,
+                    self.prov_objects[3].ref
+                ]},
+                "prov:wasInformedBy": {"@list": [self.prov_objects[0].ref, self.prov_objects[4].ref]}
             })
             create_new_merged_data = True
         # update the entry of self[key]
@@ -346,9 +350,10 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
                 "prov:wasAssociatedWith": self.prov_doc.get_hermes_command("process").ref,
                 "prov:used": {"@list": [
                     self.prov_objects[2].ref,
-                    self.prov_objects[1].ref
+                    self.prov_objects[1].ref,
+                    self.prov_objects[3].ref
                 ]},
-                "prov:wasInformedBy": self.prov_objects[0].ref
+                "prov:wasInformedBy": {"@list": [self.prov_objects[0].ref, self.prov_objects[4].ref]}
             })
             self.prov_objects[0] = merge_activity
         else:
