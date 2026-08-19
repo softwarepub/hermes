@@ -249,7 +249,7 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
             merge_activity = self.prov_doc.add_activity(data={
                 "schema:name": f"merge values at {str(self.path+[key])}",
                 "schema:description": f"Inserting value in the second 'used' value at {str(self.path+[key])} into the "
-                                       "first 'used' value at the same point, no merger needed.",
+                                      "first 'used' value at the same point, no merger needed.",
                 "prov:used": {"@list": [
                     self.prov_objects[2].ref,
                     self.prov_objects[1].ref,
@@ -269,7 +269,7 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
         self.prov_objects[0] = merge_activity
         if create_new_merged_data:
             outer_most_parent = self
-            while outer_most_parent.parent != None:
+            while outer_most_parent.parent is not None:
                 outer_most_parent = outer_most_parent.parent
             self.prov_objects[2] = self.prov_doc.add_entity(data={
                 "@type": "schema:CreativeWork",
@@ -335,7 +335,6 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
             if key in self.strategies.get(ld_type, {}):
                 type_of_used_strategy = ld_type
                 key_of_used_strategy = key
-
 
         # choose one merge strategy and return the item returned by following the merge startegy
         merger = strategy.get(key, strategy.get(None, None))

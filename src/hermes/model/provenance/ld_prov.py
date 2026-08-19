@@ -11,7 +11,7 @@ from typing_extensions import Self
 from hermes import utils
 from hermes.commands.base import HermesCommand, HermesPlugin
 from hermes.model.types import ld_dict, ld_list
-from hermes.model.types.ld_container import BASIC_TYPE, EXPANDED_JSON_LD_VALUE, JSON_LD_CONTEXT_DICT
+from hermes.model.types.ld_container import EXPANDED_JSON_LD_VALUE, JSON_LD_CONTEXT_DICT
 from hermes.model.types.ld_context import ALL_CONTEXTS, iri_map
 
 

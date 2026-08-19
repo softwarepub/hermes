@@ -27,7 +27,10 @@ class InvenioMerge(MergeAction):
         update: Union[BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]
     ) -> ld_merge_list:
         types = target.get("@type", [])
-        if key[-1] == iri["schema:license"] and (iri["schema:SoftwareSourceCode"] in types or iri["schema:SoftwareApplication"] in types):
+        if (
+            key[-1] == iri["schema:license"] and
+            (iri["schema:SoftwareSourceCode"] in types or iri["schema:SoftwareApplication"] in types)
+        ):
             if len(value) == 1:
                 if isinstance(value[0], str) or (
                     isinstance(value[0], (dict, ld_merge_dict)) and [*value[0].keys()] == ["@id"]
@@ -43,9 +46,11 @@ class InvenioMerge(MergeAction):
                     return update
             target.reject(key, update)
             return value
-        if ((key[-1] == iri["schema:familyName"] and iri["schema:Person"] in types) or
+        if (
+            (key[-1] == iri["schema:familyName"] and iri["schema:Person"] in types) or
             (key[-1] == iri["schema:name"] and iri["schema:Person"] in types) or
-            (key[-1] == iri["schema:name"] and (iri["schema:SoftwareSourceCode"] in types or iri["schema:SoftwareApplication"] in types))
+            (key[-1] == iri["schema:name"] and (iri["schema:SoftwareSourceCode"] in types or
+                                                iri["schema:SoftwareApplication"] in types))
         ):
             if len(value) == 1:
                 if value != update:
@@ -58,7 +63,8 @@ class InvenioMerge(MergeAction):
                 return value
             target.reject(key, update)
             return value
-        if ((key[-1] == iri["schema:version"] or key[-1] == iri["schema:description"]) and
+        if (
+            (key[-1] == iri["schema:version"] or key[-1] == iri["schema:description"]) and
             (iri["schema:SoftwareSourceCode"] in types or iri["schema:SoftwareApplication"] in types)
         ):
             if len(value) == 1:
