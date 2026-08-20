@@ -4,6 +4,7 @@
 
 # SPDX-FileContributor: David Pape
 # SPDX-FileContributor: Michael Meinel
+# SPDX-FileContributor: Michael Fritzsche
 
 import abc
 import argparse
@@ -82,9 +83,8 @@ class BaseDepositPlugin(HermesPlugin):
         deposit = self.map_metadata()
         end_of_map = datetime.datetime.now()
         with self.ctx[target] as cache:
-            start_of_store = datetime.datetime.now()
             cache["deposit"] = deposit
-            end_of_store = datetime.datetime.now()
+        end_of_store = datetime.datetime.now()
 
         if prov_doc is not None:
             map_action = prov_doc.add_activity(data={
@@ -107,7 +107,7 @@ class BaseDepositPlugin(HermesPlugin):
                 "schema:description": "Stores the mapped metadata.",
                 "prov:used": mapped_data.ref,
                 "prov:wasAssociatedWith": [hermes_cache.ref, deposit_command.ref, deposit_base_plugin.ref],
-                "prov:startedAtTime": start_of_store,
+                "prov:startedAtTime": end_of_map,
                 "prov:endedAtTime": end_of_store
             })
             prov_doc.add_entity(data={
@@ -130,9 +130,8 @@ class BaseDepositPlugin(HermesPlugin):
         updated_deposit = self.update_metadata()
         end_of_update_map = datetime.datetime.now()
         with self.ctx[target] as cache:
-            start_of_second_store = datetime.datetime.now()
             cache["result"] = updated_deposit
-            end_of_second_store = datetime.datetime.now()
+        end_of_second_store = datetime.datetime.now()
         self.ctx.finalize_step("deposit")
 
         if prov_doc is not None:
@@ -148,7 +147,7 @@ class BaseDepositPlugin(HermesPlugin):
                 "schema:description": "Stores the mapped metadata.",
                 "prov:used": updated_mapped_data.ref,
                 "prov:wasAssociatedWith": [hermes_cache.ref, deposit_command.ref, deposit_base_plugin.ref],
-                "prov:startedAtTime": start_of_second_store,
+                "prov:startedAtTime": end_of_update_map,
                 "prov:endedAtTime": end_of_second_store
             })
             prov_doc.add_entity(data={

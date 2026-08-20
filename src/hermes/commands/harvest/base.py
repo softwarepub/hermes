@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # SPDX-FileContributor: Michael Meinel
+# SPDX-FileContributor: Michael Fritzsche
 
 import argparse
 import datetime
@@ -53,10 +54,6 @@ class HermesHarvestPlugin(HermesPlugin):
         loaded_metadata = {"schema:description": "the loaded data", "schema:text": str(result)}
         self.io_operations.append((source_metadata, io_operation, loaded_metadata))
         return result
-
-    def write():
-        # TODO: Is this needed? If yes, it needs to be implemented
-        pass
 
 
 class HarvestSettings(BaseModel):
