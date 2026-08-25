@@ -195,8 +195,7 @@ class HermesPostprocessCommand(HermesCommand):
                     "prov:used": data.ref,
                     "prov:wasAssociatedWith": [plugin.ref, postprocess_base_plugin.ref, postprocess_command.ref]
                 })
-                written_data = prov_doc.add_entity(data=write[2])
-                written_data.update({
+                prov_doc.add_entity(data=write[2]).update({
                     "prov:wasGeneratedBy": write_action.ref,
                     "prov:wasDerivedFrom": data.ref,
                     "prov:wasAttributedTo": [plugin.ref, postprocess_base_plugin.ref, postprocess_command.ref]

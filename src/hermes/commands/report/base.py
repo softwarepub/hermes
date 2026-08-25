@@ -5,6 +5,7 @@
 # SPDX-FileContributor: Michael Fritzsche
 
 import argparse
+from typing_extensions import Self
 
 from pydantic import BaseModel
 
@@ -24,16 +25,16 @@ class HermesReportCommand(HermesCommand):
     command_name = "report"
     settings_class = HermesReportSettings
 
-    def init_command_parser(self, command_parser: argparse.ArgumentParser) -> None:
+    def init_command_parser(self: Self, command_parser: argparse.ArgumentParser) -> None:
         command_parser.add_argument(
             "--steps",
             nargs="*",
-            default=["harvest", "process", "curate", "deposit"],
-            choices=["harvest", "process", "curate", "deposit"],
+            default=["harvest", "process", "curate", "deposit", "postprocess"],
+            choices=["harvest", "process", "curate", "deposit", "postprocess"],
             help="Steps for which the report should be generated. Default is every step."
         )
 
-    def __call__(self, args: argparse.Namespace) -> None:
+    def __call__(self: Self, args: argparse.Namespace) -> None:
         print("\nProvenance report for HERMES:")
         for step in args.steps:
             ld_prov_list.INDICES = {}
@@ -46,9 +47,11 @@ class HermesReportCommand(HermesCommand):
                     self.report_curate()
                 case "deposit":
                     self.report_deposit()
+                case "postprocess":
+                    self.report_postprocess()
         print("")
 
-    def report_harvest(self) -> None:
+    def report_harvest(self: Self) -> None:
         print("- Harvest:")
         ctx = HermesContext()
         ctx.prepare_step("harvest")
@@ -95,7 +98,7 @@ class HermesReportCommand(HermesCommand):
             )):
                 print(f"      - {result['schema:url'][0]} ({result['schema:description'][0].split(' ')[1]})")
 
-    def report_process(self) -> None:
+    def report_process(self: Self) -> None:
         print("- Process:")
         ctx = HermesContext()
         ctx.prepare_step("process")
@@ -172,7 +175,7 @@ class HermesReportCommand(HermesCommand):
         for res in stored_objects:
             print(f"    - {res['schema:url'][0]} ({res['schema:description'][0].split(' ')[1]})")
 
-    def report_curate(self) -> None:
+    def report_curate(self: Self) -> None:
         print("- Curate:")
         ctx = HermesContext()
         ctx.prepare_step("curate")
@@ -232,7 +235,7 @@ class HermesReportCommand(HermesCommand):
         for result in results:
             print(f"    - {result['schema:url'][0]} ({result['schema:description'][0].split(' ')[1]})")
 
-    def report_deposit(self) -> None:
+    def report_deposit(self: Self) -> None:
         print("- Deposit:")
         ctx = HermesContext()
         ctx.prepare_step("deposit")
@@ -311,3 +314,69 @@ class HermesReportCommand(HermesCommand):
             f"{store_updated['prov:endedAtTime'][0]-store_updated['prov:startedAtTime'][0]}) in:\n"
             f"    - {result_updated['schema:url'][0]}"
         )
+
+    def report_postprocess(self: Self) -> None:
+        print("- Postprocess:")
+        ctx = HermesContext()
+        ctx.prepare_step("postprocess")
+        with ctx["provenance"] as cache:
+            try:
+                prov_doc = ld_prov_list.load_ld_prov_list(cache["result"])
+            except KeyError:
+                print("No provenance data has been recorded so far.")
+                return
+            finally:
+                ctx.finalize_step("postprocess")
+        cache = prov_doc.get_hermes_cache()
+        command = prov_doc.get_hermes_command("postprocess")
+        base_plugin = prov_doc.get_hermes_base_plugin("postprocess")
+        plugin = prov_doc.shallow_search(lambda node: (
+            "prov:actedOnBehalfOf" in node and node["prov:actedOnBehalfOf"] == [base_plugin.ref]
+        ))[0]
+        print(
+            f"  - Plugin used:\n    - {plugin['@id'][28]} ({plugin['schema:name'][0]}, version "
+            f"{vers if (vers := plugin.get('schema:softwareVersion', False)) else 'N/A'})"
+        )
+        cache_loads = prov_doc.shallow_search(lambda node: (
+            "prov:wasAssociatedWith" in node and
+            node["prov:wasAssociatedWith"] == [plugin.ref, base_plugin.ref, command.ref, cache.ref]
+        ))
+        print("  - Used deposit results:")
+        for index, cache_load in enumerate(cache_loads, start=1):
+            source_id = cache_load["prov:used"][0]["@id"]
+            source = prov_doc.shallow_search(lambda node: ("@id" in node and node["@id"] == [source_id]))[0]
+            print(
+                f"    - Load {index} at {cache_load['prov:startedAtTime']} took "
+                f"{cache_load['prov:endedAtTime']-cache_load['prov:startedAtTime']} from:\n"
+                f"      - {source['schema:url']}"
+            )
+        io_ops = prov_doc.shallow_search(lambda node: (
+            "prov:wasAssociatedWith" in node and
+            node["prov:wasAssociatedWith"] == [plugin.ref, base_plugin.ref, command.ref]
+        ))
+        loads, writes = [], []
+        for io_op in io_ops:
+            used = io_op["prov:used"][0]["@id"]
+            if "prov:wasDerivedFrom" in prov_doc.shallow_search(lambda node: ("@id" in node and node["@id"] == used)):
+                writes.append(io_op)
+            else:
+                loads.append(io_op)
+        print("  - Loaded data from:")
+        for index, load in enumerate(loads):
+            source_id = load["prov:used"][0]["@id"]
+            source = prov_doc.shallow_search(lambda node: ("@id" in node and node["@id"] == [source_id]))[0]
+            print(
+                f"    - Load {index} at {load['prov:startedAtTime']} took "
+                f"{load['prov:endedAtTime']-load['prov:startedAtTime']} from:\n"
+                f"      - {source['schema:url']}"
+            )
+        print("  - Written data to:")
+        for index, write in enumerate(writes):
+            target = prov_doc.shallow_search(lambda node: (
+                "prov:wasGeneratedBy" in node and node["prov:wasGeneratedBy"] == [write.ref]
+            ))[0]
+            print(
+                f"    - Load {index} at {write['prov:startedAtTime']} took "
+                f"{write['prov:endedAtTime']-write['prov:startedAtTime']} from:\n"
+                f"      - {target['schema:url']}"
+            )
