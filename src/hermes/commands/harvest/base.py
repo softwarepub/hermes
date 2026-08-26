@@ -9,6 +9,8 @@ import argparse
 import datetime
 from io import IOBase
 from pathlib import Path
+from typing import Any, Callable, Optional
+from typing_extensions import Self
 
 from pydantic import BaseModel
 
@@ -22,16 +24,51 @@ from hermes.model.provenance.ld_prov import ld_prov_list
 class HermesHarvestPlugin(HermesPlugin):
     """Base plugin that does harvesting.
 
+    Attributes:
+        operations (list[tuple[dict[str, str], dict[str, str], dict[str, str]]]): The information recorded on the
+            load operations executed by the plugin.
+
     TODO: describe the harvesting process and how this is mapped to this plugin.
     """
-    def __init__(self):
-        self.io_operations: list[tuple[dict, dict, dict]] = []
+
+    def __init__(self: Self) -> None:
+        """
+        Create a new instance of a HermesHarvestPlugin.
+
+        Returns:
+            None:
+        """
+        self.operations: list[tuple[dict[str, str], dict[str, str], dict[str, str]]] = []
         super().__init__()
 
-    def __call__(self, command: HermesCommand) -> SoftwareMetadata:
+    def __call__(self: Self, command: HermesCommand) -> SoftwareMetadata:
+        """
+        Execute the hermes harvest plugin `self`.
+
+        Args:
+            command (HermesCommand): The command being executed.
+
+        Returns:
+            SoftwareMetadata: The harvested metadata.
+        """
         pass
 
-    def load(self, func, source, *args, **kwargs):
+    def load(self: Self, func: Callable, source: Any, *args: Optional[Any], **kwargs: Optional[Any]) -> Any:
+        """
+        Load some data from some source using some function so that the calls provenance information is recorded.
+
+        `func(source, *args, **kwargs)` will be executed.
+
+        Args:
+            func (Callable): The function used for loading the requested source.
+            source (Any): The source the data is to be loaded from.
+            args (Any | None): Additional positional arguments for the load.
+            kwargs (Any | None): Additional keyword arguments for the load.
+
+        Returns:
+            Any: The result of the load operation.
+        """
+        # collect basic metadata
         source_metadata = {"schema:description": "metadata source"}
         if isinstance(source, IOBase):
             source_metadata["schema:url"] = Path(source.name).absolute().as_uri()
@@ -42,37 +79,60 @@ class HermesHarvestPlugin(HermesPlugin):
                 source_metadata["schema:url"] = Path(source).absolute().as_uri()
             except Exception:
                 source_metadata["schema:url"] = source
-        io_operation = {
+        operation = {
             "schema:description": "Load operation called with ("
             f"{source_metadata['schema:url'] if 'schema:url' in source_metadata else str(source)}"
             f"{', ' + str(args) if args else ''}{', ' + str(kwargs) if kwargs else ''}).",
             "schema:name": f"{func.__module__}.{func.__qualname__}"
         }
-        io_operation["prov:startedAtTime"] = datetime.datetime.now()
+        operation["prov:startedAtTime"] = datetime.datetime.now()
+        # execute the load operation
         result = func(source, *args, **kwargs)
-        io_operation["prov:endedAtTime"] = datetime.datetime.now()
+        # complete metadata collection
+        operation["prov:endedAtTime"] = datetime.datetime.now()
         loaded_metadata = {"schema:description": "the loaded data", "schema:text": str(result)}
-        self.io_operations.append((source_metadata, io_operation, loaded_metadata))
+        # store metadata
+        self.operations.append((source_metadata, operation, loaded_metadata))
+        # return result of the load operation
         return result
 
 
 class HarvestSettings(BaseModel):
-    """Generic harvesting settings."""
+    """
+    Generic harvesting settings.
+
+    Attributes:
+        sources (list[str]): (class attribute) A list of plugins to be executed.
+    """
 
     sources: list[str] = []
 
 
 def remove_harvest_plugin_from_prov_doc(prov_doc: ld_prov_list, plugin: str) -> None:
+    """
+    Removes information on the specified harvest plugin from the given provenance document.
+
+    Args:
+        prov_doc (ld_prov_list): The provenance document the plugins information is to be removed from.
+        plugin (str): The name of the plugin of which the information is to be removed.
+
+    Returns:
+        None:
+    """
+    # get the plugin object from the prov_doc
     plugin = prov_doc.get_hermes_plugin("harvest", plugin)
+    # If the plugin isn't contained in the prov_doc, return, otherwise fetch related objects
     if plugin is None:
         return
     related = prov_doc.shallow_search(lambda node: (
         ("prov:wasAssociatedWith" in node and plugin.ref in node["prov:wasAssociatedWith"]) or
         ("prov:wasAttributedTo" in node and plugin.ref in node["prov:wasAttributedTo"])
     ))
+    # If no related objects exist, delete only the plugin
     if len(related) == 0:
         del prov_doc[plugin.index]
         return
+    # Collect remaining related objects
     ids = [plugin.ref, *(rel.ref for rel in related)]
     used_entities = [rel["prov:used"][0]["@id"] for rel in related if "prov:used" in rel]
     related = prov_doc.shallow_search(lambda node: node["@id"] in used_entities)
@@ -81,6 +141,7 @@ def remove_harvest_plugin_from_prov_doc(prov_doc: ld_prov_list, plugin: str) -> 
             "wasAssociatedWith", "wasAttributedTo", "wasGeneratedBy", "used", "wasDerivedFrom", "wasInformedBy"
         ]
     ))
+    # delete all collected objects
     del prov_doc[plugin.index]
     for item in related:
         items = prov_doc.shallow_search(lambda node: ("@id" in node and node["@id"] == item["@id"]))
@@ -89,14 +150,27 @@ def remove_harvest_plugin_from_prov_doc(prov_doc: ld_prov_list, plugin: str) -> 
 
 
 class HermesHarvestCommand(HermesCommand):
-    """ Harvest metadata from configured sources. """
+    """
+    Harvest metadata from configured sources.
 
-    command_name = "harvest"
-    settings_class = HarvestSettings
+    Attributes:
+        command_name (str): (class attribute) The name of the command
+        settings_class (type): (class attribute) The settings class for general harvest settings.
+    """
 
-    def __call__(self, args: argparse.Namespace) -> None:
+    command_name: str = "harvest"
+    settings_class: type = HarvestSettings
+
+    def __call__(self: Self, args: argparse.Namespace) -> None:
+        """
+        Execute the hermes command `self`.
+
+        Args:
+            args (Namespace): The arguments of the command.
+        """
         self.args = args
         self.log.info("# Load provenance from old harvest or create new document.")
+        # initialize the provenance document for this run
         prov_doc = self.init_provenance_document()
         base_plugin = prov_doc.get_hermes_base_plugin("harvest")
         prov_doc.add_hermes_settings(self)
@@ -138,27 +212,31 @@ class HermesHarvestCommand(HermesCommand):
             stored_at_time = datetime.datetime.now()
             harvested_any = True
 
+            # remove old provenance data from a potential existent old run of this plugin
             remove_harvest_plugin_from_prov_doc(prov_doc, plugin_name)
 
+            # add the plugins provenance information
             plugin = prov_doc.add_hermes_plugin("harvest", plugin_name, plugin_func, self)
-            plugin_io_operations = plugin_func.io_operations
-            outputs = []
-            io_ops = []
-            for plugin_io_operation in plugin_io_operations:
-                loaded_source = prov_doc.add_entity(data=plugin_io_operation[0])
-                plugin_io_operation[1].update(
+            # add the collected information on the load operations of the plugin to the provenance document
+            plugin_operations = plugin_func.operations
+            outputs, io_ops = [], []
+            for plugin_operation in plugin_operations:
+                loaded_source = prov_doc.add_entity(data=plugin_operation[0])
+                plugin_operation[1].update(
                     {"prov:wasAssociatedWith": [base_plugin.ref, plugin.ref], "prov:used": loaded_source.ref}
                 )
-                io_op = prov_doc.add_activity(data=plugin_io_operation[1])
-                plugin_io_operation[2].update({
+                io_op = prov_doc.add_activity(data=plugin_operation[1])
+                plugin_operation[2].update({
                     "prov:wasAttributedTo": plugin.ref,
                     "prov:wasDerivedFrom": loaded_source.ref,
                     "prov:wasGeneratedBy": io_op.ref
                 })
-                loaded_data = prov_doc.add_entity(data=plugin_io_operation[2])
+                loaded_data = prov_doc.add_entity(data=plugin_operation[2])
+                # store references to the added objects
                 outputs.append(loaded_data.ref)
                 io_ops.append(io_op.ref)
 
+            # add provenance information on the mapping and returned data
             map_activity = prov_doc.add_activity(data={
                 "schema:description": "Maps the loaded data to the JSON-LD contexts vocabulary.",
                 "prov:wasInformedBy": io_ops,
@@ -176,6 +254,7 @@ class HermesHarvestCommand(HermesCommand):
                 "prov:generatedAtTime": returned_at_time
             })
 
+            # add provenance information on the write and stored data
             write = prov_doc.add_activity(data={
                 "schema:description": "Writes the harvested metadata into the HERMES cache.",
                 "prov:wasAssociatedWith": [
@@ -222,6 +301,7 @@ class HermesHarvestCommand(HermesCommand):
                 "prov:generatedAtTime": stored_at_time
             })
 
+        # store provenance information
         with ctx["provenance"] as cache:
             cache["result"] = prov_doc.ld_value
 
@@ -231,7 +311,14 @@ class HermesHarvestCommand(HermesCommand):
             raise HermesPluginRunError("No harvest plugin ran successfully.")
 
     @classmethod
-    def init_provenance_document(cls) -> ld_prov_list:
+    def init_provenance_document(cls: type[Self]) -> ld_prov_list:
+        """
+        Loads or creates a provenance document.
+
+        Returns:
+            ld_prov_list: The loaded or created provenance document.
+        """
+        # try loading the document
         ctx = HermesContext()
         ctx.prepare_step("harvest")
         with ctx["provenance"] as cache:
@@ -239,6 +326,9 @@ class HermesHarvestCommand(HermesCommand):
                 return ld_prov_list.load_ld_prov_list(cache["result"])
             except KeyError:
                 pass
+            finally:
+                ctx.finalize_step("harvest")
+        # initialize a new ld_prov_list because load failed
         prov_doc = ld_prov_list()
         prov_doc.init_hermes_agents()
         return prov_doc
