@@ -312,7 +312,7 @@ class HermesDepositCommand(HermesCommand):
     Deposit the curated metadata to repositories.
 
     Attributes:
-        args (Namespace): The arguments of the command.
+        args (Namespace): The namespace that was returned by the command line parser when reading the arguments.
         command_name (str): (class attribute) The name of the command.
         settings_class (type): (class attribute) The settings class for general deposit settings.
     """
@@ -342,7 +342,7 @@ class HermesDepositCommand(HermesCommand):
         Execute the hermes command `self`.
 
         Args:
-            args (Namespace): The arguments of the command.
+            args (Namespace): The namespace that was returned by the command line parser when reading the arguments.
 
         Returns:
             None:

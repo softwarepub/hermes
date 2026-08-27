@@ -192,7 +192,7 @@ class HermesPostprocessCommand(HermesCommand):
     Post-process the published metadata after deposition.
 
     Attributes:
-        args (Namespace): The arguments of the command.
+        args (Namespace): The namespace that was returned by the command line parser when reading the arguments.
         command_name (str): (class attribute) The name of the command.
         settings_class (type): (class attribute) The settings class for general deposit settings.
     """
@@ -205,7 +205,7 @@ class HermesPostprocessCommand(HermesCommand):
         Execute the hermes command `self`.
 
         Args:
-            args (Namespace): The arguments of the command.
+            args (Namespace): The namespace that was returned by the command line parser when reading the arguments.
 
         Returns:
             None:

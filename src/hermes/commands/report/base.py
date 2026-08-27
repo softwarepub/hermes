@@ -15,17 +15,32 @@ from hermes.model.provenance.ld_prov import ld_prov_list
 
 
 class HermesReportSettings(BaseModel):
-    """Configuration of the ``report`` command."""
+    """ Configuration of the ``report`` command. """
     pass
 
 
 class HermesReportCommand(HermesCommand):
-    """ Gernate a summarized provenance report for the steps chosen by the user. """
+    """
+    Generate a summarized provenance report for the steps chosen by the user.
 
-    command_name = "report"
-    settings_class = HermesReportSettings
+    Attributes:
+        command_name (str): (class attribute) The name of the command.
+        settings_class (type): (class attribute) The settings class for general report settings.
+    """
+
+    command_name: str = "report"
+    settings_class: type = HermesReportSettings
 
     def init_command_parser(self: Self, command_parser: argparse.ArgumentParser) -> None:
+        """
+        Add arguments for report command.
+
+        Args:
+            command_parser (ArgumentParser): The used argument parser.
+
+        Returns:
+            None:
+        """
         command_parser.add_argument(
             "--steps",
             nargs="*",
@@ -35,9 +50,21 @@ class HermesReportCommand(HermesCommand):
         )
 
     def __call__(self: Self, args: argparse.Namespace) -> None:
+        """
+        Execute the hermes command `self`.
+
+        Args:
+            args (Namespace): The namespace that was returned by the command line parser when reading the arguments.
+
+        Returns:
+            None:
+        """
         print("\nProvenance report for HERMES:")
+        # print the report for every step
         for step in args.steps:
+            # reset ld_prov_list because it is usually a singelton
             ld_prov_list.INDICES = {}
+            # print the report
             match step:
                 case "harvest":
                     self.report_harvest()
@@ -52,7 +79,14 @@ class HermesReportCommand(HermesCommand):
         print("")
 
     def report_harvest(self: Self) -> None:
+        """
+        Print the report for the harvest step.
+
+        Returns:
+            None:
+        """
         print("- Harvest:")
+        # load provenance data or error out
         ctx = HermesContext()
         ctx.prepare_step("harvest")
         with ctx["provenance"] as cache:
@@ -63,17 +97,21 @@ class HermesReportCommand(HermesCommand):
                 return
             finally:
                 ctx.finalize_step("harvest")
+        # get basic hermes objects
         harvest_base_plugin = prov_doc.get_hermes_base_plugin("harvest")
         harvest_command = prov_doc.get_hermes_command("harvest")
         hermes_cache = prov_doc.get_hermes_cache()
         plugins = prov_doc.shallow_search(lambda node: (
             "prov:actedOnBehalfOf" in node and node["prov:actedOnBehalfOf"] == [harvest_base_plugin.ref]
         ))
+        # for every plugin print the info on this plugins execution
         for plugin in plugins:
+            # print basic info on the plugin
             print(
                 f"  - Plugin {plugin['@id'][24:]} ({plugin['schema:name'][0]}, version "
                 f"{vers if (vers := plugin.get('schema:softwareVersion', False)) else 'N/A'})"
             )
+            # print every source loaded by the plugin
             print("    - Loaded data from:")
             for load_action in prov_doc.shallow_search(lambda node: (
                 "prov:wasAssociatedWith" in node and
@@ -85,6 +123,7 @@ class HermesReportCommand(HermesCommand):
                     f"      - {source['schema:url'][0]} (at {load_action['prov:startedAtTime'][0]}, took " +
                     f"{load_action['prov:endedAtTime'][0]-load_action['prov:startedAtTime'][0]})"
                 )
+            # print infos on the result
             store_action = prov_doc.shallow_search(lambda node: (
                 "prov:wasAssociatedWith" in node and
                 node["prov:wasAssociatedWith"] == [plugin.ref, hermes_cache.ref, harvest_command.ref]
@@ -99,7 +138,14 @@ class HermesReportCommand(HermesCommand):
                 print(f"      - {result['schema:url'][0]} ({result['schema:description'][0].split(' ')[1]})")
 
     def report_process(self: Self) -> None:
+        """
+        Print the report for the process step.
+
+        Returns:
+            None:
+        """
         print("- Process:")
+        # load provenance data or error out
         ctx = HermesContext()
         ctx.prepare_step("process")
         with ctx["provenance"] as cache:
@@ -110,10 +156,14 @@ class HermesReportCommand(HermesCommand):
                 return
             finally:
                 ctx.finalize_step("process")
+        # get basic hermes objects
         process_base_plugin = prov_doc.get_hermes_base_plugin("process")
+        process_command = prov_doc.get_hermes_command("process")
+        hermes_cache = prov_doc.get_hermes_cache()
         plugins = prov_doc.shallow_search(lambda node: (
             "prov:actedOnBehalfOf" in node and node["prov:actedOnBehalfOf"] == [process_base_plugin.ref]
         ))
+        # print info on all plugins and their strategy generation
         for plugin in plugins:
             print(
                 f"  - Plugin {plugin['@id'][24:]} ({plugin['schema:name'][0]}, version "
@@ -126,14 +176,13 @@ class HermesReportCommand(HermesCommand):
                 f"    - Generated strategies at {strategy_generation['prov:startedAtTime'][0]} took "
                 f"{strategy_generation['prov:endedAtTime'][0]-strategy_generation['prov:startedAtTime'][0]}"
             )
-        process_command = prov_doc.get_hermes_command("process")
-        hermes_cache = prov_doc.get_hermes_cache()
         load_actions = prov_doc.shallow_search(lambda node: (
             "prov:wasAssociatedWith" in node and
             node["prov:wasAssociatedWith"] == [hermes_cache.ref, process_command.ref] and
             "prov:used" in node and
             len(node["prov:used"]) == 3
         ))
+        # print info on the data loaded that was merged
         for index, load_action in enumerate(sorted(load_actions, key=lambda it: it["prov:startedAtTime"][0]), start=1):
             print(
                 f"  - In load {index} loaded (at {load_action['prov:startedAtTime'][0]}, took"
@@ -150,6 +199,7 @@ class HermesReportCommand(HermesCommand):
             "prov:wasInformedBy" in node and
             len(node["prov:wasInformedBy"]) == 3
         ))
+        # print info on the merges
         for index, merger in enumerate(sorted(bigest_mergers, key=lambda it: it["prov:startedAtTime"][0]), start=1):
             if index == 1:
                 merged = "merged data from load 1 with data of load 2"
@@ -168,6 +218,7 @@ class HermesReportCommand(HermesCommand):
         stored_objects = prov_doc.shallow_search(lambda node: (
             "prov:wasGeneratedBy" in node and node["prov:wasGeneratedBy"] == [write_action.ref]
         ))
+        # print info on the stored data
         print(
             f"  - Results stored (at {write_action['prov:startedAtTime'][0]} took "
             f"{write_action['prov:endedAtTime'][0]-write_action['prov:startedAtTime'][0]}) in:"
@@ -176,7 +227,14 @@ class HermesReportCommand(HermesCommand):
             print(f"    - {res['schema:url'][0]} ({res['schema:description'][0].split(' ')[1]})")
 
     def report_curate(self: Self) -> None:
+        """
+        Print the report for the curate step.
+
+        Returns:
+            None:
+        """
         print("- Curate:")
+        # load provenance data or error out
         ctx = HermesContext()
         ctx.prepare_step("curate")
         with ctx["provenance"] as cache:
@@ -187,7 +245,11 @@ class HermesReportCommand(HermesCommand):
                 return
             finally:
                 ctx.finalize_step("curate")
+        # get basic hermes objects
         curate_base_plugin = prov_doc.get_hermes_base_plugin("curate")
+        process_command = prov_doc.get_hermes_command("process")
+        hermes_cache = prov_doc.get_hermes_cache()
+        # print info on the used plugin
         curate_plugin = prov_doc.shallow_search(lambda node: (
             "prov:actedOnBehalfOf" in node and node["prov:actedOnBehalfOf"] == [curate_base_plugin.ref]
         ))[0]
@@ -195,8 +257,7 @@ class HermesReportCommand(HermesCommand):
             f"  - Plugin used:\n    - {curate_plugin['@id'][23:]} ({curate_plugin['schema:name'][0]}, version "
             f"{vers if (vers := curate_plugin.get('schema:softwareVersion', False)) else 'N/A'})"
         )
-        process_command = prov_doc.get_hermes_command("process")
-        hermes_cache = prov_doc.get_hermes_cache()
+        # get objects that contain info on the curation
         store_action_of_process = prov_doc.shallow_search(lambda node: (
             "prov:wasAssociatedWith" in node and
             node["prov:wasAssociatedWith"] == [process_command.ref, hermes_cache.ref] and
@@ -217,6 +278,7 @@ class HermesReportCommand(HermesCommand):
         write = prov_doc.shallow_search(lambda node: (
             "prov:used" in node and node["prov:used"] == [curate_activity.ref]
         ))[0]
+        # print curation info
         print(
             f"  - Time consumed:\n    - Curation at ~{load_action['prov:endedAtTime'][0]} took"
             f" ~{curate_activity['prov:generatedAtTime'][0]-load_action['prov:endedAtTime'][0]}"
@@ -236,7 +298,14 @@ class HermesReportCommand(HermesCommand):
             print(f"    - {result['schema:url'][0]} ({result['schema:description'][0].split(' ')[1]})")
 
     def report_deposit(self: Self) -> None:
+        """
+        Print the report for the deposit step.
+
+        Returns:
+            None:
+        """
         print("- Deposit:")
+        # load provenance data or error out
         ctx = HermesContext()
         ctx.prepare_step("deposit")
         with ctx["provenance"] as cache:
@@ -247,7 +316,11 @@ class HermesReportCommand(HermesCommand):
                 return
             finally:
                 ctx.finalize_step("deposit")
+        # get basic hermes objects
         deposit_base_plugin = prov_doc.get_hermes_base_plugin("deposit")
+        curate_command = prov_doc.get_hermes_command("curate")
+        hermes_cache = prov_doc.get_hermes_cache()
+        # print info on the plugin
         deposit_plugin = prov_doc.shallow_search(lambda node: (
             "prov:actedOnBehalfOf" in node and node["prov:actedOnBehalfOf"] == [deposit_base_plugin.ref]
         ))[0]
@@ -255,8 +328,7 @@ class HermesReportCommand(HermesCommand):
             f"  - Plugin used:\n    - {deposit_plugin['@id'][24:]} ({deposit_plugin['schema:name'][0]}, version "
             f"{vers if (vers := deposit_plugin.get('schema:softwareVersion', False)) else 'N/A'})"
         )
-        curate_command = prov_doc.get_hermes_command("curate")
-        hermes_cache = prov_doc.get_hermes_cache()
+        # get objects containing info on map and update of the metadata
         store_action_of_curate = prov_doc.shallow_search(lambda node: (
             "prov:wasAssociatedWith" in node and
             node["prov:wasAssociatedWith"] == [curate_command.ref, hermes_cache.ref] and
@@ -290,6 +362,7 @@ class HermesReportCommand(HermesCommand):
         map_action = prov_doc.shallow_search(lambda node: (
             "@id" in node and node["@id"] == mapped_metadata["prov:wasGeneratedBy"][0]["@id"]
         ))[0]
+        # print general info and info on map as well as update of the metadata
         print(
             "  - Time consumed:\n"
             f"    - Preparation at ~{load_action['prov:endedAtTime'][0]} took ~"
@@ -306,6 +379,7 @@ class HermesReportCommand(HermesCommand):
         )
         for source in stored_results_of_curate:
             print(4*" " + f"- {source['schema:url'][0]} ({source['schema:description'][0].split(' ')[1]})")
+        # print info on the store of the mapped as well as updated metadata
         print(
             f"  - Metadata mapped for deposit stored (at {store_mapped['prov:startedAtTime'][0]}, took "
             f"{store_mapped['prov:endedAtTime'][0]-store_mapped['prov:startedAtTime'][0]}) in:\n"
@@ -316,7 +390,14 @@ class HermesReportCommand(HermesCommand):
         )
 
     def report_postprocess(self: Self) -> None:
+        """
+        Print the report for the harvest step.
+
+        Returns:
+            None:
+        """
         print("- Postprocess:")
+        # load provenance data or error out
         ctx = HermesContext()
         ctx.prepare_step("postprocess")
         with ctx["provenance"] as cache:
@@ -327,9 +408,11 @@ class HermesReportCommand(HermesCommand):
                 return
             finally:
                 ctx.finalize_step("postprocess")
+        # get basic hermes objects
         cache = prov_doc.get_hermes_cache()
         command = prov_doc.get_hermes_command("postprocess")
         base_plugin = prov_doc.get_hermes_base_plugin("postprocess")
+        # print info on the plugin
         plugin = prov_doc.shallow_search(lambda node: (
             "prov:actedOnBehalfOf" in node and node["prov:actedOnBehalfOf"] == [base_plugin.ref]
         ))[0]
@@ -341,6 +424,7 @@ class HermesReportCommand(HermesCommand):
             "prov:wasAssociatedWith" in node and
             node["prov:wasAssociatedWith"] == [plugin.ref, base_plugin.ref, command.ref, cache.ref]
         ))
+        # print info on the loads from cache
         print("  - Used deposit results:")
         for index, cache_load in enumerate(cache_loads, start=1):
             source_id = cache_load["prov:used"][0]["@id"]
@@ -354,6 +438,7 @@ class HermesReportCommand(HermesCommand):
             "prov:wasAssociatedWith" in node and
             node["prov:wasAssociatedWith"] == [plugin.ref, base_plugin.ref, command.ref]
         ))
+        # sort io operations into load and write operations
         loads, writes = [], []
         for io_op in io_ops:
             used = io_op["prov:used"][0]["@id"]
@@ -361,6 +446,7 @@ class HermesReportCommand(HermesCommand):
                 writes.append(io_op)
             else:
                 loads.append(io_op)
+        # print info on general loads of the plugin
         print("  - Loaded data from:")
         for index, load in enumerate(loads):
             source_id = load["prov:used"][0]["@id"]
@@ -370,6 +456,7 @@ class HermesReportCommand(HermesCommand):
                 f"{load['prov:endedAtTime']-load['prov:startedAtTime']} from:\n"
                 f"      - {source['schema:url']}"
             )
+        # print info on general writes of the plugin
         print("  - Written data to:")
         for index, write in enumerate(writes):
             target = prov_doc.shallow_search(lambda node: (
