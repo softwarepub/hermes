@@ -10,6 +10,7 @@ import datetime
 from io import IOBase
 from pathlib import Path
 from typing import Any, Callable, Optional
+from typing_extensions import Self
 
 from pydantic import BaseModel
 
@@ -17,35 +18,90 @@ from hermes.commands.base import HermesCommand, HermesPlugin
 from hermes.error import HermesPluginRunError
 from hermes.model.context_manager import HermesContext
 from hermes.model.provenance.ld_prov import ld_prov_list
+from hermes.model.types import ld_dict
 
 
 class HermesPostprocessPlugin(HermesPlugin):
-    """ Base plugin for postprocess plugins. """
+    """
+    Base plugin for postprocess plugins.
 
-    def __init__(self):
-        self.cache_operations: list[tuple[str, dict, dict]] = []
-        self.load_operations: list[tuple[dict, dict, dict]] = []
-        self.write_operations: list[tuple[dict, dict, dict]] = []
+    Attributes:
+        cache_operations (list[tuple[str, dict[str, str], dict[str, str]]]): The information recorded on the
+            cache load operations executed by the plugin.
+        load_operations (list[tuple[dict[str, str], dict[str, str], dict[str, str]]]): The information recorded on the
+            load operations executed by the plugin.
+        write_operations (list[tuple[dict[str, str], dict[str, str], dict[str, str]]]): The information recorded on the
+            write operations executed by the plugin.
+    """
+
+    def __init__(self: Self) -> None:
+        """
+        Create a new instance of a HermesPostprocessPlugin.
+
+        Returns:
+            None:
+        """
+        self.cache_operations: list[tuple[str, dict[str, str], dict[str, str]]] = []
+        self.load_operations: list[tuple[dict[str, str], dict[str, str], dict[str, str]]] = []
+        self.write_operations: list[tuple[dict[str, str], dict[str, str], dict[str, str]]] = []
         super().__init__()
 
-    def __call__(self, command: HermesCommand) -> None:
+    def __call__(self: Self, command: "HermesPostprocessCommand") -> None:
+        """
+        Execute the hermes postprocess plugin `self`.
+
+        Args:
+            command (HermesPostprocessCommand): The command being executed.
+
+        Returns:
+            None:
+        """
         pass
 
-    def get_deposit_result(self, target: str) -> dict:
+    def get_deposit_result(self: Self, target: str) -> dict:
+        """
+        Load the result of some deposit plugin from the cache so that the calls provenance information is recorded.
+
+        Args:
+            target (str): The name of the deposit plugin.
+
+        Returns:
+            dict: The result of the cache load operation.
+        """
+        # collect basic metadata
         source_metadata = target[:]
         load_operation = {"schema:description": f"loads the result of deposit plugin {target}"}
         ctx = HermesContext()
         ctx.prepare_step("deposit")
         load_operation["prov:startedAtTime"] = datetime.datetime.now()
+        # execute the load operation
         with ctx[target] as cache:
             res = cache["result"]
+        # complete metadata collection
         load_operation["prov:endedAtTime"] = datetime.datetime.now()
         ctx.finalize_step("deposit")
         loaded_data = {"schema:description": "the loaded data", "schema:text": str(res)}
+        # store metadata
         self.cache_operations.append((source_metadata, load_operation, loaded_data))
+        # return result of the load operation
         return res
 
-    def load(self, func: Callable, source: Any, *args, **kwargs) -> Any:
+    def load(self: Self, func: Callable, source: Any, *args: Optional[Any], **kwargs: Optional[Any]) -> Any:
+        """
+        Load some data from some source using some function so that the calls provenance information is recorded.
+
+        `func(source, *args, **kwargs)` will be executed.
+
+        Args:
+            func (Callable): The function used for loading the requested source.
+            source (Any): The source the data is to be loaded from.
+            args (Any | None): Additional positional arguments for the load.
+            kwargs (Any | None): Additional keyword arguments for the load.
+
+        Returns:
+            Any: The result of the load operation.
+        """
+        # collect basic metadata
         source_metadata = {"schema:description": "metadata source"}
         if isinstance(source, IOBase):
             source_metadata["schema:url"] = Path(source.name).absolute().as_uri()
@@ -63,13 +119,35 @@ class HermesPostprocessPlugin(HermesPlugin):
             "schema:name": f"{func.__module__}.{func.__qualname__}"
         }
         load_operation["prov:startedAtTime"] = datetime.datetime.now()
+        # execute the load operation
         result = func(source, *args, **kwargs)
+        # complete metadata collection
         load_operation["prov:endedAtTime"] = datetime.datetime.now()
         loaded_metadata = {"schema:description": "the loaded data", "schema:text": str(result)}
+        # store metadata
         self.load_operations.append((source_metadata, load_operation, loaded_metadata))
+        # return result of the load operation
         return result
 
-    def write(self, func: Callable, data: Any, destination: Any, *args, **kwargs) -> Any:
+    def write(
+        self: Self, func: Callable, data: Any, destination: Any, *args: Optional[Any], **kwargs: Optional[Any]
+    ) -> Any:
+        """
+        Write some data from some source using some function so that the calls provenance information is recorded.
+
+        `func(source, *args, **kwargs)` will be executed.
+
+        Args:
+            func (Callable): The function used for writing the requested source.
+            data (Any): The data that is to be written.
+            destination (Any): The source the data is to be written to.
+            args (Any | None): Additional positional arguments for the write.
+            kwargs (Any | None): Additional keyword arguments for the write.
+
+        Returns:
+            Any: The result of the write operation.
+        """
+        # collect basic metadata
         destination_metadata = {"schema:description": "metadata destination"}
         if isinstance(destination, IOBase):
             destination_metadata["schema:url"] = Path(destination.name).absolute().as_uri()
@@ -87,33 +165,63 @@ class HermesPostprocessPlugin(HermesPlugin):
             "schema:name": f"{func.__module__}.{func.__qualname__}"
         }
         write_operation["prov:startedAtTime"] = datetime.datetime.now()
+        # execute the write operation
         result = func(data, destination, *args, **kwargs)
+        # complete metadata collection
         write_operation["prov:endedAtTime"] = datetime.datetime.now()
         written_metadata = {"schema:description": "the written data", "schema:text": str(data)}
+        # store metadata
         self.write_operations.append((written_metadata, write_operation, destination_metadata))
+        # return result of the write operation
         return result
 
 
 class PostprocessSettings(BaseModel):
-    """Generic post-processing settings."""
+    """
+    Generic post-processing settings.
 
-    run: list = []
+    Attributes:
+        run (list[str]): A list of plugins to be executed.
+    """
+
+    run: list[str] = []
 
 
 class HermesPostprocessCommand(HermesCommand):
-    """Post-process the published metadata after deposition."""
+    """
+    Post-process the published metadata after deposition.
 
-    command_name = "postprocess"
-    settings_class = PostprocessSettings
+    Attributes:
+        args (Namespace): The arguments of the command.
+        command_name (str): (class attribute) The name of the command.
+        settings_class (type): (class attribute) The settings class for general deposit settings.
+    """
 
-    def __call__(self, args: argparse.Namespace) -> None:
+    command_name: str = "postprocess"
+    settings_class: type = PostprocessSettings
+
+    def __call__(self: Self, args: argparse.Namespace) -> None:
+        """
+        Execute the hermes command `self`.
+
+        Args:
+            args (Namespace): The arguments of the command.
+
+        Returns:
+            None:
+
+        Raises:
+            HermesPluginRunError: If something went wrong with all plugin runs.
+        """
         self.log.info("# Postprocessing")
         self.args = args
         plugin_names = self.settings.run
+        # try loading and adding general information to the provenance document
         prov_doc = self.load_prov_doc()
         if prov_doc is not None:
             prov_doc.add_hermes_settings(self)
             prov_doc.add_settings_to_command("postprocess", self)
+            # get basic hermes objects to reference later
             hermes_cache = prov_doc.get_hermes_cache()
             postprocess_command = prov_doc.get_hermes_command("postprocess")
             postprocess_base_plugin = prov_doc.get_hermes_base_plugin("postprocess")
@@ -128,7 +236,7 @@ class HermesPostprocessCommand(HermesCommand):
             self.log.info(f"### Load {plugin_name} plugin")
             # load plugin
             try:
-                plugin_func = self.plugins[plugin_name]()
+                plugin_func: HermesPostprocessPlugin = self.plugins[plugin_name]()
             except KeyError:
                 self.log.error(f"### Plugin {plugin_name} not found.")
                 continue
@@ -146,11 +254,15 @@ class HermesPostprocessCommand(HermesCommand):
             if prov_doc is None:
                 continue
 
+            # add information on the postprocess plugin
             plugin = prov_doc.add_hermes_plugin("postprocess", plugin_name, plugin_func, self)
+            # add the collected information on the io operations of the plugin to the provenance document
             cache_loads = plugin_func.cache_operations
             loads = plugin_func.load_operations
             writes = plugin_func.write_operations
-            load_actions, loaded_datas = [], []
+            load_actions: list[ld_dict] = []
+            loaded_datas: list[ld_dict] = []
+            # add cache load operations to the provenance document
             for cache_load in cache_loads:
                 deposit_plugin = prov_doc.get_hermes_plugin("postprocess", cache_load[0])
                 updated_metadata = prov_doc.shallow_search(lambda node: (
@@ -172,6 +284,7 @@ class HermesPostprocessCommand(HermesCommand):
                     "prov:wasDerivedFrom": updated_metadata.ref,
                     "prov:wasAttributedTo": hermes_cache.ref
                 })
+            # add load operations to the provenance document
             for load in loads:
                 source = prov_doc.add_entity(data=load[0])
                 load_actions.append(prov_doc.add_activity(data=load[1]))
@@ -187,6 +300,7 @@ class HermesPostprocessCommand(HermesCommand):
                 })
             load_actions = [load_action.ref for load_action in load_actions]
             loaded_datas = [loaded_data.ref for loaded_data in loaded_datas]
+            # add write operations to the provenance document
             for write in writes:
                 data = prov_doc.add_entity(data=write[0])
                 data.update({"prov:wasDerivedFrom": loaded_datas, "prov:wasInfluencedBy": plugin.ref})
@@ -202,23 +316,34 @@ class HermesPostprocessCommand(HermesCommand):
                 })
 
         if prov_doc is not None:
+            # store provenance data
             ctx = HermesContext()
             ctx.prepare_step("postprocess")
             with ctx["provenance"] as cache:
                 cache["result"] = prov_doc.ld_value
             ctx.finalize_step("postprocess")
 
+        # error out if no plugin ran successfully
         if not ran_any:
             self.log.critical("## No postprocess plugin ran successfully.")
             raise HermesPluginRunError("No postprocess plugin ran successfully.")
 
-    def load_prov_doc(self) -> Optional[ld_prov_list]:
+    def load_prov_doc(self: Self) -> Optional[ld_prov_list]:
+        """
+        Loads the provenance document of the postprocess step.
+
+        Returns:
+            ld_prov_list | None: The loaded provenance document or None if the load failed.
+        """
+        # set up HermesContext
         ctx = HermesContext()
         ctx.prepare_step("deposit")
         with ctx["provenance"] as cache:
+            # try load
             try:
                 return ld_prov_list.load_ld_prov_list(cache["result"])
             except Exception:
+                # log the warning and return None
                 self.log.warning(
                     "The provenance data from the deposit step could not be loaded. "
                     "Postprocessing will proceed without collecting provenance data.",

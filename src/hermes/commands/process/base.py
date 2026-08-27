@@ -25,12 +25,12 @@ from hermes.model.types import ld_dict
 class HermesProcessPlugin(HermesPlugin):
     """ Base plugin that defines additional merge strategies. """
 
-    def __call__(self: Self, command: HermesCommand) -> dict[Optional[str], dict[Optional[str], MergeAction]]:
+    def __call__(self: Self, command: "HermesProcessCommand") -> dict[Optional[str], dict[Optional[str], MergeAction]]:
         """
         Execute the hermes process plugin `self`.
 
         Args:
-            command (HermesCommand): The command being executed.
+            command (HermesProcessCommand): The command being executed.
 
         Returns:
             dict[str | None, dict[str | None, MergeAction]]: The merge strategies.
@@ -56,6 +56,7 @@ class HermesProcessCommand(HermesCommand):
     Process the collected metadata into a common dataset.
 
     Attributes:
+        args (Namespace): The arguments of the command.
         command_name (str): (class attribute) The name of the command
         settings_class (type): (class attribute) The settings class for general process settings.
     """
@@ -63,7 +64,20 @@ class HermesProcessCommand(HermesCommand):
     command_name: str = "process"
     settings_class: type = ProcessSettings
 
-    def __call__(self, args: argparse.Namespace) -> None:
+    def __call__(self: Self, args: argparse.Namespace) -> None:
+        """
+        Execute the hermes command `self`.
+
+        Args:
+            args (Namespace): The arguments of the command.
+
+        Returns:
+            None:
+
+        Raises:
+            MisconfigurationError: If it was explicitly configured that no process plugin should be run.
+            MisconfigurationError: If no harvesters have been configured to be used.
+        """
         self.args = args
         self.log.info("# Load provenance data from harvest step")
         # try loading and adding general information to the provenance document
@@ -71,6 +85,7 @@ class HermesProcessCommand(HermesCommand):
         if prov_doc is not None:
             prov_doc.add_hermes_settings(self)
             prov_doc.add_settings_to_command("process", self)
+            # get basic hermes objects to reference later
             process_command = prov_doc.get_hermes_command("process")
             hermes_cache = prov_doc.get_hermes_cache()
 
@@ -100,6 +115,7 @@ class HermesProcessCommand(HermesCommand):
             merge_doc, harvester_names, prov_doc, strategy_action, merged_strategies
         )
 
+        # set up HermesContext
         ctx = HermesContext()
         self.log.info("## Store processed metadata")
         # store processed data
@@ -175,6 +191,9 @@ class HermesProcessCommand(HermesCommand):
         Returns:
             tuple[ld_dict | None, ld_dict | None]: The object of the last merge of strategies and the object of the
                 merged strategies.
+
+        Raises:
+            HermesPluginRunError: If all plugin runs failed.
         """
         self.log.info("## Load and run the plugins")
         any_strategies_loaded = False
@@ -276,6 +295,10 @@ class HermesProcessCommand(HermesCommand):
 
         Returns:
             tuple[ld_dict | None, ld_dict | None]: The object of the last merge and the object of the merged data.
+
+        Raises:
+            RuntimeError: If a merge failed.
+            RuntimeError: If data from all harvesters couldn't be loaded.
         """
         if prov_doc is not None:
             process_command = prov_doc.get_hermes_command("process")

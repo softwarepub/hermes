@@ -41,12 +41,12 @@ class HermesHarvestPlugin(HermesPlugin):
         self.operations: list[tuple[dict[str, str], dict[str, str], dict[str, str]]] = []
         super().__init__()
 
-    def __call__(self: Self, command: HermesCommand) -> SoftwareMetadata:
+    def __call__(self: Self, command: "HermesHarvestCommand") -> SoftwareMetadata:
         """
         Execute the hermes harvest plugin `self`.
 
         Args:
-            command (HermesCommand): The command being executed.
+            command (HermesHarvestCommand): The command being executed.
 
         Returns:
             SoftwareMetadata: The harvested metadata.
@@ -154,6 +154,7 @@ class HermesHarvestCommand(HermesCommand):
     Harvest metadata from configured sources.
 
     Attributes:
+        args (Namespace): The arguments of the command.
         command_name (str): (class attribute) The name of the command
         settings_class (type): (class attribute) The settings class for general harvest settings.
     """
@@ -167,14 +168,22 @@ class HermesHarvestCommand(HermesCommand):
 
         Args:
             args (Namespace): The arguments of the command.
+
+        Returns:
+            None:
+
+        Raises:
+            MisconfigurationError: If no plugin is configured to be run.
+            HermesPluginRunError: If all plugin runs failed.
         """
         self.args = args
         self.log.info("# Load provenance from old harvest or create new document.")
         # initialize the provenance document for this run
         prov_doc = self.init_provenance_document()
-        base_plugin = prov_doc.get_hermes_base_plugin("harvest")
         prov_doc.add_hermes_settings(self)
         prov_doc.add_settings_to_command("harvest", self)
+        # get basic hermes object to reference later
+        base_plugin = prov_doc.get_hermes_base_plugin("harvest")
 
         self.log.info("# Metadata harvesting")
         if len(self.settings.sources) == 0:
@@ -191,7 +200,7 @@ class HermesHarvestCommand(HermesCommand):
             self.log.info(f"### Load {plugin_name} plugin")
             # load plugin
             try:
-                plugin_func = self.plugins[plugin_name]()
+                plugin_func: HermesHarvestPlugin = self.plugins[plugin_name]()
             except KeyError:
                 self.log.error(f"### Plugin {plugin_name} not found, skipping it now.")
                 continue

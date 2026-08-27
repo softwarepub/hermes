@@ -7,6 +7,7 @@
 import argparse
 import datetime
 from typing import Optional
+from typing_extensions import Self
 
 from pydantic import BaseModel
 
@@ -21,29 +22,67 @@ from hermes.model.provenance.ld_prov import ld_prov_list
 class HermesCuratePlugin(HermesPlugin):
     """ Base plugin for curate plugins. """
 
-    def __call__(self, command: HermesCommand, metadata: SoftwareMetadata) -> SoftwareMetadata:
+    def __call__(self: Self, command: "HermesCurateCommand", metadata: SoftwareMetadata) -> SoftwareMetadata:
+        """
+        Execute the hermes curate plugin `self`.
+
+        Args:
+            command (HermesCurateCommand): The command being executed.
+            metadata (SoftwareMetadata): The metadata to be curated.
+
+        Returns:
+            SoftwareMetadata: The curated metadata.
+        """
         pass
 
 
 class CurateSettings(BaseModel):
-    """Generic deposition settings."""
+    """
+    Generic deposition settings.
+
+    Attributes:
+        plugin (str): The plugin to be executed.
+    """
 
     plugin: str = "pass_curate"
 
 
 class HermesCurateCommand(HermesCommand):
-    """ Curate the unified metadata before deposition. """
+    """
+    Curate the unified metadata before deposition.
 
-    command_name = "curate"
-    settings_class = CurateSettings
+    Attributes:
+        args (Namespace): The arguments of the command.
+        command_name (str): (class attribute) The name of the command.
+        settings_class (type): (class attribute) The settings class for general curate settings.
+    """
 
-    def __call__(self, args: argparse.Namespace) -> None:
+    command_name: str = "curate"
+    settings_class: type = CurateSettings
+
+    def __call__(self: Self, args: argparse.Namespace) -> None:
+        """
+        Execute the hermes command `self`.
+
+        Args:
+            args (Namespace): The arguments of the command.
+
+        Returns:
+            None:
+
+        Raises:
+            HermesValidationError: If the results of the process step couldn't be loaded.
+            MisconfigurationError: If the curation plugin wasn't found.
+            HermesPluginRunError: If something went wrong in the plugin run.
+        """
         self.args = args
         self.log.info("# Load provenance data from process step")
+        # try loading and adding general information to the provenance document
         prov_doc = self.load_prov_doc()
         if prov_doc is not None:
             prov_doc.add_hermes_settings(self)
             prov_doc.add_settings_to_command("curate", self)
+            # get basic hermes objects to reference later
             curate_command = prov_doc.get_hermes_command("curate")
             curate_base_plugin = prov_doc.get_hermes_base_plugin("curate")
             process_command = prov_doc.get_hermes_command("process")
@@ -52,6 +91,7 @@ class HermesCurateCommand(HermesCommand):
         self.log.info("# Metadata curation")
         plugin_name = self.settings.plugin
 
+        # set up HermesContext
         ctx = HermesContext()
         ctx.prepare_step("curate")
 
@@ -97,7 +137,9 @@ class HermesCurateCommand(HermesCommand):
         stored_at_time = datetime.datetime.now()
 
         if prov_doc is not None:
+            # add information on the curate plugin
             curate_plugin = prov_doc.add_hermes_plugin("curate", plugin_name, plugin_func, self)
+            # get objects from process
             store_action_of_process = prov_doc.shallow_search(lambda node: (
                 "prov:wasAssociatedWith" in node and
                 node["prov:wasAssociatedWith"] == [process_command.ref, hermes_cache.ref] and
@@ -106,6 +148,7 @@ class HermesCurateCommand(HermesCommand):
             stored_results_of_process = [res.ref for res in prov_doc.shallow_search(lambda node: (
                 "prov:wasGeneratedBy" in node and node["prov:wasGeneratedBy"] == [store_action_of_process.ref]
             ))]
+            # add information on load, loaded data and curated data
             load_action = prov_doc.add_activity(data={
                 "schema:description": "loads the data from process step",
                 "prov:wasAssociatedWith": [process_command.ref, hermes_cache.ref],
@@ -132,6 +175,7 @@ class HermesCurateCommand(HermesCommand):
                 "prov:wasDerivedFrom": loaded_data.ref,
                 "prov:generatedAtTime": end_curation_time
             })
+            # add provenance information on the write and stored curated metadata
             write = prov_doc.add_activity(data={
                 "schema:description": "Writes the processed metadata into the HERMES cache.",
                 "prov:wasAssociatedWith": [curate_command.ref, hermes_cache.ref],
@@ -139,7 +183,6 @@ class HermesCurateCommand(HermesCommand):
                 "prov:startedAtTime": begin_store_at_time,
                 "prov:endedAtTime": stored_at_time
             })
-            # TODO: add more info
             prov_doc.add_entity(data={
                 "@type": "schema:CreativeWork",
                 "schema:description": "The compacted version of the processed metadata.",
@@ -174,18 +217,28 @@ class HermesCurateCommand(HermesCommand):
                 "prov:generatedAtTime": stored_at_time
             })
 
+            # store provenance information
             with ctx["provenance"] as cache:
                 cache["result"] = prov_doc.ld_value
 
         ctx.finalize_step("curate")
 
-    def load_prov_doc(self) -> Optional[ld_prov_list]:
+    def load_prov_doc(self: Self) -> Optional[ld_prov_list]:
+        """
+        Loads the provenance document of the process step.
+
+        Returns:
+            ld_prov_list | None: The loaded provenance document or None if the load failed.
+        """
+        # set up HermesContext
         ctx = HermesContext()
         ctx.prepare_step("process")
         with ctx["provenance"] as cache:
+            # try load
             try:
                 return ld_prov_list.load_ld_prov_list(cache["result"])
             except Exception:
+                # log the warning and return None
                 self.log.warning(
                     "The provenance data from the process step could not be loaded. "
                     "Processing will proceed without collecting provenance data.",
