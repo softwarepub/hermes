@@ -104,6 +104,19 @@ class HermesCommand(abc.ABC):
             type=pathlib.Path,
             help="Configuration file in TOML format",
         )
+        # Add a new argument to accept a URL for harvesting (in harvest command)
+        parser.add_argument(
+            "--url",
+            type=str,
+            help="URL from which to extract metadata (GitHub or GitLab))"
+        )
+        # Add a new argument to accept a token (from GitHub or GitLab) for harvesting (in harvest command)
+        parser.add_argument(
+            "--token",
+            type=str,
+            required=False,
+            help="Access token for GitHub/GitLab (optional, only needed for private repos or GitHub/GitLab API plugin)"
+        )
 
         plugin_args = parser.add_argument_group("Extra options")
         plugin_args.add_argument(
