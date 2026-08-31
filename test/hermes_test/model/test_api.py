@@ -143,6 +143,5 @@ def test_usage():
         if "Baz" not in author["name"]:
             assert "email" in author
         if "schema:knowsAbout" not in author:
-            # FIXME: None has to be discussed
             author["schema:knowsAbout"] = None
         author["schema:pronouns"] = "they/them"

@@ -237,7 +237,7 @@ class HermesProcessCommand(HermesCommand):
                 "prov:startedAtTime": generate_strategies_start,
                 "prov:endedAtTime": generate_strategies_end
             })
-            new_strategies = prov_doc.add_entity(data={  # TODO: record strategies
+            new_strategies = prov_doc.add_entity(data={
                 "@type": "schema:CreativeWork",
                 "schema:description": f"new merge strategies of plugin {plugin_name}",
                 "schema:text": str(additional_strategies),  # TODO: maybe "prov:value" instead?

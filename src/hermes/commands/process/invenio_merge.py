@@ -36,15 +36,15 @@ class InvenioMerge(MergeAction):
                     isinstance(value[0], (dict, ld_merge_dict)) and [*value[0].keys()] == ["@id"]
                 ):
                     if value != update:
-                        target.reject(key, update)
+                        target.reject(key[-1], update)
                     return value
             if isinstance(update, ld_list) and len(update) == 1:
                 if isinstance(update[0], str) or (
                     isinstance(update[0], (dict, ld_merge_dict)) and [*update[0].keys()] == ["@id"]
                 ):
-                    target.replace(key, value)
+                    target.replace(key[-1], value)
                     return update
-            target.reject(key, update)
+            target.reject(key[-1], update)
             return value
         if (
             (key[-1] == iri["schema:familyName"] and iri["schema:Person"] in types) or
@@ -54,14 +54,14 @@ class InvenioMerge(MergeAction):
         ):
             if len(value) == 1:
                 if value != update:
-                    target.reject(key, update)
+                    target.reject(key[-1], update)
                 return value
             if len(update) == 1:
-                target.replace(key, value)
+                target.replace(key[-1], value)
                 return update
             if len(value) == len(update) == 0:
                 return value
-            target.reject(key, update)
+            target.reject(key[-1], update)
             return value
         if (
             (key[-1] == iri["schema:version"] or key[-1] == iri["schema:description"]) and
@@ -69,14 +69,14 @@ class InvenioMerge(MergeAction):
         ):
             if len(value) == 1:
                 if value != update:
-                    target.reject(key, update)
+                    target.reject(key[-1], update)
                 return value
             if len(update) == 1:
-                target.replace(key, value)
+                target.replace(key[-1], value)
                 return update
             if len(value) == 0 or len(update) == 0:
                 return []
-            target.reject(key, update)
+            target.reject(key[-1], update)
             return value
 
 

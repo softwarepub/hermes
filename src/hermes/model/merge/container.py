@@ -373,7 +373,6 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
         Returns:
             None:
         """
-        # FIXME: key not only string
         # make sure appending is possible
         self.emplace(rel)
         # append the new entry
@@ -392,7 +391,6 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
         Returns:
             None:
         """
-        # FIXME: key not only string
         self._add_related("hermes-rt:reject", key, value)
 
     def replace(self: Self, key: str, value: Union[BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]) -> None:
@@ -408,5 +406,4 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
         Returns:
             None:
         """
-        # FIXME: key not only string
         self._add_related("hermes-rt:replace", key, value)

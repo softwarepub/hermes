@@ -232,7 +232,7 @@ class ld_container:
         # all ld_container (ld_dicts and ld_lists) and datetime, date as well as time objects in value have to dissolved
         # because the JSON-LD processor can't handle them
         # to do this traverse value in a BFS and replace all items with a type in 'special_types' with a usable values
-        key_and_reference_todo_list = [(0, [value])]
+        key_and_reference_todo_list: list[Union[tuple[int, list], tuple[str, dict]]] = [(0, [value])]
         special_types = (list, dict, ld_container, datetime, date, time)
         while True:
             # check if ready
@@ -462,7 +462,6 @@ class ld_container:
         Returns:
             BASIC_TYPE | TIME_TYPE: The pythonized version of data.
         """
-        # FIXME: #434 dates are not returned as datetime/ date/ time but as string
         ld_value = data[0]['@value']
         if iri_map["schema:DateTime"] == data[0]['@type']:
             ld_value = datetime.fromisoformat(ld_value)

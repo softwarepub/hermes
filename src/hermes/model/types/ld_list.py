@@ -655,7 +655,6 @@ class ld_list(ld_container):
         Raises:
             ValueError: If key is '@type' and container_type is not '@set'.
         """
-        # TODO: handle context if not of type list or None
         # validate container_type
         if key == "@type":
             if container_type != "@set":
@@ -666,6 +665,10 @@ class ld_list(ld_container):
             value = [{container_type: value}]
         elif container_type != "@set":
             raise ValueError(f"Invalid container type: {container_type}. (valid are only '@set', '@list' and '@graph')")
+
+        # handle non-list context
+        if context is not None and not isinstance(context, list):
+            context = [context]
 
         if parent is not None:
             # expand value in the "context" of parent

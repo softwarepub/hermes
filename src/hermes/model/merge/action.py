@@ -282,7 +282,9 @@ class MergeSet(MergeAction):
                     elif isinstance(item, ld_list) and isinstance(update_item, ld_list):
                         self.merge(target, [*key, index], item, update_item)
                     elif isinstance(item, (ld_dict,  ld_list)) or isinstance(update_item, (ld_dict, ld_list)):
-                        """ FIXME: log error """
+                        """
+                        FIXME: log error/ warning that merge of items at... could not be merged and will be skipped
+                        """
                     break
             else:
                 value.append(update_item)

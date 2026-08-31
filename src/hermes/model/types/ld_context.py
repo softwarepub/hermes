@@ -128,7 +128,7 @@ class ContextPrefix:
         Raises:
             HermesContextError: If the compressed term is '' or its prefix can't be expanded.
         """
-        # seperate the prefix from the term
+        # separate the prefix from the term
         if not isinstance(compressed_term, str):
             prefix, term = compressed_term
         elif ":" in compressed_term:

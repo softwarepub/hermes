@@ -117,9 +117,11 @@ class TestLdContainer:
 
     def test_to_python_datetime_value(self, mock_context):
         cont = ld_container([{}], context=[mock_context])
-        assert cont._to_python("http://spam.eggs/eggs", {
-            "@value": "2022-02-22T00:00:00", "@type": "https://schema.org/DateTime"
-        }) == "2022-02-22T00:00:00"  # TODO: #434 typed date is returned as string instead of date
+        res = cont._to_python("http://spam.eggs/eggs", {
+            "@value": "2022-02-22T00:00:00", "@type": "http://schema.org/DateTime"
+        })
+        assert isinstance(res, datetime)
+        assert res == datetime.fromisoformat("2022-02-22T00:00:00")
 
     def test_to_python_error(self, mock_context):
         cont = ld_container([{}], context=[mock_context])
