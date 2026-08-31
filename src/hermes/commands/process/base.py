@@ -140,7 +140,7 @@ class HermesProcessCommand(HermesCommand):
             prov_doc.add_entity(data={
                 "@type": "schema:CreativeWork",
                 "schema:description": "The compacted version of the processed metadata.",
-                "schema:text": str(merge_doc.compact()),  # TODO: maybe "prov:value" instead?
+                "schema:text": str(merge_doc.compact()),
                 "schema:encodingFormat": "application/json",
                 "schema:url": (ctx.cache_dir / "process" / "result" / "codemeta.json").absolute().as_uri(),
                 "prov:wasGeneratedBy": write.ref,
@@ -151,7 +151,7 @@ class HermesProcessCommand(HermesCommand):
             prov_doc.add_entity(data={
                 "@type": "schema:CreativeWork",
                 "schema:description": "The context of the processed metadata.",
-                "schema:text": str({"@context": merge_doc.full_context}),  # TODO: maybe "prov:value" instead?
+                "schema:text": str({"@context": merge_doc.full_context}),
                 "schema:encodingFormat": "application/json",
                 "schema:url": (ctx.cache_dir / "process" / "result" / "context.json").absolute().as_uri(),
                 "prov:wasGeneratedBy": write.ref,
@@ -162,7 +162,7 @@ class HermesProcessCommand(HermesCommand):
             prov_doc.add_entity(data={
                 "@type": "schema:CreativeWork",
                 "schema:description": "The expanded version of the processed metadata.",
-                "schema:text": str(merge_doc.ld_value),  # TODO: maybe "prov:value" instead?
+                "schema:text": str(merge_doc.ld_value),
                 "schema:encodingFormat": "application/json",
                 "schema:url": (ctx.cache_dir / "process" / "result" / "expanded.json").absolute().as_uri(),
                 "prov:wasGeneratedBy": write.ref,
@@ -240,7 +240,7 @@ class HermesProcessCommand(HermesCommand):
             new_strategies = prov_doc.add_entity(data={
                 "@type": "schema:CreativeWork",
                 "schema:description": f"new merge strategies of plugin {plugin_name}",
-                "schema:text": str(additional_strategies),  # TODO: maybe "prov:value" instead?
+                "schema:text": str(additional_strategies),
                 "prov:wasAttributedTo": plugin.ref,
                 "prov:wasGeneratedBy": new_strategy_generation.ref,
                 "prov:generatedAtTime": generate_strategies_end
@@ -261,7 +261,7 @@ class HermesProcessCommand(HermesCommand):
             })
             merged_strategies = prov_doc.add_entity(data={
                 "schema:description": "the merge strategies of multiple plugins merged together",
-                "schema:text": str(merge_doc.strategies),  # TODO: maybe "prov:value" instead?
+                "schema:text": str(merge_doc.strategies),
                 "prov:wasDerivedFrom": [merged_strategies.ref, new_strategies.ref],
                 "prov:wasGeneratedBy": strategy_action.ref,
                 "prov:wasAttributedTo": process_command.ref,
@@ -348,7 +348,7 @@ class HermesProcessCommand(HermesCommand):
                 new_data = prov_doc.add_entity(data={  # new data to be merged
                     "@type": "schema:CreativeWork",
                     "schema:description": f"data loaded from {harvester} plugin",
-                    "schema:text": str(metadata.compact()),  # TODO: maybe "prov:value" instead?
+                    "schema:text": str(metadata.compact()),
                     "prov:wasAttributedTo": [process_command.ref, hermes_cache.ref],
                     "prov:wasGeneratedBy": new_action.ref,
                     "prov:wasDerivedFrom": stored_results,

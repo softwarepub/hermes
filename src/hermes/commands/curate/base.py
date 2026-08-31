@@ -159,7 +159,7 @@ class HermesCurateCommand(HermesCommand):
             loaded_data = prov_doc.add_entity(data={
                 "@type": "schema:CreativeWork",
                 "schema:description": "data loaded from process step",
-                "schema:text": loaded_metadata_str,  # TODO: maybe "prov:value" instead?
+                "schema:text": loaded_metadata_str,
                 "prov:wasAttributedTo": hermes_cache.ref,
                 "prov:wasGeneratedBy": load_action.ref,
                 "prov:wasDerivedFrom": stored_results_of_process,
@@ -168,7 +168,7 @@ class HermesCurateCommand(HermesCommand):
             curated_data = prov_doc.add_entity(data={
                 "@type": "schema:CreativeWork",
                 "schema:description": "curated metadata",
-                "schema:text": str(curated_metadata.compact()),  # TODO: maybe "prov:value" instead?
+                "schema:text": str(curated_metadata.compact()),
                 "prov:wasAttributedTo": [curate_plugin.ref, curate_base_plugin.ref, curate_command.ref],
                 "prov:wasInfluencedBy": curate_plugin.ref,
                 "prov:wasGeneratedBy": load_action.ref,
@@ -186,7 +186,7 @@ class HermesCurateCommand(HermesCommand):
             prov_doc.add_entity(data={
                 "@type": "schema:CreativeWork",
                 "schema:description": "The compacted version of the processed metadata.",
-                "schema:text": str(curated_metadata.compact()),  # TODO: maybe "prov:value" instead?
+                "schema:text": str(curated_metadata.compact()),
                 "schema:encodingFormat": "application/json",
                 "schema:url": (ctx.cache_dir / "curate" / "result" / "codemeta.json").absolute().as_uri(),
                 "prov:wasGeneratedBy": write.ref,
@@ -197,7 +197,7 @@ class HermesCurateCommand(HermesCommand):
             prov_doc.add_entity(data={
                 "@type": "schema:CreativeWork",
                 "schema:description": "The context of the processed metadata.",
-                "schema:text": str({"@context": curated_metadata.full_context}),  # TODO: maybe "prov:value" instead?
+                "schema:text": str({"@context": curated_metadata.full_context}),
                 "schema:encodingFormat": "application/json",
                 "schema:url": (ctx.cache_dir / "curate" / "result" / "context.json").absolute().as_uri(),
                 "prov:wasGeneratedBy": write.ref,
@@ -208,7 +208,7 @@ class HermesCurateCommand(HermesCommand):
             prov_doc.add_entity(data={
                 "@type": "schema:CreativeWork",
                 "schema:description": "The expanded version of the processed metadata.",
-                "schema:text": str(curated_metadata.ld_value),  # TODO: maybe "prov:value" instead?
+                "schema:text": str(curated_metadata.ld_value),
                 "schema:encodingFormat": "application/json",
                 "schema:url": (ctx.cache_dir / "curate" / "result" / "expanded.json").absolute().as_uri(),
                 "prov:wasGeneratedBy": write.ref,

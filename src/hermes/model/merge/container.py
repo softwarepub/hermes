@@ -274,7 +274,7 @@ class ld_merge_dict(_ld_merge_container, ld_dict):
             self.prov_objects[2] = self.prov_doc.add_entity(data={
                 "@type": "schema:CreativeWork",
                 "schema:description": f"software metadata after merge of values at {str(self.path+[key])}",
-                "schema:text": str(outer_most_parent.compact()),  # TODO: maybe "prov:value" instead?
+                "schema:text": str(outer_most_parent.compact()),
                 "prov:wasAttributedTo": self.prov_doc.get_hermes_command("process").ref,
                 "prov:wasGeneratedBy": merge_activity.ref,
                 "prov:wasDerivedFrom": {"@list": [self.prov_objects[1].ref, self.prov_objects[2].ref]},

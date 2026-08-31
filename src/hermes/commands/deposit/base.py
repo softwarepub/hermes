@@ -93,7 +93,7 @@ class BaseDepositPlugin(HermesPlugin):
             loaded_data = prov_doc.add_entity(data={
                 "@type": "schema:CreativeWork",
                 "schema:description": "data loaded from curate step",
-                "schema:text": str(self.metadata.compact()),  # TODO: maybe "prov:value" instead?
+                "schema:text": str(self.metadata.compact()),
                 "prov:wasAttributedTo": hermes_cache.ref,
                 "prov:wasGeneratedBy": load_action.ref,
                 "prov:wasDerivedFrom": results_curate,
@@ -122,7 +122,7 @@ class BaseDepositPlugin(HermesPlugin):
             mapped_data = prov_doc.add_entity(data={
                 "@type": "schema:CreativeWork",
                 "schema:description": "The metadata mapped to the format required by the deposition target.",
-                "schema:text": str(deposit),  # TODO: maybe "prov:value" instead?
+                "schema:text": str(deposit),
                 "prov:wasAttributedTo": plugin.ref,
                 "prov:wasGeneratedBy": map_action.ref,
                 "prov:wasDerivedFrom": loaded_data.ref,
@@ -138,7 +138,7 @@ class BaseDepositPlugin(HermesPlugin):
             prov_doc.add_entity(data={
                 "@type": "schema:CreativeWork",
                 "schema:description": "The stored version of the mapped metadata.",
-                "schema:text": str(deposit),  # TODO: maybe "prov:value" instead?
+                "schema:text": str(deposit),
                 "schema:encodingFormat": "application/json",
                 "schema:url": (ctx.cache_dir / "deposit" / target / "deposit.json").absolute().as_uri(),
                 "prov:wasGeneratedBy": store_mapped_data.ref,
@@ -166,7 +166,7 @@ class BaseDepositPlugin(HermesPlugin):
             updated_mapped_data = prov_doc.add_entity(data={
                 "@type": "schema:CreativeWork",
                 "schema:description": "The updated mapped metadata.",
-                "schema:text": str(updated_deposit),  # TODO: maybe "prov:value" instead?
+                "schema:text": str(updated_deposit),
                 "prov:wasInfluencedBy": plugin.ref,
                 "prov:wasDerivedFrom": mapped_data.ref,
                 "prov:generatedAtTime": end_of_update_map
@@ -181,7 +181,7 @@ class BaseDepositPlugin(HermesPlugin):
             prov_doc.add_entity(data={
                 "@type": "schema:CreativeWork",
                 "schema:description": "The stored version of the updated mapped metadata.",
-                "schema:text": str(updated_deposit),  # TODO: maybe "prov:value" instead?
+                "schema:text": str(updated_deposit),
                 "schema:encodingFormat": "application/json",
                 "schema:url": (ctx.cache_dir / "deposit" / target / "result.json").absolute().as_uri(),
                 "prov:wasGeneratedBy": store_updated_mapped_data.ref,

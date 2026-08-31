@@ -256,7 +256,7 @@ class HermesHarvestCommand(HermesCommand):
             data_output = prov_doc.add_entity(data={
                 "@type": "schema:CreativeWork",
                 "schema:description": "the harvested metadata",
-                "schema:text": str(harvested_data.compact()),  # TODO: maybe "prov:value" instead?
+                "schema:text": str(harvested_data.compact()),
                 "prov:wasAttributedTo": plugin.ref,
                 "prov:wasGeneratedBy": map_activity.ref,
                 "prov:wasDerivedFrom": outputs,
@@ -279,7 +279,7 @@ class HermesHarvestCommand(HermesCommand):
             prov_doc.add_entity(data={
                 "@type": "schema:CreativeWork",
                 "schema:description": "The compacted version of the harvested metadata.",
-                "schema:text": str(harvested_data.compact()),  # TODO: maybe "prov:value" instead?
+                "schema:text": str(harvested_data.compact()),
                 "schema:encodingFormat": "application/json",
                 "schema:url": (ctx.cache_dir / "harvest" / plugin_name / "codemeta.json").absolute().as_uri(),
                 "prov:wasGeneratedBy": write.ref,
@@ -290,7 +290,7 @@ class HermesHarvestCommand(HermesCommand):
             prov_doc.add_entity(data={
                 "@type": "schema:CreativeWork",
                 "schema:description": "The context of the harvested metadata.",
-                "schema:text": str({"@context": harvested_data.full_context}),  # TODO: maybe "prov:value" instead?
+                "schema:text": str({"@context": harvested_data.full_context}),
                 "schema:encodingFormat": "application/json",
                 "schema:url": (ctx.cache_dir / "harvest" / plugin_name / "context.json").absolute().as_uri(),
                 "prov:wasGeneratedBy": write.ref,
@@ -301,7 +301,7 @@ class HermesHarvestCommand(HermesCommand):
             prov_doc.add_entity(data={
                 "@type": "schema:CreativeWork",
                 "schema:description": "The expanded version of the harvested metadata.",
-                "schema:text": str(harvested_data.ld_value),  # TODO: maybe "prov:value" instead?
+                "schema:text": str(harvested_data.ld_value),
                 "schema:encodingFormat": "application/json",
                 "schema:url": (ctx.cache_dir / "harvest" / plugin_name / "expanded.json").absolute().as_uri(),
                 "prov:wasGeneratedBy": write.ref,
