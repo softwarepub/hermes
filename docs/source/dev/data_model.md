@@ -6,6 +6,7 @@ SPDX-License-Identifier: CC-BY-SA-4.0
 
 <!--
 SPDX-FileContributor: Stephan Druskat <stephan.druskat@dlr.de>
+SPDX-FileContributor: Michael Fritzsche <michael.fritzsche@dlr.de>
 -->
 
 # Data model
@@ -14,7 +15,7 @@ SPDX-FileContributor: Stephan Druskat <stephan.druskat@dlr.de>
 It is based on [**JSON-LD (JSON Linked Data)**](https://json-ld.org/), and
 the public API simplifies interaction with the data model through Python code.
 
-Output of the different `hermes` subcommands consequently are valid JSON-LD files that are cached in
+Output of the different `hermes` subcommands consequently are valid JSON-LD files (deposit plugins are an exception) that are cached in
 subdirectories of the `.hermes/` directory that is created in the root of the project directory (see following diagram).
 ```
 .hermes
@@ -24,6 +25,10 @@ subdirectories of the `.hermes/` directory that is created in the root of the pr
 │     ├──codemeta.json
 │     ├──context.json
 │     └──expanded.json
+├──deposit
+│  └──invenio <- for every plugin one folder
+│     ├──deposit.json <- not necessarily JSON-LD
+│     └──result.json <- not necessarily JSON-LD
 ├──harvest
 │  └──cff <- for every plugin one folder
 │     ├──codemeta.json
@@ -206,7 +211,7 @@ When you access data from a data model instance or a {class}`~hermes.model.types
 it will always be returned in a **list**-like object (of class {class}`~hermes.model.types.ld_list.ld_list`)!
 ```
 
-The reason for providing data in list-like objects is that exapnded JSON-LD treats all property values as arrays ([source](https://www.w3.org/TR/json-ld11-api/#expansion-algorithm:~:text=or%20keywords%20and-,all%20JSON%2DLD%20values%20are%20expressed%20in%20arrays%20in%20expanded%20form.,-5.1.1%20Overview)).
+The reason for providing data in list-like objects is that expanded JSON-LD treats all property values as arrays ([source](https://www.w3.org/TR/json-ld11-api/#expansion-algorithm:~:text=or%20keywords%20and-,all%20JSON%2DLD%20values%20are%20expressed%20in%20arrays%20in%20expanded%20form.,-5.1.1%20Overview)).
 Even if you add "single value" data to a `hermes` data model instance via the API, the underlying JSON-LD model
 will treat it as an array, i.e., returns it as an object of {class}`~hermes.model.types.ld_list.ld_list`:
 
