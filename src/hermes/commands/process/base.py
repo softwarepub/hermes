@@ -33,7 +33,6 @@ ObjectStrategies: TypeAlias = dict[TypeIRI, PropertyStrategies]
 class HermesProcessPlugin(HermesPlugin):
     """ Base plugin that defines additional merge strategies. """
 
-
     def __call__(self: Self, command: "HermesProcessCommand") -> dict[Optional[str], dict[Optional[str], MergeAction]]:
         """
         Execute the hermes process plugin `self`.
@@ -313,7 +312,6 @@ class HermesProcessCommand(HermesCommand):
         if prov_doc is not None:
             process_command = prov_doc.get_hermes_command("process")
             hermes_cache = prov_doc.get_hermes_cache()
-
 
         # merge data from harvesters
         self.log.info("## Merge the metadata of the harvesters")

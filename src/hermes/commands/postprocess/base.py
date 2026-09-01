@@ -317,7 +317,7 @@ class HermesPostprocessCommand(HermesCommand):
 
         if prov_doc is not None:
             # store provenance data
-            ctx =  HermesCacheManager()
+            ctx = HermesCacheManager()
             ctx.prepare_step("postprocess")
             with ctx["provenance"] as cache:
                 cache["result"] = prov_doc.ld_value

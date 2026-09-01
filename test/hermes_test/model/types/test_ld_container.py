@@ -127,7 +127,6 @@ class TestLdContainer:
             {"@value": "2022-02-22T00:00:00", "@type": "https://schema.org/DateTime"}
         ) == "2022-02-22T00:00:00"  # TODO: #434 typed date is returned as string instead of date
 
-
     def test_to_native_python_error(self, mock_context):
         cont = ld_container([{}], context=[mock_context])
         with pytest.raises(TypeError):
