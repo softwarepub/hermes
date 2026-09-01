@@ -12,9 +12,9 @@ from importlib import metadata
 from typing import Optional
 from typing_extensions import Self
 
-import toml
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
+import tomlkit
 
 
 class HermesSettings(BaseSettings):
@@ -179,7 +179,7 @@ class HermesCommand(abc.ABC):
             None:
         """
 
-        toml_data = toml.load(args.path / args.config)
+        toml_data = tomlkit.load((args.path / args.config).open()).unwrap()
         self.root_settings = HermesCommand.settings_class.model_validate(toml_data)
         self.settings = getattr(self.root_settings, self.command_name)
 

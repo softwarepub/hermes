@@ -10,7 +10,7 @@ from hermes.model.types.ld_context import (
     ALL_CONTEXTS,
 )
 
-from hermes.model.error import HermesContextError
+from hermes.model.error import HermesCacheError
 
 
 @pytest.fixture
@@ -87,7 +87,7 @@ def test_get_item_from_prefixed_vocabulary_raises_on_prefix_not_exist(
     Tests that an exception is raised when trying to get compacted items for which there is no
     prefixed vocabulary in the context.
     """
-    with pytest.raises(HermesContextError) as hce:
+    with pytest.raises(HermesCacheError) as hce:
         _ = ctx[not_exist]
     assert str(hce.value) == prefix
 
@@ -117,7 +117,7 @@ def test_get_item_from_prefixed_vocabulary_raises_on_term_not_exist(
     Tests that an exception is raised when trying to get compacted items for which the vocabulary exists,
     but doesn't contain the requested term.
     """
-    with pytest.raises(HermesContextError) as hce:
+    with pytest.raises(HermesCacheError) as hce:
         _ = ctx[not_exist]
         with pytest.raises(Exception):
             assert str(hce.value) == term
@@ -150,8 +150,8 @@ def test_get_item_from_expanded_fail(ctx):
     """
     Tests that context raises on unsupported expanded term input.
     """
-    with pytest.raises(HermesContextError):
-        ctx["https://foo.bar/baz"]
+    with pytest.raises(HermesCacheError):
+        ctx["https://example.com/baz"]
 
 
 @pytest.mark.parametrize(
@@ -194,5 +194,5 @@ def test_get_non_str_item_fail(ctx, non_str, error_type):
 )
 def test_get_item_validate_fail(ctx, item):
     """Context raises on theoretically valid compressed terms that don't exist in the context."""
-    with pytest.raises(HermesContextError):
+    with pytest.raises(HermesCacheError):
         ctx[item]

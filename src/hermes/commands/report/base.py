@@ -10,7 +10,7 @@ from typing_extensions import Self
 from pydantic import BaseModel
 
 from hermes.commands.base import HermesCommand
-from hermes.model.context_manager import HermesContext
+from hermes.model.hermes_cache import HermesCacheManager
 from hermes.model.provenance.ld_prov import ld_prov_list
 
 
@@ -87,7 +87,7 @@ class HermesReportCommand(HermesCommand):
         """
         print("- Harvest:")
         # load provenance data or error out
-        ctx = HermesContext()
+        ctx = HermesCacheManager()
         ctx.prepare_step("harvest")
         with ctx["provenance"] as cache:
             try:
@@ -146,7 +146,7 @@ class HermesReportCommand(HermesCommand):
         """
         print("- Process:")
         # load provenance data or error out
-        ctx = HermesContext()
+        ctx = HermesCacheManager()
         ctx.prepare_step("process")
         with ctx["provenance"] as cache:
             try:
@@ -398,7 +398,7 @@ class HermesReportCommand(HermesCommand):
         """
         print("- Postprocess:")
         # load provenance data or error out
-        ctx = HermesContext()
+        ctx = HermesCacheManager()
         ctx.prepare_step("postprocess")
         with ctx["provenance"] as cache:
             try:

@@ -11,6 +11,7 @@ import logging
 import tomlkit
 
 from hermes.error import MisconfigurationError
+from hermes.model.hermes_cache import HermesCacheManager
 from ..base import HermesCommand
 from .base import HermesPostprocessPlugin
 

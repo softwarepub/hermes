@@ -8,6 +8,7 @@ import argparse
 import datetime
 from typing import Optional
 from typing_extensions import Self
+from typing import TypeAlias, Union
 
 from pydantic import BaseModel
 
@@ -15,15 +16,23 @@ from hermes.commands.base import HermesCommand, HermesPlugin
 from hermes.commands.harvest.base import remove_harvest_plugin_from_prov_doc
 from hermes.error import HermesPluginRunError, MisconfigurationError
 from hermes.model.api import SoftwareMetadata
-from hermes.model.context_manager import HermesContext
+from hermes.model.hermes_cache import HermesCacheManager
 from hermes.model.merge.action import MergeAction
 from hermes.model.merge.container import ld_merge_dict
 from hermes.model.provenance.ld_prov import ld_prov_list
 from hermes.model.types import ld_dict
 
+TypeIRI: TypeAlias = Union[str, None]
+""" Type description for the iri of a JSON-LD property or object type (or None indicating a 'joker') """
+PropertyStrategies: TypeAlias = dict[TypeIRI, MergeAction]
+""" Type description for mapping PropertyTypeIRIs to MergeActions """
+ObjectStrategies: TypeAlias = dict[TypeIRI, PropertyStrategies]
+""" Type description for mapping ObjectTypeIRIs to PropertyStrategies """
+
 
 class HermesProcessPlugin(HermesPlugin):
     """ Base plugin that defines additional merge strategies. """
+
 
     def __call__(self: Self, command: "HermesProcessCommand") -> dict[Optional[str], dict[Optional[str], MergeAction]]:
         """
@@ -35,6 +44,7 @@ class HermesProcessPlugin(HermesPlugin):
         Returns:
             dict[str | None, dict[str | None, MergeAction]]: The merge strategies.
         """
+
         pass
 
 
@@ -116,7 +126,7 @@ class HermesProcessCommand(HermesCommand):
         )
 
         # set up HermesContext
-        ctx = HermesContext()
+        ctx = HermesCacheManager()
         self.log.info("## Store processed metadata")
         # store processed data
         ctx.prepare_step("process")
@@ -304,9 +314,10 @@ class HermesProcessCommand(HermesCommand):
             process_command = prov_doc.get_hermes_command("process")
             hermes_cache = prov_doc.get_hermes_cache()
 
+
         # merge data from harvesters
         self.log.info("## Merge the metadata of the harvesters")
-        ctx = HermesContext()
+        ctx = HermesCacheManager()
         ctx.prepare_step('harvest')
         merged_any = False
         last_action, last_data = None, None
@@ -400,7 +411,7 @@ class HermesProcessCommand(HermesCommand):
             ld_prov_list | None: The loaded provenance document or None if the load failed.
         """
         # set up HermesContext
-        ctx = HermesContext()
+        ctx = HermesCacheManager()
         ctx.prepare_step("harvest")
         with ctx["provenance"] as cache:
             # try load

@@ -9,7 +9,7 @@
 from typing import Union
 from typing_extensions import Self
 
-from hermes.model.error import HermesContextError
+from hermes.model.error import HermesCacheError
 
 
 CODEMETA_PREFIX: str = "https://doi.org/10.5063/schema/codemeta-2.0"
@@ -126,7 +126,7 @@ class ContextPrefix:
             str: The fully qualified IRI for the passed term
 
         Raises:
-            HermesContextError: If the compressed term is '' or its prefix can't be expanded.
+            HermesCacheError: If the compressed term is '' or its prefix can't be expanded.
         """
         # separate the prefix from the term
         if not isinstance(compressed_term, str):
@@ -138,13 +138,13 @@ class ContextPrefix:
         elif compressed_term != "":
             prefix, term = None, compressed_term
         else:
-            raise HermesContextError(compressed_term)
+            raise HermesCacheError(compressed_term)
 
         # expand the prefix
         try:
             base_iri = self.context[prefix]
         except KeyError as ke:
-            raise HermesContextError(prefix) from ke
+            raise HermesCacheError(prefix) from ke
 
         # return the expanded term
         return base_iri + term

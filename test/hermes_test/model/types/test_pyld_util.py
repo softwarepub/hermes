@@ -28,7 +28,7 @@ def test_mock_document_expanded(ld_proc, mock_document):
 def test_initial_context(ld_proc, httpserver, mock_document):
     with pytest.raises(jsonld.JsonLdError):
         active_ctx = ld_proc.initial_ctx(
-            [{"s": "www.spam.de"}],
+            [{"s": "www.example.com"}],
             {"documentLoader": pyld_util.bundled_loader}
         )
     url = httpserver.url_for("/")
@@ -48,19 +48,19 @@ def test_initial_context(ld_proc, httpserver, mock_document):
 def test_expand_iri(ld_proc, mock_context):
     active_ctx = {'processingMode': 'json-ld-1.1',
                   'mappings': mock_context}
-    assert ld_proc.expand_iri(active_ctx, "spam") == "http://spam.eggs/" + "spam"
+    assert ld_proc.expand_iri(active_ctx, "spam") == "http://example.com/" + "spam"
 
 
 def test_compact_iri(ld_proc, mock_context):
     active_ctx = {'mappings': {'spam': {'reverse': False, 'protected': False, '_prefix': False,
-                                        '_term_has_colon': False, '@id': 'http://spam.eggs/spam'},
+                                        '_term_has_colon': False, '@id': 'http://example.com/spam'},
                                'ham': {'reverse': False, 'protected': False, '_prefix': False,
-                                       '_term_has_colon': False, '@id': 'http://spam.eggs/ham', '@type': '@id'},
+                                       '_term_has_colon': False, '@id': 'http://example.com/ham', '@type': '@id'},
                                },
                   'processingMode': 'json-ld-1.1', '_uuid': 'c641b9db-b0e8-11f0-bc68-9cfce89fd5b3'}
 
-    assert ld_proc.compact_iri(active_ctx, "http://spam.eggs/spam") == "spam"
-    assert ld_proc.compact_iri(active_ctx, "http://spam.eggs/bacon") == "http://spam.eggs/bacon"
+    assert ld_proc.compact_iri(active_ctx, "http://example.com/spam") == "spam"
+    assert ld_proc.compact_iri(active_ctx, "http://example.com/bacon") == "http://example.com/bacon"
 
 
 def test_register_typemap():

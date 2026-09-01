@@ -13,7 +13,7 @@ class MockDocument:
     """
 
     @classmethod
-    def vocabulary(cls, base_url: str = "http://spam.eggs/") -> dict:
+    def vocabulary(cls, base_url: str = "http://example.com/") -> dict:
         """
         Retrieve the vocabulary used for the document.
 
@@ -31,7 +31,7 @@ class MockDocument:
         }
 
     @classmethod
-    def compact(cls, base_url: str = "http://spam.eggs/", embed_vocabulary: bool = True) -> dict:
+    def compact(cls, base_url: str = "http://example.com/", embed_vocabulary: bool = True) -> dict:
         """
         Get compact representation of the example document.
 
@@ -52,7 +52,7 @@ class MockDocument:
         }
 
     @classmethod
-    def expanded(cls, base_url: str = "http://spam.eggs/") -> list[dict]:
+    def expanded(cls, base_url: str = "http://example.com/") -> list[dict]:
         """
         Get expanded representation of the example document.
 

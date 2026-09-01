@@ -8,10 +8,10 @@ import json
 import sys
 
 from ruamel import yaml
-import toml
+import tomlkit
 
 from hermes.commands import cli
-from hermes.model import context_manager
+from hermes.model import hermes_cache
 
 
 def test_invenio_postprocess(tmp_path, monkeypatch):
@@ -66,18 +66,18 @@ run = ["config_invenio_record_id", "cff_doi", "codemeta_doi"]
     sys.argv = ["hermes", "postprocess", "--path", str(tmp_path), "--config", str(config_file)]
     result_cff = result_toml = {}
     try:
-        monkeypatch.setattr(context_manager.HermesContext.__init__, "__defaults__", (tmp_path.cwd(),))
+        monkeypatch.setattr(hermes_cache.HermesCacheManager.__init__, "__defaults__", (tmp_path.cwd(),))
         cli.main()
     except SystemExit as e:
         if e.code != 0:
             raise e
     finally:
-        result_toml = toml.load(config_file)
+        result_toml = tomlkit.load(config_file.open('r')).unwrap()
         result_cff = yaml.YAML().load(citation_file)
         result_codemeta = json.loads(codemeta_file.read_text())
         sys.argv = orig_argv
 
-    assert result_toml == toml.loads(
+    assert result_toml == tomlkit.loads(
         """# SPDX-FileCopyrightText: 2023 German Aerospace Center (DLR)
 #
 # SPDX-License-Identifier: CC0-1.0
@@ -103,7 +103,7 @@ communities = "api/communities"
 [postprocess]
 run = ["config_invenio_record_id", "cff_doi", "codemeta_doi"]
 """
-    )
+    ).unwrap()
     assert result_cff == yaml.YAML().load(
         """cff-version: 1.2.0
 title: Test

@@ -153,14 +153,18 @@ def test_append():
     assert li[0] == "foo" and li.item_list[0] == {"@value": "foo"} and len(li) == 1
     li.append("bar")
     assert li[0:2] == ["foo", "bar"] and li.item_list[1] == {"@value": "bar"} and len(li) == 2
-    li.append(ld_dict.from_dict({"@type": "A", "schema:name": "a"}, parent=li, key=li.key))
-    assert li.item_list[2] == {"@type": ["A"], "https://schema.org/name": [{"@value": "a"}]} and len(li) == 3
-    li.append({"@type": "A", "schema:name": "a"})
+    li.append(ld_dict.from_dict({"@type": "https://schema.org/Thing", "schema:name": "a"}, parent=li, key=li.key))
+    assert len(li) == 3
+    assert li.item_list[2] == {"@type": ["https://schema.org/Thing"], "https://schema.org/name": [{"@value": "a"}]}
+    li.append({"@type": "schema:Thing", "schema:name": "a"})
     assert li.item_list[2] == li.item_list[3]
-    li.append(ld_list([{"@list": [{"@type": ["A"], "https://schema.org/name": [{"@value": "a"}]}]}], parent=li,
-                      key=li.key))
-    li.append([{"@type": "A", "schema:name": "a"}])
-    li.append(2 * [{"@type": "A", "schema:name": "a"}])
+    li.append(ld_list(
+        [{"@list": [{"@type": ["https://schema.org/Thing"], "https://schema.org/name": [{"@value": "a"}]}]}],
+        parent=li,
+        key=li.key
+    ))
+    li.append([{"@type": "schema:Thing", "schema:name": "a"}])
+    li.append(2 * [{"@type": "schema:Thing", "schema:name": "a"}])
     assert 2 * li[4].item_list == 2 * li[5].item_list == li[6].item_list
 
 
@@ -253,28 +257,33 @@ def test_extend():
     assert li[0] == "foo" and li.item_list[0] == {"@value": "foo"} and len(li) == 1
     li.extend(["bar"])
     assert li[0:2] == ["foo", "bar"] and li.item_list[1] == {"@value": "bar"} and len(li) == 2
-    li.extend([ld_dict([{"@type": ["A"], "https://schema.org/name": [{"@value": "a"}]}])])
-    assert li[-1].data_dict == {"@type": ["A"], "https://schema.org/name": [{"@value": "a"}]} and len(li) == 3
+    li.extend([ld_dict([{"@type": ["https://schema.org/Thing"], "https://schema.org/name": [{"@value": "a"}]}])])
+    assert len(li) == 3
+    assert li[-1].data_dict == {"@type": ["https://schema.org/Thing"], "https://schema.org/name": [{"@value": "a"}]}
 
     li = ld_list([{"@list": []}], key="https://schema.org/name", context=[{"schema": "https://schema.org/"}])
-    li.extend(["foo", "bar", ld_dict([{"@type": ["A"], "https://schema.org/name": [{"@value": "a"}]}])])
+    li.extend([
+        "foo", "bar", ld_dict([{"@type": ["https://schema.org/Thing"], "https://schema.org/name": [{"@value": "a"}]}])
+    ])
     assert li[0:2] == ["foo", "bar"] and li.item_list[0:2] == [{"@value": "foo"}, {"@value": "bar"}]
-    assert li[-1].data_dict == {"@type": ["A"], "https://schema.org/name": [{"@value": "a"}]} and len(li) == 3
+    assert len(li) == 3
+    assert li[-1].data_dict == {"@type": ["https://schema.org/Thing"], "https://schema.org/name": [{"@value": "a"}]}
 
     li = ld_list([{"@list": []}], key="https://schema.org/name", context=[{"schema": "https://schema.org/"}])
     li.append("foo")
-    li.extend(["bar", ld_dict([{"@type": ["A"], "https://schema.org/name": [{"@value": "a"}]}])])
+    li.extend(["bar", ld_dict([{"@type": ["https://schema.org/Thing"], "https://schema.org/name": [{"@value": "a"}]}])])
     assert li[0:2] == ["foo", "bar"] and li.item_list[0:2] == [{"@value": "foo"}, {"@value": "bar"}]
-    assert li[-1].data_dict == {"@type": ["A"], "https://schema.org/name": [{"@value": "a"}]} and len(li) == 3
+    assert len(li) == 3
+    assert li[-1].data_dict == {"@type": ["https://schema.org/Thing"], "https://schema.org/name": [{"@value": "a"}]}
 
 
-def test_to_python():
+def test_to_native_python():
     li = ld_list([{"@list": []}], key="https://schema.org/name", context=[{"schema": "https://schema.org/"}])
     li.append("foo")
-    li.append(ld_dict([{"@type": ["A"], "https://schema.org/name": [{"@value": "a"}]}], parent=li))
+    li.append(ld_dict([{"@type": ["schema:Thing"], "https://schema.org/name": [{"@value": "a"}]}], parent=li))
     li.append(["a"])
-    assert li[1]["@type"].item_list == ["A"]
-    assert li.to_python() == ["foo", {"@type": ["A"], "schema:name": ["a"]}, ["a"]]
+    assert li[1]["@type"].item_list == ["https://schema.org/Thing"]
+    assert li.to_native_python() == ["foo", {"@type": ["schema:Thing"], "schema:name": ["a"]}, ["a"]]
 
 
 def test_is_ld_list():

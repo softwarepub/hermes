@@ -10,7 +10,7 @@ from typing import Any, Union
 
 class HermesValidationError(Exception):
     """
-    This exception should be thrown when input validation (e.g., during harvest) occurs.
+    This exception should be raised when an error occurs during input validation (e.g., during harvest).
 
     To be able to track and fix the error, you should use this in conjunction with the original exception if applicable:
 
@@ -24,9 +24,9 @@ class HermesValidationError(Exception):
     pass
 
 
-class HermesContextError(Exception):
+class HermesCacheError(Exception):
     """
-    This exception should be thrown when interacting with the model context.
+    This exception should be raised when interacting with the model context.
     # TODO Change class name and docstring if we decide to call it differently
     # TODO in https://github.com/softwarepub/hermes/issues/392.
 
@@ -37,7 +37,7 @@ class HermesContextError(Exception):
         try:
              context[term]
         except ValueError as e:
-            raise HermesContextError(term) from e
+            raise HermesCacheError(term) from e
     """
     pass
 

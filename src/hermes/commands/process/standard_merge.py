@@ -6,15 +6,15 @@
 
 
 import csv
-from typing import Any, Callable, Union
+from typing import Any, Callable
 
 import requests
 
 from hermes.commands.base import HermesCommand
-from hermes.model.merge.action import Concat, IdMerge, MergeAction, MergeSet, Reject
+from hermes.model.merge.action import Concat, IdMerge, MergeSet, Reject
 from hermes.model.types import ld_dict
 from hermes.model.types.ld_context import iri_map as iri
-from .base import HermesProcessPlugin
+from .base import HermesProcessPlugin, ObjectStrategies
 
 
 def match_equals(left: Any, right: Any) -> bool:
@@ -860,7 +860,7 @@ CODEMETA_STRATEGY[iri["schema:CreditCard"]] = {
 
 
 class CodemetaProcessPlugin(HermesProcessPlugin):
-    def __call__(self, command: HermesCommand) -> dict[Union[str, None], dict[Union[str, None], MergeAction]]:
+    def __call__(self, command: HermesCommand) -> ObjectStrategies:
         try:
             subtypes_for_types = CodemetaProcessPlugin.get_schema_type_hierarchy()
             strats = CodemetaProcessPlugin.get_schema_strategies(subtypes_for_types)

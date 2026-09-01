@@ -16,7 +16,7 @@ from .ld_container import (
     ld_container,
     JSON_LD_CONTEXT_DICT,
     EXPANDED_JSON_LD_VALUE,
-    PYTHONIZED_LD_CONTAINER,
+    NATIVE_LD_CONTAINER,
     JSON_LD_VALUE,
     TIME_TYPE,
     BASIC_TYPE,
@@ -72,17 +72,17 @@ class ld_dict(ld_container):
 
     def __getitem__(self: Self, key: str) -> ld_list:
         """
-        Get the item with the given key in a pythonized form.\n
+        Get the item with the given key in as a ld_list.\n
         If self contains no key, value pair with the given key, then an empty list is added as its value and returned.
 
         Args:
             key (str): The key (compacted or expanded) to the item.
 
         Returns:
-            ld_list: The pythonized item at the key.
+            ld_list: The ld_list item at the key.
         """
         full_iri = self.ld_proc.expand_iri(self.active_ctx, key)
-        return self._to_python(full_iri, self.data_dict[full_iri])
+        return self._to_native_python(full_iri, self.data_dict[full_iri])
 
     def __setitem__(self: Self, key: str, value: Union[JSON_LD_VALUE, BASIC_TYPE, TIME_TYPE, ld_dict, ld_list]) -> None:
         """
@@ -263,14 +263,14 @@ class ld_dict(ld_container):
         self: Self, key: str, default: Any = _NO_DEFAULT
     ) -> Union[ld_list, Any]:
         """
-        Get the item with the given key in a pythonized form using the build in get.\n
+        Get the item with the given key in as a ld_list using the build in get.\n
         If a KeyError is raised, return the default or reraise it if no default is given.
 
         Args:
             key (str): The key (compacted or expanded) to the item.
 
         Returns:
-            ld_list: The pythonized item at the key.
+            ld_list: The ld_list item at the key.
 
         Raises:
             KeyError: If :meth:`__getitem__(key)` raised a KeyError and default isn't set.
@@ -343,18 +343,18 @@ class ld_dict(ld_container):
         """
         return {"@id": self.data_dict['@id']}
 
-    def to_python(self: Self) -> dict[str, Union[BASIC_TYPE, TIME_TYPE, PYTHONIZED_LD_CONTAINER]]:
+    def to_native_python(self: Self) -> dict[str, Union[BASIC_TYPE, TIME_TYPE, NATIVE_LD_CONTAINER]]:
         """
-        Return a fully pythonized version of this object where all ld_container are replaced by lists and dicts.
+        Return a native python version of this object where all ld_container are replaced by lists and dicts.
 
         Returns:
-            dict[str, BASIC_TYPE | TIME_TYPE | PYTHONIZED_LD_CONTAINER]: The fully pythonized version of self.
+            dict[str, BASIC_TYPE | TIME_TYPE | NATIVE_LD_CONTAINER]: The native python version of self.
         """
         res = {}
         for key in self.compact_keys():
             value = self[key]
             if isinstance(value, ld_container):
-                value = value.to_python()
+                value = value.to_native_python()
             res[key] = value
         return res
 
@@ -362,7 +362,7 @@ class ld_dict(ld_container):
     @classmethod
     def from_dict(
         cls: type[Self],
-        value: dict[str, PYTHONIZED_LD_CONTAINER],
+        value: dict[str, NATIVE_LD_CONTAINER],
         *,
         parent: Optional[Union[ld_dict, ld_list]] = None,
         key: Optional[str] = None,
@@ -374,7 +374,7 @@ class ld_dict(ld_container):
         Uses the expansion of the JSON-LD Processor and not the one of ld_container.
 
         Args:
-            value (dict[str, PYTHONIZED_LD_CONTAINER]): The dict of values the ld_dict should be created from.
+            value (dict[str, NATIVE_LD_CONTAINER]): The dict of values the ld_dict should be created from.
             parent (ld_dict | ld_list | None): The parent container of the new ld_list.
             key (str | None): The key into the inner most parent container representing a dict of the new ld_list.
             context (str | JSON_LD_CONTEXT_DICT | list[str | JSON_LD_CONTEXT_DICT] | None):

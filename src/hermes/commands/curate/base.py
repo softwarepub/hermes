@@ -14,7 +14,7 @@ from pydantic import BaseModel
 from hermes.commands.base import HermesCommand, HermesPlugin
 from hermes.error import HermesPluginRunError, MisconfigurationError
 from hermes.model import SoftwareMetadata
-from hermes.model.context_manager import HermesContext
+from hermes.model.hermes_cache import HermesCacheManager
 from hermes.model.error import HermesValidationError
 from hermes.model.provenance.ld_prov import ld_prov_list
 
@@ -91,8 +91,8 @@ class HermesCurateCommand(HermesCommand):
         self.log.info("# Metadata curation")
         plugin_name = self.settings.plugin
 
-        # set up HermesContext
-        ctx = HermesContext()
+        ctx = HermesCacheManager()
+
         ctx.prepare_step("curate")
 
         self.log.info("## Load processed metadata")
@@ -231,7 +231,7 @@ class HermesCurateCommand(HermesCommand):
             ld_prov_list | None: The loaded provenance document or None if the load failed.
         """
         # set up HermesContext
-        ctx = HermesContext()
+        ctx = HermesCacheManager()
         ctx.prepare_step("process")
         with ctx["provenance"] as cache:
             # try load

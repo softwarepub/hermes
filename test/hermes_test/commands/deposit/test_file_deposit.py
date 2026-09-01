@@ -10,7 +10,7 @@ import sys
 import pytest
 
 from hermes.commands import cli
-from hermes.model import context_manager, SoftwareMetadata
+from hermes.model import hermes_cache, SoftwareMetadata
 
 
 @pytest.mark.parametrize(
@@ -26,7 +26,7 @@ from hermes.model import context_manager, SoftwareMetadata
 def test_file_deposit(tmp_path, monkeypatch, metadata):
     monkeypatch.chdir(tmp_path)
 
-    manager = context_manager.HermesContext(tmp_path)
+    manager = hermes_cache.HermesCacheManager(tmp_path)
     manager.prepare_step("curate")
     with manager["result"] as cache:
         cache["codemeta"] = metadata.compact()
@@ -39,7 +39,7 @@ def test_file_deposit(tmp_path, monkeypatch, metadata):
     sys.argv = ["hermes", "deposit", "--path", str(tmp_path), "--config", str(config_file)]
     result = {}
     try:
-        monkeypatch.setattr(context_manager.HermesContext.__init__, "__defaults__", (tmp_path.cwd(),))
+        monkeypatch.setattr(hermes_cache.HermesCacheManager.__init__, "__defaults__", (tmp_path.cwd(),))
         cli.main()
     except SystemExit as e:
         if e.code != 0:

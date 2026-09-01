@@ -22,7 +22,8 @@
 #
 import os
 import sys
-import toml
+
+import tomlkit
 
 sys.path.insert(0, os.path.abspath('../../src'))
 sys.path.append(os.path.abspath('_ext'))
@@ -36,7 +37,7 @@ def read_from_pyproject(file_path="../../pyproject.toml"):
     """
     try:
         # Load the pyproject.toml file
-        data = toml.load(file_path)
+        data = tomlkit.load(open(file_path, 'r')).unwrap()
 
         # Navigate to the authors metadata
         metadata = data.get("project", {})
@@ -45,7 +46,7 @@ def read_from_pyproject(file_path="../../pyproject.toml"):
         return metadata
     except FileNotFoundError:
         return f"The file {file_path} was not found."
-    except toml.TomlDecodeError:
+    except tomlkit.exceptions.TOMLKitError:
         return f"Failed to parse {file_path}. Ensure it is a valid TOML file."
     except Exception as e:
         return f"An unexpected error occurred: {e}"
@@ -94,7 +95,6 @@ extensions = [
     'sphinxcontrib.contentui',
     'sphinxcontrib.images',
     'sphinxcontrib.icon',
-    'sphinxemoji.sphinxemoji',
     "sphinxext.opengraph",
     'myst_parser',
     'autoapi.extension',
@@ -194,7 +194,7 @@ togglebutton_hint = "Click to show screenshot"
 def autoapi_skip_member(app, obj_type, name, obj, skip, options):
     if obj_type == "attribute":
         if any(documented_type in obj.id for documented_type in [
-            "Collect", "HermesCache", "HermesContext", "HermesMergeError", "ld_container", "ld_context", "ld_dict",
+            "Collect", "HermesCache", "HermesCacheManager", "HermesMergeError", "ld_container", "ld_context", "ld_dict",
             "ld_list", "ld_merge_dict", "ld_merge_list", "MergeSet"
         ]):
             return True

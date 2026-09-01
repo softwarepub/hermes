@@ -9,19 +9,22 @@ import json
 import os.path
 from pathlib import Path
 from types import TracebackType
-from typing import Optional
+from typing import Any, Optional
 from typing_extensions import Self
 
-from .error import HermesContextError
+from .error import HermesCacheError
 
 
 class HermesCache:
     """
     The HermesCache supplies the user with easy (read and write) access to the JSON files in the cache.
 
+    A HermesCache object should only be obtained from an HermesCacheManager object because this ensures the correct
+    cache directory is used.
+
     Attributes:
         _cache_dir (Path): The directory the cache is located at.
-        _cached_data (dict[str, dict]): The cache of the files in the cache. The key is the filename.
+        _cached_data (dict[str, Any]): The cache of the files in the cache. The key is the filename.
     """
     def __init__(self: Self, cache_dir: Path) -> None:
         """
@@ -53,7 +56,7 @@ class HermesCache:
         # return the cache object
         return self
 
-    def __getitem__(self: Self, item: str) -> dict:
+    def __getitem__(self: Self, item: str) -> Any:
         """
         Loads a file if necessary or returns the cached value.
 
@@ -61,7 +64,7 @@ class HermesCache:
             item (str): The name of the file.
 
         Returns:
-            dict: The JSON value in the given file.
+            Any: The JSON value in the given file.
         """
         # check whether or not the given file was already loaded
         if item not in self._cached_data:
@@ -73,14 +76,14 @@ class HermesCache:
         # return the loaded json
         return self._cached_data[item]
 
-    def __setitem__(self: Self, key: str, value: dict) -> None:
+    def __setitem__(self: Self, key: str, value: Any) -> None:
         """
         Writes a value into the cache.\n
         Note that the files isn't immediately updated only the cache is.
 
         Args:
             key (str): The filename the data is written too.
-            value (dict): The JSON value for the file.
+            value (Any): The JSON value for the file.
 
         Returns:
             None:
@@ -116,9 +119,9 @@ class HermesCache:
                 json.dump(data, cachefile.open('w'))
 
 
-class HermesContext:
+class HermesCacheManager:
     """
-    The HermesContext supplies the user with easy access to the HERMES cache.
+    The HermesCacheManager supplies the user with easy access to the HERMES cache.
 
     Attributes:
         project_dir (Path): The directory the project is located in.
@@ -130,7 +133,7 @@ class HermesContext:
 
     def __init__(self: Self, project_dir: Path = Path.cwd()) -> None:
         """
-        Creates a new instance of the HermesContext.
+        Creates a new instance of the HermesCacheManager.
 
         Args:
             project_dir (Path): The directory the project is located in.
@@ -188,11 +191,11 @@ class HermesContext:
             HermesCache: The HermesCache object of the cache.
 
         Raises:
-            HermesContextError: If no step has been prepared (i.e. no current cache dir is set).
+            HermesCacheError: If no step has been prepared (i.e. no current cache dir is set).
         """
         # check if a step is prepared
         if len(self._current_step) < 1:
-            raise HermesContextError("Prepare a step first.")
+            raise HermesCacheError("Prepare a step first.")
         # build the dir of the cache and return the HermesCache for it
         subdir = self.cache_dir / self._current_step[-1] / source_name
         return HermesCache(subdir)

@@ -42,11 +42,11 @@ JSON_LD_VALUE: TypeAlias = Union[
     dict[str, Union["JSON_LD_VALUE", BASIC_TYPE, TIME_TYPE, "ld_dict", "ld_list"]],
 ]
 """ Type description of valid JSON_LD objects that are partially represented by ld_containers """
-PYTHONIZED_LD_CONTAINER: TypeAlias = Union[
-    list[Union["PYTHONIZED_LD_CONTAINER", BASIC_TYPE, TIME_TYPE]],
-    dict[str, Union["PYTHONIZED_LD_CONTAINER", BASIC_TYPE, TIME_TYPE]],
+NATIVE_LD_CONTAINER: TypeAlias = Union[
+    list[Union["NATIVE_LD_CONTAINER", BASIC_TYPE, TIME_TYPE]],
+    dict[str, Union["NATIVE_LD_CONTAINER", BASIC_TYPE, TIME_TYPE]],
 ]
-""" Type description of the pythonized from of ld_containers (i.e. if the ld_container(s) is/ are replaced). """
+""" Type description of the native python version of ld_containers (i.e. if the ld_container(s) is/ are replaced). """
 
 
 class ld_container:
@@ -149,21 +149,22 @@ class ld_container:
         """
         return self._data
 
-    def _to_python(
+    def _to_native_python(
         self: Self,
         full_iri: str,
         ld_value: Union[EXPANDED_JSON_LD_VALUE, dict[str, EXPANDED_JSON_LD_VALUE], list[str], str]
     ) -> Union["ld_container", BASIC_TYPE, TIME_TYPE]:
         """
-        Returns a pythonized version of the given value pretending the value is in self and full_iri its key.
+        Returns a native python version of the given value pretending the value is in self and full_iri its key.
 
         Args:
             full_iri (str): The expanded iri of the key of ld_value / self (later if self is not a dictionary).
             ld_value (EXPANDED_JSON_LD_VALUE | dict[str, EXPANDED_JSON_LD_VALUE] | list[str] | str): The value thats
-                pythonized value is requested. ld_value has to be valid expanded JSON-LD if it were inside self._data.
+                native python value is requested.
+                ld_value has to be valid expanded JSON-LD if it were inside self._data.
 
         Returns:
-            ld_dict | ld_list | BASIC_TYPE | TIME_TYPE: The pythonized value of the ld_value.
+            ld_dict | ld_list | BASIC_TYPE | TIME_TYPE: The native python value of the ld_value.
         """
         if full_iri == "@id":
             # values of key "@id" only have to be compacted
@@ -302,7 +303,7 @@ class ld_container:
         Returns:
             (str): The representation of self.
         """
-        return str(self.to_python())
+        return str(self.to_native_python())
 
     def compact(
         self: Self, context: Optional[Union[list[Union[JSON_LD_CONTEXT_DICT, str]], JSON_LD_CONTEXT_DICT, str]] = None
@@ -321,7 +322,7 @@ class ld_container:
             self.ld_value, context or self.full_context, {"documentLoader": bundled_loader, "skipExpand": True}
         )
 
-    def to_python(self):
+    def to_native_python(self):
         raise NotImplementedError()
 
     @classmethod
@@ -453,14 +454,14 @@ class ld_container:
     def typed_ld_to_py(cls: type[Self], data: list[dict[str, BASIC_TYPE]], **kwargs) -> Union[BASIC_TYPE, TIME_TYPE]:
         """
         Returns the value of the given expanded JSON-LD value containing a value type converted into that type.
-        Meaning the pythonized version of the JSON-LD value data is returned.
+        Meaning the native python version of the JSON-LD value data is returned.
         ld_container.is_typed_ld_value(data) must return True.
 
         Args:
-            data (list[dict[str, BASIC_TYPE]]): The value that is that is converted into its pythonized from.
+            data (list[dict[str, BASIC_TYPE]]): The value that is that is converted into its native python version.
 
         Returns:
-            BASIC_TYPE | TIME_TYPE: The pythonized version of data.
+            BASIC_TYPE | TIME_TYPE: The native python version of data.
         """
         ld_value = data[0]['@value']
         if iri_map["schema:DateTime"] == data[0]['@type']:

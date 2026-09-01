@@ -16,7 +16,7 @@ from pydantic import BaseModel
 
 from hermes.commands.base import HermesCommand, HermesPlugin
 from hermes.error import HermesPluginRunError
-from hermes.model.context_manager import HermesContext
+from hermes.model.hermes_cache import HermesCacheManager
 from hermes.model.provenance.ld_prov import ld_prov_list
 from hermes.model.types import ld_dict
 
@@ -71,7 +71,7 @@ class HermesPostprocessPlugin(HermesPlugin):
         # collect basic metadata
         source_metadata = target[:]
         load_operation = {"schema:description": f"loads the result of deposit plugin {target}"}
-        ctx = HermesContext()
+        ctx = HermesCacheManager()
         ctx.prepare_step("deposit")
         load_operation["prov:startedAtTime"] = datetime.datetime.now()
         # execute the load operation
@@ -317,7 +317,7 @@ class HermesPostprocessCommand(HermesCommand):
 
         if prov_doc is not None:
             # store provenance data
-            ctx = HermesContext()
+            ctx =  HermesCacheManager()
             ctx.prepare_step("postprocess")
             with ctx["provenance"] as cache:
                 cache["result"] = prov_doc.ld_value
@@ -336,7 +336,7 @@ class HermesPostprocessCommand(HermesCommand):
             ld_prov_list | None: The loaded provenance document or None if the load failed.
         """
         # set up HermesContext
-        ctx = HermesContext()
+        ctx = HermesCacheManager()
         ctx.prepare_step("deposit")
         with ctx["provenance"] as cache:
             # try load

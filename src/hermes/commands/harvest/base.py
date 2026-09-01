@@ -16,7 +16,7 @@ from pydantic import BaseModel
 
 from hermes.commands.base import HermesCommand, HermesPlugin
 from hermes.error import HermesPluginRunError, MisconfigurationError
-from hermes.model.context_manager import HermesContext
+from hermes.model.hermes_cache import HermesCacheManager
 from hermes.model import SoftwareMetadata
 from hermes.model.provenance.ld_prov import ld_prov_list
 
@@ -191,7 +191,7 @@ class HermesHarvestCommand(HermesCommand):
             raise MisconfigurationError("No harvest plugin was configured to be run and loaded.")
 
         # Initialize the harvest cache directory here to indicate the step ran
-        ctx = HermesContext()
+        ctx = HermesCacheManager()
         ctx.prepare_step('harvest')
 
         self.log.info("## Load and run the plugins")
@@ -328,7 +328,7 @@ class HermesHarvestCommand(HermesCommand):
             ld_prov_list: The loaded or created provenance document.
         """
         # try loading the document
-        ctx = HermesContext()
+        ctx = HermesCacheManager()
         ctx.prepare_step("harvest")
         with ctx["provenance"] as cache:
             try:

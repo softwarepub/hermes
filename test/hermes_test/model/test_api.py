@@ -12,7 +12,7 @@ from hermes.model.types import ld_list, ld_dict
 
 from hermes.model.types.ld_context import ALL_CONTEXTS
 
-EXTRA_VOCABS = {"foo": "https://bar.net/schema"}
+EXTRA_VOCABS = {"foo": "https://example.net/schema"}
 
 
 @pytest.fixture
@@ -50,7 +50,7 @@ def test_init_nested_object():
         "maintainer": {"name": "Some Name", "email": "maintainer@example.com"},
         "author": [{"name": "Foo"}, {"name": "Bar"}],
     }
-    data = SoftwareMetadata(my_software, extra_vocabs={"foo": "https://foo.bar"})
+    data = SoftwareMetadata(my_software, extra_vocabs={"foo": "https://example.com"})
     assert data["schema:softwareName"] == ["MySoftware"]
     assert len(data["maintainer"]) == 1 and data["maintainer"][0]["name"] == ["Some Name"]
     for author in data["author"]:
@@ -83,7 +83,7 @@ def test_append():
 
 def test_iterative_assignment():
     # This tests iterative assignments/traversals to edit/appending values
-    data = SoftwareMetadata(extra_vocabs={"foo": "https://foo.bar"})
+    data = SoftwareMetadata(extra_vocabs={"foo": "https://example.com"})
     data["author"] = {"name": "Foo"}
     # Look, a squirrel!
     authors = data["author"]
@@ -100,8 +100,8 @@ def test_usage():
     data = SoftwareMetadata()
     data["author"] = {"name": "Foo"}
     data["author"].append({"name": "Bar"})
-    data["author"][0]["email"] = "foo@bar.net"
-    data["author"][0]["email"].append("foo@baz.com")
+    data["author"][0]["email"] = "foo@example.net"
+    data["author"][0]["email"].append("foo@example.org")
     assert len(data["author"]) == 2
     assert len(data["author"][0]["email"]) == 2
     assert len(data["author"][1].get("email", [])) == 0
@@ -130,7 +130,7 @@ def test_usage():
     assert foo["name"][0] == "Foo"
     assert foo["affiliation"] == ["Uni A", "Lab B"]
     assert foo["schema:knowsAbout"] == ["a", "b", "c"]
-    assert foo["email"] == ["foo@bar.net", "foo@baz.com"]
+    assert foo["email"] == ["foo@example.net", "foo@example.org"]
     assert bar["name"][0] == "Bar"
     assert bar["affiliation"] == ["Uni C"]
     assert bar["email"] == ["bar@c.edu"]

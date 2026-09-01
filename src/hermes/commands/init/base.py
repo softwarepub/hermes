@@ -16,9 +16,9 @@ from pathlib import Path
 from urllib.parse import urljoin, urlparse
 
 import requests
-import toml
 from pydantic import BaseModel
 from requests import HTTPError
+import tomlkit
 
 import hermes.commands.init.util.slim_click as sc
 from hermes.commands import marketplace
@@ -359,7 +359,7 @@ class HermesInitCommand(HermesCommand):
                 or sc.confirm("Do you want to replace your `hermes.toml` with a new one?", default=True):
             with open(hermes_toml_path, 'w') as toml_file:
                 # noinspection PyTypeChecker
-                toml.dump(self.hermes_toml_data, toml_file)
+                tomlkit.dump(self.hermes_toml_data, toml_file)
             sc.echo("`hermes.toml` was created.", formatting=sc.Formats.OKGREEN)
 
     def create_citation_cff(self) -> None:

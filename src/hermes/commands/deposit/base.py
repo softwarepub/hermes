@@ -16,7 +16,7 @@ from pydantic import BaseModel
 
 from hermes.commands.base import HermesCommand, HermesPlugin
 from hermes.error import HermesPluginRunError, MisconfigurationError
-from hermes.model.context_manager import HermesContext
+from hermes.model.hermes_cache import HermesCacheManager
 from hermes.model import SoftwareMetadata
 from hermes.model.error import HermesValidationError
 from hermes.model.provenance.ld_prov import ld_prov_list
@@ -52,8 +52,8 @@ class BaseDepositPlugin(HermesPlugin):
         self.command = command
         target = command.settings.target
 
-        # set up HermesContext
-        ctx = HermesContext()
+        ctx = HermesCacheManager()
+
         ctx.prepare_step("curate")
         # load curated metadata
         try:
@@ -382,7 +382,7 @@ class HermesDepositCommand(HermesCommand):
             return
 
         # store provenance result
-        ctx = HermesContext()
+        ctx = HermesCacheManager()
         ctx.prepare_step("deposit")
         with ctx["provenance"] as cache:
             cache["result"] = prov_doc.ld_value
@@ -395,8 +395,8 @@ class HermesDepositCommand(HermesCommand):
         Returns:
             ld_prov_list | None: The loaded provenance document or None if the load failed.
         """
-        # set up HermesContext
-        ctx = HermesContext()
+        # set up HermesCache
+        ctx = HermesCacheManager()
         ctx.prepare_step("curate")
         with ctx["provenance"] as cache:
             # try load
