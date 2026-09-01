@@ -235,7 +235,7 @@ class HermesReportCommand(HermesCommand):
         """
         print("- Curate:")
         # load provenance data or error out
-        ctx = HermesContext()
+        ctx = HermesCacheManager()
         ctx.prepare_step("curate")
         with ctx["provenance"] as cache:
             try:
@@ -306,7 +306,7 @@ class HermesReportCommand(HermesCommand):
         """
         print("- Deposit:")
         # load provenance data or error out
-        ctx = HermesContext()
+        ctx = HermesCacheManager()
         ctx.prepare_step("deposit")
         with ctx["provenance"] as cache:
             try:
