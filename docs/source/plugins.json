@@ -32,8 +32,15 @@
         "pypi_url": "https://pypi.org/project/hermes-plugin-python/"
     },
     {
-        "name": "Merge",
-        "description": "Process plugin for basic merging of metadata.",
+        "name": "Basic processor",
+        "description": "Process plugin for basic merging of metadata (for Schema and Codemeta).",
+        "author": "Hermes team",
+        "steps": ["process"],
+        "builtin": true
+    },
+    {
+        "name": "Invenio processor",
+        "description": "Process plugin for merging of metadata for Invenio deposit (use with 'Basic processor', this plugin should be used with higher priority).",
         "author": "Hermes team",
         "steps": ["process"],
         "builtin": true
@@ -43,6 +50,13 @@
         "description": "Curation plugin for no-check acceptance of the metadata.",
         "author": "Hermes team",
         "steps": ["curate"],
+        "builtin": true
+    },
+    {
+        "name": "File Deposit",
+        "description": "Deposit plugin that only dumps the metadata into a local file.",
+        "author": "Hermes team",
+        "steps": ["deposit"],
         "builtin": true
     },
     {

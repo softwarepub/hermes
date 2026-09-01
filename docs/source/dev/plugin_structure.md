@@ -9,6 +9,7 @@ SPDX-FileContributor: Michael Meinel
 SPDX-FileContributor: Sophie Kernchen
 SPDX-FileContributor: Nitai Heeb
 SPDX-FileContributor: Oliver Bertuch
+SPDX-FileContributor: Michael Fritzsche
 -->
 
 # HERMES plugins
@@ -21,11 +22,11 @@ This plugin extracts information from the local git history.
 The hermes-plugin-git will help to gather contribution and branch metadata.
 
 ```{note}
-You should be familiar with HERMES before learning about how the structure of plugins.
+You should be familiar with HERMES before learning about the structure of plugins.
 If you never used HERMES before, you might want to check the tutorial: [Automated Publication with HERMES](./../tutorials/automated-publication-with-ci).
 
 Also all metadata directly handled by HERMES is [JSON-LD](https://json-ld.org/) so you should be familiar with [how it is used by HERMES](./data_model.md) when writing a plugin.
-And uses the [schema.org](https://schema.org/) (with prefix "schema") and the [CodeMeta](https://codemeta.github.io/) (without prefix) context.
+And that HERMES uses the [schema.org](https://schema.org/) (with prefix "schema") and the [CodeMeta](https://codemeta.github.io/) (without prefix) context.
 ```
 
 ## Plugin Architecture
@@ -54,6 +55,7 @@ hermes deposit -O invenio_rdm.auth_token YourSecretAuthToken
 ## Implement plugin class
 To write a new plugin, it is important to follow the given structure.
 This means your plugins source code has a pydantic class with Settings and the plugin class which inherits from the plugins steps base class.
+But because the details of the plugin structure vary depending on what step the plugin is for, we will discuss the structures separatly.
 
 ### Harvest plugin
 The class structure of a harvest plugin should look like this:
@@ -82,6 +84,12 @@ class YourHarvestPlugin(HermesHarvestPlugin):
 
 The {py:meth}`~hermes.commands.harvest.base.HermesHarvestPlugin.__call__` method of harvest plugins needs to return a {py:class}`~hermes.model.api.SoftwareMetadata` object containing the harvested metadata.
 For more information on how to use this object see [here](./data_model.md).
+
+```{attention}
+Please use for **all** load operations the {py:meth}`~hermes.commands.harvest.base.HermesHarvestPlugin.load` function of {py:class}`hermes.commands.harvest.base.HermesHarvestPlugin` using `self.load(...)` inside your plugin object.
+
+This is necessary for collection of provenance information.
+```
 
 ### Process plugin
 The class structure of a process plugin should look like this:
@@ -168,7 +176,7 @@ The returned object may be the object `metadata` passed to `__call__`.
 The class structure of a deposit plugin should look like this:
 
 ```{code-block} python
-from hermes.commands.deposit.base import HermesDepositPlugin
+from hermes.commands.deposit.base import BaseDepositPlugin
 from hermes.model import SoftwareMetadata
 from pydantic import BaseModel
 
@@ -178,7 +186,7 @@ class YourDepositSettings(BaseModel):
     pass
 
 
-class YourDepositPlugin(HermesDepositPlugin):
+class YourDepositPlugin(BaseDepositPlugin):
     settings_class = YourDepositSettings
 
     def prepare(self) -> None:
@@ -198,11 +206,11 @@ class YourDepositPlugin(HermesDepositPlugin):
         return is_initial
 
     def create_initial_version(self) -> None:
-        """ necessary if is_initial_publication can return True """
+        """ not necessary if is_initial_publication can not return True """
         pass
 
     def create_new_version(self) -> None:
-        """ necessary if is_initial_publication can return False """
+        """ not necessary if is_initial_publication can not return False """
         pass
 
     def update_metadata(self) -> dict:
@@ -220,13 +228,13 @@ class YourDepositPlugin(HermesDepositPlugin):
         pass
 
     def publish(self) -> None:
-        """ necessary """
-        # TODO: implement logic
+        """ not necessary """
         pass
 ```
 
 A deposit plugin doesn't implement a `__call__` method like plugins for other steps.
 Instead it can (and in some cases has to) implement methods, which will be called in a predefined order.
+For information on the order and the purpose of a single function see {py:class}`~hermes.commands.deposit.base.BaseDepositPlugin`.
 
 The plugin still has access to the command (via `self.command`) and the metadata for the software (via `self.metadata`).
 
@@ -252,18 +260,13 @@ class YourPostprocessPlugin(HermesPostprocessPlugin):
         pass
 ```
 
-The metadata from a deposit plugin can be loaded via
+```{attention}
+Please use for **all** load operations the {py:meth}`~hermes.commands.postprocess.base.HermesPostprocessPlugin.load` function of {py:class}`hermes.commands.postprocess.base.HermesPostprocessPlugin` using `self.load(...)` inside your plugin object.
+And {py:meth}`~hermes.commands.postprocess.base.HermesPostprocessPlugin.write` for **all** write operations.
+As well as {py:meth}`~hermes.commands.postprocess.base.HermesPostprocessPlugin.get_deposit_result` for loading the result of the deposit plugin.
 
-```python
-ctx = HermesCacheManager()
-ctx.prepare_step("deposit")
-with ctx[deposit_plugin_name] as manager:
-    deposition = manager["result"]
-ctx.finalize_step("deposit")
+This is necessary for collection of provenance information.
 ```
-
-where `deposit_plugin_name` is the name of the deposit plugin the data is loaded from and {py:class}`~hermes.model.hermes_cache.HermesCacheManager` is imported from {py:mod}`hermes.model.hermes_cache`.
-The loaded data is some valid JSON data and has no fixed format.
 
 ## Implement and use plugin specific settings
 The class set in the `settings_class` attribute of your plugin class is your plugins settings class.
@@ -271,7 +274,7 @@ All attributes in it can be set in the `hermes.toml` of your project or passed v
 If not set, they will be set to the (in the class) specified default value.
 Pydantic will also validate the attributes value against the type hint of the attribute.
 
-The settings of your plugin can be accessed via `self.settings.{plugin_step}.{plugin_name}.{attribute_name}`.
+The settings of your plugin can be accessed via `command.settings.{plugin_name}.{attribute_name}` where `command` is the `Hermes{Step}Command` object usually passed via the `__call__` method.
 And setting it in the `hermes.toml` works like this:
 ```shell
 [{plugin_step}.{plugin_name}]
@@ -381,7 +384,7 @@ run = [ ..., "{plugin_name}", ... ]
 ...
 
 ```
-<br><br>
+
 ```{admonition} Congratulations!
 You can now write plugins for HERMES.
 ```
