@@ -4,6 +4,7 @@
 
 # SPDX-FileContributor: Michael Fritzsche
 
+# flake8: noqa: C901
 
 from typing import Union
 from typing_extensions import Self

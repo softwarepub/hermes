@@ -264,7 +264,7 @@ class HermesPostprocessCommand(HermesCommand):
             loaded_datas: list[ld_dict] = []
             # add cache load operations to the provenance document
             for cache_load in cache_loads:
-                deposit_plugin = prov_doc.get_hermes_plugin("postprocess", cache_load[0])
+                deposit_plugin = prov_doc.get_hermes_plugin("deposit", cache_load[0])
                 updated_metadata = prov_doc.shallow_search(lambda node: (
                     "prov:wasInfluencedBy" in node and node["prov:wasInfluencedBy"] == [deposit_plugin.ref]
                 ))[0]
