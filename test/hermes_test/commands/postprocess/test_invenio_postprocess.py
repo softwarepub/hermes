@@ -58,7 +58,7 @@ licenses = "api/vocabularies/licenses"
 communities = "api/communities"
 
 [postprocess]
-run = ["config_invenio_record_id", "cff_doi", "codemeta_doi"]
+run = ["config_invenio_record_id", "invenio_cff_doi", "invenio_codemeta_doi"]
 """
     )
 
@@ -101,7 +101,7 @@ licenses = "api/vocabularies/licenses"
 communities = "api/communities"
 
 [postprocess]
-run = ["config_invenio_record_id", "cff_doi", "codemeta_doi"]
+run = ["config_invenio_record_id", "invenio_cff_doi", "invenio_codemeta_doi"]
 """
     ).unwrap()
     assert result_cff == yaml.YAML().load(
