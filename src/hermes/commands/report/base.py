@@ -417,7 +417,7 @@ class HermesReportCommand(HermesCommand):
             "prov:actedOnBehalfOf" in node and node["prov:actedOnBehalfOf"] == [base_plugin.ref]
         ))[0]
         print(
-            f"  - Plugin used:\n    - {plugin['@id'][28]} ({plugin['schema:name'][0]}, version "
+            f"  - Plugin used:\n    - {plugin['@id'][28:]} ({plugin['schema:name'][0]}, version "
             f"{vers if (vers := plugin.get('schema:softwareVersion', False)) else 'N/A'})"
         )
         cache_loads = prov_doc.shallow_search(lambda node: (
@@ -428,11 +428,11 @@ class HermesReportCommand(HermesCommand):
         print("  - Used deposit results:")
         for index, cache_load in enumerate(cache_loads, start=1):
             source_id = cache_load["prov:used"][0]["@id"]
-            source = prov_doc.shallow_search(lambda node: ("@id" in node and node["@id"] == [source_id]))[0]
+            source = prov_doc.shallow_search(lambda node: ("@id" in node and node["@id"] == source_id))[0]
             print(
-                f"    - Load {index} at {cache_load['prov:startedAtTime']} took "
-                f"{cache_load['prov:endedAtTime']-cache_load['prov:startedAtTime']} from:\n"
-                f"      - {source['schema:url']}"
+                f"    - Load {index} at {cache_load['prov:startedAtTime'][0]} took "
+                f"{cache_load['prov:endedAtTime'][0]-cache_load['prov:startedAtTime'][0]} from:\n"
+                f"      - {source['schema:url'][0]}"
             )
         io_ops = prov_doc.shallow_search(lambda node: (
             "prov:wasAssociatedWith" in node and
@@ -442,7 +442,9 @@ class HermesReportCommand(HermesCommand):
         loads, writes = [], []
         for io_op in io_ops:
             used = io_op["prov:used"][0]["@id"]
-            if "prov:wasDerivedFrom" in prov_doc.shallow_search(lambda node: ("@id" in node and node["@id"] == used)):
+            if "prov:wasDerivedFrom" in prov_doc.shallow_search(
+                lambda node: ("@id" in node and node["@id"] == used)
+            )[0]:
                 writes.append(io_op)
             else:
                 loads.append(io_op)
@@ -450,11 +452,11 @@ class HermesReportCommand(HermesCommand):
         print("  - Loaded data from:")
         for index, load in enumerate(loads):
             source_id = load["prov:used"][0]["@id"]
-            source = prov_doc.shallow_search(lambda node: ("@id" in node and node["@id"] == [source_id]))[0]
+            source = prov_doc.shallow_search(lambda node: ("@id" in node and node["@id"] == source_id))[0]
             print(
-                f"    - Load {index} at {load['prov:startedAtTime']} took "
-                f"{load['prov:endedAtTime']-load['prov:startedAtTime']} from:\n"
-                f"      - {source['schema:url']}"
+                f"    - Load {index} at {load['prov:startedAtTime'][0]} took "
+                f"{load['prov:endedAtTime'][0]-load['prov:startedAtTime'][0]} from:\n"
+                f"      - {source['schema:url'][0]}"
             )
         # print info on general writes of the plugin
         print("  - Written data to:")
@@ -463,7 +465,7 @@ class HermesReportCommand(HermesCommand):
                 "prov:wasGeneratedBy" in node and node["prov:wasGeneratedBy"] == [write.ref]
             ))[0]
             print(
-                f"    - Load {index} at {write['prov:startedAtTime']} took "
-                f"{write['prov:endedAtTime']-write['prov:startedAtTime']} from:\n"
-                f"      - {target['schema:url']}"
+                f"    - Write {index} at {write['prov:startedAtTime'][0]} took "
+                f"{write['prov:endedAtTime'][0]-write['prov:startedAtTime'][0]} from:\n"
+                f"      - {target['schema:url'][0]}"
             )
