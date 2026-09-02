@@ -23,7 +23,6 @@ class HermesSettings(BaseSettings):
 
     Attributes:
         model_config (SettingsConfigDict): The settings config dict for the settings of hermes.
-        logging (dict): ...
     """
 
     model_config = SettingsConfigDict(env_file_encoding='utf-8')
