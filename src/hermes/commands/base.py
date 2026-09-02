@@ -28,8 +28,6 @@ class HermesSettings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file_encoding='utf-8')
 
-    logging: dict = {}  # FIXME: Is this still used? Even if removed, no tests fail...
-
 
 class HermesCommand(abc.ABC):
     """Base class for a HERMES workflow command.
@@ -57,7 +55,6 @@ class HermesCommand(abc.ABC):
         self.settings = None
 
         self.log = logging.getLogger(f"hermes.{self.command_name}")
-        self.errors = []  # FIXME: not used, right?
 
     def init_plugins(self: Self) -> dict[str, type["HermesPlugin"]]:
         """
