@@ -47,9 +47,9 @@ class HermesMergeError(Exception):
     This exception should be raised when there is an error during a merge / set operation.
 
     Attributes:
-        path (list[str | int]): The path where the merge error occured.
+        path (list[str | int]): The path where the merge error occurred.
         old_value (Any): Old value that was stored at `path`.
-        new_value (Any): New value that was to be assinged.
+        new_value (Any): New value that was to be assigned .
         tag: Tag data for the new value.
     """
     def __init__(self, path: list[Union[str, int]], old_value: Any, new_value: Any, **kwargs) -> None:
@@ -57,9 +57,9 @@ class HermesMergeError(Exception):
         Create a new merge incident.
 
         Args:
-            path (list[str | int]): The path where the merge error occured.
+            path (list[str | int]): The path where the merge error occurred.
             old_value (Any): Old value that was stored at `path`.
-            new_value (Any): New value that was to be assinged.
+            new_value (Any): New value that was to be assigned .
             kwargs: Tag data for the new value.
 
         Returns:

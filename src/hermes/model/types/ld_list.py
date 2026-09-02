@@ -15,6 +15,7 @@ from typing import Any, Optional, Union, TYPE_CHECKING
 from typing_extensions import Self
 
 from .ld_container import (
+    COMPACTED_JSON_LD_VALUE,
     ld_container,
     JSON_LD_CONTEXT_DICT,
     EXPANDED_JSON_LD_VALUE,
@@ -23,6 +24,7 @@ from .ld_container import (
     TIME_TYPE,
     BASIC_TYPE,
 )
+from .pyld_util import bundled_loader
 if TYPE_CHECKING:
     from .ld_dict import ld_dict
 
@@ -548,6 +550,45 @@ class ld_list(ld_container):
             for item in self
         ]
 
+    def compact(
+        self: Self, context: Optional[Union[list[Union[JSON_LD_CONTEXT_DICT, str]], JSON_LD_CONTEXT_DICT, str]] = None
+    ) -> COMPACTED_JSON_LD_VALUE:
+        """
+        Returns the compacted version of the given ld_list using its context only if none was supplied.
+        The returned object is of the form `{"@context": the_context, container_type: compacted_content}`.
+
+        Args:
+            context (list[JSON_LD_CONTEXT_DICT | str] | JSON_LD_CONTEXT_DICT | str | None):
+                The context to use for the compaction. If None the context of self is used.
+
+        Returns:
+            COMPACTED_JSON_LD_VALUE: The compacted version of selfs JSON-LD representation.
+        """
+        # compact the ld_list standalone if necessary
+        if self.key is None:
+            return self.ld_proc.compact(
+                self.ld_value, context or self.full_context, {"documentLoader": bundled_loader, "skipExpand": True}
+            )
+        # compact the ld_list within a temporary dictionary
+        temp_dict = self.ld_proc.compact(
+            [{self.ld_proc.expand_iri(self.active_ctx, self.key): self.ld_value}],
+            context or self.full_context,
+            {"documentLoader": bundled_loader, "skipExpand": True}
+        )
+        context  = temp_dict["@context"]
+        temp_container = temp_dict[
+            self.ld_proc.compact_iri(self.active_ctx, self.ld_proc.expand_iri(self.active_ctx, self.key))
+        ]
+        if self.container_type != "@set":
+            return {
+                "@context": context,
+                **temp_container
+            }
+        return {
+            "@context": context,
+            "@set": temp_container if isinstance(temp_container, list) else [temp_container]
+        }
+
     @classmethod
     def is_ld_list(cls: type[Self], ld_value: Any) -> bool:
         """
@@ -589,7 +630,7 @@ class ld_list(ld_container):
         key: Optional[str] = None,
         context: Optional[Union[str, JSON_LD_CONTEXT_DICT, list[Union[str, JSON_LD_CONTEXT_DICT]]]] = None,
         container_type: str = "@set"
-    ) -> ld_list:
+    ) -> Self:
         """
         Creates a ld_list from the given list with the given parent, key, context and container_type.\n
         Note that only container_type '@set' is valid for key '@type'.\n
@@ -614,7 +655,6 @@ class ld_list(ld_container):
         Raises:
             ValueError: If key is '@type' and container_type is not '@set'.
         """
-        # TODO: handle context if not of type list or None
         # validate container_type
         if key == "@type":
             if container_type != "@set":
@@ -625,6 +665,10 @@ class ld_list(ld_container):
             value = [{container_type: value}]
         elif container_type != "@set":
             raise ValueError(f"Invalid container type: {container_type}. (valid are only '@set', '@list' and '@graph')")
+
+        # handle non-list context
+        if context is not None and not isinstance(context, list):
+            context = [context]
 
         if parent is not None:
             # expand value in the "context" of parent

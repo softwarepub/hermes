@@ -13,6 +13,8 @@ from datetime import date, datetime, time
 from typing import Any, Optional, TypeAlias, TYPE_CHECKING, Union
 from typing_extensions import Self
 
+from hermes.model.types.ld_context import iri_map
+
 from .pyld_util import JsonLdProcessor, bundled_loader
 if TYPE_CHECKING:
     from .ld_dict import ld_dict
@@ -231,7 +233,7 @@ class ld_container:
         # all ld_container (ld_dicts and ld_lists) and datetime, date as well as time objects in value have to dissolved
         # because the JSON-LD processor can't handle them
         # to do this traverse value in a BFS and replace all items with a type in 'special_types' with a usable values
-        key_and_reference_todo_list = [(0, [value])]
+        key_and_reference_todo_list: list[Union[tuple[int, list], tuple[str, dict]]] = [(0, [value])]
         special_types = (list, dict, ld_container, datetime, date, time)
         while True:
             # check if ready
@@ -317,7 +319,7 @@ class ld_container:
             COMPACTED_JSON_LD_VALUE: The compacted version of selfs JSON-LD representation.
         """
         return self.ld_proc.compact(
-            self.ld_value, context or self.context, {"documentLoader": bundled_loader, "skipExpand": True}
+            self.ld_value, context or self.full_context, {"documentLoader": bundled_loader, "skipExpand": True}
         )
 
     def to_native_python(self):
@@ -461,8 +463,13 @@ class ld_container:
         Returns:
             BASIC_TYPE | TIME_TYPE: The native python version of data.
         """
-        # FIXME: #434 dates are not returned as datetime/ date/ time but as string
         ld_value = data[0]['@value']
+        if iri_map["schema:DateTime"] == data[0]['@type']:
+            ld_value = datetime.fromisoformat(ld_value)
+        elif iri_map["schema:Date"] == data[0]['@type']:
+            ld_value = date.fromisoformat(ld_value)
+        elif iri_map["schema:Time"] == data[0]['@type']:
+            ld_value = time.fromisoformat(ld_value)
 
         return ld_value
 

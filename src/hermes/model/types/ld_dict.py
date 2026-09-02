@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 from collections.abc import Generator, Iterator, KeysView
+from datetime import date, datetime, time
 from typing import Any, Literal, Optional, Union, TYPE_CHECKING
 from typing_extensions import Self
 
@@ -383,6 +384,39 @@ class ld_dict(ld_container):
         Returns:
             ld_dict: The new ld_dict build from value.
         """
+        # all ld_container (ld_dicts and ld_lists) and datetime, date as well as time objects in value have to dissolved
+        # because the JSON-LD processor can't handle them
+        # to do this traverse value in a BFS and replace all items with a type in 'special_types' with a usable values
+        key_and_reference_todo_list: list[Union[tuple[int, list], tuple[str, dict]]] = [(0, [value])]
+        special_types = (list, dict, ld_container, datetime, date, time)
+        while True:
+            # check if ready
+            if len(key_and_reference_todo_list) == 0:
+                break
+            # get next item
+            tmp_key, ref = key_and_reference_todo_list.pop()
+            temp = ref[tmp_key]
+            # replace item if necessary and add childs to the todo list
+            if isinstance(temp, list):
+                key_and_reference_todo_list.extend(
+                    [(index, temp) for index, val in enumerate(temp) if isinstance(val, special_types)]
+                )
+            elif isinstance(temp, dict):
+                key_and_reference_todo_list.extend(
+                    [(new_key, temp) for new_key in temp.keys() if isinstance(temp[new_key], special_types)]
+                )
+            elif isinstance(temp, ld_container):
+                if "ld_list" in [sub_cls.__name__ for sub_cls in type(temp).mro()] and temp.container_type == "@set":
+                    ref[tmp_key] = temp._data
+                else:
+                    ref[tmp_key] = temp._data[0]
+            elif isinstance(temp, datetime):
+                ref[tmp_key] = {"@value": temp.isoformat(), "@type": "schema:DateTime"}
+            elif isinstance(temp, date):
+                ref[tmp_key] = {"@value": temp.isoformat(), "@type": "schema:Date"}
+            elif isinstance(temp, time):
+                ref[tmp_key] = {"@value": temp.isoformat(), "@type": "schema:Time"}
+
         # make a copy of value and add the new type to it.
         ld_data = value.copy()
         ld_type = ld_container.merge_to_list(ld_type or [], ld_data.get('@type', []))

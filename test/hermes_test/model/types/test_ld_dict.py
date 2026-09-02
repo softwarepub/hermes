@@ -5,6 +5,8 @@
 # SPDX-FileContributor: Stephan Druskat
 # SPDX-FileContributor: Michael Fritzsche
 
+from datetime import datetime
+
 import pytest
 
 from hermes.model.types.ld_dict import ld_dict
@@ -406,6 +408,39 @@ def test_from_dict():
                            context={"xmlns": "http://xmlns.com/foaf/0.1/"})
     assert di["http://xmlns.com/foaf/0.1/name"] == di["xmlns:name"] == ["fo"]
     assert di.context == [{"schema": "https://schema.org/"}, {"xmlns": "http://xmlns.com/foaf/0.1/"}]
+
+    di = ld_dict.from_dict(
+        {
+            "@context": {"schema": "http://schema.org/"},
+            "@type": "schema:Thing",
+            "schema:owner": ld_dict.from_dict(
+                {
+                    "@context": {"schema": "http://schema.org/"},
+                    "@type": "schema:Person",
+                    "schema:name": "Foo"
+                }
+            )
+        }
+    )
+    assert di["schema:owner"][0]["schema:name"][0] == "Foo"
+    di = ld_dict.from_dict(
+        {
+            "@context": {"schema": "http://schema.org/"},
+            "@type": "schema:Thing",
+            "schema:name": ld_list.from_list(
+                ["Foo", "Bar"], key="schema:name", context={"schema": "http://schema.org/"}, container_type="@list"
+            )
+        }
+    )
+    assert di["schema:name"][0] == "Foo"
+    di = ld_dict.from_dict(
+        {
+            "@context": {"schema": "http://schema.org/"},
+            "@type": "schema:CreativeWork",
+            "schema:dateCreated": datetime(2026, 8, 31, 14, 50)
+        }
+    )
+    assert di["schema:dateCreated"][0] == datetime(2026, 8, 31, 14, 50)
 
 
 def test_is_ld_dict():

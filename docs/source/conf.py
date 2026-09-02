@@ -28,6 +28,7 @@ import tomlkit
 sys.path.insert(0, os.path.abspath('../../src'))
 sys.path.append(os.path.abspath('_ext'))
 
+
 def read_from_pyproject(file_path="../../pyproject.toml"):
     """
     Reads the metadata from the pyproject.toml file.
@@ -51,6 +52,7 @@ def read_from_pyproject(file_path="../../pyproject.toml"):
     except Exception as e:
         return f"An unexpected error occurred: {e}"
 
+
 def read_authors_from_pyproject():
     metadata = read_from_pyproject()
     authors = metadata.get("authors", [])
@@ -58,6 +60,7 @@ def read_authors_from_pyproject():
         return "No authors metadata found in pyproject.toml"
     # Convert the list of authors to a comma-separated string
     return ", ".join([author["name"] for author in authors])
+
 
 def read_version_from_pyproject():
     metadata = read_from_pyproject()
@@ -70,7 +73,8 @@ def read_version_from_pyproject():
 # -- Project information -----------------------------------------------------
 
 project = 'HERMES Workflow'
-copyright = '2025 by Forschungszentrum Jülich (FZJ), German Aerospace Center (DLR) and Helmholtz-Zentrum Dresden-Rossendorf (HZDR)'
+copyright = '2025 by Forschungszentrum Jülich (FZJ), German Aerospace Center (DLR)' \
+            ' and Helmholtz-Zentrum Dresden-Rossendorf (HZDR)'
 author = read_authors_from_pyproject()
 
 # The full version, including alpha/beta/rc tags
@@ -191,6 +195,7 @@ togglebutton_hint = "Click to show screenshot"
 # TODO: remove this workaround and remove "undoc-members" from autoapi_options once everything is documented
 # This removes all generated entries for known documented classes (because autoapi will add all attributes
 # it finds in the code no matter if they are described in a class doc string or not).
+
 def autoapi_skip_member(app, obj_type, name, obj, skip, options):
     if obj_type == "attribute":
         if any(documented_type in obj.id for documented_type in [
@@ -200,6 +205,7 @@ def autoapi_skip_member(app, obj_type, name, obj, skip, options):
             return True
 
     return skip
+
 
 def setup(app):
     app.connect("autoapi-skip-member", autoapi_skip_member)

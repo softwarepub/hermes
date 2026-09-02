@@ -69,11 +69,14 @@ rodare = "hermes.commands.deposit.rodare:RodareDepositPlugin"
 [project.entry-points."hermes.postprocess"]
 config_invenio_record_id = "hermes.commands.postprocess.invenio:config_record_id"
 config_invenio_rdm_record_id = "hermes.commands.postprocess.invenio_rdm:config_record_id"
-cff_doi = "hermes.commands.postprocess.invenio:cff_doi"
-codemeta_doi = "hermes.commands.postprocess.invenio:codemeta_doi"
+invenio_cff_doi = "hermes.commands.postprocess.invenio:cff_doi"
+invenio_rdm_cff_doi = "hermes.commands.postprocess.invenio_rdm:cff_doi"
+invenio_codemeta_doi = "hermes.commands.postprocess.invenio:codemeta_doi"
+invenio_rdm_codemeta_doi = "hermes.commands.postprocess.invenio_rdm:codemeta_doi"
 
 [project.entry-points."hermes.process"]
 codemeta = "hermes.commands.process.standard_merge:CodemetaProcessPlugin"
+invenio = "hermes.commands.process.invenio_merge:InvenioProcessPlugin"
 
 [project.entry-points."hermes.curate"]
 pass_curate = "hermes.commands.curate.pass_curate:PassCuratePlugin"
