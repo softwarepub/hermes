@@ -22,7 +22,7 @@ from hermes.commands.deposit.error import DepositionUnauthorizedError
 from hermes.error import MisconfigurationError
 from hermes.model.context import CodeMetaContext
 from hermes.model.path import ContextPath
-from hermes.utils import hermes_doi, hermes_user_agent
+from hermes.utils import hermes_concept_doi, hermes_user_agent
 
 
 _log = logging.getLogger("cli.deposit.invenio")
@@ -385,7 +385,7 @@ class InvenioDepositPlugin(BaseDepositPlugin):
         """
         return [
             {
-                "identifier": hermes_doi,
+                "identifier": hermes_concept_doi,
                 "relation": "isCompiledBy",
                 "scheme": "doi",
             },
