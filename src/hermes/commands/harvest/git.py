@@ -18,6 +18,7 @@ import typing as t
 from pydantic import BaseModel
 
 from hermes.commands.harvest.base import HermesHarvestCommand, HermesHarvestPlugin
+from hermes.model.api import SoftwareMetadata
 
 
 class NodeRegister:
@@ -221,6 +222,7 @@ class GitHarvestPlugin(HermesHarvestPlugin):
     settings_class = GitHarvestSettings
 
     def __init__(self):
+        super().__init__()
         self.git_exe = shutil.which('git')
         if not self.git_exe:
             raise RuntimeError('Git not available!')
@@ -232,7 +234,7 @@ class GitHarvestPlugin(HermesHarvestPlugin):
             raise RuntimeError(f"`git {subcommand}` command failed with code {proc.returncode}")
         return proc.stdout
 
-    def __call__(self, command: HermesHarvestCommand):
+    def __call__(self, command: HermesHarvestCommand) -> SoftwareMetadata:
         """Implementation of a harvester that provides author, branch & remote data from Git."""
 
         git_authors = NodeRegister(ContributorData, 'email', 'name', email=str.upper)
@@ -288,7 +290,7 @@ class GitHarvestPlugin(HermesHarvestPlugin):
         data.update({"hermes:gitRemotes": git_remotes})
         data.update({"hermes:gitRemoteUrls": git_remote_urls})
 
-        return data, {"gitBranch": git_branch}
+        return SoftwareMetadata(data)
 
     def _audit_contributors(self, contributors, audit_log: logging.Logger):
         # Collect all authors that have ambiguous data
