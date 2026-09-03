@@ -95,8 +95,6 @@ This is necessary for collection of provenance information.
 The class structure of a process plugin should look like this:
 
 ```{code-block} python
-from typing import Union
-
 from hermes.commands.process.base import HermesProcessCommand, HermesProcessPlugin, ObjectStrategies
 from hermes.model.merge.action import MergeAction
 from pydantic import BaseModel
