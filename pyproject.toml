@@ -89,28 +89,25 @@ taskipy = ">=1.10.3"
 flake8 = "^5.0.4"
 requests-mock = ">=1.10.0"
 pytest-httpserver = ">=1.1.5"
+reuse = ">=1.1.2"
 
-# Packages for developers for creating documentation
 [tool.poetry.group.docs]
 optional = true
 
 [tool.poetry.group.docs.dependencies]
-Sphinx = "^8.2.0"
-# Sphinx - Additional modules
-myst-parser = "^4.0.0"
-sphinx-book-theme = "^1.0.1"
-sphinx-favicon = "^0.2"
-sphinxcontrib-contentui = "^0.2.5"
-sphinxcontrib-images = "^1.0.1"
-sphinx-icon = "^0.1.2"
-sphinx-autobuild = "^2021.3.14"
-sphinx-autoapi = "^3.0.0"
-sphinxext-opengraph = "^0.6.3"
-sphinxcontrib-mermaid="^0.8.1"
-sphinx-togglebutton="^0.3.2"
-reuse = "^1.1.2"
-sphinxcontrib-datatemplates = "~=0.11"
-
+Sphinx = ">=8.2"
+myst-parser = ">=4.0"
+sphinx-book-theme = ">=1.1"
+sphinx-favicon = ">=0.2"
+sphinxcontrib-contentui = ">=0.2"
+sphinxcontrib-images = ">=1.0"
+sphinx-icon = ">=0.1"
+sphinx-autobuild = ">=2021.3.14"
+sphinx-autoapi = ">=3.6"
+sphinxext-opengraph = ">=0.6"
+sphinxcontrib-mermaid=">=0.8"
+sphinx-togglebutton=">=0.3.2"
+sphinxcontrib-datatemplates = ">=0.11"
 
 [tool.taskipy.tasks]
 docs-build = "poetry run sphinx-build -M html docs/source docs/build -W"
