@@ -270,7 +270,7 @@ class GitHarvestPlugin(HermesHarvestPlugin):
         git_remote_urls = []
         try:
             # Get remotes with `git remote`
-            git_remotes = self._run_git("remote").strip().split('\n')
+            git_remotes = self._run_git("remote").decode(SHELL_ENCODING).strip().split("\n")
             git_remotes = [remote.strip() for remote in git_remotes if remote.strip() != ""]
             for remote in git_remotes:
                 # Get remote url
