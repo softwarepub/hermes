@@ -14,6 +14,7 @@ import tomlkit
 from pydantic import BaseModel
 
 from hermes.commands.harvest.base import HermesHarvestCommand, HermesHarvestPlugin
+from hermes.model.api import SoftwareMetadata
 
 
 class TomlHarvestSettings(BaseModel):
@@ -39,7 +40,7 @@ class TomlHarvestPlugin(HermesHarvestPlugin):
     }
     allowed_keys_for_person = ["givenName", "lastName", "email", "@id", "@type", "name"]
 
-    def __call__(self, command: HermesHarvestCommand):
+    def __call__(self, command: HermesHarvestCommand) -> SoftwareMetadata:
         """start of the process of harvesting the .toml file"""
 
         #set the working directory temporary to the correct location
@@ -52,7 +53,7 @@ class TomlHarvestPlugin(HermesHarvestPlugin):
         chdir(old_dir)
 
         #returning the harvested data and some metadata
-        return data, {"filename": command.settings.toml.filename}
+        return SoftwareMetadata(data)
 
     @classmethod
     def read_from_toml(cls, file):
