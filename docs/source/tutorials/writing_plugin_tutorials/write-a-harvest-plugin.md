@@ -93,7 +93,7 @@ class PyprojectHarvestPlugin(HermesHarvestPlugin):
         data = SoftwareMetadata()
 
         # load data
-        pyproject = toml.load(command.settings.pyproject_harvest.location)
+        pyproject = self.load(toml.load, command.settings.pyproject_harvest.location)
 
         # extract data
         name = pyproject.get("project", {}).get("name", None)
@@ -104,6 +104,10 @@ class PyprojectHarvestPlugin(HermesHarvestPlugin):
         data["schema:description"] = description
 
         return data
+```
+
+```{important}
+It is important that you use the load function provided by {py:class}`~HermesHarvestPlugin` for all loads.
 ```
 
 ## Configuring HERMES to use your plugin
