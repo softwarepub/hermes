@@ -10,7 +10,7 @@
 from email.utils import getaddresses
 from os import chdir, getcwd
 
-import toml
+import tomlkit
 from pydantic import BaseModel
 
 from hermes.commands.harvest.base import HermesHarvestCommand, HermesHarvestPlugin
@@ -59,7 +59,8 @@ class TomlHarvestPlugin(HermesHarvestPlugin):
         """Read and process the data inside the .toml file"""
 
         #load the toml file as a dictionary
-        data  = toml.load(file)
+        with open(file) as fp:
+            data = tomlkit.load(fp).unwrap()
 
         ret_data = {}
 

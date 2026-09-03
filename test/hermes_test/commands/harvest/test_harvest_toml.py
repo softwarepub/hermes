@@ -6,7 +6,7 @@
 # SPDX-FileContributor: Michael Fritzsche
 
 import pytest
-import toml
+import tomlkit
 
 from hermes.commands.harvest.toml import TomlHarvestPlugin
 
@@ -56,7 +56,8 @@ def toml_file(tmp_path_factory):
     ({"project":{"authors":"abc def<abc.def@dlr.com>"}}, {"author":{"name":"abc def", "email": "abc.def@dlr.com", "@type": "Person"}})
 ])
 def test_read_from_toml(in_data, out_data, toml_file):
-    toml.dump(in_data, open(toml_file, "w", encoding="utf8"))
+    with open(toml_file, "w", encoding="utf8") as fp:
+        tomlkit.dump(in_data, fp)
     assert TomlHarvestPlugin.read_from_toml(str(toml_file)) == out_data
 
 @pytest.mark.parametrize("in_data", [
@@ -67,6 +68,7 @@ def test_read_from_toml(in_data, out_data, toml_file):
     ({"project": {"authors":"as<as>as"}})
 ])
 def test_read_from_toml_with_error(in_data, toml_file):
-    toml.dump(in_data, open(toml_file, "w", encoding="utf8"))
+    with open(toml_file, "w", encoding="utf8") as fp:
+        tomlkit.dump(in_data, fp)
     with pytest.raises(ValueError):
         TomlHarvestPlugin.read_from_toml(str(toml_file))
