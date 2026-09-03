@@ -14,7 +14,7 @@ title: hermes
 message: >-
   If you use this software, please cite it using the
   metadata from this file.
-version: 0.9.0
+version: 0.9.1
 license: "Apache-2.0"
 abstract: "Tool to automate software publication. Not stable yet."
 type: software

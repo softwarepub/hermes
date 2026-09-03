@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from pathlib import Path
+from argparse import Namespace
 
 import tomlkit
 
@@ -22,4 +23,13 @@ def test_hermes_user_agent():
 
     assert (
         hermes_user_agent == f"{expected_name}/{expected_version} ({expected_homepage})"
+    )
+
+
+def test_mask_values_options():
+    from hermes.utils import mask_options_values
+    ns = Namespace(foo="bar", options=[("foo", "bar"), ("bar", "foo")])
+    assert mask_options_values(ns) == Namespace(
+        foo="bar",
+        options=[("foo", "***REDACTED***"), ("bar", "***REDACTED***")]
     )

@@ -16,6 +16,17 @@
         "builtin": true
     },
     {
+        "name": "'file_exists' Harvester",
+        "description": "Harvest plugin that figures out whether certain frequently used files (README, LICENSE, ...) exist. Custom search patterns for other types of files can be configured.",
+        "author": "Hermes team",
+        "steps": ["harvest"],
+        "harvested_files": [
+            "readme",
+            "license"
+        ],
+        "builtin": true
+    },
+    {
         "name": "hermes-plugin-git",
         "description": "Harvest plugin for Git repository metadata.",
         "author": "Hermes team",
@@ -58,6 +69,13 @@
         "author": "Hermes team",
         "steps": ["deposit"],
         "builtin": true
+    },
+    {
+        "name": "hermes-plugin-software-card",
+        "description": "HERMES curation plugin using the Software CaRD framework.",
+        "author": "Software CaRD team",
+        "steps": ["curate"],
+        "repository_url": "https://github.com/softwarepub/hermes-plugin-software-card"
     },
     {
         "name": "Invenio Deposit",

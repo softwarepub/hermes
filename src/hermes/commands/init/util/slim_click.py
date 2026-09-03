@@ -137,9 +137,9 @@ def choose(text: str, options: list[str], default: int = 0) -> int:
     assert 0 <= default < len(options), "Default index should match the options list."
     echo(text)
     for i, option in enumerate(options):
-        index = f"{i:>2d}"
+        index = f"{i:>2d}"  # noqa E231
         if i == default:
-            index = f"*{i:>1d}"
+            index = f"*{i:>1d}"  # noqa E231
         print(f"[{index}] {option}")
     while True:
         chosen_index = -1
@@ -171,7 +171,7 @@ def next_step(description: str):
 def create_console_hyperlink(url: str, word: str) -> str:
     """Use this to have a consistent display of hyperlinks."""
     if USE_FANCY_HYPERLINKS:
-        return f"\033]8;;{url}\033\\{word}\033]8;;\033\\"
+        return f"\033]8;;{url}\033\\{word}\033]8;;\033\\"    # noqa E231,E702
     return f"{word} ({url})"
 
 

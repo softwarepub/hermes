@@ -8,7 +8,7 @@
 
 [project]
 name = "hermes"
-version = "0.10.0.dev1"
+version = "0.10.0.dev0"
 description = "Workflow to publish research software with rich metadata"
 license = "Apache-2.0 AND LicenseRef-BSD-Caltech"
 authors = [
@@ -41,8 +41,9 @@ dependencies = [
     "rdflib>=7.6.0, <8.0.0",
     "schemaorg>=0.1.1, <0.2.0",
     "tomlkit>=0.15.1, <0.16.0",
+    "jinja2>=3.1.6, <4.0.0",
 ]
-requires-python = ">=3.10, <4.0.0"
+requires-python = ">=3.11, <4.0.0"
 
 [project.urls]
 homepage = "https://hermes.software-metadata.pub"
@@ -50,15 +51,14 @@ documentation = "https://hermes.software-metadata.pub"
 repository = "https://github.com/softwarepub/hermes.git"
 issues = "https://github.com/softwarepub/hermes/issues"
 
-
 [project.scripts]
 hermes = "hermes.commands.cli:main"
 hermes-marketplace = "hermes.commands.marketplace:main"
 
-
 [project.entry-points."hermes.harvest"]
 cff = "hermes.commands.harvest.cff:CffHarvestPlugin"
 codemeta = "hermes.commands.harvest.codemeta:CodeMetaHarvestPlugin"
+file_exists = "hermes.commands.harvest.file_exists:FileExistsHarvestPlugin"
 
 [project.entry-points."hermes.deposit"]
 file = "hermes.commands.deposit.file:FileDepositPlugin"
@@ -94,7 +94,7 @@ pytest-httpserver = ">=1.1.5"
 optional = true
 
 [tool.poetry.group.docs.dependencies]
-Sphinx = "^8.0.0"
+Sphinx = "^8.2.0"
 # Sphinx - Additional modules
 myst-parser = "^4.0.0"
 sphinx-book-theme = "^1.0.1"
@@ -108,7 +108,7 @@ sphinxext-opengraph = "^0.6.3"
 sphinxcontrib-mermaid="^0.8.1"
 sphinx-togglebutton="^0.3.2"
 reuse = "^1.1.2"
-sphinxcontrib-datatemplates = "^0.11.0"
+sphinxcontrib-datatemplates = "~=0.11"
 
 
 [tool.taskipy.tasks]
@@ -116,7 +116,6 @@ docs-build = "poetry run sphinx-build -M html docs/source docs/build -W"
 docs-clean = "poetry run sphinx-build -M clean docs/source docs/build"
 docs-live = "poetry run sphinx-autobuild docs/source docs/build"
 flake8 = "poetry run flake8 ./test/ ./src/ --count --select=E9,F63,F7,F82 --statistics"
-
 
 [tool.pytest.ini_options]
 minversion = "6.0"
@@ -126,7 +125,6 @@ testpaths = [
     "test"
 ]
 addopts = "-r s --cov=hermes --cov-report term"
-
 
 [build-system]
 requires = [

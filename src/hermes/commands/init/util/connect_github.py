@@ -2,13 +2,13 @@
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-FileContributor: Nitai Heeb
 
-import requests
 from base64 import b64encode
+
+import requests
 from nacl import encoding, public
 
 from . import slim_click as sc
 from .oauth_process import OauthProcess
-
 
 local_port = 8333
 client_id = 'Ov23linvdC7WzHnOO2WK'
@@ -49,7 +49,7 @@ def allow_actions(project_url: str, token):
     repo_name = url_split[-1]
 
     # GitHub API URLs
-    repo_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}"
+    repo_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}"  # noqa E231
     action_permissions_url = f"{repo_url}/actions/permissions/workflow"
 
     # Headers for GitHub API requests
@@ -89,7 +89,7 @@ def create_secret(project_url: str, secret_name: str, secret_value, token):
     repo_name = url_split[-1]
 
     # GitHub API URLs
-    repo_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}"
+    repo_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}"  # noqa E231
     public_key_url = f"{repo_url}/actions/secrets/public-key"
     secrets_url = f"{repo_url}/actions/secrets/{secret_name}"
 
