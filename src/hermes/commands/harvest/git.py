@@ -231,7 +231,7 @@ class GitHarvestPlugin(HermesHarvestPlugin):
         proc = subprocess.run([self.git_exe, subcommand, *args, *_GIT_ARGS], capture_output=True)
         if proc.returncode != 0:
             # TODO better suited exception with stdout / stderr output
-            raise RuntimeError(f"`git {subcommand}` command failed with code {proc.returncode}")
+            raise RuntimeError(f"'git {subcommand}' command failed with code {proc.returncode}")
         return proc.stdout
 
     def __call__(self, command: HermesHarvestCommand) -> SoftwareMetadata:
@@ -317,7 +317,7 @@ class GitHarvestPlugin(HermesHarvestPlugin):
 
     def _merge_contributors(self, git_authors: NodeRegister, git_committers: NodeRegister) -> NodeRegister:
         """
-        Merges the git authors and git committers :py:class:`NodeRegister` and assign the respective roles for each node.
+        Merge the git authors and git committers :py:class:`NodeRegister` and assign the respective roles for each node.
         """
         git_contributors = NodeRegister(ContributorData, 'email', 'name', email=str.upper)
         for author in git_authors._all:
