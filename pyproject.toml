@@ -60,6 +60,7 @@ hermes-marketplace = "hermes.commands.marketplace:main"
 cff = "hermes.commands.harvest.cff:CffHarvestPlugin"
 codemeta = "hermes.commands.harvest.codemeta:CodeMetaHarvestPlugin"
 file_exists = "hermes.commands.harvest.file_exists:FileExistsHarvestPlugin"
+git = "hermes.commands.harvest.git:GitHarvestPlugin"
 
 [project.entry-points."hermes.deposit"]
 file = "hermes.commands.deposit.file:FileDepositPlugin"
