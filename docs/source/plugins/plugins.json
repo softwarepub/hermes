@@ -39,8 +39,7 @@
         "author": "Hermes team",
         "steps": ["harvest"],
         "harvested_files": ["pyproject.toml"],
-        "repository_url": "https://github.com/softwarepub/hermes-plugin-python",
-        "pypi_url": "https://pypi.org/project/hermes-plugin-python/"
+        "builtin": true
     },
     {
         "name": "Basic processor",
