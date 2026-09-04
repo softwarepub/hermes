@@ -115,7 +115,11 @@ class TomlHarvestPlugin(HermesHarvestPlugin):
                         ret_data[field1] = persons
 
                 elif field1 == "license":
-                    ret_data[field1] = table[field2].get("text", None)
+                    license_value = table[field2]
+                    if isinstance(license_value, str):
+                        ret_data[field1] = license_value
+                    else:
+                        ret_data[field1].get("text")
                 else:
                     #add the data of a field that needs no processing
                     ret_data[field1] = table[field2]
