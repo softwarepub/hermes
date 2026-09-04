@@ -63,18 +63,26 @@
         "builtin": true
     },
     {
-        "name": "File Deposit",
-        "description": "Deposit plugin that only dumps the metadata into a local file.",
-        "author": "Hermes team",
-        "steps": ["deposit"],
-        "builtin": true
-    },
-    {
         "name": "hermes-plugin-software-card",
         "description": "HERMES curation plugin using the Software CaRD framework.",
         "author": "Software CaRD team",
         "steps": ["curate"],
         "repository_url": "https://github.com/softwarepub/hermes-plugin-software-card"
+    },
+    {
+        "name": "hermes-plugin-rsd",
+        "description": "Harvest and deposit plugin to create and update software entries in a Research Software Directory instance.",
+        "author": "Software CaRD team",
+        "steps": ["harvest", "deposit"],
+        "repository_url": "https://codebase.helmholtz.cloud/research-software-directory/hermes-plugin-rsd",
+        "pypi_url": "https://pypi.org/project/hermes-plugin-rsd/"
+    },
+    {
+        "name": "File Deposit",
+        "description": "Deposit plugin that only dumps the metadata into a local file.",
+        "author": "Hermes team",
+        "steps": ["deposit"],
+        "builtin": true
     },
     {
         "name": "Invenio Deposit",
