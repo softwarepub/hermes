@@ -12,7 +12,7 @@ import os
 
 from pydantic import BaseModel
 
-from hermes.commands.deposit.base import BaseDepositPlugin
+from hermes.commands.deposit.base import HermesDepositPlugin
 
 
 _log = logging.getLogger("cli.deposit.file")
@@ -22,7 +22,7 @@ class FileDepositSettings(BaseModel):
     filename: str = 'hermes.json'
 
 
-class FileDepositPlugin(BaseDepositPlugin):
+class FileDepositPlugin(HermesDepositPlugin):
     settings_class = FileDepositSettings
 
     def map_metadata(self) -> dict:

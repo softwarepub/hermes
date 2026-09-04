@@ -35,7 +35,7 @@ pip install hermes
 First we'll start with a new python file that contains the following code:
 
 ```{code-block} python
-from hermes.commands.deposit.base import BaseDepositPlugin
+from hermes.commands.deposit.base import HermesDepositPlugin
 from hermes.model import SoftwareMetadata
 from pydantic import BaseModel
 
@@ -44,7 +44,7 @@ class FileDepositSettings(BaseModel):
     pass
 
 
-class FileDepositPlugin(BaseDepositPlugin):
+class FileDepositPlugin(HermesDepositPlugin):
     settings_class = YourDepositSettings
 
     def prepare(self) -> None:
@@ -97,7 +97,7 @@ To do that we have to modify `FileDepositSettings` like this:
 :emphasize-lines: 1, 9
 from pathlib import Path
 
-from hermes.commands.deposit.base import BaseDepositPlugin
+from hermes.commands.deposit.base import HermesDepositPlugin
 from hermes.model import SoftwareMetadata
 from pydantic import BaseModel
 
@@ -106,7 +106,7 @@ class FileDepositSettings(BaseModel):
     file: Path = Path("deposit_results.json")
 
 
-class FileDepositPlugin(BaseDepositPlugin):
+class FileDepositPlugin(HermesDepositPlugin):
     settings_class = YourDepositSettings
 ...
 ```
@@ -122,7 +122,7 @@ That can be achieved for example like this:
 :emphasize-lines: 21, 39, 51-52
 from pathlib import Path
 
-from hermes.commands.deposit.base import BaseDepositPlugin
+from hermes.commands.deposit.base import HermesDepositPlugin
 from hermes.model import SoftwareMetadata
 from pydantic import BaseModel
 
@@ -131,7 +131,7 @@ class FileDepositSettings(BaseModel):
     file: Path = Path("deposit_results.json")
 
 
-class FileDepositPlugin(BaseDepositPlugin):
+class FileDepositPlugin(HermesDepositPlugin):
     settings_class = YourDepositSettings
 
     def prepare(self) -> None:

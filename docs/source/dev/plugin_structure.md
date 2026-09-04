@@ -174,7 +174,7 @@ The returned object may be the object `metadata` passed to `__call__`.
 The class structure of a deposit plugin should look like this:
 
 ```{code-block} python
-from hermes.commands.deposit.base import BaseDepositPlugin
+from hermes.commands.deposit.base import HermesDepositPlugin
 from hermes.model import SoftwareMetadata
 from pydantic import BaseModel
 
@@ -184,7 +184,7 @@ class YourDepositSettings(BaseModel):
     pass
 
 
-class YourDepositPlugin(BaseDepositPlugin):
+class YourDepositPlugin(HermesDepositPlugin):
     settings_class = YourDepositSettings
 
     def prepare(self) -> None:
@@ -232,7 +232,7 @@ class YourDepositPlugin(BaseDepositPlugin):
 
 A deposit plugin doesn't implement a `__call__` method like plugins for other steps.
 Instead it can (and in some cases has to) implement methods, which will be called in a predefined order.
-For information on the order and the purpose of a single function see {py:class}`~hermes.commands.deposit.base.BaseDepositPlugin`.
+For information on the order and the purpose of a single function see {py:class}`~hermes.commands.deposit.base.HermesDepositPlugin`.
 
 The plugin still has access to the command (via `self.command`) and the metadata for the software (via `self.metadata`).
 

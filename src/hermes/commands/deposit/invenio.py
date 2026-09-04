@@ -16,7 +16,7 @@ import requests
 from pydantic import BaseModel
 from typing import Union
 
-from hermes.commands.deposit.base import BaseDepositPlugin
+from hermes.commands.deposit.base import HermesDepositPlugin
 from hermes.commands.deposit.error import DepositionUnauthorizedError
 from hermes.error import MisconfigurationError
 
@@ -257,7 +257,7 @@ class InvenioDepositSettings(BaseModel):
     doi: str = None
 
 
-class InvenioDepositPlugin(BaseDepositPlugin):
+class InvenioDepositPlugin(HermesDepositPlugin):
 
     platform_name = "invenio"
     invenio_client_class = InvenioClient
