@@ -140,7 +140,6 @@ def test_cff_harvest(tmp_path, monkeypatch, cff, res):
     assert result == res
 
 
-@pytest.mark.xfail
 @pytest.mark.parametrize(
     "cff, res",
     [
@@ -191,14 +190,14 @@ date-released: "2026-01-16" """,
                 "http://schema.org/codeRepository": [{"@id": "https://github.com/softwarepub/hermes"}],
                 "http://schema.org/datePublished": [{"@type": "http://schema.org/Date", "@value": "2026-01-16"}],
                 "http://schema.org/description": [{"@value": "for testing"}],
-                "http://schema.org/identifier": [{"@id": "https://doi.org/10.5281/zenodo.13221384"}],
+                "http://schema.org/identifier": [
+                    {"@id": "https://doi.org/10.5281/zenodo.13221384"},
+                    {"@id": "https://arxiv.org/abs/2201.09015"}
+                ],
                 "http://schema.org/keywords": [{"@value": "testing"}, {"@value": "more testing"}],
                 "http://schema.org/license": [{"@id": "https://spdx.org/licenses/Apache-2.0"}],
                 "http://schema.org/name": [{"@value": "Test"}],
-                "http://schema.org/url": [
-                    {"@id": "https://arxiv.org/abs/2201.09015"},
-                    {"@id": "https://docs.software-metadata.pub/en/latest"}
-                ],
+                "http://schema.org/url": [{"@id": "https://docs.software-metadata.pub/en/latest"}],
                 "http://schema.org/version": [{"@value": "9.0.1"}]
             })
         )
