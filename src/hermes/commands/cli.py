@@ -12,10 +12,12 @@ import argparse
 import sys
 
 from hermes import logger
-from hermes.commands import (HermesHelpCommand, HermesVersionCommand, HermesCleanCommand,
-                             HermesHarvestCommand, HermesProcessCommand, HermesCurateCommand,
-                             HermesDepositCommand, HermesPostprocessCommand, HermesInitCommand)
+from hermes.commands import (
+    HermesCurateCommand, HermesCleanCommand, HermesDepositCommand, HermesHarvestCommand, HermesHelpCommand,
+    HermesInitCommand, HermesPostprocessCommand, HermesProcessCommand, HermesReportCommand, HermesVersionCommand
+)
 from hermes.commands.base import HermesCommand
+from hermes.error import HermesPluginRunError
 from hermes.utils import mask_options_values
 
 
@@ -37,15 +39,16 @@ def main() -> None:
     setting_types = {}
 
     for command in (
-            HermesHelpCommand(parser),
-            HermesVersionCommand(parser),
-            HermesInitCommand(parser),
             HermesCleanCommand(parser),
-            HermesHarvestCommand(parser),
-            HermesProcessCommand(parser),
             HermesCurateCommand(parser),
             HermesDepositCommand(parser),
+            HermesHarvestCommand(parser),
+            HermesHelpCommand(parser),
+            HermesInitCommand(parser),
             HermesPostprocessCommand(parser),
+            HermesProcessCommand(parser),
+            HermesReportCommand(parser),
+            HermesVersionCommand(parser),
     ):
         if command.settings_class is not None:
             setting_types[command.command_name] = command.settings_class
@@ -75,16 +78,20 @@ def main() -> None:
 
         log.info("Run subcommand %s", args.command.command_name)
         args.command(args)
-    except Exception as e:
-        log.error("An error occurred during execution of %s (Find details in './hermes.log')",
-                  args.command.command_name)
-        log.debug("Original exception was: %s", e)
-
+    except HermesPluginRunError:
+        log.critical(
+            "An error occurred during the execution of the %s command (Find details in './hermes.log')",
+            args.command.command_name,
+            exc_info=1
+        )
         sys.exit(2)
-
-    if args.command.errors:
-        for e in args.command.errors:
-            log.error(e)
+    except Exception:
+        log.critical(
+            "An error occurred during execution of the %s command (Find details in './hermes.log')",
+            args.command.command_name,
+            exc_info=1
+        )
         sys.exit(1)
 
+    log.info("Finished run of %s command successfully.", args.command.command_name)
     sys.exit(0)

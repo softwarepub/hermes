@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-FileContributor: David Pape
 
+# flake8: noqa
+
 import requests_mock
 
 from hermes.commands.marketplace import (

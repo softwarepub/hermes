@@ -22,13 +22,13 @@ Superseded: we no longer need to serialize additional information like provenanc
 ## Considered Options
 
 * One common model for all stages
-* Seperate model for different stages
+* Separate model for different stages
 * Common model for all stages
 * Processing model and curated model
 
 ## Decision Outcome
 
-Chosen option: "Seperate model for different stages", because comes out best.
+Chosen option: "Separate model for different stages", because comes out best.
 
 ## Pros and Cons of the Options
 

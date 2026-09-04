@@ -8,8 +8,11 @@ sources = [ "cff", "toml", "file_exists" ] # ordered priority (first one is most
 [harvest.file_exists.search_patterns]
 community = ["contributing.md", "governance.md"]
 
+[process]
+plugins = [ "invenio", "codemeta" ]
+
 [curate]
-method = "accept"
+plugin = "pass_curate"
 
 [deposit]
 target = "invenio_rdm"

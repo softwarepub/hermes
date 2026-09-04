@@ -2,8 +2,11 @@
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-FileContributor: Nitai Heeb
 
+# flake8: noqa
+
 import json
 import pytest
+
 from hermes.commands.init.base import string_in_file, download_file_from_url
 from unittest.mock import patch, MagicMock
 import hermes.commands.init.util.oauth_process as oauth_process
@@ -39,14 +42,13 @@ def test_string_in_file(tmp_path):
 
 @patch("requests.get")
 def test_download_file_from_url(mock_get, tmp_path):
-    mock_get.return_value.__enter__.return_value.iter_content.return_value = [b"test_content"]
-    mock_get.return_value.__enter__.return_value.raise_for_status = MagicMock()
-
+    mock_response = MagicMock()
+    mock_response.content = b"test_content"
+    mock_get.return_value.__enter__.return_value = mock_response
     test_file = tmp_path / "downloaded.txt"
-    download_file_from_url("https://example.com/file.txt", test_file)
-
-    with open(test_file, "r", encoding="utf-8") as f:
-        assert f.read() == "test_content"
+    download_file_from_url( "https://example.com/file.txt", test_file, )
+    mock_response.raise_for_status.assert_called_once()
+    assert test_file.read_text(encoding="utf-8") == "test_content"
 
 
 @pytest.mark.parametrize(

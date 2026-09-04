@@ -77,6 +77,7 @@ plugins/marketplace
 Tutorial: Get started w/ development <dev/start>
 dev/contribute
 dev/data_model
+dev/plugin_structure
 adr/index
 api/index
 dev/releasing

@@ -1,0 +1,12 @@
+{
+  "@context": {
+    "schema": "http://schema.org/",
+    "hermes-content": "https://schema.software-metadata.pub/hermes-content/1.0/",
+
+    "SemanticVersion": {"@id": "hermes-content:SemanticVersion"},
+
+    "comment": {"@id": "schema:comment", "@container": "@list"},
+
+    "metadata": {"@id": "hermes-content:metadata", "@type": "@json"}
+  }
+}

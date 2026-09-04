@@ -15,6 +15,7 @@ import subprocess
 from pydantic import BaseModel
 
 from hermes.commands.harvest.base import HermesHarvestCommand, HermesHarvestPlugin
+from hermes.model.api import SoftwareMetadata
 from hermes.utils import guess_file_type
 
 
@@ -154,6 +155,7 @@ class FileExistsHarvestPlugin(HermesHarvestPlugin):
     }
 
     def __init__(self):
+        super().__init__()
         self.working_directory: Path = Path.cwd()
         self.settings: FileExistsHarvestSettings = FileExistsHarvestSettings()
 
@@ -192,14 +194,14 @@ class FileExistsHarvestPlugin(HermesHarvestPlugin):
                 for work in creative_works
                 if work.keywords and "license" in work.keywords
             ],
-            "codemeta:readme": [
+            "readme": [
                 work.associated_media.url.as_codemeta()
                 for work in creative_works
                 if work.keywords and "readme" in work.keywords
             ],
         }
 
-        return data, {"workingDirectory": str(self.working_directory)}
+        return SoftwareMetadata(data)
 
     def _find_files(self) -> List[Path]:
         """Find files.

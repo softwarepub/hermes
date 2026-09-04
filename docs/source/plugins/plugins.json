@@ -31,7 +31,7 @@
         "description": "Harvest plugin for Git repository metadata.",
         "author": "Hermes team",
         "steps": ["harvest"],
-        "repository_url": "https://github.com/softwarepub/hermes-plugin-git"
+        "builtin": true
     },
     {
         "name": "hermes-plugin-python",
@@ -39,20 +39,18 @@
         "author": "Hermes team",
         "steps": ["harvest"],
         "harvested_files": ["pyproject.toml"],
-        "repository_url": "https://github.com/softwarepub/hermes-plugin-python",
-        "pypi_url": "https://pypi.org/project/hermes-plugin-python/"
+        "builtin": true
     },
     {
-        "name": "hermes-plugin-rsd",
-        "description": "Harvest and deposit plugin to create and update software entries in a Research Software Directory instance.",
-        "author": "Software CaRD team",
-        "steps": ["harvest", "deposit"],
-        "repository_url": "https://codebase.helmholtz.cloud/research-software-directory/hermes-plugin-rsd",
-        "pypi_url": "https://pypi.org/project/hermes-plugin-rsd/"
+        "name": "Basic processor",
+        "description": "Process plugin for basic merging of metadata (for Schema and Codemeta).",
+        "author": "Hermes team",
+        "steps": ["process"],
+        "builtin": true
     },
     {
-        "name": "Merge",
-        "description": "Process plugin for basic merging of metadata.",
+        "name": "Invenio processor",
+        "description": "Process plugin for merging of metadata for Invenio deposit (use with 'Basic processor', this plugin should be used with higher priority).",
         "author": "Hermes team",
         "steps": ["process"],
         "builtin": true
@@ -70,6 +68,21 @@
         "author": "Software CaRD team",
         "steps": ["curate"],
         "repository_url": "https://github.com/softwarepub/hermes-plugin-software-card"
+    },
+    {
+        "name": "hermes-plugin-rsd",
+        "description": "Harvest and deposit plugin to create and update software entries in a Research Software Directory instance.",
+        "author": "Software CaRD team",
+        "steps": ["harvest", "deposit"],
+        "repository_url": "https://codebase.helmholtz.cloud/research-software-directory/hermes-plugin-rsd",
+        "pypi_url": "https://pypi.org/project/hermes-plugin-rsd/"
+    },
+    {
+        "name": "File Deposit",
+        "description": "Deposit plugin that only dumps the metadata into a local file.",
+        "author": "Hermes team",
+        "steps": ["deposit"],
+        "builtin": true
     },
     {
         "name": "Invenio Deposit",
