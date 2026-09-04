@@ -47,7 +47,7 @@ def sandbox_auth(pytestconfig):
                 "license": "apache-2.0",
                 "prereserve_doi": True,
                 "related_identifiers": [
-                    {"identifier": "10.5281/zenodo.13311079", "relation": "isCompiledBy", "scheme": "doi"}
+                    {"identifier": "10.5281/zenodo.13221383", "relation": "isCompiledBy", "scheme": "doi"}
                 ]
             }
         )
