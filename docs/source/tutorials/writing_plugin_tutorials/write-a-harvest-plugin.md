@@ -15,7 +15,20 @@ For simplicity's sake our plugin will only harvest the name and description of t
 
 ## Setup
 
-To follow this tutorial you'll need...
+To follow this tutorial you'll need to have HERMES with version >=0.10 installed.
+You can install it like this:
+
+First, install Python 3.11 (or later).
+
+Additionally, you need to [install `poetry >= 2.0.0`](https://python-poetry.org/docs/#installation), either globally, or
+within an environment of your choice. As a project, we chose `poetry` to manage our dependencies, builds, and deposits
+as a state of the art solution within the Python ecosystem.
+
+In case you still want to install on your machine, you can (for example) use `pip`:
+
+```shell
+pip install hermes
+```
 
 ## Writing the plugin
 
