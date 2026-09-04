@@ -26,6 +26,9 @@ class TomlHarvestPlugin(HermesHarvestPlugin):
     """Base class for the hermes plugin that harvests .toml files"""
 
     settings_class = TomlHarvestSettings
+
+    # Prioritized; top-most key is most important. Results from lower mappings will be
+    # overwritten by high mappings
     table_with_mapping = {
         "project": [
             ("name", "name"), ("version", "version"), ("description", "description"),
@@ -63,32 +66,29 @@ class TomlHarvestPlugin(HermesHarvestPlugin):
         with open(file) as fp:
             data = tomlkit.load(fp).unwrap()
 
-        ret_data = {}
+        mapped_data = {}
 
         #iterate over each table
         #read it's information and store it according to the mapping
-        #if more than one table existis raise an error as
-        #the information could be overlapping and there should only be one table
-        for table, mapping in cls.table_with_mapping.items():
+        for table_name, mapping in cls.table_with_mapping.items():
             #choose correct dictionary representing the table
-            if table == "project":
-                table = data.get(table)
+            if table_name == "project":
+                table = data.get(table_name)
             else:
                 temp = data.get("tool")
                 if temp is None:
                     continue
-                table = temp.get(table)
+                table = temp.get(table_name)
 
-            #check if the table exists
-            if not table is None:
-                #if the table exists
-                if len(ret_data.keys()) != 0:
-                    raise ValueError("Both project and tool.poetry table exist.")
-                #read the data from the table
-                ret_data = cls.read_from_one_table(table, mapping)
+            mapped_data[table_name] = cls.read_from_one_table(table, mapping)
 
-        #return the result
-        return ret_data
+        # Collect results from all mappings from `table_with_mapping`. Iterate backwards
+        # so that the top-most mapping has the highest priority.
+        result = {}
+        for key in reversed(mapped_data.keys()):
+            result.update(mapped_data[key])
+
+        return result
 
     @classmethod
     def read_from_one_table(cls, table, mapping):
