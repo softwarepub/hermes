@@ -84,12 +84,12 @@ class TomlHarvestPlugin(HermesHarvestPlugin):
         for table_name, mapping in cls.table_with_mapping.items():
             # choose correct dictionary representing the table
             if table_name == "project":
-                table = data.get(table_name)
+                table = data.get(table_name, {})
             else:
                 temp = data.get("tool")
                 if temp is None:
                     continue
-                table = temp.get(table_name)
+                table = temp.get(table_name, {})
 
             mapped_data[table_name] = cls.read_from_one_table(table, mapping)
 
