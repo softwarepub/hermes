@@ -51,7 +51,7 @@ class HermesCache:
             # load all files from the cache dir and cache the contents
             for filepath in self._cache_dir.glob('*'):
                 basename, _ = os.path.splitext(filepath.name)
-                self._cached_data[basename] = json.load(filepath.open('r'))
+                self._cached_data[basename] = json.load(filepath.open('r', encoding='utf-8'))
 
         # return the cache object
         return self
@@ -71,7 +71,7 @@ class HermesCache:
             # construct the file path as well as load and cache the file
             filepath = self._cache_dir / f'{item}.json'
             if filepath.is_file():
-                self._cached_data[item] = json.load(filepath.open('r'))
+                self._cached_data[item] = json.load(filepath.open('r', encoding='utf-8'))
 
         # return the loaded json
         return self._cached_data[item]
@@ -116,7 +116,7 @@ class HermesCache:
             for basename, data in self._cached_data.items():
                 # create complete file path and write the data
                 cachefile = self._cache_dir / f'{basename}.json'
-                json.dump(data, cachefile.open('w'))
+                json.dump(data, cachefile.open('w', encoding='utf-8'), ensure_ascii=False)
 
 
 class HermesCacheManager:

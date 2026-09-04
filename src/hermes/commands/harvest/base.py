@@ -53,7 +53,8 @@ class HermesHarvestPlugin(HermesPlugin):
         """
         pass
 
-    def load(self: Self, func: Callable, source: Any, *args: Optional[Any], **kwargs: Optional[Any]) -> Any:
+    def load(self: Self, func: Callable, source: Any, *args: Optional[Any], encoding: Optional[str] = "utf-8",
+             **kwargs: Optional[Any]) -> Any:
         """
         Load some data from some source using some function so that the calls provenance information is recorded.
 
@@ -63,6 +64,7 @@ class HermesHarvestPlugin(HermesPlugin):
             func (Callable): The function used for loading the requested source.
             source (Any): The source the data is to be loaded from.
             args (Any | None): Additional positional arguments for the load.
+            encoding (str): Encoding for loaded file, utf-8 is default.
             kwargs (Any | None): Additional keyword arguments for the load.
 
         Returns:
@@ -86,6 +88,8 @@ class HermesHarvestPlugin(HermesPlugin):
             "schema:name": f"{func.__module__}.{func.__qualname__}"
         }
         operation["prov:startedAtTime"] = datetime.datetime.now()
+        if encoding is not None:
+            kwargs.setdefault("encoding", encoding)
         # execute the load operation
         result = func(source, *args, **kwargs)
         # complete metadata collection
