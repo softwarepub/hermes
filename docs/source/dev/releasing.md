@@ -10,7 +10,7 @@ To release a new version of HERMES when a new set of features and/or fixes have 
       To edit the version in `pyproject.toml`, there are two ways:
       - Manually edit the file with an editor.
       - Use `poetry version <rule>`. See also [Poetry Docs](https://python-poetry.org/docs/cli/#version)
-2. Merge and delete the release `release/v<version>` branch.
+2. Merge the release `release/v<version>` branch, you can keep the branch for updating `develop` later again.
 2. Create a pull request from `develop` to `main`.
 3. Check if all the CI pipelines for that PR succeed.
 3. Let the named maintainer (see GOVERNANCE.md) merge the PR into `main`.
@@ -22,7 +22,9 @@ To release a new version of HERMES when a new set of features and/or fixes have 
    - Publish the release.
    
    Note: this will also ensure usage of *annotated* tags, making Software Heritage archive the release.
-5. On `develop`, update the version in `pyproject.toml` to `<major>.<minor+1>.0.dev0` in another pull request.
+5. On `develop`:
+   1. Update the version in `pyproject.toml` to `<major>.<minor+1>.0.dev0` in another pull request.
    To edit the version, you can use two ways:
-   - Manually edit the file with an editor.
-   - Use `poetry version "<major>.<minor+1>.0.dev0"`
+      - Manually edit the file with an editor.
+      - Use `poetry version "<major>.<minor+1>.0.dev0"`
+   2. Append in `CITATION.cff` the new identifier to `identifiers` (if postprocess did not do it)
