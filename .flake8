@@ -7,3 +7,10 @@ max-complexity = 15
 max-line-length = 120
 per-file-ignores =
     src/hermes/commands/marketplace.py:E231
+exclude =
+    migrations
+    __pycache__
+    manage.py
+    settings.py
+    venv
+    .venv

@@ -6,6 +6,7 @@
 
  /*
   * SPDX-FileContributor: Oliver Bertuch
+  * SPDX-FileContributor: Michael Fritzsche
   */
 
 img.member {
@@ -22,4 +23,36 @@ img.badge-icon {
     img.member {
         max-width: 23%;
     }
+}
+
+img {
+    display: block;
+    margin: auto;
+}
+
+.bd-page-width {
+    max-width: none !important;
+}
+
+@media (min-width: 1200px) {
+    .bd-article-container {
+        max-width: none !important;
+    }
+}
+
+.bd-article-container {
+    max-width: 100%;
+}
+
+.bd-sidebar-primary.bd-sidebar {
+    max-width: min-content;
+}
+
+.bd-docs-nav {
+    min-width: max-content;
+}
+
+.bd-sidebar-secondary{
+    max-width: 15%;
+    width: max-content;
 }

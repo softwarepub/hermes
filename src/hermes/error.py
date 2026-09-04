@@ -6,3 +6,7 @@
 
 class MisconfigurationError(Exception):
     pass
+
+
+class HermesPluginRunError(Exception):
+    pass

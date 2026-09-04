@@ -114,7 +114,7 @@ Each step in the publication workflow has its own section.
 
 Configure HERMES to:
 
-- harvest metadata from Git and `CITATION.cff`
+- harvest metadata from `CITATION.cff`
 - deposit on Zenodo Sandbox (which is built on the InvenioRDM)
 - use Zenodo Sandbox as the target publication repository
 

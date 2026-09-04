@@ -22,10 +22,12 @@
 #
 import os
 import sys
-import toml
+
+import tomlkit
 
 sys.path.insert(0, os.path.abspath('../../src'))
 sys.path.append(os.path.abspath('_ext'))
+
 
 def read_from_pyproject(file_path="../../pyproject.toml"):
     """
@@ -36,19 +38,20 @@ def read_from_pyproject(file_path="../../pyproject.toml"):
     """
     try:
         # Load the pyproject.toml file
-        data = toml.load(file_path)
+        data = tomlkit.load(open(file_path, 'r')).unwrap()
 
         # Navigate to the authors metadata
-        metadata = data.get("tool", {}).get("poetry", {})
+        metadata = data.get("project", {})
         if not metadata:
             return "No metadata found in pyproject.toml"
         return metadata
     except FileNotFoundError:
         return f"The file {file_path} was not found."
-    except toml.TomlDecodeError:
+    except tomlkit.exceptions.TOMLKitError:
         return f"Failed to parse {file_path}. Ensure it is a valid TOML file."
     except Exception as e:
         return f"An unexpected error occurred: {e}"
+
 
 def read_authors_from_pyproject():
     metadata = read_from_pyproject()
@@ -56,7 +59,8 @@ def read_authors_from_pyproject():
     if not authors:
         return "No authors metadata found in pyproject.toml"
     # Convert the list of authors to a comma-separated string
-    return ", ".join([a.split(" <")[0] for a in authors])
+    return ", ".join([author["name"] for author in authors])
+
 
 def read_version_from_pyproject():
     metadata = read_from_pyproject()
@@ -69,11 +73,12 @@ def read_version_from_pyproject():
 # -- Project information -----------------------------------------------------
 
 project = 'HERMES Workflow'
-copyright = '2025 by Forschungszentrum Jülich (FZJ), German Aerospace Center (DLR) and Helmholtz-Zentrum Dresden-Rossendorf (HZDR)'
+copyright = '2025 by Forschungszentrum Jülich (FZJ), German Aerospace Center (DLR)' \
+            ' and Helmholtz-Zentrum Dresden-Rossendorf (HZDR)'
 author = read_authors_from_pyproject()
 
 # The full version, including alpha/beta/rc tags
-release = read_version_from_pyproject()
+version = release = read_version_from_pyproject()
 
 
 # -- General configuration ---------------------------------------------------
@@ -94,7 +99,6 @@ extensions = [
     'sphinxcontrib.contentui',
     'sphinxcontrib.images',
     'sphinxcontrib.icon',
-    'sphinxemoji.sphinxemoji',
     "sphinxext.opengraph",
     'myst_parser',
     'autoapi.extension',
@@ -131,7 +135,10 @@ autoapi_type = "python"
 autoapi_file_patterns = ["*.py"]
 autoapi_root = "api"
 autoapi_dirs = ["../../src"]
-autoapi_ignore = ["*/__main__.py"]
+autoapi_ignore = ["*__main__*"]
+autoapi_options = [
+    "members", "undoc-members", "private-members", "special-members", "show-inheritance", "show-module-summary"
+]
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -162,6 +169,7 @@ html_theme_options = {
     "repository_url": "https://github.com/hermes-hmc/hermes",
     "use_repository_button": True,
     "navigation_with_keys": False,
+    "max_navbar_depth": -1
 }
 
 html_css_files = [
@@ -183,3 +191,14 @@ ogp_type = "website"
 # -- Options for sphinx-togglebutton -----------------------------------------
 
 togglebutton_hint = "Click to show screenshot"
+
+
+def autoapi_skip_member(app, obj_type, name, obj, skip, options):
+    if obj_type == "attribute":
+        return True
+
+    return skip
+
+
+def setup(app):
+    app.connect("autoapi-skip-member", autoapi_skip_member)

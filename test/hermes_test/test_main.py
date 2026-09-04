@@ -4,6 +4,8 @@
 
 # SPDX-FileContributor: Michael Meinel
 
+# flake8: noqa
+
 import subprocess
 import sys
 
