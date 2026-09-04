@@ -144,9 +144,8 @@ def download_file_from_url(url, filepath, append: bool = False) -> None:
     try:
         with requests.get(url, stream=True) as r:
             r.raise_for_status()
-            with open(filepath, 'ab' if append else 'wb') as f:
-                for chunk in r.iter_content(chunk_size=8192):
-                    f.write(chunk)
+            with open(filepath, 'a' if append else 'w', encoding='utf-8') as f:
+                f.write(r.content.decode('utf-8'))
     except HTTPError:
         sc.echo(f"No file found at {url}.", formatting=sc.Formats.FAIL)
 
@@ -550,10 +549,11 @@ class HermesInitCommand(HermesCommand):
 
     def configure_ci_template(self, ci_file_path) -> None:
         """Replaces all {%parameter%} in a ci file with values from ci_parameters dict"""
-        jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(""),
-                                       block_start_string="{%%", block_end_string="%%}",
+        jinja_env = jinja2.Environment(block_start_string="{%%", block_end_string="%%}",
                                        variable_start_string="{%", variable_end_string="%}")
-        template = jinja_env.get_template(str(ci_file_path))
+        with open(ci_file_path, "r", encoding="utf-8") as file:
+            source = file.read()
+        template = jinja_env.from_string(source)
         rendered = template.render(self.ci_parameters)
         with open(ci_file_path, 'w') as file:
             file.write(rendered)
