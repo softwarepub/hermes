@@ -24,9 +24,6 @@ from hermes.model.error import HermesValidationError
 from hermes.model.types import ld_dict
 from hermes.utils import hermes_concept_doi, hermes_user_agent
 
-
-
-
 _log = logging.getLogger("cli.deposit.invenio")
 
 
