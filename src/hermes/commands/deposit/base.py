@@ -22,7 +22,7 @@ from hermes.model.error import HermesValidationError
 from hermes.model.provenance.ld_prov import ld_prov_list
 
 
-class BaseDepositPlugin(HermesPlugin):
+class HermesDepositPlugin(HermesPlugin):
     """
     Base class that implements the generic deposition workflow.
 
