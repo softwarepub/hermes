@@ -4,18 +4,20 @@
 # SPDX-FileContributor: David Pape
 
 from __future__ import annotations
-import logging
 
+import json
+import logging
 import os
 import threading
 import time
 import webbrowser
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from threading import Event
+from urllib.parse import parse_qs, urlparse
+
 import requests
 import requests_oauthlib
-import json
-from threading import Event
-from http.server import BaseHTTPRequestHandler, HTTPServer
-from urllib.parse import parse_qs, urlparse
+from oauthlib.oauth2.rfc6749.errors import CustomOAuth2Error
 
 from . import slim_click as sc
 
@@ -73,6 +75,7 @@ class OauthProcess:
         self.tokens = {}
         self.device_code_url = device_code_url
         self.server: HTTPServer = None
+        self.error_description: str = ""
 
     def create_handler_constructor(self):
         def handler(*args, **kwargs):
@@ -157,7 +160,10 @@ class OauthProcess:
             if "access_token" in token_response_data:
                 return token_response_data
             elif "error" in token_response_data and token_response_data["error"] != "authorization_pending":
-                sc.echo(f"Error: {token_response_data['error']}")
+                sc.echo(f"Device Flow Error: {token_response_data['error']}", sc.Formats.WARNING)
+                return {}
+            elif self.error_description:
+                sc.echo(f"Device Flow Error: {self.error_description}", sc.Formats.WARNING)
                 return {}
 
             time.sleep(interval)
@@ -181,9 +187,9 @@ class OauthProcess:
 
     def get_tokens(self) -> dict[str: str]:
         if PREFER_DEVICE_FLOW:
-            return self.get_tokens_from_device_flow() or self.get_tokens_from_oauth() or {}
+            return self.get_tokens_from_device_flow() or {}
         else:
-            return self.get_tokens_from_oauth() or self.get_tokens_from_device_flow() or {}
+            return self.get_tokens_from_oauth() or {}
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -219,9 +225,12 @@ class Handler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         auth_code = parse_qs(parsed.query)["code"][0]
 
-        tokens = self.oauth_process.get_tokens_from_auth_code(auth_code)
-        self.oauth_process.tokens = tokens
-        self.oauth_process.shutdown_event.set()
+        try:
+            tokens = self.oauth_process.get_tokens_from_auth_code(auth_code)
+            self.oauth_process.tokens = tokens
+            self.oauth_process.shutdown_event.set()
+        except CustomOAuth2Error as e:
+            self.oauth_process.error_description = e.description
 
         self.end_headers()
         self.wfile.write(b"You can close this window now.")

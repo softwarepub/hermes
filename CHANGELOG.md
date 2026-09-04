@@ -11,6 +11,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project tries to adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.2] - 2026-09-04
+
+### Added
+
+- Add Michael Fritzsche as author
+- Add missing release DOIs to CITATION.cff
+- Add JuRSE code pick of the month badge
+- Add hermes-plugin-software-card to marketplace
+- Add hermes-plugin-rsd to marketplace
+- Add "Accept Curate" curation plugin
+
+### Fixed
+
+- Fix readthedocs build
+
+### Changed
+
+- Small changes in tutorials
+- More fleshed out base curate plugin and command
+- Use HERMES' concept DOI in "IsCompiledBy" relation
+- Use Jinja2 templates to set up CI in `hermes init`
+
 ## [0.9.1] - 2026-01-12
 
 ### Added

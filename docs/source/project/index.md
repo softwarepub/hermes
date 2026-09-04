@@ -76,6 +76,12 @@ Made by [DLR](https://dlr.de), [HZDR](https://hzdr.de) and [FZJ](https://fz-juel
     :target: https://fz-juelich.de/profile/bertuch_o
 ```
 
+```{image} ../_static/img/fritzsche.jpg
+    :alt: Michael Fritzsche
+    :class: member
+    :target: https://orcid.org/0009-0002-7752-6353
+```
+
 </p>
 
 All outputs of the project are openly available. 
