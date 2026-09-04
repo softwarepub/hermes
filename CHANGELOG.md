@@ -11,6 +11,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project tries to adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.0] - 2026-09-04
+
+### Added
+
+- **New Data model** compliant with json-ld
+- Provenance model and implementation
+- json-ld wrapper for `pyld`
+- Docs extended
+- Auto-api for docs
+- Tests for model and commands
+- Add instructions for Changelog.md
+
+### Fixed
+
+- Fix `hermes init`
+- utf-8 compliance
+- Updated dependencies
+- switched to **python 3.11**
+
+### Changed
+
+- **Big changes** in commands and model
+- Refactoring of plugins
+- Reintegrated Plugins: `toml` and `git` in main repository
+- Change `log` process
+- Change `error` class
+- Updated adr
+
 ## [0.9.2] - 2026-09-04
 
 ### Added
