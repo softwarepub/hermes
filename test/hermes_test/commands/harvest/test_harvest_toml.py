@@ -116,6 +116,7 @@ def test_read_from_toml(in_data, out_data, toml_file):
         tomlkit.dump(in_data, fp)
     assert TomlHarvestPlugin.read_from_toml(str(toml_file)) == out_data
 
+
 @pytest.mark.parametrize(
     "in_data, out_data",
     [
@@ -129,6 +130,7 @@ def test_project_overrules_poetry(in_data, out_data, toml_file):
     with open(toml_file, "w", encoding="utf8") as fp:
         tomlkit.dump(in_data, fp)
     assert TomlHarvestPlugin.read_from_toml(str(toml_file)) == out_data
+
 
 @pytest.mark.parametrize(
     "in_data",
