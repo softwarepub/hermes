@@ -16,9 +16,9 @@ This is not necessary if you only want to use HERMES or want to develop an exten
 
 ## Prepare your environment
 
-First, install Python 3.10 (or later).
+First, install Python 3.11 (or later).
 
-Additionally, you need to [install `poetry >= 1.2.0`](https://python-poetry.org/docs/#installation), either globally, or
+Additionally, you need to [install `poetry >= 2.0.0`](https://python-poetry.org/docs/#installation), either globally, or
 within an environment of your choice. As a project, we chose `poetry` to manage our dependencies, builds, and deposits
 as a state of the art solution within the Python ecosystem.
 

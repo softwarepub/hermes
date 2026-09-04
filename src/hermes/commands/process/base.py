@@ -210,7 +210,7 @@ class HermesProcessCommand(HermesCommand):
         if prov_doc is not None:
             process_command = prov_doc.get_hermes_command("process")
         # add the strategies from the plugins
-        for plugin_name in reversed(self.settings.plugins):
+        for plugin_name in self.settings.plugins:
             self.log.info(f"### Load {plugin_name} plugin")
             # load plugin
             try:
