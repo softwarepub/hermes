@@ -31,7 +31,7 @@
         "description": "Harvest plugin for Git repository metadata.",
         "author": "Hermes team",
         "steps": ["harvest"],
-        "repository_url": "https://github.com/softwarepub/hermes-plugin-git"
+        "builtin": true
     },
     {
         "name": "hermes-plugin-python",
