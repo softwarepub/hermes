@@ -56,11 +56,9 @@ class CffHarvestPlugin(HermesHarvestPlugin):
         if "version" in codemeta_dict:
             codemeta_dict["version"] = str(codemeta_dict["version"])   # Convert Version to string
 
-        print(codemeta_dict)
         # TODO Replace the following temp patch for #112 once there is a new cffconvert version with cffconvert#309
         codemeta_dict = self._patch_author_emails(cff_dict, codemeta_dict)
         codemeta_dict = self._patch_identifiers(cff_dict, codemeta_dict)
-        print(codemeta_dict)
         ld_codemeta = SoftwareMetadata(codemeta_dict, extra_vocabs={'legalName': {'@id': "http://schema.org/name"}})
         return ld_codemeta
 
