@@ -22,7 +22,7 @@ To release a new version of HERMES when a new set of features and/or fixes have 
    - Publish the release.
    
    Note: this will also ensure usage of *annotated* tags, making Software Heritage archive the release.
-5. On `develop`:
+5. Using a pull request from release/v<version>, update develop:
    1. Update the version in `pyproject.toml` to `<major>.<minor+1>.0.dev0` in another pull request.
    To edit the version, you can use two ways:
       - Manually edit the file with an editor.
