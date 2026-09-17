@@ -1,11 +1,65 @@
 <!--
 SPDX-FileCopyrightText: 2024 German Aerospace Center (DLR)
 SPDX-FileContributor: Stephan Druskat
+SPDX-FileContributor: David Pape
 
 SPDX-License-Identifier: CC-BY-SA-4.0
 -->
 
-## Governance
+# Governance
+
+This document describes the governance over the repositories listed below as
+[HERMES Project Repositories](#hermes-project-repositories) and
+[Software CaRD Project Repositories](#software-card-project-repositories).
+
+DLR, HZDR, FZJ, and GFZ share the governance over these repositories and their maintenance.
+Maintainers can be contacted via their [mailing list](mailto:team@software-metadata.pub).
+
+The software provided in these repositories is no longer actively developed due to the projects
+having reached their conclusions.
+Security patches and bug fixes will be provided on a best effort basis but are not guaranteed.
+Potential contributors are encouraged to provide bug fixes via pull requests to the relevant
+repositories, which are then reviewed and integrated on a best effort basis.
+
+Any of the named institutions may resume the development of these projects.
+In this case they should adopt a new governance model.
+The old governance model is provided for reference at the bottom of this document.
+New contributors and developers may contact the maintainers to be introduced to the projects on a
+best effort basis.
+The maintenance over any of the projects may be transferred.
+
+## HERMES Project Repositories
+
+The following repositories were developed jointly by DLR, HZDR, and FZJ, within the HERMES project:
+
+- <https://github.com/softwarepub/hermes>
+- <https://github.com/softwarepub/ci-templates>
+- <https://github.com/softwarepub/showcase>
+- <https://github.com/softwarepub/schema.software-metadata.pub>
+- <https://github.com/softwarepub/github-action>
+- <https://github.com/softwarepub/concept-paper>
+
+The [HERMES project (`ZT-I-PF-3-006`)](https://helmholtz-metadaten.de/inf-projects/hermes) was
+funded by the _Initiative and Networking Fund_ of the Helmholtz Association in the framework of the
+Helmholtz Metadata Collaboration's 2020 project call.
+
+## Software CaRD Project Repositories
+
+The following repositories were developed jointly by DLR, HZDR, FZJ, and GFZ, within the
+Software CaRD project:
+
+- <https://github.com/softwarepub/software-card>
+- <https://github.com/softwarepub/hermes-plugin-software-card>
+- <https://github.com/softwarepub/software-card-policies>
+- <https://codebase.helmholtz.cloud/research-software-directory/hermes-plugin-rsd/>
+
+The [Software CaRD project (`ZT-I-PF-3-080`)](https://helmholtz-metadaten.de/inf-projects/softwarecard)
+was funded by the _Initiative and Networking Fund_ of the Helmholtz Association in the framework of
+the Helmholtz Metadata Collaboration's 2023 project call.
+
+---
+
+## Old Governance
 
 The HERMES project employs a lightweight governance model.
 
