@@ -27,8 +27,10 @@ class HermesCleanCommand(HermesCommand):
         self.log.info("Removing HERMES caches...")
 
         # Naive implementation for now... check errors, validate directory, don't construct the path ourselves, etc.
-        shutil.rmtree(args.path / '.hermes')
-
-    def load_settings(self, args: argparse.Namespace):
-        """No settings are needed for the clean command."""
-        pass
+        try:
+            path = args.path / '.hermes'
+            shutil.rmtree(path)
+        except FileNotFoundError:
+            pass
+        except Exception as exc:
+            self.log.warning(f"{path} couldn't be cleaned: {exc}")
