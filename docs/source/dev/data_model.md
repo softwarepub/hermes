@@ -19,7 +19,6 @@ Output of the different `hermes` subcommands consequently are valid JSON-LD file
 subdirectories of the `.hermes/` directory that is created in the root of the project directory (see following diagram).
 ```
 .hermes
-│  audit.log
 ├──curate
 │  └──result
 │     ├──codemeta.json
