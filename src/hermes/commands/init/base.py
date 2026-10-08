@@ -1000,7 +1000,14 @@ class HermesInitCommand(HermesCommand):
         sc.echo("Cleaning unused files...")
         hidden_hermes_path = Path(".hermes")
         if hidden_hermes_path.exists() and hidden_hermes_path.is_dir():
-            shutil.rmtree(hidden_hermes_path)
+            try:
+                shutil.rmtree(hidden_hermes_path)
+            except Exception as exc:
+                sc.echo(
+                    f"{hidden_hermes_path} couldn't be cleaned: {exc}",
+                    formatting=sc.Formats.WARNING,
+                    log_as=logging.ERROR
+                )
         if aborted:
             if not self.hermes_was_already_installed:
                 for path in reversed(self.new_created_paths):

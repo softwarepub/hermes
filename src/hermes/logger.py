@@ -15,8 +15,7 @@ _logging_config = {
 
     'formatters': {
         'plain': {'format': "%(message)s"},
-        'logfile': {'format': "%(created)16f:%(name)20s:%(levelname)10s | %(message)s"},
-        'auditlog': {'format': "%(asctime)s %(name)-20s  %(message)s"},
+        'logfile': {'format': "%(created)16f:%(name)20s:%(levelname)10s | %(message)s"}
     },
 
     'handlers': {
@@ -32,22 +31,14 @@ _logging_config = {
             'formatter': "logfile",
             'level': "DEBUG",
             'filename': "./hermes.log",
-        },
-
-        'auditfile': {
-            'class': "logging.FileHandler",
-            'formatter': "plain",
-            'level': "DEBUG",
-            'filename': "./.hermes/audit.log",
-            'mode': "w",
-        },
+        }
     },
 
     'loggers': {
         'cli': {'level': "DEBUG", 'handlers': ['terminal']},
         'hermes': {'level': "DEBUG", 'handlers': ['terminal', 'logfile']},
-        'audit': {'level': "DEBUG", 'handlers': ['terminal', 'logfile']},
-    },
+        'audit': {'level': "DEBUG", 'handlers': ['terminal', 'logfile']}
+    }
 }
 
 _loggers = {}
@@ -59,7 +50,6 @@ def init_logging():
 
     # Make sure the directories to hold the log files exists (or else create)
     pathlib.Path(_logging_config['handlers']['logfile']['filename']).parent.mkdir(exist_ok=True, parents=True)
-    pathlib.Path(_logging_config['handlers']['auditfile']['filename']).parent.mkdir(exist_ok=True, parents=True)
 
     # Inintialize logging system
     import logging.config
